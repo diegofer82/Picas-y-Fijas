@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1a1730">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Picas y Fijas">
+<title>Picas y Fijas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a1730; --panel:#262042; --panel-2:#2f2752; --edge:#3d3468;
+    --text:#ECE7FF; --muted:#9B92C4;
+    --fija:#4ADE80; --pica:#FBBF24; --accent:#22D3EE; --pink:#F472B6;
+    --r:16px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%}
+  body{
+    font-family:'Space Grotesk',system-ui,sans-serif;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(34,211,238,.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(244,114,182,.10), transparent 55%),
+      var(--ink);
+    color:var(--text);min-height:100dvh;
+    padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  }
+  .wrap{max-width:520px;margin:0 auto;padding:20px 18px 40px}
+  .brand{display:flex;align-items:center;gap:12px;margin:6px 0 22px}
+  .logo{width:44px;height:44px;border-radius:12px;flex:0 0 auto;
+    background:linear-gradient(135deg,var(--accent),var(--pink));
+    display:grid;place-items:center;font-family:'JetBrains Mono',monospace;
+    font-weight:800;color:#141126;font-size:18px;letter-spacing:-1px;
+    box-shadow:0 8px 24px rgba(34,211,238,.25);}
+  .brand h1{font-size:20px;margin:0;font-weight:700;letter-spacing:-.02em}
+  .brand .sub{font-size:12px;color:var(--muted);margin-top:2px;letter-spacing:.14em;text-transform:uppercase}
+
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--edge);border-radius:var(--r);padding:20px;margin-bottom:16px;
+    box-shadow:0 10px 30px rgba(0,0,0,.25);}
+  .card h2{margin:0 0 4px;font-size:17px;font-weight:600}
+  .card p.hint{margin:0 0 16px;color:var(--muted);font-size:13px;line-height:1.5}
+
+  label{display:block;font-size:12px;color:var(--muted);margin:14px 0 7px;letter-spacing:.03em}
+  label:first-of-type{margin-top:0}
+  input[type=text]{width:100%;background:#141126;border:1px solid var(--edge);color:var(--text);
+    border-radius:12px;padding:14px 15px;font-size:16px;outline:none;
+    font-family:'Space Grotesk',sans-serif;transition:border-color .15s,box-shadow .15s;}
+  input[type=text].code{font-family:'JetBrains Mono',monospace;font-size:26px;letter-spacing:12px;text-align:center;font-weight:700}
+  input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(34,211,238,.18)}
+
+  .btn{width:100%;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:600;
+    font-family:'Space Grotesk',sans-serif;cursor:pointer;letter-spacing:.01em;
+    background:linear-gradient(135deg,var(--accent),#3aa0ff);color:#0c1020;transition:transform .06s ease,filter .15s;}
+  .btn:active{transform:translateY(1px)}
+  .btn:disabled{filter:grayscale(.6) brightness(.7);cursor:not-allowed}
+  .btn.ghost{background:transparent;border:1px solid var(--edge);color:var(--text)}
+  .btn.pink{background:linear-gradient(135deg,var(--pink),#c84fd6);color:#160814}
+  .btn.green{background:linear-gradient(135deg,var(--fija),#22c55e);color:#06210f}
+  .btn.sm{width:auto;padding:9px 16px;font-size:13px;border-radius:10px}
+  .row{display:flex;gap:10px}
+  .row .btn{flex:1}
+
+  .seg{display:flex;gap:8px;flex-wrap:wrap}
+  .seg button{flex:1;min-width:64px;background:#141126;border:1px solid var(--edge);color:var(--muted);
+    border-radius:12px;padding:13px 6px;font-size:14px;font-weight:600;cursor:pointer;
+    font-family:'Space Grotesk',sans-serif;transition:.15s;}
+  .seg.mono button{font-family:'JetBrains Mono',monospace}
+  .seg button.on{background:rgba(34,211,238,.14);border-color:var(--accent);color:var(--text)}
+
+  .val{font-size:12px;margin-top:8px;min-height:16px}
+  .val.err{color:var(--pink)} .val.ok{color:var(--fija)}
+
+  /* Color pad */
+  .pad{margin-top:4px}
+  .slots{display:flex;gap:8px;justify-content:center;margin-bottom:12px;min-height:40px}
+  .slot{width:40px;height:40px;border-radius:10px;border:2px dashed var(--edge);background:#141126}
+  .slot.filled{border-style:solid;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+  .palette{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .sw{width:44px;height:44px;border-radius:12px;border:2px solid rgba(255,255,255,.15);cursor:pointer;padding:0}
+  .sw:active{transform:translateY(1px)}
+  .sw.bs{background:#141126;border-color:var(--edge);color:var(--text);font-size:18px;display:grid;place-items:center}
+
+  .list{display:flex;flex-direction:column;gap:10px}
+  .gitem{display:flex;align-items:center;gap:12px;background:#141126;border:1px solid var(--edge);border-radius:12px;padding:12px 14px;}
+  .gitem .gid{font-family:'JetBrains Mono',monospace;font-weight:800;letter-spacing:3px;font-size:16px;color:var(--accent)}
+  .gitem .meta{flex:1;min-width:0}
+  .gitem .meta .who{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .gitem .meta .det{font-size:12px;color:var(--muted)}
+  .empty{color:var(--muted);font-size:13px;text-align:center;padding:14px 0}
+
+  .turnbar{display:flex;align-items:center;gap:10px;border-radius:12px;padding:12px 14px;margin-bottom:12px;font-weight:600;font-size:14px;}
+  .turnbar.mine{background:rgba(74,222,128,.13);border:1px solid rgba(74,222,128,.4);color:var(--fija)}
+  .turnbar.theirs{background:rgba(155,146,196,.12);border:1px solid var(--edge);color:var(--muted)}
+  .turnbar .dot{width:9px;height:9px;border-radius:50%;background:currentColor;animation:pulse 1.4s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+  .statusrow{display:flex;gap:10px;margin-bottom:14px}
+  .chip{font-size:12px;color:var(--muted);background:#141126;border:1px solid var(--edge);border-radius:999px;padding:6px 12px;font-family:'JetBrains Mono',monospace}
+  .chip.warn{color:var(--pica);border-color:rgba(251,191,36,.4)}
+  .chip.hot{color:var(--pink);border-color:rgba(244,114,182,.5)}
+
+  .mysecret{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted);margin-bottom:14px;flex-wrap:wrap}
+  .mysecret .code-view{display:inline-flex;align-items:center;gap:5px}
+  .n{font-family:'JetBrains Mono',monospace;font-weight:800;letter-spacing:4px;color:var(--text)}
+  .mini{width:16px;height:16px;border-radius:5px;display:inline-block;border:1px solid rgba(255,255,255,.15)}
+
+  .guessarea{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
+  .guessarea .field{flex:1}
+  .guessarea .btn{width:auto;flex:0 0 auto;padding:0 20px;align-self:stretch}
+
+  .cols{display:grid;grid-template-columns:1fr;gap:16px}
+  .colhead{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px}
+  .glog{display:flex;flex-direction:column;gap:8px}
+  .glog .g{display:flex;align-items:center;gap:12px;background:#141126;border:1px solid var(--edge);border-radius:10px;padding:10px 12px;}
+  .glog .g .n{font-size:20px}
+  .glog .g .mini{width:20px;height:20px;border-radius:6px}
+  .code-view{display:inline-flex;align-items:center;gap:5px}
+  .pips{display:flex;gap:5px;margin-left:auto}
+  .pip{width:12px;height:12px;border-radius:50%;background:#2a2450;border:1px solid var(--edge)}
+  .pip.f{background:var(--fija);border-color:var(--fija);box-shadow:0 0 8px rgba(74,222,128,.5)}
+  .pip.p{background:var(--pica);border-color:var(--pica);box-shadow:0 0 8px rgba(251,191,36,.5)}
+  .scoretxt{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+
+  .banner{border-radius:14px;padding:22px;text-align:center;margin-bottom:16px}
+  .banner.win{background:linear-gradient(135deg,rgba(74,222,128,.2),rgba(34,211,238,.15));border:1px solid rgba(74,222,128,.5)}
+  .banner.lose{background:rgba(244,114,182,.12);border:1px solid rgba(244,114,182,.4)}
+  .banner.draw{background:rgba(155,146,196,.14);border:1px solid var(--edge)}
+  .banner h2{font-size:26px;margin:0 0 4px}
+  .banner p{margin:0;color:var(--muted);font-size:14px}
+
+  .rankrow{display:flex;align-items:center;gap:12px;background:#141126;border:1px solid var(--edge);border-radius:10px;padding:11px 13px}
+  .rankrow .pos{font-family:'JetBrains Mono',monospace;font-weight:800;color:var(--accent);width:28px}
+  .rankrow .nm{flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rankrow .wl{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  .rankrow.me{border-color:var(--accent);background:rgba(34,211,238,.08)}
+
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+    background:#0f0c22;border:1px solid var(--edge);color:var(--text);padding:12px 18px;border-radius:12px;
+    font-size:14px;max-width:90vw;box-shadow:0 12px 30px rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:.25s;z-index:50;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.err{border-color:var(--pink)}
+
+  .foot{text-align:center;color:var(--muted);font-size:11px;margin-top:24px;letter-spacing:.05em}
+  .link{color:var(--accent);cursor:pointer;text-decoration:underline;font-size:13px}
+  .hidden{display:none!important}
+  .legend{display:flex;gap:16px;justify-content:center;font-size:12px;color:var(--muted);margin-top:6px;flex-wrap:wrap}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend .pip{width:11px;height:11px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand">
+    <div class="logo">P·F</div>
+    <div><h1>Picas y Fijas</h1><div class="sub">Duelo de deducción online</div></div>
+  </div>
+
+  <!-- LOGIN -->
+  <section id="s-login" class="card">
+    <h2>Elige tu nombre de jugador</h2>
+    <p class="hint">Con este nombre aparecerás en las partidas y en el ranking. No hace falta contraseña.</p>
+    <label for="uname">Nombre de usuario</label>
+    <input type="text" id="uname" maxlength="24" placeholder="p.ej. Diego" autocomplete="off">
+    <div class="val" id="uname-val"></div>
+    <button class="btn" onclick="doLogin()">Entrar</button>
+  </section>
+
+  <!-- LOBBY -->
+  <section id="s-lobby" class="hidden">
+    <div class="card">
+      <h2>Hola, <span id="hi-name"></span> 👋</h2>
+      <p class="hint">Crea una partida y comparte el código, o únete a una pública abierta.</p>
+      <div class="row">
+        <button class="btn" onclick="show('create')">Crear partida</button>
+        <button class="btn ghost" onclick="openRank()">Ranking</button>
+      </div>
+      <div style="height:10px"></div>
+      <button class="btn ghost" onclick="refreshLobby()">Actualizar lista</button>
+    </div>
+
+    <div class="card" id="mine-card">
+      <h2>Tus partidas activas</h2>
+      <div class="list" id="mine-list"><div class="empty">—</div></div>
+    </div>
+
+    <div class="card">
+      <h2>Partidas públicas abiertas</h2>
+      <div class="list" id="open-list"><div class="empty">Cargando…</div></div>
+    </div>
+
+    <div class="foot"><span class="link" onclick="logout()">Cambiar de usuario</span></div>
+  </section>
+
+  <!-- RANKING -->
+  <section id="s-rank" class="hidden">
+    <div class="card">
+      <h2>Ranking global 🏆</h2>
+      <p class="hint">Victorias totales por jugador. Se actualiza con cada partida terminada.</p>
+      <div class="list" id="rank-list"><div class="empty">Cargando…</div></div>
+      <div style="height:16px"></div>
+      <button class="btn ghost" onclick="show('lobby')">Volver</button>
+    </div>
+  </section>
+
+  <!-- CREAR -->
+  <section id="s-create" class="hidden">
+    <div class="card">
+      <h2>Nueva partida</h2>
+      <p class="hint">Configura las reglas y define tu código secreto.</p>
+
+      <label>Modo</label>
+      <div class="seg" id="seg-mode">
+        <button data-m="numbers" class="on">Números 0-9</button>
+        <button data-m="colors">Colores</button>
+      </div>
+
+      <label>Posiciones</label>
+      <div class="seg mono" id="seg-digits">
+        <button data-d="3" class="on">3</button>
+        <button data-d="4">4</button>
+        <button data-d="5">5</button>
+        <button data-d="6">6</button>
+      </div>
+
+      <label>Repetidos</label>
+      <div class="seg" id="seg-repeat">
+        <button data-r="0" class="on">No permitir</button>
+        <button data-r="1">Permitir</button>
+      </div>
+
+      <label>Límite de intentos</label>
+      <div class="seg mono" id="seg-attempts">
+        <button data-a="0" class="on">Sin límite</button>
+        <button data-a="6">6</button>
+        <button data-a="10">10</button>
+      </div>
+
+      <label>Tiempo por turno</label>
+      <div class="seg mono" id="seg-time">
+        <button data-t="0" class="on">Sin límite</button>
+        <button data-t="30">30s</button>
+        <button data-t="60">60s</button>
+        <button data-t="120">2min</button>
+      </div>
+
+      <label>Visibilidad</label>
+      <div class="seg" id="seg-public">
+        <button data-p="1" class="on">Pública</button>
+        <button data-p="0">Privada</button>
+      </div>
+      <p class="hint" id="pub-hint" style="margin:8px 0 0">Aparece en el lobby: cualquiera puede unirse.</p>
+
+      <label>Tu código secreto</label>
+      <input type="text" id="secret-c" class="code" inputmode="numeric" maxlength="3" placeholder="•••">
+      <div class="pad hidden" id="pad-c"><div class="slots" id="slots-c"></div><div class="palette" id="palette-c"></div></div>
+      <div class="val" id="secret-c-val"></div>
+
+      <button class="btn" id="btn-create" onclick="createGame()">Crear y esperar rival</button>
+      <div style="height:10px"></div>
+      <button class="btn ghost" onclick="show('lobby')">Volver</button>
+    </div>
+  </section>
+
+  <!-- SALA DE ESPERA -->
+  <section id="s-wait" class="hidden">
+    <div class="card" style="text-align:center">
+      <h2>Partida creada</h2>
+      <p class="hint">Comparte este código con tu rival. Empieza en cuanto se una.</p>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:44px;font-weight:800;letter-spacing:10px;color:var(--accent);margin:6px 0 4px" id="wait-code">····</div>
+      <div class="scoretxt" id="wait-info"></div>
+      <div style="height:16px"></div>
+      <button class="btn ghost sm" style="width:100%" onclick="copyCode()">Copiar código</button>
+      <div style="height:10px"></div>
+      <div class="scoretxt">Esperando a que alguien se una…</div>
+      <div style="height:16px"></div>
+      <button class="btn ghost" onclick="cancelWait()">Cancelar y volver</button>
+    </div>
+  </section>
+
+  <!-- UNIRSE -->
+  <section id="s-join" class="hidden">
+    <div class="card">
+      <h2>Unirse a <span id="join-code" style="font-family:'JetBrains Mono',monospace;color:var(--accent)"></span></h2>
+      <p class="hint" id="join-rules-txt">Define tu código secreto.</p>
+      <label>Tu código secreto</label>
+      <input type="text" id="secret-j" class="code" inputmode="numeric" maxlength="3" placeholder="•••">
+      <div class="pad hidden" id="pad-j"><div class="slots" id="slots-j"></div><div class="palette" id="palette-j"></div></div>
+      <div class="val" id="secret-j-val"></div>
+      <button class="btn" id="btn-join" onclick="confirmJoin()">Unirse y jugar</button>
+      <div style="height:10px"></div>
+      <button class="btn ghost" onclick="show('lobby')">Volver</button>
+    </div>
+  </section>
+
+  <!-- REVANCHA (definir nuevo secreto) -->
+  <section id="s-rematch" class="hidden">
+    <div class="card">
+      <h2>Revancha 🔁</h2>
+      <p class="hint" id="rematch-rules-txt">Mismas reglas, mismo rival. Define tu nuevo código secreto.</p>
+      <label>Tu nuevo código secreto</label>
+      <input type="text" id="secret-r" class="code" inputmode="numeric" maxlength="3" placeholder="•••">
+      <div class="pad hidden" id="pad-r"><div class="slots" id="slots-r"></div><div class="palette" id="palette-r"></div></div>
+      <div class="val" id="secret-r-val"></div>
+      <button class="btn green" id="btn-rematch" onclick="sendRematch()">Enviar revancha</button>
+      <div style="height:10px"></div>
+      <button class="btn ghost" onclick="enterLobby()">Volver al inicio</button>
+    </div>
+  </section>
+
+  <!-- JUEGO -->
+  <section id="s-game" class="hidden">
+    <div class="card">
+      <div class="mysecret">
+        <span>Partida <b class="n" style="letter-spacing:3px" id="g-code"></b> · <span id="g-vs"></span></span>
+        <span class="code-view">Tu código:&nbsp;<span id="g-mysecret"></span></span>
+      </div>
+
+      <div id="g-banner"></div>
+      <div id="g-rematch-zone"></div>
+
+      <div class="turnbar theirs" id="g-turn"><span class="dot"></span><span id="g-turn-txt"></span></div>
+      <div class="statusrow hidden" id="g-statusrow">
+        <span class="chip hidden" id="g-timer"></span>
+        <span class="chip hidden" id="g-attempts"></span>
+      </div>
+
+      <div class="guessarea" id="g-guessarea">
+        <div class="field">
+          <input type="text" id="g-guess" class="code" inputmode="numeric" placeholder="•••" style="letter-spacing:8px;font-size:22px">
+          <div class="pad hidden" id="pad-g"><div class="slots" id="slots-g"></div><div class="palette" id="palette-g"></div></div>
+        </div>
+        <button class="btn" id="g-guess-btn" onclick="submitGuess()">Adivinar</button>
+      </div>
+      <div class="val" id="g-guess-val" style="margin-top:0;margin-bottom:8px"></div>
+
+      <div class="legend">
+        <span><span class="pip f"></span> Fija = posición correcta</span>
+        <span><span class="pip p"></span> Pica = presente, mal colocada</span>
+      </div>
+    </div>
+
+    <div class="cols">
+      <div class="card">
+        <div class="colhead">Tus intentos → código de <span id="g-oppname">rival</span></div>
+        <div class="glog" id="g-mylog"><div class="empty">Aún no has adivinado</div></div>
+      </div>
+      <div class="card">
+        <div class="colhead">Intentos de <span id="g-oppname2">rival</span> → tu código</div>
+        <div class="glog" id="g-theirlog"><div class="empty">Sin intentos todavía</div></div>
+      </div>
+    </div>
+
+    <div class="foot"><span class="link" onclick="leaveGame()">Volver al inicio</span></div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ==========================================================================
+   CONFIG — pega aquí la URL /exec de tu Aplicación web de Apps Script
+   ========================================================================== */
+const API = 'https://script.google.com/macros/s/AKfycbyjJRp_ZokFiKyRK3-P2kA8shD1SR73zjP3DMbynf09BvCOpGDGNoHULXf-uDy40pEI/exec';
+
+/* Paleta de 6 colores (índices 0-5 = símbolos '0'-'5') */
+const COLORS = [
+  {c:'#F87171', n:'rojo'}, {c:'#FBBF24', n:'ámbar'}, {c:'#4ADE80', n:'verde'},
+  {c:'#22D3EE', n:'cian'}, {c:'#818CF8', n:'azul'},  {c:'#F472B6', n:'rosa'}
+];
+
+/* -------------------- estado -------------------- */
+let user = localStorage.getItem('pf_user') || '';
+let cfg = { digits:3, mode:'numbers', allowRepeats:false, isPublic:true, maxAttempts:0, turnSeconds:0 };
+let joinMeta = null;       // reglas de la partida a la que me uno
+let finishedMeta = null;   // reglas de la partida terminada (para revancha)
+let game = { id:'', digits:3, mode:'numbers', allowRepeats:false, maxAttempts:0, turnSeconds:0 };
+let gState = null;         // último estado recibido
+let pollTimer = null, tickTimer = null, passRequested = false, lastTurnStart = '';
+
+/* -------------------- utilidades -------------------- */
+const $ = id => document.getElementById(id);
+function show(name){
+  ['login','lobby','rank','create','wait','join','rematch','game'].forEach(s=>{
+    $('s-'+s).classList.toggle('hidden', s!==name);
+  });
+  if(name!=='game') stopTick();
+  if(!['game','wait'].includes(name)) stopPoll();
+  window.scrollTo(0,0);
+}
+function toast(msg, isErr){
+  const t=$('toast'); t.textContent=msg; t.className='toast show'+(isErr?' err':'');
+  clearTimeout(t._h); t._h=setTimeout(()=>t.className='toast',2600);
+}
+async function api(action, payload={}){
+  if(API.indexOf('PEGA_AQUI')===0){ toast('Configura la URL de Apps Script en index.html',true); throw new Error('API sin configurar'); }
+  const res = await fetch(API,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(Object.assign({action}, payload)) });
+  return res.json();
+}
+function esc(s){ return String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
+function noRepeat(v){ return new Set(v.split('')).size === v.length; }
+function validateLive(v, digits, allowRepeats){
+  if(v.length===0) return {cls:'',msg:''};
+  if(!/^[0-9]*$/.test(v)) return {cls:'err',msg:'Solo dígitos 0-9'};
+  if(!allowRepeats && !noRepeat(v)) return {cls:'err',msg:'Hay repetidos'};
+  if(v.length<digits) return {cls:'',msg:v.length+'/'+digits};
+  return {cls:'ok',msg:'¡Válido!'};
+}
+function rulesLabel(m){
+  const parts=[ (m.mode==='colors'?'colores':'números'), m.digits+' pos',
+    (m.allowRepeats?'repetidos ✓':'sin repetir') ];
+  if(m.maxAttempts>0) parts.push(m.maxAttempts+' intentos');
+  if(m.turnSeconds>0) parts.push(m.turnSeconds+'s/turno');
+  return parts.join(' · ');
+}
+function codeViewHTML(str, mode){
+  if(mode==='colors'){
+    let h=''; for(const ch of String(str)){ const col=COLORS[+ch]||{c:'#555'}; h+=`<span class="mini" style="background:${col.c}"></span>`; }
+    return `<span class="code-view">${h}</span>`;
+  }
+  return `<span class="n">${esc(str)}</span>`;
+}
+
+/* -------------------- color pads -------------------- */
+function makePad(slotsId, paletteId, getLen, onChange){
+  let value='';
+  const slots=$(slotsId), pal=$(paletteId);
+  function drawSlots(){
+    const len=getLen(); slots.innerHTML='';
+    for(let i=0;i<len;i++){
+      const d=document.createElement('div'); d.className='slot';
+      if(i<value.length){ d.classList.add('filled'); d.style.background=COLORS[+value[i]].c; }
+      slots.appendChild(d);
+    }
+  }
+  function drawPalette(){
+    pal.innerHTML='';
+    COLORS.forEach((col,idx)=>{
+      const b=document.createElement('button'); b.type='button'; b.className='sw'; b.style.background=col.c; b.title=col.n;
+      b.onclick=()=>{ if(value.length<getLen()){ value+=idx; drawSlots(); onChange&&onChange(value); } };
+      pal.appendChild(b);
+    });
+    const bs=document.createElement('button'); bs.type='button'; bs.className='sw bs'; bs.textContent='⌫';
+    bs.onclick=()=>{ value=value.slice(0,-1); drawSlots(); onChange&&onChange(value); };
+    pal.appendChild(bs);
+  }
+  drawPalette(); drawSlots();
+  return { get:()=>value, reset:()=>{value='';drawSlots();}, refresh:()=>{drawSlots();drawPalette();} };
+}
+const padC = makePad('slots-c','palette-c', ()=>cfg.digits, v=>setVal('secret-c-val', v, cfg.digits, cfg.allowRepeats));
+const padJ = makePad('slots-j','palette-j', ()=>joinMeta?joinMeta.digits:3, v=>setVal('secret-j-val', v, joinMeta.digits, joinMeta.allowRepeats));
+const padR = makePad('slots-r','palette-r', ()=>finishedMeta?finishedMeta.digits:3, v=>setVal('secret-r-val', v, finishedMeta.digits, finishedMeta.allowRepeats));
+const padG = makePad('slots-g','palette-g', ()=>game.digits, v=>setVal('g-guess-val', v, game.digits, game.allowRepeats));
+function setVal(elId, v, digits, allowRepeats){
+  const r=validateLive(v, digits, allowRepeats); $(elId).className='val '+r.cls; $(elId).textContent=r.msg;
+}
+/** Muestra input o pad según modo, en un contexto (c/j/r/g). */
+function applyMode(ctx, mode, inputId, padId, pad){
+  const isColors = mode==='colors';
+  $(inputId).classList.toggle('hidden', isColors);
+  $(padId).classList.toggle('hidden', !isColors);
+  if(isColors) pad.refresh(); else { $(inputId).value=''; }
+}
+
+/* -------------------- login -------------------- */
+function doLogin(){
+  const v=$('uname').value.trim();
+  if(v.length<2){ $('uname-val').className='val err'; $('uname-val').textContent='Mínimo 2 caracteres'; return; }
+  user=v; localStorage.setItem('pf_user', user); enterLobby();
+}
+function logout(){ localStorage.removeItem('pf_user'); user=''; show('login'); $('uname').value=''; }
+function enterLobby(){ $('hi-name').textContent=user; show('lobby'); refreshLobby(); }
+
+/* -------------------- lobby -------------------- */
+async function refreshLobby(){
+  $('open-list').innerHTML='<div class="empty">Cargando…</div>';
+  try{
+    const [open, mine] = await Promise.all([ api('listGames'), api('myGames',{username:user}) ]);
+    renderOpen(open.games||[]); renderMine(mine.games||[]);
+  }catch(e){ $('open-list').innerHTML='<div class="empty">No se pudo cargar</div>'; }
+}
+function renderOpen(games){
+  const box=$('open-list'); const list=games.filter(g=>g.p1!==user);
+  if(!list.length){ box.innerHTML='<div class="empty">No hay partidas abiertas. ¡Crea una!</div>'; return; }
+  box.innerHTML='';
+  list.forEach(g=>{
+    const el=document.createElement('div'); el.className='gitem';
+    el.innerHTML=`<div class="gid">${g.gameId}</div>
+      <div class="meta"><div class="who">${esc(g.p1)}</div><div class="det">${rulesLabel(g)}</div></div>`;
+    const b=document.createElement('button'); b.className='btn pink sm'; b.textContent='Unirse';
+    b.onclick=()=>openJoin(g); el.appendChild(b); box.appendChild(el);
+  });
+}
+function renderMine(games){
+  const box=$('mine-list');
+  if(!games.length){ $('mine-card').classList.add('hidden'); return; }
+  $('mine-card').classList.remove('hidden'); box.innerHTML='';
+  games.forEach(g=>{
+    const opp = g.p1===user ? g.p2 : g.p1;
+    const label = g.status==='waiting' ? 'Esperando rival' : ('vs '+(opp||'—'));
+    const el=document.createElement('div'); el.className='gitem';
+    el.innerHTML=`<div class="gid">${g.gameId}</div>
+      <div class="meta"><div class="who">${esc(label)}</div><div class="det">${rulesLabel(g)}${g.isPublic?'':' · privada'}</div></div>`;
+    const b=document.createElement('button'); b.className='btn sm'; b.textContent= g.status==='waiting'?'Ver':'Continuar';
+    b.onclick=()=>{ const meta={id:g.gameId,digits:g.digits,mode:g.mode,allowRepeats:g.allowRepeats,maxAttempts:g.maxAttempts,turnSeconds:g.turnSeconds};
+      if(g.status==='waiting'){ enterWait(meta); } else { enterGame(meta); } };
+    el.appendChild(b); box.appendChild(el);
+  });
+}
+
+/* -------------------- ranking -------------------- */
+async function openRank(){
+  show('rank'); $('rank-list').innerHTML='<div class="empty">Cargando…</div>';
+  try{
+    const res=await api('leaderboard');
+    const list=res.ranking||[];
+    if(!list.length){ $('rank-list').innerHTML='<div class="empty">Aún no hay partidas terminadas.</div>'; return; }
+    $('rank-list').innerHTML='';
+    list.forEach((r,i)=>{
+      const el=document.createElement('div'); el.className='rankrow'+(r.user===user?' me':'');
+      el.innerHTML=`<div class="pos">${i+1}</div><div class="nm">${esc(r.user)}</div>
+        <div class="wl">${r.wins} 🏆 · ${r.played} jug.</div>`;
+      $('rank-list').appendChild(el);
+    });
+  }catch(e){ $('rank-list').innerHTML='<div class="empty">No se pudo cargar</div>'; }
+}
+
+/* -------------------- crear -------------------- */
+function segPick(container, btn){ [...container.children].forEach(x=>x.classList.toggle('on', x===btn)); }
+$('seg-mode').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
+  cfg.mode=b.dataset.m; segPick($('seg-mode'),b);
+  padC.reset(); applyMode('c', cfg.mode, 'secret-c', 'pad-c', padC); $('secret-c-val').textContent=''; });
+$('seg-digits').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
+  cfg.digits=parseInt(b.dataset.d,10); segPick($('seg-digits'),b);
+  const inp=$('secret-c'); inp.maxLength=cfg.digits; inp.value=''; inp.placeholder='•'.repeat(cfg.digits);
+  padC.reset(); if(cfg.mode==='colors') padC.refresh(); $('secret-c-val').textContent=''; });
+$('seg-repeat').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
+  cfg.allowRepeats=b.dataset.r==='1'; segPick($('seg-repeat'),b);
+  setVal('secret-c-val', getSecret('c'), cfg.digits, cfg.allowRepeats); });
+$('seg-attempts').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
+  cfg.maxAttempts=parseInt(b.dataset.a,10); segPick($('seg-attempts'),b); });
+$('seg-time').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
+  cfg.turnSeconds=parseInt(b.dataset.t,10); segPick($('seg-time'),b); });
+$('seg-public').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
+  cfg.isPublic=b.dataset.p==='1'; segPick($('seg-public'),b);
+  $('pub-hint').textContent=cfg.isPublic?'Aparece en el lobby: cualquiera puede unirse.':'No aparece en el lobby: solo se entra con el código.'; });
+$('secret-c').addEventListener('input', e=>setVal('secret-c-val', e.target.value, cfg.digits, cfg.allowRepeats));
+
+function getSecret(ctx){
+  if(ctx==='c') return cfg.mode==='colors'? padC.get() : $('secret-c').value.trim();
+  if(ctx==='j') return joinMeta.mode==='colors'? padJ.get() : $('secret-j').value.trim();
+  if(ctx==='r') return finishedMeta.mode==='colors'? padR.get() : $('secret-r').value.trim();
+  if(ctx==='g') return game.mode==='colors'? padG.get() : $('g-guess').value.trim();
+}
+async function createGame(){
+  const secret=getSecret('c');
+  const r=validateLive(secret, cfg.digits, cfg.allowRepeats);
+  if(r.cls!=='ok'){ toast('Revisa tu código secreto',true); return; }
+  $('btn-create').disabled=true;
+  try{
+    const res=await api('createGame',{username:user, digits:cfg.digits, secret, mode:cfg.mode, numColors:6,
+      allowRepeats:cfg.allowRepeats, isPublic:cfg.isPublic, maxAttempts:cfg.maxAttempts, turnSeconds:cfg.turnSeconds});
+    if(!res.ok){ toast(res.error,true); return; }
+    localStorage.setItem('pf_secret_'+res.gameId, secret);
+    enterWait({id:res.gameId, digits:cfg.digits, mode:cfg.mode, allowRepeats:cfg.allowRepeats, maxAttempts:cfg.maxAttempts, turnSeconds:cfg.turnSeconds});
+  }catch(e){ toast('Error de red',true); } finally{ $('btn-create').disabled=false; }
+}
+
+/* -------------------- sala de espera -------------------- */
+function enterWait(meta){
+  game={id:meta.id, digits:meta.digits, mode:meta.mode, allowRepeats:meta.allowRepeats, maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0};
+  $('wait-code').textContent=meta.id; $('wait-info').textContent=rulesLabel(meta);
+  show('wait'); startPoll(pollWait);
+}
+async function pollWait(){
+  try{ const st=await api('state',{gameId:game.id, username:user});
+    if(st.ok && st.status==='active'){ enterGame(metaFromState(st)); } }catch(e){}
+}
+function cancelWait(){ stopPoll(); enterLobby(); }
+function copyCode(){ navigator.clipboard?.writeText(game.id).then(()=>toast('Código copiado: '+game.id)).catch(()=>toast(game.id)); }
+
+/* -------------------- unirse -------------------- */
+function openJoin(meta){
+  joinMeta={gameId:meta.gameId||meta.id, digits:meta.digits, mode:meta.mode, allowRepeats:meta.allowRepeats,
+    maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0};
+  $('join-code').textContent=joinMeta.gameId;
+  $('join-rules-txt').textContent='Reglas: '+rulesLabel(joinMeta)+'. Define tu código secreto.';
+  const inp=$('secret-j'); inp.maxLength=joinMeta.digits; inp.value=''; inp.placeholder='•'.repeat(joinMeta.digits);
+  padJ.reset(); applyMode('j', joinMeta.mode, 'secret-j', 'pad-j', padJ); $('secret-j-val').textContent='';
+  show('join');
+}
+$('secret-j').addEventListener('input', e=>setVal('secret-j-val', e.target.value, joinMeta.digits, joinMeta.allowRepeats));
+async function confirmJoin(){
+  const secret=getSecret('j');
+  const r=validateLive(secret, joinMeta.digits, joinMeta.allowRepeats);
+  if(r.cls!=='ok'){ toast('Revisa tu código secreto',true); return; }
+  $('btn-join').disabled=true;
+  try{
+    const res=await api('joinGame',{gameId:joinMeta.gameId, username:user, secret});
+    if(!res.ok){ toast(res.error,true); return; }
+    localStorage.setItem('pf_secret_'+joinMeta.gameId, secret);
+    enterGame({id:joinMeta.gameId, digits:joinMeta.digits, mode:joinMeta.mode, allowRepeats:joinMeta.allowRepeats, maxAttempts:joinMeta.maxAttempts, turnSeconds:joinMeta.turnSeconds});
+  }catch(e){ toast('Error de red',true); } finally{ $('btn-join').disabled=false; }
+}
+
+/* -------------------- revancha -------------------- */
+function openRematch(){
+  finishedMeta={gameId:gState.gameId, digits:gState.digits, mode:gState.mode, allowRepeats:gState.allowRepeats,
+    maxAttempts:gState.maxAttempts, turnSeconds:gState.turnSeconds};
+  $('rematch-rules-txt').textContent='Reglas: '+rulesLabel(finishedMeta)+'. Define tu nuevo código.';
+  const inp=$('secret-r'); inp.maxLength=finishedMeta.digits; inp.value=''; inp.placeholder='•'.repeat(finishedMeta.digits);
+  padR.reset(); applyMode('r', finishedMeta.mode, 'secret-r', 'pad-r', padR); $('secret-r-val').textContent='';
+  show('rematch');
+}
+$('secret-r').addEventListener('input', e=>setVal('secret-r-val', e.target.value, finishedMeta.digits, finishedMeta.allowRepeats));
+async function sendRematch(){
+  const secret=getSecret('r');
+  const r=validateLive(secret, finishedMeta.digits, finishedMeta.allowRepeats);
+  if(r.cls!=='ok'){ toast('Revisa tu código',true); return; }
+  $('btn-rematch').disabled=true;
+  try{
+    const res=await api('rematch',{gameId:finishedMeta.gameId, username:user, secret});
+    if(!res.ok){ toast(res.error,true); return; }
+    localStorage.setItem('pf_secret_'+res.gameId, secret);
+    enterWait({id:res.gameId, digits:finishedMeta.digits, mode:finishedMeta.mode, allowRepeats:finishedMeta.allowRepeats, maxAttempts:finishedMeta.maxAttempts, turnSeconds:finishedMeta.turnSeconds});
+  }catch(e){ toast('Error de red',true); } finally{ $('btn-rematch').disabled=false; }
+}
+async function goToRematch(rematchId){
+  try{
+    const st=await api('state',{gameId:rematchId, username:user});
+    if(!st.ok){ toast(st.error||'No disponible',true); return; }
+    const meta=metaFromState(st);
+    if(st.status==='active'){ enterGame(meta); }
+    else if(st.youAre===1){ enterWait(meta); }
+    else { openJoin(Object.assign({gameId:rematchId}, meta)); }
+  }catch(e){ toast('Error de red',true); }
+}
+
+/* -------------------- juego -------------------- */
+function metaFromState(st){
+  return {id:st.gameId, digits:parseInt(st.digits,10), mode:st.mode, allowRepeats:st.allowRepeats,
+    maxAttempts:st.maxAttempts||0, turnSeconds:st.turnSeconds||0};
+}
+function enterGame(meta){
+  game={id:meta.id, digits:parseInt(meta.digits,10), mode:meta.mode, allowRepeats:meta.allowRepeats,
+    maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0};
+  const inp=$('g-guess'); inp.maxLength=game.digits; inp.value=''; inp.placeholder='•'.repeat(game.digits);
+  padG.reset(); applyMode('g', game.mode, 'g-guess', 'pad-g', padG);
+  $('g-code').textContent=meta.id; $('g-guess-val').textContent='';
+  gState=null; passRequested=false; lastTurnStart='';
+  show('game'); refreshGame(); startPoll(refreshGame); startTick();
+}
+async function refreshGame(){
+  try{ const st=await api('state',{gameId:game.id, username:user}); if(st.ok) renderGame(st); }catch(e){}
+}
+$('g-guess').addEventListener('input', e=>setVal('g-guess-val', e.target.value, game.digits, game.allowRepeats));
+
+function renderGame(st){
+  if(!st) return;
+  gState=st;
+  if(typeof st.allowRepeats==='boolean') game.allowRepeats=st.allowRepeats;
+  if(st.mode) game.mode=st.mode;
+  if(st.digits) game.digits=parseInt(st.digits,10);
+  if(st.turnStartedAt!==lastTurnStart){ lastTurnStart=st.turnStartedAt; passRequested=false; }
+
+  const me=st.youAre; const oppName = me===1 ? st.p2 : st.p1;
+  $('g-vs').textContent=(oppName?('vs '+oppName):'esperando…')+' · '+rulesLabel(metaFromState(st));
+  $('g-oppname').textContent=oppName||'rival'; $('g-oppname2').textContent=oppName||'rival';
+
+  const local=localStorage.getItem('pf_secret_'+game.id);
+  $('g-mysecret').innerHTML = local ? codeViewHTML(local, game.mode) : '•••';
+
+  const mine=st.guesses.filter(g=>g.by===user);
+  const theirs=st.guesses.filter(g=>g.by!==user);
+  renderLog('g-mylog', mine, 'Aún no has adivinado');
+  renderLog('g-theirlog', theirs, 'Sin intentos todavía');
+
+  const banner=$('g-banner'); const rz=$('g-rematch-zone'); const turn=$('g-turn');
+  const guessarea=$('g-guessarea'); const legend=document.querySelector('.legend'); const statusrow=$('g-statusrow');
+
+  if(st.status==='finished'){
+    turn.classList.add('hidden'); guessarea.classList.add('hidden'); statusrow.classList.add('hidden'); legend.style.display='none';
+    stopTick();
+    const won = st.winner===user;
+    if(st.isDraw){
+      banner.innerHTML=`<div class="banner draw"><h2>Empate 🤝</h2><p>Nadie descifró el código dentro del límite de intentos</p></div>`;
+    }else{
+      banner.innerHTML=`<div class="banner ${won?'win':'lose'}"><h2>${won?'¡Ganaste! 🎉':'Perdiste'}</h2>
+        <p>${won?'Descifraste el código de '+esc(oppName||'tu rival'):(esc(st.winner)+' descifró tu código primero')}</p></div>`;
+    }
+    // Revancha
+    if(st.rematchId){
+      rz.innerHTML=`<button class="btn green" onclick="goToRematch('${st.rematchId}')">Ir a la revancha 🔁</button><div style="height:12px"></div>`;
+    }else{
+      rz.innerHTML=`<button class="btn green" onclick="openRematch()">Revancha 🔁</button><div style="height:12px"></div>`;
+    }
+    return;
+  }
+
+  banner.innerHTML=''; rz.innerHTML=''; legend.style.display='flex';
+  turn.classList.remove('hidden'); guessarea.classList.remove('hidden');
+
+  // intentos
+  const myAttempts = me===1 ? st.attemptsP1 : st.attemptsP2;
+  const canGuessAttempts = !(st.maxAttempts>0 && myAttempts>=st.maxAttempts);
+  if(st.maxAttempts>0 || st.turnSeconds>0){
+    statusrow.classList.remove('hidden');
+    if(st.maxAttempts>0){ const left=Math.max(0, st.maxAttempts-myAttempts);
+      const a=$('g-attempts'); a.classList.remove('hidden'); a.className='chip'+(left<=1?' hot':(left<=2?' warn':''));
+      a.textContent='Intentos: '+left+'/'+st.maxAttempts; }
+    else $('g-attempts').classList.add('hidden');
+    $('g-timer').classList.toggle('hidden', !(st.turnSeconds>0));
+  }else statusrow.classList.add('hidden');
+
+  if(st.yourTurn){
+    turn.className='turnbar mine'; $('g-turn-txt').textContent='Es tu turno — adivina el código rival';
+    const ok=canGuessAttempts;
+    $('g-guess-btn').disabled=!ok; $('g-guess').disabled=!ok;
+    if(!ok) $('g-turn-txt').textContent='Sin intentos restantes — esperando al rival';
+  }else{
+    turn.className='turnbar theirs';
+    $('g-turn-txt').textContent=(st.whoseTurn?('Turno de '+st.whoseTurn):'Esperando…')+' …';
+    $('g-guess-btn').disabled=true; $('g-guess').disabled=true;
+  }
+  updateTimer();
+}
+function renderLog(id, arr, emptyMsg){
+  const box=$(id);
+  if(!arr.length){ box.innerHTML=`<div class="empty">${emptyMsg}</div>`; return; }
+  box.innerHTML='';
+  arr.slice().reverse().forEach(g=>{
+    const el=document.createElement('div'); el.className='g';
+    let pips='';
+    for(let i=0;i<g.fijas;i++) pips+='<span class="pip f"></span>';
+    for(let i=0;i<g.picas;i++) pips+='<span class="pip p"></span>';
+    if(g.fijas+g.picas===0) pips='<span class="scoretxt">nada</span>';
+    el.innerHTML=`${codeViewHTML(g.guess, game.mode)}
+      <span class="scoretxt">${g.fijas}F · ${g.picas}P</span>
+      <span class="pips">${pips}</span>`;
+    box.appendChild(el);
+  });
+}
+async function submitGuess(){
+  const guess=getSecret('g');
+  const r=validateLive(guess, game.digits, game.allowRepeats);
+  if(r.cls!=='ok'){ toast('Intento inválido',true); return; }
+  $('g-guess-btn').disabled=true;
+  try{
+    const res=await api('guess',{gameId:game.id, username:user, guess});
+    if(!res.ok){ toast(res.error,true); $('g-guess-btn').disabled=false; return; }
+    $('g-guess').value=''; padG.reset(); $('g-guess-val').textContent='';
+    if(res.win) toast('¡'+res.fijas+' fijas! 🎉'); else if(res.draw) toast('Empate 🤝'); else toast(res.fijas+' fijas · '+res.picas+' picas');
+    refreshGame();
+  }catch(e){ toast('Error de red',true); $('g-guess-btn').disabled=false; }
+}
+function leaveGame(){ stopPoll(); stopTick(); enterLobby(); }
+
+/* -------------------- cronómetro por turno -------------------- */
+function updateTimer(){
+  if(!gState || gState.status!=='active' || !(gState.turnSeconds>0)){ return; }
+  const started=new Date(gState.turnStartedAt).getTime();
+  const remaining=Math.max(0, gState.turnSeconds - Math.floor((Date.now()-started)/1000));
+  const t=$('g-timer'); t.classList.remove('hidden');
+  const mm=Math.floor(remaining/60), ss=remaining%60;
+  t.textContent='⏱ '+(mm>0?mm+':'+String(ss).padStart(2,'0'):ss+'s');
+  t.className='chip'+(remaining<=5?' hot':(remaining<=10?' warn':''));
+  if(remaining<=0 && !passRequested){
+    passRequested=true;
+    api('passTurn',{gameId:game.id, username:user}).then(()=>refreshGame()).catch(()=>{});
+  }
+}
+function startTick(){ stopTick(); tickTimer=setInterval(updateTimer, 1000); }
+function stopTick(){ if(tickTimer){ clearInterval(tickTimer); tickTimer=null; } }
+
+/* -------------------- polling -------------------- */
+function startPoll(fn){ stopPoll(); pollTimer=setInterval(fn, 2500); }
+function stopPoll(){ if(pollTimer){ clearInterval(pollTimer); pollTimer=null; } }
+
+/* -------------------- arranque -------------------- */
+if(user){ enterLobby(); } else { show('login'); }
+</script>
+</body>
+</html>
