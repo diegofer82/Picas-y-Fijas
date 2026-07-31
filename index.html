@@ -104,6 +104,10 @@
   .chip.hot{color:var(--pink);border-color:rgba(244,114,182,.5)}
 
   .mysecret{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted);margin-bottom:14px;flex-wrap:wrap}
+  .players{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;font-size:16px}
+  .pl{display:inline-flex;align-items:center;gap:2px}
+  .pl b{font-weight:700;color:var(--text)}
+  .vs-sep{color:var(--muted);font-size:13px;font-weight:600}
   .mysecret .code-view{display:inline-flex;align-items:center;gap:5px}
   .n{font-family:'JetBrains Mono',monospace;font-weight:800;letter-spacing:4px;color:var(--text)}
   /* Cero con barra: distingue claramente 0 de 8 */
@@ -381,9 +385,10 @@
   <!-- JUEGO -->
   <section id="s-game" class="hidden">
     <div class="card">
+      <div class="players" id="g-players"></div>
       <div class="mysecret">
-        <span><span data-i18n="game_match">Partida</span> <b class="n" style="letter-spacing:3px" id="g-code"></b> · <span id="g-vs"></span></span>
-        <span class="code-view"><span id="g-myflag"></span><span data-i18n="game_yourcode">Tu código:</span>&nbsp;<span id="g-mysecret"></span></span>
+        <span><span data-i18n="game_match">Partida</span> <b class="n" style="letter-spacing:3px" id="g-code"></b> · <span id="g-rules"></span></span>
+        <span class="code-view"><span data-i18n="game_yourcode">Tu código:</span>&nbsp;<span id="g-mysecret"></span></span>
       </div>
 
       <div id="g-banner"></div>
@@ -779,6 +784,10 @@ function flagHTML(cc){
   if(!/^[a-z]{2}$/.test(cc)) return '';
   return `<img class="flag" src="https://flagcdn.com/20x15/${cc}.png" srcset="https://flagcdn.com/40x30/${cc}.png 2x" alt="${cc.toUpperCase()}" loading="lazy">`;
 }
+/* Bandera + nombre en negrita (estilo del ranking), reutilizable */
+function playerChip(cc, name){ return `<span class="pl">${flagHTML(cc)}<b>${esc(name||'—')}</b></span>`; }
+/* "vs" + bandera + nombre (para historial y mis partidas) */
+function vsPlayer(cc, name){ return `vs ${playerChip(cc, name)}`; }
 
 /* -------------------- utilidades -------------------- */
 const $ = id => document.getElementById(id);
@@ -982,7 +991,7 @@ function renderOpen(games){
   list.forEach(g=>{
     const el=document.createElement('div'); el.className='gitem';
     el.innerHTML=`<div class="gid">${g.gameId}</div>
-      <div class="meta"><div class="who">${flagHTML(g.country1)}${esc(g.p1)}</div><div class="det">${rulesLabel(g)}</div></div>
+      <div class="meta"><div class="who">${playerChip(g.country1, g.p1)}</div><div class="det">${rulesLabel(g)}</div></div>
       <span class="pill" style="margin-right:2px">1/2</span>`;
     const b=document.createElement('button'); b.className='btn pink sm'; b.textContent=t('join_btn');
     b.onclick=()=>openJoin(g); el.appendChild(b); box.appendChild(el);
@@ -995,12 +1004,12 @@ function renderMine(games){
   games.forEach(g=>{
     const opp = g.p1===user ? g.p2 : g.p1;
     const oppCountry = g.p1===user ? g.country2 : g.country1;
-    const label = g.status==='waiting' ? t('mine_waiting') : t('vs',{name:opp||'—'});
+    const who = g.status==='waiting' ? esc(t('mine_waiting')) : vsPlayer(oppCountry, opp||'—');
     const el=document.createElement('div'); el.className='gitem';
     const cnt = g.status==='waiting' ? '1/2' : '2/2';
     const cntCls = g.status==='waiting' ? 'pill' : 'pill f';
     el.innerHTML=`<div class="gid">${g.gameId}</div>
-      <div class="meta"><div class="who">${g.status==='waiting'?'':flagHTML(oppCountry)}${esc(label)}</div><div class="det">${rulesLabel(g)}${g.isPublic?'':' · '+t('private_tag')}</div></div>
+      <div class="meta"><div class="who">${who}</div><div class="det">${rulesLabel(g)}${g.isPublic?'':' · '+t('private_tag')}</div></div>
       <span class="${cntCls}" style="margin-right:2px">${cnt}</span>`;
     const b=document.createElement('button'); b.className='btn sm'; b.textContent= g.status==='waiting'?t('see_btn'):t('continue_btn');
     b.onclick=()=>{ const meta={id:g.gameId,digits:g.digits,mode:g.mode,numColors:g.numColors,allowRepeats:g.allowRepeats,maxAttempts:g.maxAttempts,turnSeconds:g.turnSeconds};
@@ -1018,7 +1027,7 @@ async function openRank(){
     $('rank-list').innerHTML='';
     list.forEach((r,i)=>{
       const el=document.createElement('div'); el.className='rankrow'+(r.user===user?' me':'');
-      el.innerHTML=`<div class="pos">${i+1}</div><div class="nm">${flagHTML(r.country)}${esc(r.user)}</div>
+      el.innerHTML=`<div class="pos">${i+1}</div><div class="nm">${playerChip(r.country, r.user)}</div>
         <div class="wl">${t('rank_wl',{wins:r.wins,played:r.played})}</div>`;
       $('rank-list').appendChild(el);
     });
@@ -1039,7 +1048,7 @@ async function openHistory(){
       const badgeCls = h.result==='win'?'pill f':(h.result==='draw'?'pill':'pill p');
       let date=''; try{ date=new Date(h.updatedAt).toLocaleDateString(LOCALE[lang]||'es',{day:'2-digit',month:'short'}); }catch(e){}
       const el=document.createElement('div'); el.className='gitem';
-      el.innerHTML=`<div class="meta"><div class="who">${flagHTML(h.oppCountry)}${t('vs',{name:esc(h.opp||'—')})}</div>
+      el.innerHTML=`<div class="meta"><div class="who">${vsPlayer(h.oppCountry, h.opp||'—')}</div>
         <div class="det">${rulesLabel(h)} · ${date}</div></div>
         <span class="${badgeCls}">${badge}</span>`;
       $('hist-list').appendChild(el);
@@ -1218,12 +1227,16 @@ function renderGame(st){
 
   const me=st.youAre; const oppName = me===1 ? st.p2 : st.p1; const oppLabel = oppName||t('rival');
   const oppCountry = me===1 ? st.country2 : st.country1;
-  $('g-vs').innerHTML=(oppName? flagHTML(oppCountry)+t('vs',{name:esc(oppName)}) : t('waiting_short'))+' · '+rulesLabel(metaFromState(st));
+  let leftCC, leftName, rightCC, rightName;
+  if(me===0){ leftCC=st.country1; leftName=st.p1; rightCC=st.country2; rightName=st.p2; }
+  else { leftCC=myCountry; leftName=user; rightCC=oppCountry; rightName=oppName; }
+  const rightChip = rightName ? playerChip(rightCC, rightName) : `<span class="pl">${t('waiting_short')}</span>`;
+  $('g-players').innerHTML = playerChip(leftCC, leftName) + `<span class="vs-sep">vs</span>` + rightChip;
+  $('g-rules').textContent = rulesLabel(metaFromState(st));
   $('colhead-mine').textContent=t('colhead_mine',{name:oppLabel});
   $('colhead-theirs').textContent=t('colhead_theirs',{name:oppLabel});
 
   const local=localStorage.getItem('pf_secret_'+game.id);
-  $('g-myflag').innerHTML = flagHTML(myCountry);
   $('g-mysecret').innerHTML = local ? codeViewHTML(local, game.mode) : '•••';
 
   const mine=st.guesses.filter(g=>g.by===user);
