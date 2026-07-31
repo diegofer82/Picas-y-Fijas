@@ -75,7 +75,6 @@
   .val{font-size:12px;margin-top:8px;min-height:16px}
   .val.err{color:var(--pink)} .val.ok{color:var(--fija)}
 
-  /* Color pad */
   .pad{margin-top:4px}
   .slots{display:flex;gap:8px;justify-content:center;margin-bottom:12px;min-height:40px}
   .slot{width:40px;height:40px;border-radius:10px;border:2px dashed var(--edge);background:#141126}
@@ -107,7 +106,7 @@
   .mysecret{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted);margin-bottom:14px;flex-wrap:wrap}
   .mysecret .code-view{display:inline-flex;align-items:center;gap:5px}
   .n{font-family:'JetBrains Mono',monospace;font-weight:800;letter-spacing:4px;color:var(--text)}
-  /* Cero con barra: distingue claramente 0 de 8 en las cifras */
+  /* Cero con barra: distingue claramente 0 de 8 */
   .code,.n,.seg.mono button,#wait-code,.gid,.chip,.scoretxt,.rankrow .pos,.rankrow .wl{
     font-variant-numeric:slashed-zero;
     font-feature-settings:"zero" 1;
@@ -163,69 +162,75 @@
 
   <div class="brand">
     <div class="logo">P·F</div>
-    <div><h1>Picas y Fijas</h1><div class="sub">Duelo de deducción online</div></div>
+    <div><h1>Picas y Fijas</h1><div class="sub" data-i18n="brand_sub">Duelo de deducción online</div></div>
   </div>
 
   <!-- LOGIN -->
   <section id="s-login" class="card">
-    <h2>Elige tu nombre de jugador</h2>
-    <p class="hint">Con este nombre aparecerás en las partidas y en el ranking. No hace falta contraseña.</p>
-    <label for="uname">Nombre de usuario</label>
-    <input type="text" id="uname" maxlength="24" placeholder="p.ej. Diego" autocomplete="off">
+    <h2 data-i18n="login_title">Elige tu nombre de jugador</h2>
+    <p class="hint" data-i18n="login_hint">Con este nombre aparecerás en las partidas y en el ranking. No hace falta contraseña.</p>
+    <label data-i18n="login_lang">Idioma</label>
+    <div class="seg" id="seg-lang">
+      <button data-lang="es">Español</button>
+      <button data-lang="en">English</button>
+      <button data-lang="fr">Français</button>
+    </div>
+    <label for="uname" data-i18n="login_name">Nombre de usuario</label>
+    <input type="text" id="uname" maxlength="24" data-i18n-ph="login_name_ph" placeholder="p.ej. Diego" autocomplete="off">
     <div class="val" id="uname-val"></div>
-    <button class="btn" onclick="doLogin()">Entrar</button>
+    <button class="btn" onclick="doLogin()" data-i18n="login_enter">Entrar</button>
   </section>
 
   <!-- LOBBY -->
   <section id="s-lobby" class="hidden">
     <div class="card">
-      <h2>Hola, <span id="hi-name"></span> 👋</h2>
-      <p class="hint">Crea una partida y comparte el código, o únete a una pública abierta.</p>
+      <h2 id="lobby-greet"></h2>
+      <p class="hint" data-i18n="lobby_hint">Crea una partida y comparte el código, o únete a una pública abierta.</p>
       <div class="row">
-        <button class="btn" onclick="show('create')">Crear partida</button>
-        <button class="btn ghost" onclick="openRank()">Ranking</button>
+        <button class="btn" onclick="show('create')" data-i18n="lobby_create">Crear partida</button>
+        <button class="btn ghost" onclick="openRank()" data-i18n="lobby_ranking">Ranking</button>
       </div>
       <div style="height:10px"></div>
-      <button class="btn ghost" onclick="refreshLobby()">Actualizar lista</button>
+      <button class="btn ghost" onclick="refreshLobby()" data-i18n="lobby_refresh">Actualizar lista</button>
     </div>
 
     <div class="card" id="mine-card">
-      <h2>Tus partidas activas</h2>
+      <h2 data-i18n="lobby_mine">Tus partidas activas</h2>
       <div class="list" id="mine-list"><div class="empty">—</div></div>
     </div>
 
     <div class="card">
-      <h2>Partidas públicas abiertas</h2>
-      <div class="list" id="open-list"><div class="empty">Cargando…</div></div>
+      <h2 data-i18n="lobby_open">Partidas públicas abiertas</h2>
+      <div class="list" id="open-list"><div class="empty">…</div></div>
     </div>
 
-    <div class="foot"><span class="link" onclick="logout()">Cambiar de usuario</span></div>
+    <div class="foot"><span class="link" onclick="logout()" data-i18n="lobby_changeuser">Cambiar de usuario</span></div>
   </section>
 
   <!-- RANKING -->
   <section id="s-rank" class="hidden">
     <div class="card">
-      <h2>Ranking global 🏆</h2>
-      <p class="hint">Victorias totales por jugador. Se actualiza con cada partida terminada.</p>
-      <div class="list" id="rank-list"><div class="empty">Cargando…</div></div>
+      <h2 data-i18n="rank_title">Ranking global 🏆</h2>
+      <p class="hint" data-i18n="rank_hint">Victorias totales por jugador. Se actualiza con cada partida terminada.</p>
+      <div class="list" id="rank-list"><div class="empty">…</div></div>
       <div style="height:16px"></div>
-      <button class="btn ghost" onclick="show('lobby')">Volver</button>
+      <button class="btn ghost" onclick="show('lobby')" data-i18n="back">Volver</button>
     </div>
   </section>
 
   <!-- CREAR -->
   <section id="s-create" class="hidden">
     <div class="card">
-      <h2>Nueva partida</h2>
-      <p class="hint">Configura las reglas y define tu código secreto.</p>
+      <h2 data-i18n="create_title">Nueva partida</h2>
+      <p class="hint" data-i18n="create_hint">Configura las reglas y define tu código secreto.</p>
 
-      <label>Modo</label>
+      <label data-i18n="lbl_mode">Modo</label>
       <div class="seg" id="seg-mode">
-        <button data-m="numbers" class="on">Números 0-9</button>
-        <button data-m="colors">Colores</button>
+        <button data-m="numbers" class="on" data-i18n="mode_numbers">Números 0-9</button>
+        <button data-m="colors" data-i18n="mode_colors">Colores</button>
       </div>
 
-      <label>Posiciones</label>
+      <label data-i18n="lbl_positions">Posiciones</label>
       <div class="seg mono" id="seg-digits">
         <button data-d="3" class="on">3</button>
         <button data-d="4">4</button>
@@ -233,88 +238,88 @@
         <button data-d="6">6</button>
       </div>
 
-      <label>Repetidos</label>
+      <label data-i18n="lbl_repeats">Repetidos</label>
       <div class="seg" id="seg-repeat">
-        <button data-r="0" class="on">No permitir</button>
-        <button data-r="1">Permitir</button>
+        <button data-r="0" class="on" data-i18n="rep_no">No permitir</button>
+        <button data-r="1" data-i18n="rep_yes">Permitir</button>
       </div>
 
-      <label>Límite de intentos</label>
+      <label data-i18n="lbl_attempts">Límite de intentos</label>
       <div class="seg mono" id="seg-attempts">
-        <button data-a="0" class="on">Sin límite</button>
+        <button data-a="0" class="on" data-i18n="nolimit">Sin límite</button>
         <button data-a="6">6</button>
         <button data-a="10">10</button>
       </div>
 
-      <label>Tiempo por turno</label>
+      <label data-i18n="lbl_time">Tiempo por turno</label>
       <div class="seg mono" id="seg-time">
-        <button data-t="0" class="on">Sin límite</button>
+        <button data-t="0" class="on" data-i18n="nolimit">Sin límite</button>
         <button data-t="30">30s</button>
         <button data-t="60">60s</button>
         <button data-t="120">2min</button>
       </div>
 
-      <label>Visibilidad</label>
+      <label data-i18n="lbl_visibility">Visibilidad</label>
       <div class="seg" id="seg-public">
-        <button data-p="1" class="on">Pública</button>
-        <button data-p="0">Privada</button>
+        <button data-p="1" class="on" data-i18n="vis_public">Pública</button>
+        <button data-p="0" data-i18n="vis_private">Privada</button>
       </div>
-      <p class="hint" id="pub-hint" style="margin:8px 0 0">Aparece en el lobby: cualquiera puede unirse.</p>
+      <p class="hint" id="pub-hint" data-i18n="pub_hint_public" style="margin:8px 0 0">Aparece en el lobby: cualquiera puede unirse.</p>
 
-      <label>Tu código secreto</label>
+      <label data-i18n="lbl_secret">Tu código secreto</label>
       <input type="text" id="secret-c" class="code" inputmode="numeric" maxlength="3" placeholder="•••">
       <div class="pad hidden" id="pad-c"><div class="slots" id="slots-c"></div><div class="palette" id="palette-c"></div></div>
       <div class="val" id="secret-c-val"></div>
 
-      <button class="btn" id="btn-create" onclick="createGame()">Crear y esperar rival</button>
+      <button class="btn" id="btn-create" onclick="createGame()" data-i18n="create_btn">Crear y esperar rival</button>
       <div style="height:10px"></div>
-      <button class="btn ghost" onclick="show('lobby')">Volver</button>
+      <button class="btn ghost" onclick="show('lobby')" data-i18n="back">Volver</button>
     </div>
   </section>
 
   <!-- SALA DE ESPERA -->
   <section id="s-wait" class="hidden">
     <div class="card" style="text-align:center">
-      <h2>Partida creada</h2>
-      <p class="hint">Comparte este código con tu rival. Empieza en cuanto se una.</p>
+      <h2 data-i18n="wait_title">Partida creada</h2>
+      <p class="hint" data-i18n="wait_hint">Comparte este código con tu rival. Empieza en cuanto se una.</p>
       <div style="font-family:'JetBrains Mono',monospace;font-size:44px;font-weight:800;letter-spacing:10px;color:var(--accent);margin:6px 0 4px" id="wait-code">····</div>
       <div class="scoretxt" id="wait-info"></div>
       <div style="height:16px"></div>
-      <button class="btn ghost sm" style="width:100%" onclick="copyCode()">Copiar código</button>
+      <button class="btn ghost sm" style="width:100%" onclick="copyCode()" data-i18n="wait_copy">Copiar código</button>
       <div style="height:10px"></div>
-      <div class="scoretxt">Esperando a que alguien se una…</div>
+      <div class="scoretxt" data-i18n="wait_waiting">Esperando a que alguien se una…</div>
       <div style="height:16px"></div>
-      <button class="btn ghost" onclick="cancelWait()">Cancelar y volver</button>
+      <button class="btn ghost" onclick="cancelWait()" data-i18n="wait_cancel">Cancelar y volver</button>
     </div>
   </section>
 
   <!-- UNIRSE -->
   <section id="s-join" class="hidden">
     <div class="card">
-      <h2>Unirse a <span id="join-code" style="font-family:'JetBrains Mono',monospace;color:var(--accent)"></span></h2>
+      <h2><span data-i18n="join_to">Unirse a</span> <span id="join-code" style="font-family:'JetBrains Mono',monospace;color:var(--accent)"></span></h2>
       <p class="hint" id="join-rules-txt">Define tu código secreto.</p>
-      <label>Tu código secreto</label>
+      <label data-i18n="lbl_secret">Tu código secreto</label>
       <input type="text" id="secret-j" class="code" inputmode="numeric" maxlength="3" placeholder="•••">
       <div class="pad hidden" id="pad-j"><div class="slots" id="slots-j"></div><div class="palette" id="palette-j"></div></div>
       <div class="val" id="secret-j-val"></div>
-      <button class="btn" id="btn-join" onclick="confirmJoin()">Unirse y jugar</button>
+      <button class="btn" id="btn-join" onclick="confirmJoin()" data-i18n="join_btn2">Unirse y jugar</button>
       <div style="height:10px"></div>
-      <button class="btn ghost" onclick="show('lobby')">Volver</button>
+      <button class="btn ghost" onclick="show('lobby')" data-i18n="back">Volver</button>
     </div>
   </section>
 
-  <!-- REVANCHA (definir nuevo secreto) -->
+  <!-- REVANCHA -->
   <section id="s-rematch" class="hidden">
     <div class="card">
-      <h2>Revancha 🔁</h2>
+      <h2 data-i18n="rematch_title">Revancha 🔁</h2>
       <p class="hint" id="rematch-rules-txt">Mismas reglas, mismo rival. Define tu nuevo código secreto.</p>
-      <label>Tu nuevo código secreto</label>
+      <label data-i18n="lbl_newsecret">Tu nuevo código secreto</label>
       <input type="text" id="secret-r" class="code" inputmode="numeric" maxlength="3" placeholder="•••">
       <div class="pad hidden" id="pad-r"><div class="slots" id="slots-r"></div><div class="palette" id="palette-r"></div></div>
       <div class="val" id="secret-r-val"></div>
-      <button class="btn green" id="btn-rematch" onclick="sendRematch()">Enviar revancha</button>
+      <button class="btn green" id="btn-rematch" onclick="sendRematch()" data-i18n="rematch_send">Enviar revancha</button>
       <div style="height:10px"></div>
-      <button class="btn ghost" onclick="enterLobby()">Volver al inicio</button>
+      <button class="btn ghost" onclick="enterLobby()" data-i18n="back_home">Volver al inicio</button>
     </div>
   </section>
 
@@ -322,8 +327,8 @@
   <section id="s-game" class="hidden">
     <div class="card">
       <div class="mysecret">
-        <span>Partida <b class="n" style="letter-spacing:3px" id="g-code"></b> · <span id="g-vs"></span></span>
-        <span class="code-view">Tu código:&nbsp;<span id="g-mysecret"></span></span>
+        <span><span data-i18n="game_match">Partida</span> <b class="n" style="letter-spacing:3px" id="g-code"></b> · <span id="g-vs"></span></span>
+        <span class="code-view"><span data-i18n="game_yourcode">Tu código:</span>&nbsp;<span id="g-mysecret"></span></span>
       </div>
 
       <div id="g-banner"></div>
@@ -340,28 +345,28 @@
           <input type="text" id="g-guess" class="code" inputmode="numeric" placeholder="•••" style="letter-spacing:8px;font-size:22px">
           <div class="pad hidden" id="pad-g"><div class="slots" id="slots-g"></div><div class="palette" id="palette-g"></div></div>
         </div>
-        <button class="btn" id="g-guess-btn" onclick="submitGuess()">Adivinar</button>
+        <button class="btn" id="g-guess-btn" onclick="submitGuess()" data-i18n="guess_btn">Adivinar</button>
       </div>
       <div class="val" id="g-guess-val" style="margin-top:0;margin-bottom:8px"></div>
 
       <div class="legend">
-        <span><span class="pip f"></span> Fija = posición correcta</span>
-        <span><span class="pip p"></span> Pica = presente, mal colocada</span>
+        <span><span class="pip f"></span> <span data-i18n="legend_fija">F = posición correcta</span></span>
+        <span><span class="pip p"></span> <span data-i18n="legend_pica">P = presente, mal colocada</span></span>
       </div>
     </div>
 
     <div class="cols">
       <div class="card">
-        <div class="colhead">Tus intentos → código de <span id="g-oppname">rival</span></div>
-        <div class="glog" id="g-mylog"><div class="empty">Aún no has adivinado</div></div>
+        <div class="colhead" id="colhead-mine"></div>
+        <div class="glog" id="g-mylog"></div>
       </div>
       <div class="card">
-        <div class="colhead">Intentos de <span id="g-oppname2">rival</span> → tu código</div>
-        <div class="glog" id="g-theirlog"><div class="empty">Sin intentos todavía</div></div>
+        <div class="colhead" id="colhead-theirs"></div>
+        <div class="glog" id="g-theirlog"></div>
       </div>
     </div>
 
-    <div class="foot"><span class="link" onclick="leaveGame()">Volver al inicio</span></div>
+    <div class="foot"><span class="link" onclick="leaveGame()" data-i18n="back_home">Volver al inicio</span></div>
   </section>
 
 </div>
@@ -374,19 +379,228 @@
    ========================================================================== */
 const API = 'https://script.google.com/macros/s/AKfycbyjJRp_ZokFiKyRK3-P2kA8shD1SR73zjP3DMbynf09BvCOpGDGNoHULXf-uDy40pEI/exec';
 
-/* Paleta de 6 colores (índices 0-5 = símbolos '0'-'5') */
+/* ==========================================================================
+   TRADUCCIONES  (es / en / fr)
+   ========================================================================== */
+const I18N = {
+  es:{
+    brand_sub:"Duelo de deducción online",
+    login_title:"Elige tu nombre de jugador",
+    login_hint:"Con este nombre aparecerás en las partidas y en el ranking. No hace falta contraseña.",
+    login_lang:"Idioma", login_name:"Nombre de usuario", login_name_ph:"p.ej. Diego",
+    login_enter:"Entrar", login_min:"Mínimo 2 caracteres",
+    lobby_greeting:"Hola, {name} 👋",
+    lobby_hint:"Crea una partida y comparte el código, o únete a una pública abierta.",
+    lobby_create:"Crear partida", lobby_ranking:"Ranking", lobby_refresh:"Actualizar lista",
+    lobby_mine:"Tus partidas activas", lobby_open:"Partidas públicas abiertas", lobby_changeuser:"Cambiar de usuario",
+    loading:"Cargando…", load_error:"No se pudo cargar", open_empty:"No hay partidas abiertas. ¡Crea una!",
+    join_btn:"Unirse", mine_waiting:"Esperando rival", see_btn:"Ver", continue_btn:"Continuar", private_tag:"privada",
+    rank_title:"Ranking global 🏆", rank_hint:"Victorias totales por jugador. Se actualiza con cada partida terminada.",
+    rank_empty:"Aún no hay partidas terminadas.", rank_wl:"{wins} 🏆 · {played} jug.", back:"Volver",
+    create_title:"Nueva partida", create_hint:"Configura las reglas y define tu código secreto.",
+    lbl_mode:"Modo", mode_numbers:"Números 0-9", mode_colors:"Colores",
+    lbl_positions:"Posiciones", lbl_repeats:"Repetidos", rep_no:"No permitir", rep_yes:"Permitir",
+    lbl_attempts:"Límite de intentos", nolimit:"Sin límite", lbl_time:"Tiempo por turno",
+    lbl_visibility:"Visibilidad", vis_public:"Pública", vis_private:"Privada",
+    pub_hint_public:"Aparece en el lobby: cualquiera puede unirse.",
+    pub_hint_private:"No aparece en el lobby: solo se entra con el código.",
+    lbl_secret:"Tu código secreto", create_btn:"Crear y esperar rival",
+    wait_title:"Partida creada", wait_hint:"Comparte este código con tu rival. Empieza en cuanto se una.",
+    wait_copy:"Copiar código", wait_waiting:"Esperando a que alguien se una…", wait_cancel:"Cancelar y volver",
+    copied:"Código copiado: {code}",
+    join_to:"Unirse a", join_rules:"Reglas: {rules}. Define tu código secreto.", join_btn2:"Unirse y jugar",
+    rematch_title:"Revancha 🔁", rematch_hint:"Mismas reglas, mismo rival. Define tu nuevo código secreto.",
+    rematch_rules:"Reglas: {rules}. Define tu nuevo código.", lbl_newsecret:"Tu nuevo código secreto",
+    rematch_send:"Enviar revancha", back_home:"Volver al inicio",
+    game_match:"Partida", game_yourcode:"Tu código:", vs:"vs {name}", waiting_short:"esperando…",
+    guess_btn:"Adivinar", legend_fija:"F = posición correcta", legend_pica:"P = presente, mal colocada",
+    colhead_mine:"Tus intentos → código de {name}", colhead_theirs:"Intentos de {name} → tu código",
+    rival:"rival", log_empty_mine:"Aún no has adivinado", log_empty_theirs:"Sin intentos todavía", log_nada:"nada",
+    your_turn:"Es tu turno — adivina el código rival", no_attempts_wait:"Sin intentos restantes — esperando al rival",
+    tiebreak_you:"⚡ Último intento: {name} ya descifró tu código. ¡Aciértalo para empatar!",
+    turn_of:"Turno de {name} …", waiting_generic:"Esperando… …",
+    solved_wait:"✅ ¡Descifraste su código! Esperando el último intento de {name} para ver si empata…",
+    attempts_chip:"Intentos: {left}/{max}",
+    win_title:"¡Ganaste! 🎉", lose_title:"Perdiste", draw_title:"Empate 🤝",
+    win_msg:"Descifraste el código de {name}", lose_msg:"{name} descifró tu código primero",
+    draw_both:"Ambos descifraron el código en el mismo número de intentos",
+    draw_limit:"Nadie descifró el código dentro del límite de intentos",
+    rematch_go:"Ir a la revancha 🔁", rematch_btn:"Revancha 🔁",
+    toast_tie:"¡Empate! ambos acertaron 🤝", toast_solved:"✅ ¡Descifrado! esperando el último intento del rival",
+    toast_score:"{f} fijas · {p} picas",
+    invalid_guess:"Intento inválido", check_secret:"Revisa tu código secreto", check_code:"Revisa tu código",
+    net_error:"Error de red", not_available:"No disponible", api_not_set:"Configura la URL de Apps Script en index.html",
+    val_digits:"Solo dígitos 0-9", val_repeats:"Hay repetidos", val_valid:"¡Válido!",
+    rl_colors:"colores", rl_numbers:"números", rl_pos:"{n} pos", rl_norepeat:"sin repetir", rl_repeat:"repetidos ✓",
+    rl_attempts:"{n} intentos", rl_turn:"{n}s/turno"
+  },
+  en:{
+    brand_sub:"Online deduction duel",
+    login_title:"Choose your player name",
+    login_hint:"This name appears in games and on the ranking. No password needed.",
+    login_lang:"Language", login_name:"Username", login_name_ph:"e.g. Diego",
+    login_enter:"Enter", login_min:"At least 2 characters",
+    lobby_greeting:"Hi, {name} 👋",
+    lobby_hint:"Create a game and share the code, or join an open public one.",
+    lobby_create:"Create game", lobby_ranking:"Ranking", lobby_refresh:"Refresh list",
+    lobby_mine:"Your active games", lobby_open:"Open public games", lobby_changeuser:"Change user",
+    loading:"Loading…", load_error:"Couldn't load", open_empty:"No open games. Create one!",
+    join_btn:"Join", mine_waiting:"Waiting for opponent", see_btn:"View", continue_btn:"Continue", private_tag:"private",
+    rank_title:"Global ranking 🏆", rank_hint:"Total wins per player. Updates after each finished game.",
+    rank_empty:"No finished games yet.", rank_wl:"{wins} 🏆 · {played} games", back:"Back",
+    create_title:"New game", create_hint:"Set the rules and choose your secret code.",
+    lbl_mode:"Mode", mode_numbers:"Numbers 0-9", mode_colors:"Colors",
+    lbl_positions:"Positions", lbl_repeats:"Repeats", rep_no:"Not allowed", rep_yes:"Allowed",
+    lbl_attempts:"Attempt limit", nolimit:"No limit", lbl_time:"Time per turn",
+    lbl_visibility:"Visibility", vis_public:"Public", vis_private:"Private",
+    pub_hint_public:"Shown in the lobby: anyone can join.",
+    pub_hint_private:"Not shown in the lobby: join only with the code.",
+    lbl_secret:"Your secret code", create_btn:"Create and wait for opponent",
+    wait_title:"Game created", wait_hint:"Share this code with your opponent. It starts as soon as they join.",
+    wait_copy:"Copy code", wait_waiting:"Waiting for someone to join…", wait_cancel:"Cancel and go back",
+    copied:"Code copied: {code}",
+    join_to:"Join", join_rules:"Rules: {rules}. Choose your secret code.", join_btn2:"Join and play",
+    rematch_title:"Rematch 🔁", rematch_hint:"Same rules, same opponent. Choose your new secret code.",
+    rematch_rules:"Rules: {rules}. Choose your new code.", lbl_newsecret:"Your new secret code",
+    rematch_send:"Send rematch", back_home:"Back to home",
+    game_match:"Game", game_yourcode:"Your code:", vs:"vs {name}", waiting_short:"waiting…",
+    guess_btn:"Guess", legend_fija:"F = correct position", legend_pica:"P = present, wrong spot",
+    colhead_mine:"Your guesses → {name}'s code", colhead_theirs:"{name}'s guesses → your code",
+    rival:"opponent", log_empty_mine:"No guesses yet", log_empty_theirs:"No guesses yet", log_nada:"none",
+    your_turn:"Your turn — guess the opponent's code", no_attempts_wait:"No attempts left — waiting for opponent",
+    tiebreak_you:"⚡ Last try: {name} already cracked your code. Match it to tie!",
+    turn_of:"{name}'s turn …", waiting_generic:"Waiting… …",
+    solved_wait:"✅ You cracked their code! Waiting for {name}'s last try to see if it's a tie…",
+    attempts_chip:"Attempts: {left}/{max}",
+    win_title:"You won! 🎉", lose_title:"You lost", draw_title:"Draw 🤝",
+    win_msg:"You cracked {name}'s code", lose_msg:"{name} cracked your code first",
+    draw_both:"Both cracked the code in the same number of tries",
+    draw_limit:"Nobody cracked the code within the attempt limit",
+    rematch_go:"Go to rematch 🔁", rematch_btn:"Rematch 🔁",
+    toast_tie:"Draw! both guessed 🤝", toast_solved:"✅ Cracked! waiting for opponent's last try",
+    toast_score:"{f} F · {p} P",
+    invalid_guess:"Invalid guess", check_secret:"Check your secret code", check_code:"Check your code",
+    net_error:"Network error", not_available:"Not available", api_not_set:"Set the Apps Script URL in index.html",
+    val_digits:"Digits 0-9 only", val_repeats:"Repeated digits", val_valid:"Valid!",
+    rl_colors:"colors", rl_numbers:"numbers", rl_pos:"{n} pos", rl_norepeat:"no repeats", rl_repeat:"repeats ✓",
+    rl_attempts:"{n} tries", rl_turn:"{n}s/turn"
+  },
+  fr:{
+    brand_sub:"Duel de déduction en ligne",
+    login_title:"Choisis ton nom de joueur",
+    login_hint:"Ce nom apparaît dans les parties et le classement. Aucun mot de passe requis.",
+    login_lang:"Langue", login_name:"Nom d'utilisateur", login_name_ph:"ex. Diego",
+    login_enter:"Entrer", login_min:"2 caractères minimum",
+    lobby_greeting:"Salut, {name} 👋",
+    lobby_hint:"Crée une partie et partage le code, ou rejoins une partie publique ouverte.",
+    lobby_create:"Créer une partie", lobby_ranking:"Classement", lobby_refresh:"Actualiser la liste",
+    lobby_mine:"Tes parties en cours", lobby_open:"Parties publiques ouvertes", lobby_changeuser:"Changer d'utilisateur",
+    loading:"Chargement…", load_error:"Échec du chargement", open_empty:"Aucune partie ouverte. Crées-en une !",
+    join_btn:"Rejoindre", mine_waiting:"En attente d'un adversaire", see_btn:"Voir", continue_btn:"Continuer", private_tag:"privée",
+    rank_title:"Classement global 🏆", rank_hint:"Victoires totales par joueur. Mis à jour après chaque partie terminée.",
+    rank_empty:"Aucune partie terminée pour l'instant.", rank_wl:"{wins} 🏆 · {played} parties", back:"Retour",
+    create_title:"Nouvelle partie", create_hint:"Règle les paramètres et choisis ton code secret.",
+    lbl_mode:"Mode", mode_numbers:"Chiffres 0-9", mode_colors:"Couleurs",
+    lbl_positions:"Positions", lbl_repeats:"Répétitions", rep_no:"Interdites", rep_yes:"Autorisées",
+    lbl_attempts:"Limite d'essais", nolimit:"Illimité", lbl_time:"Temps par tour",
+    lbl_visibility:"Visibilité", vis_public:"Publique", vis_private:"Privée",
+    pub_hint_public:"Visible dans le lobby : tout le monde peut rejoindre.",
+    pub_hint_private:"Absente du lobby : on rejoint uniquement avec le code.",
+    lbl_secret:"Ton code secret", create_btn:"Créer et attendre l'adversaire",
+    wait_title:"Partie créée", wait_hint:"Partage ce code avec ton adversaire. La partie démarre dès qu'il rejoint.",
+    wait_copy:"Copier le code", wait_waiting:"En attente d'un joueur…", wait_cancel:"Annuler et revenir",
+    copied:"Code copié : {code}",
+    join_to:"Rejoindre", join_rules:"Règles : {rules}. Choisis ton code secret.", join_btn2:"Rejoindre et jouer",
+    rematch_title:"Revanche 🔁", rematch_hint:"Mêmes règles, même adversaire. Choisis ton nouveau code secret.",
+    rematch_rules:"Règles : {rules}. Choisis ton nouveau code.", lbl_newsecret:"Ton nouveau code secret",
+    rematch_send:"Envoyer la revanche", back_home:"Retour à l'accueil",
+    game_match:"Partie", game_yourcode:"Ton code :", vs:"vs {name}", waiting_short:"en attente…",
+    guess_btn:"Deviner", legend_fija:"F = bonne position", legend_pica:"P = présent, mal placé",
+    colhead_mine:"Tes essais → code de {name}", colhead_theirs:"Essais de {name} → ton code",
+    rival:"adversaire", log_empty_mine:"Aucun essai pour l'instant", log_empty_theirs:"Aucun essai pour l'instant", log_nada:"rien",
+    your_turn:"À toi — devine le code de l'adversaire", no_attempts_wait:"Plus d'essais — en attente de l'adversaire",
+    tiebreak_you:"⚡ Dernier essai : {name} a déjà trouvé ton code. Réussis pour égaliser !",
+    turn_of:"Tour de {name} …", waiting_generic:"En attente… …",
+    solved_wait:"✅ Tu as trouvé son code ! En attente du dernier essai de {name} pour voir si c'est une égalité…",
+    attempts_chip:"Essais : {left}/{max}",
+    win_title:"Tu as gagné ! 🎉", lose_title:"Tu as perdu", draw_title:"Égalité 🤝",
+    win_msg:"Tu as trouvé le code de {name}", lose_msg:"{name} a trouvé ton code en premier",
+    draw_both:"Vous avez trouvé le code au même nombre d'essais",
+    draw_limit:"Personne n'a trouvé le code dans la limite d'essais",
+    rematch_go:"Aller à la revanche 🔁", rematch_btn:"Revanche 🔁",
+    toast_tie:"Égalité ! les deux ont trouvé 🤝", toast_solved:"✅ Trouvé ! en attente du dernier essai de l'adversaire",
+    toast_score:"{f} F · {p} P",
+    invalid_guess:"Essai invalide", check_secret:"Vérifie ton code secret", check_code:"Vérifie ton code",
+    net_error:"Erreur réseau", not_available:"Indisponible", api_not_set:"Configure l'URL Apps Script dans index.html",
+    val_digits:"Chiffres 0-9 uniquement", val_repeats:"Chiffres répétés", val_valid:"Valide !",
+    rl_colors:"couleurs", rl_numbers:"chiffres", rl_pos:"{n} pos", rl_norepeat:"sans répétition", rl_repeat:"répétitions ✓",
+    rl_attempts:"{n} essais", rl_turn:"{n}s/tour"
+  }
+};
+/* Mensajes de error del backend (español) → traducción */
+const ERR = {
+  en:{
+    "Falta el nombre de usuario.":"Username is missing.",
+    "Partida no encontrada.":"Game not found.",
+    "Esta partida ya no acepta jugadores.":"This game is no longer accepting players.",
+    "No puedes unirte a tu propia partida con el mismo nombre.":"You can't join your own game with the same name.",
+    "La partida no está activa.":"The game is not active.",
+    "No eres jugador de esta partida.":"You're not a player in this game.",
+    "No es tu turno.":"It's not your turn.",
+    "Sin intentos restantes.":"No attempts left.",
+    "Esta partida no tiene cronómetro.":"This game has no timer.",
+    "Aún queda tiempo.":"There's still time left.",
+    "La partida aún no ha terminado.":"The game hasn't finished yet.",
+    "Longitud debe ser 3, 4, 5 o 6.":"Length must be 3, 4, 5 or 6.",
+    "Código inválido.":"Invalid code.",
+    "Símbolo fuera de rango.":"Symbol out of range.",
+    "No se permiten repetidos en esta partida.":"Repeats aren't allowed in this game."
+  },
+  fr:{
+    "Falta el nombre de usuario.":"Nom d'utilisateur manquant.",
+    "Partida no encontrada.":"Partie introuvable.",
+    "Esta partida ya no acepta jugadores.":"Cette partie n'accepte plus de joueurs.",
+    "No puedes unirte a tu propia partida con el mismo nombre.":"Tu ne peux pas rejoindre ta propre partie avec le même nom.",
+    "La partida no está activa.":"La partie n'est pas active.",
+    "No eres jugador de esta partida.":"Tu n'es pas joueur de cette partie.",
+    "No es tu turno.":"Ce n'est pas ton tour.",
+    "Sin intentos restantes.":"Plus d'essais disponibles.",
+    "Esta partida no tiene cronómetro.":"Cette partie n'a pas de chrono.",
+    "Aún queda tiempo.":"Il reste encore du temps.",
+    "La partida aún no ha terminado.":"La partie n'est pas encore terminée.",
+    "Longitud debe ser 3, 4, 5 o 6.":"La longueur doit être 3, 4, 5 ou 6.",
+    "Código inválido.":"Code invalide.",
+    "Símbolo fuera de rango.":"Symbole hors limites.",
+    "No se permiten repetidos en esta partida.":"Les répétitions ne sont pas autorisées dans cette partie."
+  }
+};
+
+let lang = localStorage.getItem('pf_lang') || 'es';
+function t(key, p){
+  let s = (I18N[lang] && I18N[lang][key]) || I18N.es[key] || key;
+  if(p) for(const k in p) s = s.split('{'+k+'}').join(p[k]);
+  return s;
+}
+function te(msg){ return (ERR[lang] && ERR[lang][msg]) || msg; }
+function applyI18n(){
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ el.placeholder = t(el.dataset.i18nPh); });
+  document.querySelectorAll('#seg-lang button').forEach(b=> b.classList.toggle('on', b.dataset.lang===lang));
+}
+
+/* Paleta de 6 colores (índices 0-5) */
 const COLORS = [
-  {c:'#F87171', n:'rojo'}, {c:'#FBBF24', n:'ámbar'}, {c:'#4ADE80', n:'verde'},
-  {c:'#22D3EE', n:'cian'}, {c:'#818CF8', n:'azul'},  {c:'#F472B6', n:'rosa'}
+  {c:'#F87171'}, {c:'#FBBF24'}, {c:'#4ADE80'},
+  {c:'#22D3EE'}, {c:'#818CF8'}, {c:'#F472B6'}
 ];
 
 /* -------------------- estado -------------------- */
 let user = localStorage.getItem('pf_user') || '';
 let cfg = { digits:3, mode:'numbers', allowRepeats:false, isPublic:true, maxAttempts:0, turnSeconds:0 };
-let joinMeta = null;       // reglas de la partida a la que me uno
-let finishedMeta = null;   // reglas de la partida terminada (para revancha)
+let joinMeta = null, finishedMeta = null;
 let game = { id:'', digits:3, mode:'numbers', allowRepeats:false, maxAttempts:0, turnSeconds:0 };
-let gState = null;         // último estado recibido
+let gState = null;
 let pollTimer = null, tickTimer = null, passRequested = false, lastTurnStart = '';
 
 /* -------------------- utilidades -------------------- */
@@ -404,7 +618,7 @@ function toast(msg, isErr){
   clearTimeout(t._h); t._h=setTimeout(()=>t.className='toast',2600);
 }
 async function api(action, payload={}){
-  if(API.indexOf('PEGA_AQUI')===0){ toast('Configura la URL de Apps Script en index.html',true); throw new Error('API sin configurar'); }
+  if(API.indexOf('PEGA_AQUI')===0){ toast(t('api_not_set'),true); throw new Error('API sin configurar'); }
   const res = await fetch(API,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
     body: JSON.stringify(Object.assign({action}, payload)) });
   return res.json();
@@ -413,16 +627,16 @@ function esc(s){ return String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&
 function noRepeat(v){ return new Set(v.split('')).size === v.length; }
 function validateLive(v, digits, allowRepeats){
   if(v.length===0) return {cls:'',msg:''};
-  if(!/^[0-9]*$/.test(v)) return {cls:'err',msg:'Solo dígitos 0-9'};
-  if(!allowRepeats && !noRepeat(v)) return {cls:'err',msg:'Hay repetidos'};
+  if(!/^[0-9]*$/.test(v)) return {cls:'err',msg:t('val_digits')};
+  if(!allowRepeats && !noRepeat(v)) return {cls:'err',msg:t('val_repeats')};
   if(v.length<digits) return {cls:'',msg:v.length+'/'+digits};
-  return {cls:'ok',msg:'¡Válido!'};
+  return {cls:'ok',msg:t('val_valid')};
 }
 function rulesLabel(m){
-  const parts=[ (m.mode==='colors'?'colores':'números'), m.digits+' pos',
-    (m.allowRepeats?'repetidos ✓':'sin repetir') ];
-  if(m.maxAttempts>0) parts.push(m.maxAttempts+' intentos');
-  if(m.turnSeconds>0) parts.push(m.turnSeconds+'s/turno');
+  const parts=[ (m.mode==='colors'?t('rl_colors'):t('rl_numbers')), t('rl_pos',{n:m.digits}),
+    (m.allowRepeats?t('rl_repeat'):t('rl_norepeat')) ];
+  if(m.maxAttempts>0) parts.push(t('rl_attempts',{n:m.maxAttempts}));
+  if(m.turnSeconds>0) parts.push(t('rl_turn',{n:m.turnSeconds}));
   return parts.join(' · ');
 }
 function codeViewHTML(str, mode){
@@ -448,7 +662,7 @@ function makePad(slotsId, paletteId, getLen, onChange){
   function drawPalette(){
     pal.innerHTML='';
     COLORS.forEach((col,idx)=>{
-      const b=document.createElement('button'); b.type='button'; b.className='sw'; b.style.background=col.c; b.title=col.n;
+      const b=document.createElement('button'); b.type='button'; b.className='sw'; b.style.background=col.c;
       b.onclick=()=>{ if(value.length<getLen()){ value+=idx; drawSlots(); onChange&&onChange(value); } };
       pal.appendChild(b);
     });
@@ -466,7 +680,6 @@ const padG = makePad('slots-g','palette-g', ()=>game.digits, v=>setVal('g-guess-
 function setVal(elId, v, digits, allowRepeats){
   const r=validateLive(v, digits, allowRepeats); $(elId).className='val '+r.cls; $(elId).textContent=r.msg;
 }
-/** Muestra input o pad según modo, en un contexto (c/j/r/g). */
 function applyMode(ctx, mode, inputId, padId, pad){
   const isColors = mode==='colors';
   $(inputId).classList.toggle('hidden', isColors);
@@ -474,32 +687,36 @@ function applyMode(ctx, mode, inputId, padId, pad){
   if(isColors) pad.refresh(); else { $(inputId).value=''; }
 }
 
+/* -------------------- idioma -------------------- */
+$('seg-lang').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
+  lang=b.dataset.lang; localStorage.setItem('pf_lang', lang); applyI18n(); });
+
 /* -------------------- login -------------------- */
 function doLogin(){
   const v=$('uname').value.trim();
-  if(v.length<2){ $('uname-val').className='val err'; $('uname-val').textContent='Mínimo 2 caracteres'; return; }
+  if(v.length<2){ $('uname-val').className='val err'; $('uname-val').textContent=t('login_min'); return; }
   user=v; localStorage.setItem('pf_user', user); enterLobby();
 }
 function logout(){ localStorage.removeItem('pf_user'); user=''; show('login'); $('uname').value=''; }
-function enterLobby(){ $('hi-name').textContent=user; show('lobby'); refreshLobby(); }
+function enterLobby(){ $('lobby-greet').textContent=t('lobby_greeting',{name:user}); show('lobby'); refreshLobby(); }
 
 /* -------------------- lobby -------------------- */
 async function refreshLobby(){
-  $('open-list').innerHTML='<div class="empty">Cargando…</div>';
+  $('open-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
   try{
     const [open, mine] = await Promise.all([ api('listGames'), api('myGames',{username:user}) ]);
     renderOpen(open.games||[]); renderMine(mine.games||[]);
-  }catch(e){ $('open-list').innerHTML='<div class="empty">No se pudo cargar</div>'; }
+  }catch(e){ $('open-list').innerHTML=`<div class="empty">${t('load_error')}</div>`; }
 }
 function renderOpen(games){
   const box=$('open-list'); const list=games.filter(g=>g.p1!==user);
-  if(!list.length){ box.innerHTML='<div class="empty">No hay partidas abiertas. ¡Crea una!</div>'; return; }
+  if(!list.length){ box.innerHTML=`<div class="empty">${t('open_empty')}</div>`; return; }
   box.innerHTML='';
   list.forEach(g=>{
     const el=document.createElement('div'); el.className='gitem';
     el.innerHTML=`<div class="gid">${g.gameId}</div>
       <div class="meta"><div class="who">${esc(g.p1)}</div><div class="det">${rulesLabel(g)}</div></div>`;
-    const b=document.createElement('button'); b.className='btn pink sm'; b.textContent='Unirse';
+    const b=document.createElement('button'); b.className='btn pink sm'; b.textContent=t('join_btn');
     b.onclick=()=>openJoin(g); el.appendChild(b); box.appendChild(el);
   });
 }
@@ -509,11 +726,11 @@ function renderMine(games){
   $('mine-card').classList.remove('hidden'); box.innerHTML='';
   games.forEach(g=>{
     const opp = g.p1===user ? g.p2 : g.p1;
-    const label = g.status==='waiting' ? 'Esperando rival' : ('vs '+(opp||'—'));
+    const label = g.status==='waiting' ? t('mine_waiting') : t('vs',{name:opp||'—'});
     const el=document.createElement('div'); el.className='gitem';
     el.innerHTML=`<div class="gid">${g.gameId}</div>
-      <div class="meta"><div class="who">${esc(label)}</div><div class="det">${rulesLabel(g)}${g.isPublic?'':' · privada'}</div></div>`;
-    const b=document.createElement('button'); b.className='btn sm'; b.textContent= g.status==='waiting'?'Ver':'Continuar';
+      <div class="meta"><div class="who">${esc(label)}</div><div class="det">${rulesLabel(g)}${g.isPublic?'':' · '+t('private_tag')}</div></div>`;
+    const b=document.createElement('button'); b.className='btn sm'; b.textContent= g.status==='waiting'?t('see_btn'):t('continue_btn');
     b.onclick=()=>{ const meta={id:g.gameId,digits:g.digits,mode:g.mode,allowRepeats:g.allowRepeats,maxAttempts:g.maxAttempts,turnSeconds:g.turnSeconds};
       if(g.status==='waiting'){ enterWait(meta); } else { enterGame(meta); } };
     el.appendChild(b); box.appendChild(el);
@@ -522,19 +739,18 @@ function renderMine(games){
 
 /* -------------------- ranking -------------------- */
 async function openRank(){
-  show('rank'); $('rank-list').innerHTML='<div class="empty">Cargando…</div>';
+  show('rank'); $('rank-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
   try{
-    const res=await api('leaderboard');
-    const list=res.ranking||[];
-    if(!list.length){ $('rank-list').innerHTML='<div class="empty">Aún no hay partidas terminadas.</div>'; return; }
+    const res=await api('leaderboard'); const list=res.ranking||[];
+    if(!list.length){ $('rank-list').innerHTML=`<div class="empty">${t('rank_empty')}</div>`; return; }
     $('rank-list').innerHTML='';
     list.forEach((r,i)=>{
       const el=document.createElement('div'); el.className='rankrow'+(r.user===user?' me':'');
       el.innerHTML=`<div class="pos">${i+1}</div><div class="nm">${esc(r.user)}</div>
-        <div class="wl">${r.wins} 🏆 · ${r.played} jug.</div>`;
+        <div class="wl">${t('rank_wl',{wins:r.wins,played:r.played})}</div>`;
       $('rank-list').appendChild(el);
     });
-  }catch(e){ $('rank-list').innerHTML='<div class="empty">No se pudo cargar</div>'; }
+  }catch(e){ $('rank-list').innerHTML=`<div class="empty">${t('load_error')}</div>`; }
 }
 
 /* -------------------- crear -------------------- */
@@ -555,7 +771,7 @@ $('seg-time').addEventListener('click', e=>{ const b=e.target.closest('button');
   cfg.turnSeconds=parseInt(b.dataset.t,10); segPick($('seg-time'),b); });
 $('seg-public').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
   cfg.isPublic=b.dataset.p==='1'; segPick($('seg-public'),b);
-  $('pub-hint').textContent=cfg.isPublic?'Aparece en el lobby: cualquiera puede unirse.':'No aparece en el lobby: solo se entra con el código.'; });
+  $('pub-hint').textContent=cfg.isPublic?t('pub_hint_public'):t('pub_hint_private'); });
 $('secret-c').addEventListener('input', e=>setVal('secret-c-val', e.target.value, cfg.digits, cfg.allowRepeats));
 
 function getSecret(ctx){
@@ -567,15 +783,15 @@ function getSecret(ctx){
 async function createGame(){
   const secret=getSecret('c');
   const r=validateLive(secret, cfg.digits, cfg.allowRepeats);
-  if(r.cls!=='ok'){ toast('Revisa tu código secreto',true); return; }
+  if(r.cls!=='ok'){ toast(t('check_secret'),true); return; }
   $('btn-create').disabled=true;
   try{
     const res=await api('createGame',{username:user, digits:cfg.digits, secret, mode:cfg.mode, numColors:6,
       allowRepeats:cfg.allowRepeats, isPublic:cfg.isPublic, maxAttempts:cfg.maxAttempts, turnSeconds:cfg.turnSeconds});
-    if(!res.ok){ toast(res.error,true); return; }
+    if(!res.ok){ toast(te(res.error),true); return; }
     localStorage.setItem('pf_secret_'+res.gameId, secret);
     enterWait({id:res.gameId, digits:cfg.digits, mode:cfg.mode, allowRepeats:cfg.allowRepeats, maxAttempts:cfg.maxAttempts, turnSeconds:cfg.turnSeconds});
-  }catch(e){ toast('Error de red',true); } finally{ $('btn-create').disabled=false; }
+  }catch(e){ toast(t('net_error'),true); } finally{ $('btn-create').disabled=false; }
 }
 
 /* -------------------- sala de espera -------------------- */
@@ -589,14 +805,14 @@ async function pollWait(){
     if(st.ok && st.status==='active'){ enterGame(metaFromState(st)); } }catch(e){}
 }
 function cancelWait(){ stopPoll(); enterLobby(); }
-function copyCode(){ navigator.clipboard?.writeText(game.id).then(()=>toast('Código copiado: '+game.id)).catch(()=>toast(game.id)); }
+function copyCode(){ navigator.clipboard?.writeText(game.id).then(()=>toast(t('copied',{code:game.id}))).catch(()=>toast(game.id)); }
 
 /* -------------------- unirse -------------------- */
 function openJoin(meta){
   joinMeta={gameId:meta.gameId||meta.id, digits:meta.digits, mode:meta.mode, allowRepeats:meta.allowRepeats,
     maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0};
   $('join-code').textContent=joinMeta.gameId;
-  $('join-rules-txt').textContent='Reglas: '+rulesLabel(joinMeta)+'. Define tu código secreto.';
+  $('join-rules-txt').textContent=t('join_rules',{rules:rulesLabel(joinMeta)});
   const inp=$('secret-j'); inp.maxLength=joinMeta.digits; inp.value=''; inp.placeholder='•'.repeat(joinMeta.digits);
   padJ.reset(); applyMode('j', joinMeta.mode, 'secret-j', 'pad-j', padJ); $('secret-j-val').textContent='';
   show('join');
@@ -605,21 +821,21 @@ $('secret-j').addEventListener('input', e=>setVal('secret-j-val', e.target.value
 async function confirmJoin(){
   const secret=getSecret('j');
   const r=validateLive(secret, joinMeta.digits, joinMeta.allowRepeats);
-  if(r.cls!=='ok'){ toast('Revisa tu código secreto',true); return; }
+  if(r.cls!=='ok'){ toast(t('check_secret'),true); return; }
   $('btn-join').disabled=true;
   try{
     const res=await api('joinGame',{gameId:joinMeta.gameId, username:user, secret});
-    if(!res.ok){ toast(res.error,true); return; }
+    if(!res.ok){ toast(te(res.error),true); return; }
     localStorage.setItem('pf_secret_'+joinMeta.gameId, secret);
     enterGame({id:joinMeta.gameId, digits:joinMeta.digits, mode:joinMeta.mode, allowRepeats:joinMeta.allowRepeats, maxAttempts:joinMeta.maxAttempts, turnSeconds:joinMeta.turnSeconds});
-  }catch(e){ toast('Error de red',true); } finally{ $('btn-join').disabled=false; }
+  }catch(e){ toast(t('net_error'),true); } finally{ $('btn-join').disabled=false; }
 }
 
 /* -------------------- revancha -------------------- */
 function openRematch(){
   finishedMeta={gameId:gState.gameId, digits:gState.digits, mode:gState.mode, allowRepeats:gState.allowRepeats,
     maxAttempts:gState.maxAttempts, turnSeconds:gState.turnSeconds};
-  $('rematch-rules-txt').textContent='Reglas: '+rulesLabel(finishedMeta)+'. Define tu nuevo código.';
+  $('rematch-rules-txt').textContent=t('rematch_rules',{rules:rulesLabel(finishedMeta)});
   const inp=$('secret-r'); inp.maxLength=finishedMeta.digits; inp.value=''; inp.placeholder='•'.repeat(finishedMeta.digits);
   padR.reset(); applyMode('r', finishedMeta.mode, 'secret-r', 'pad-r', padR); $('secret-r-val').textContent='';
   show('rematch');
@@ -628,24 +844,24 @@ $('secret-r').addEventListener('input', e=>setVal('secret-r-val', e.target.value
 async function sendRematch(){
   const secret=getSecret('r');
   const r=validateLive(secret, finishedMeta.digits, finishedMeta.allowRepeats);
-  if(r.cls!=='ok'){ toast('Revisa tu código',true); return; }
+  if(r.cls!=='ok'){ toast(t('check_code'),true); return; }
   $('btn-rematch').disabled=true;
   try{
     const res=await api('rematch',{gameId:finishedMeta.gameId, username:user, secret});
-    if(!res.ok){ toast(res.error,true); return; }
+    if(!res.ok){ toast(te(res.error),true); return; }
     localStorage.setItem('pf_secret_'+res.gameId, secret);
     enterWait({id:res.gameId, digits:finishedMeta.digits, mode:finishedMeta.mode, allowRepeats:finishedMeta.allowRepeats, maxAttempts:finishedMeta.maxAttempts, turnSeconds:finishedMeta.turnSeconds});
-  }catch(e){ toast('Error de red',true); } finally{ $('btn-rematch').disabled=false; }
+  }catch(e){ toast(t('net_error'),true); } finally{ $('btn-rematch').disabled=false; }
 }
 async function goToRematch(rematchId){
   try{
     const st=await api('state',{gameId:rematchId, username:user});
-    if(!st.ok){ toast(st.error||'No disponible',true); return; }
+    if(!st.ok){ toast(te(st.error)||t('not_available'),true); return; }
     const meta=metaFromState(st);
     if(st.status==='active'){ enterGame(meta); }
     else if(st.youAre===1){ enterWait(meta); }
     else { openJoin(Object.assign({gameId:rematchId}, meta)); }
-  }catch(e){ toast('Error de red',true); }
+  }catch(e){ toast(t('net_error'),true); }
 }
 
 /* -------------------- juego -------------------- */
@@ -675,17 +891,18 @@ function renderGame(st){
   if(st.digits) game.digits=parseInt(st.digits,10);
   if(st.turnStartedAt!==lastTurnStart){ lastTurnStart=st.turnStartedAt; passRequested=false; }
 
-  const me=st.youAre; const oppName = me===1 ? st.p2 : st.p1;
-  $('g-vs').textContent=(oppName?('vs '+oppName):'esperando…')+' · '+rulesLabel(metaFromState(st));
-  $('g-oppname').textContent=oppName||'rival'; $('g-oppname2').textContent=oppName||'rival';
+  const me=st.youAre; const oppName = me===1 ? st.p2 : st.p1; const oppLabel = oppName||t('rival');
+  $('g-vs').textContent=(oppName? t('vs',{name:oppName}) : t('waiting_short'))+' · '+rulesLabel(metaFromState(st));
+  $('colhead-mine').textContent=t('colhead_mine',{name:oppLabel});
+  $('colhead-theirs').textContent=t('colhead_theirs',{name:oppLabel});
 
   const local=localStorage.getItem('pf_secret_'+game.id);
   $('g-mysecret').innerHTML = local ? codeViewHTML(local, game.mode) : '•••';
 
   const mine=st.guesses.filter(g=>g.by===user);
   const theirs=st.guesses.filter(g=>g.by!==user);
-  renderLog('g-mylog', mine, 'Aún no has adivinado');
-  renderLog('g-theirlog', theirs, 'Sin intentos todavía');
+  renderLog('g-mylog', mine, t('log_empty_mine'));
+  renderLog('g-theirlog', theirs, t('log_empty_theirs'));
 
   const banner=$('g-banner'); const rz=$('g-rematch-zone'); const turn=$('g-turn');
   const guessarea=$('g-guessarea'); const legend=document.querySelector('.legend'); const statusrow=$('g-statusrow');
@@ -697,19 +914,15 @@ function renderGame(st){
     if(st.isDraw){
       const solvedBy = n => st.guesses.some(x=>x.by===n && x.fijas===parseInt(st.digits,10));
       const bothSolved = solvedBy(st.p1) && solvedBy(st.p2);
-      const drawMsg = bothSolved
-        ? 'Ambos descifraron el código en el mismo número de intentos'
-        : 'Nadie descifró el código dentro del límite de intentos';
-      banner.innerHTML=`<div class="banner draw"><h2>Empate 🤝</h2><p>${drawMsg}</p></div>`;
+      banner.innerHTML=`<div class="banner draw"><h2>${t('draw_title')}</h2><p>${bothSolved?t('draw_both'):t('draw_limit')}</p></div>`;
     }else{
-      banner.innerHTML=`<div class="banner ${won?'win':'lose'}"><h2>${won?'¡Ganaste! 🎉':'Perdiste'}</h2>
-        <p>${won?'Descifraste el código de '+esc(oppName||'tu rival'):(esc(st.winner)+' descifró tu código primero')}</p></div>`;
+      banner.innerHTML=`<div class="banner ${won?'win':'lose'}"><h2>${won?t('win_title'):t('lose_title')}</h2>
+        <p>${won?t('win_msg',{name:esc(oppLabel)}):t('lose_msg',{name:esc(st.winner)})}</p></div>`;
     }
-    // Revancha
     if(st.rematchId){
-      rz.innerHTML=`<button class="btn green" onclick="goToRematch('${st.rematchId}')">Ir a la revancha 🔁</button><div style="height:12px"></div>`;
+      rz.innerHTML=`<button class="btn green" onclick="goToRematch('${st.rematchId}')">${t('rematch_go')}</button><div style="height:12px"></div>`;
     }else{
-      rz.innerHTML=`<button class="btn green" onclick="openRematch()">Revancha 🔁</button><div style="height:12px"></div>`;
+      rz.innerHTML=`<button class="btn green" onclick="openRematch()">${t('rematch_btn')}</button><div style="height:12px"></div>`;
     }
     return;
   }
@@ -717,36 +930,33 @@ function renderGame(st){
   banner.innerHTML=''; rz.innerHTML=''; legend.style.display='flex';
   turn.classList.remove('hidden'); guessarea.classList.remove('hidden');
 
-  // intentos
   const myAttempts = me===1 ? st.attemptsP1 : st.attemptsP2;
   const canGuessAttempts = !(st.maxAttempts>0 && myAttempts>=st.maxAttempts);
   if(st.maxAttempts>0 || st.turnSeconds>0){
     statusrow.classList.remove('hidden');
     if(st.maxAttempts>0){ const left=Math.max(0, st.maxAttempts-myAttempts);
       const a=$('g-attempts'); a.classList.remove('hidden'); a.className='chip'+(left<=1?' hot':(left<=2?' warn':''));
-      a.textContent='Intentos: '+left+'/'+st.maxAttempts; }
+      a.textContent=t('attempts_chip',{left:left,max:st.maxAttempts}); }
     else $('g-attempts').classList.add('hidden');
     $('g-timer').classList.toggle('hidden', !(st.turnSeconds>0));
   }else statusrow.classList.add('hidden');
 
   const pending = st.pendingWinner || '';
   if(st.yourTurn){
-    turn.className='turnbar mine'; $('g-turn-txt').textContent='Es tu turno — adivina el código rival';
+    turn.className='turnbar mine'; $('g-turn-txt').textContent=t('your_turn');
     const ok=canGuessAttempts;
     $('g-guess-btn').disabled=!ok; $('g-guess').disabled=!ok;
-    if(!ok) $('g-turn-txt').textContent='Sin intentos restantes — esperando al rival';
-    // Turno de desempate: el rival ya resolvió y este es mi último intento.
+    if(!ok) $('g-turn-txt').textContent=t('no_attempts_wait');
     if(pending && pending!==user){
       turn.className='turnbar mine';
-      $('g-turn-txt').textContent='⚡ Último intento: '+(oppName||'tu rival')+' ya descifró tu código. ¡Aciértalo para empatar!';
+      $('g-turn-txt').textContent=t('tiebreak_you',{name:oppLabel});
     }
   }else{
     turn.className='turnbar theirs';
-    $('g-turn-txt').textContent=(st.whoseTurn?('Turno de '+st.whoseTurn):'Esperando…')+' …';
+    $('g-turn-txt').textContent= st.whoseTurn ? t('turn_of',{name:st.whoseTurn}) : t('waiting_generic');
     $('g-guess-btn').disabled=true; $('g-guess').disabled=true;
-    // Yo resolví y espero el intento de desempate del rival.
     if(pending && pending===user){
-      $('g-turn-txt').textContent='✅ ¡Descifraste su código! Esperando el último intento de '+(oppName||'tu rival')+' para ver si empata…';
+      $('g-turn-txt').textContent=t('solved_wait',{name:oppLabel});
     }
   }
   updateTimer();
@@ -760,7 +970,7 @@ function renderLog(id, arr, emptyMsg){
     let pips='';
     for(let i=0;i<g.fijas;i++) pips+='<span class="pip f"></span>';
     for(let i=0;i<g.picas;i++) pips+='<span class="pip p"></span>';
-    if(g.fijas+g.picas===0) pips='<span class="scoretxt">nada</span>';
+    if(g.fijas+g.picas===0) pips=`<span class="scoretxt">${t('log_nada')}</span>`;
     el.innerHTML=`${codeViewHTML(g.guess, game.mode)}
       <span class="scoretxt">${g.fijas}F · ${g.picas}P</span>
       <span class="pips">${pips}</span>`;
@@ -770,19 +980,19 @@ function renderLog(id, arr, emptyMsg){
 async function submitGuess(){
   const guess=getSecret('g');
   const r=validateLive(guess, game.digits, game.allowRepeats);
-  if(r.cls!=='ok'){ toast('Intento inválido',true); return; }
+  if(r.cls!=='ok'){ toast(t('invalid_guess'),true); return; }
   $('g-guess-btn').disabled=true;
   try{
     const res=await api('guess',{gameId:game.id, username:user, guess});
-    if(!res.ok){ toast(res.error,true); $('g-guess-btn').disabled=false; return; }
+    if(!res.ok){ toast(te(res.error),true); $('g-guess-btn').disabled=false; return; }
     $('g-guess').value=''; padG.reset(); $('g-guess-val').textContent='';
-    if(res.tie) toast('¡Empate! ambos acertaron 🤝');
-    else if(res.win) toast('¡Ganaste! 🎉');
-    else if(res.pending) toast('✅ ¡Descifrado! esperando el último intento del rival');
-    else if(res.draw) toast('Empate 🤝');
-    else toast(res.fijas+' fijas · '+res.picas+' picas');
+    if(res.tie) toast(t('toast_tie'));
+    else if(res.win) toast(t('win_title'));
+    else if(res.pending) toast(t('toast_solved'));
+    else if(res.draw) toast(t('draw_title'));
+    else toast(t('toast_score',{f:res.fijas,p:res.picas}));
     refreshGame();
-  }catch(e){ toast('Error de red',true); $('g-guess-btn').disabled=false; }
+  }catch(e){ toast(t('net_error'),true); $('g-guess-btn').disabled=false; }
 }
 function leaveGame(){ stopPoll(); stopTick(); enterLobby(); }
 
@@ -791,10 +1001,10 @@ function updateTimer(){
   if(!gState || gState.status!=='active' || !(gState.turnSeconds>0)){ return; }
   const started=new Date(gState.turnStartedAt).getTime();
   const remaining=Math.max(0, gState.turnSeconds - Math.floor((Date.now()-started)/1000));
-  const t=$('g-timer'); t.classList.remove('hidden');
+  const el=$('g-timer'); el.classList.remove('hidden');
   const mm=Math.floor(remaining/60), ss=remaining%60;
-  t.textContent='⏱ '+(mm>0?mm+':'+String(ss).padStart(2,'0'):ss+'s');
-  t.className='chip'+(remaining<=5?' hot':(remaining<=10?' warn':''));
+  el.textContent='⏱ '+(mm>0?mm+':'+String(ss).padStart(2,'0'):ss+'s');
+  el.className='chip'+(remaining<=5?' hot':(remaining<=10?' warn':''));
   if(remaining<=0 && !passRequested){
     passRequested=true;
     api('passTurn',{gameId:game.id, username:user}).then(()=>refreshGame()).catch(()=>{});
@@ -808,6 +1018,7 @@ function startPoll(fn){ stopPoll(); pollTimer=setInterval(fn, 2500); }
 function stopPoll(){ if(pollTimer){ clearInterval(pollTimer); pollTimer=null; } }
 
 /* -------------------- arranque -------------------- */
+applyI18n();
 if(user){ enterLobby(); } else { show('login'); }
 </script>
 </body>
