@@ -107,6 +107,11 @@
   .mysecret{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted);margin-bottom:14px;flex-wrap:wrap}
   .mysecret .code-view{display:inline-flex;align-items:center;gap:5px}
   .n{font-family:'JetBrains Mono',monospace;font-weight:800;letter-spacing:4px;color:var(--text)}
+  /* Cero con barra: distingue claramente 0 de 8 en las cifras */
+  .code,.n,.seg.mono button,#wait-code,.gid,.chip,.scoretxt,.rankrow .pos,.rankrow .wl{
+    font-variant-numeric:slashed-zero;
+    font-feature-settings:"zero" 1;
+  }
   .mini{width:16px;height:16px;border-radius:5px;display:inline-block;border:1px solid rgba(255,255,255,.15)}
 
   .guessarea{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
@@ -690,7 +695,12 @@ function renderGame(st){
     stopTick();
     const won = st.winner===user;
     if(st.isDraw){
-      banner.innerHTML=`<div class="banner draw"><h2>Empate 🤝</h2><p>Nadie descifró el código dentro del límite de intentos</p></div>`;
+      const solvedBy = n => st.guesses.some(x=>x.by===n && x.fijas===parseInt(st.digits,10));
+      const bothSolved = solvedBy(st.p1) && solvedBy(st.p2);
+      const drawMsg = bothSolved
+        ? 'Ambos descifraron el código en el mismo número de intentos'
+        : 'Nadie descifró el código dentro del límite de intentos';
+      banner.innerHTML=`<div class="banner draw"><h2>Empate 🤝</h2><p>${drawMsg}</p></div>`;
     }else{
       banner.innerHTML=`<div class="banner ${won?'win':'lose'}"><h2>${won?'¡Ganaste! 🎉':'Perdiste'}</h2>
         <p>${won?'Descifraste el código de '+esc(oppName||'tu rival'):(esc(st.winner)+' descifró tu código primero')}</p></div>`;
@@ -719,15 +729,25 @@ function renderGame(st){
     $('g-timer').classList.toggle('hidden', !(st.turnSeconds>0));
   }else statusrow.classList.add('hidden');
 
+  const pending = st.pendingWinner || '';
   if(st.yourTurn){
     turn.className='turnbar mine'; $('g-turn-txt').textContent='Es tu turno — adivina el código rival';
     const ok=canGuessAttempts;
     $('g-guess-btn').disabled=!ok; $('g-guess').disabled=!ok;
     if(!ok) $('g-turn-txt').textContent='Sin intentos restantes — esperando al rival';
+    // Turno de desempate: el rival ya resolvió y este es mi último intento.
+    if(pending && pending!==user){
+      turn.className='turnbar mine';
+      $('g-turn-txt').textContent='⚡ Último intento: '+(oppName||'tu rival')+' ya descifró tu código. ¡Aciértalo para empatar!';
+    }
   }else{
     turn.className='turnbar theirs';
     $('g-turn-txt').textContent=(st.whoseTurn?('Turno de '+st.whoseTurn):'Esperando…')+' …';
     $('g-guess-btn').disabled=true; $('g-guess').disabled=true;
+    // Yo resolví y espero el intento de desempate del rival.
+    if(pending && pending===user){
+      $('g-turn-txt').textContent='✅ ¡Descifraste su código! Esperando el último intento de '+(oppName||'tu rival')+' para ver si empata…';
+    }
   }
   updateTimer();
 }
@@ -756,7 +776,11 @@ async function submitGuess(){
     const res=await api('guess',{gameId:game.id, username:user, guess});
     if(!res.ok){ toast(res.error,true); $('g-guess-btn').disabled=false; return; }
     $('g-guess').value=''; padG.reset(); $('g-guess-val').textContent='';
-    if(res.win) toast('¡'+res.fijas+' fijas! 🎉'); else if(res.draw) toast('Empate 🤝'); else toast(res.fijas+' fijas · '+res.picas+' picas');
+    if(res.tie) toast('¡Empate! ambos acertaron 🤝');
+    else if(res.win) toast('¡Ganaste! 🎉');
+    else if(res.pending) toast('✅ ¡Descifrado! esperando el último intento del rival');
+    else if(res.draw) toast('Empate 🤝');
+    else toast(res.fijas+' fijas · '+res.picas+' picas');
     refreshGame();
   }catch(e){ toast('Error de red',true); $('g-guess-btn').disabled=false; }
 }
