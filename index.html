@@ -146,6 +146,7 @@
   .rankrow .nm{flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .rankrow .wl{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace}
   .rankrow.me{border-color:var(--accent);background:rgba(34,211,238,.08)}
+  .rank-separator{padding:7px 13px;color:var(--muted);font-size:13px;border-left:1px dashed var(--edge);margin-left:20px}
 
   .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
     background:#0f0c22;border:1px solid var(--edge);color:var(--text);padding:12px 18px;border-radius:12px;
@@ -189,7 +190,7 @@
   <!-- LOGIN -->
   <section id="s-login" class="card">
     <h2 data-i18n="login_title">Elige tu nombre de jugador</h2>
-    <p class="hint" data-i18n="login_hint">Con este nombre aparecerás en las partidas y en el ranking. No hace falta contraseña.</p>
+    <p class="hint" data-i18n="login_hint">Tu nombre aparecerá en las partidas y el ranking. Elige un PIN para protegerlo.</p>
     <label data-i18n="login_lang">Idioma</label>
     <div class="seg" id="seg-lang">
       <button data-lang="es">Español</button>
@@ -198,6 +199,8 @@
     </div>
     <label for="uname" data-i18n="login_name">Nombre de usuario</label>
     <input type="text" id="uname" maxlength="24" data-i18n-ph="login_name_ph" placeholder="p.ej. Diego" autocomplete="off">
+    <label for="upin" data-i18n="login_pin">PIN de acceso</label>
+    <input type="password" id="upin" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" data-i18n-ph="login_pin_ph" placeholder="4–8 dígitos" autocomplete="current-password">
     <div class="val" id="uname-val"></div>
     <button class="btn" onclick="doLogin()" data-i18n="login_enter">Entrar</button>
     <div class="foot"><span class="link" onclick="openRules()" data-i18n="rules_link">¿Cómo se juega?</span></div>
@@ -238,6 +241,7 @@
     <div class="card">
       <h2 data-i18n="rank_title">Ranking global 🏆</h2>
       <p class="hint" data-i18n="rank_hint">Victorias totales por jugador. Se actualiza con cada partida terminada.</p>
+      <div class="scoretxt" id="rank-total" style="margin:2px 0 12px"></div>
       <div class="list" id="rank-list"><div class="empty">…</div></div>
       <div style="height:16px"></div>
       <button class="btn ghost" onclick="show('lobby')" data-i18n="back">Volver</button>
@@ -454,9 +458,9 @@ const I18N = {
   es:{
     brand_sub:"Duelo de deducción online",
     login_title:"Elige tu nombre de jugador",
-    login_hint:"Con este nombre aparecerás en las partidas y en el ranking. No hace falta contraseña.",
-    login_lang:"Idioma", login_name:"Nombre de usuario", login_name_ph:"p.ej. Diego",
-    login_enter:"Entrar", login_min:"Mínimo 2 caracteres",
+    login_hint:"Tu nombre aparecerá en las partidas y el ranking. Elige un PIN para protegerlo.",
+    login_lang:"Idioma", login_name:"Nombre de usuario", login_name_ph:"p.ej. Diego", login_pin:"PIN de acceso", login_pin_ph:"4–8 dígitos",
+    login_enter:"Entrar", login_min:"Mínimo 2 caracteres", login_pin_invalid:"El PIN debe tener entre 4 y 8 dígitos",
     lobby_greeting:"Hola, {name} 👋",
     lobby_hint:"Crea una partida y comparte el código, o únete a una pública abierta.",
     lobby_create:"Crear partida", lobby_ranking:"Ranking", lobby_refresh:"Actualizar lista",
@@ -464,7 +468,7 @@ const I18N = {
     loading:"Cargando…", load_error:"No se pudo cargar", open_empty:"No hay partidas abiertas. ¡Crea una!",
     join_btn:"Unirse", mine_waiting:"Esperando rival", see_btn:"Ver", continue_btn:"Continuar", private_tag:"privada",
     rank_title:"Ranking global 🏆", rank_hint:"Victorias totales por jugador. Se actualiza con cada partida terminada.",
-    rank_empty:"Aún no hay partidas terminadas.", rank_wl:"{wins} 🏆 · {played} jug.", back:"Volver",
+    rank_empty:"Aún no hay partidas terminadas.", rank_wl:"{wins} 🏆 · {played} jug.", rank_total:"Ranking global · {n} jugadores", rank_your_pos:"… tu posición: #{n}", back:"Volver",
     rules_title:"Cómo se juega", rules_link:"¿Cómo se juega?", wait_share:"Compartir",
     share_text:"¡Únete a mi partida de Picas y Fijas! Código: {code}",
     lbl_numcolors:"Número de colores", lobby_history:"Historial",
@@ -512,9 +516,9 @@ const I18N = {
   en:{
     brand_sub:"Online deduction duel",
     login_title:"Choose your player name",
-    login_hint:"This name appears in games and on the ranking. No password needed.",
-    login_lang:"Language", login_name:"Username", login_name_ph:"e.g. Diego",
-    login_enter:"Enter", login_min:"At least 2 characters",
+    login_hint:"Your name appears in games and on the ranking. Choose a PIN to protect it.",
+    login_lang:"Language", login_name:"Username", login_name_ph:"e.g. Diego", login_pin:"Access PIN", login_pin_ph:"4–8 digits",
+    login_enter:"Enter", login_min:"At least 2 characters", login_pin_invalid:"The PIN must contain 4 to 8 digits",
     lobby_greeting:"Hi, {name} 👋",
     lobby_hint:"Create a game and share the code, or join an open public one.",
     lobby_create:"Create game", lobby_ranking:"Ranking", lobby_refresh:"Refresh list",
@@ -522,7 +526,7 @@ const I18N = {
     loading:"Loading…", load_error:"Couldn't load", open_empty:"No open games. Create one!",
     join_btn:"Join", mine_waiting:"Waiting for opponent", see_btn:"View", continue_btn:"Continue", private_tag:"private",
     rank_title:"Global ranking 🏆", rank_hint:"Total wins per player. Updates after each finished game.",
-    rank_empty:"No finished games yet.", rank_wl:"{wins} 🏆 · {played} games", back:"Back",
+    rank_empty:"No finished games yet.", rank_wl:"{wins} 🏆 · {played} games", rank_total:"Global ranking · {n} players", rank_your_pos:"… your position: #{n}", back:"Back",
     rules_title:"How to play", rules_link:"How to play?", wait_share:"Share",
     share_text:"Join my Picas y Fijas game! Code: {code}",
     lbl_numcolors:"Number of colors", lobby_history:"History",
@@ -570,9 +574,9 @@ const I18N = {
   fr:{
     brand_sub:"Duel de déduction en ligne",
     login_title:"Choisis ton nom de joueur",
-    login_hint:"Ce nom apparaît dans les parties et le classement. Aucun mot de passe requis.",
-    login_lang:"Langue", login_name:"Nom d'utilisateur", login_name_ph:"ex. Diego",
-    login_enter:"Entrer", login_min:"2 caractères minimum",
+    login_hint:"Ton nom apparaît dans les parties et le classement. Choisis un PIN pour le protéger.",
+    login_lang:"Langue", login_name:"Nom d'utilisateur", login_name_ph:"ex. Diego", login_pin:"PIN d'accès", login_pin_ph:"4–8 chiffres",
+    login_enter:"Entrer", login_min:"2 caractères minimum", login_pin_invalid:"Le PIN doit contenir de 4 à 8 chiffres",
     lobby_greeting:"Salut, {name} 👋",
     lobby_hint:"Crée une partie et partage le code, ou rejoins une partie publique ouverte.",
     lobby_create:"Créer une partie", lobby_ranking:"Classement", lobby_refresh:"Actualiser la liste",
@@ -580,7 +584,7 @@ const I18N = {
     loading:"Chargement…", load_error:"Échec du chargement", open_empty:"Aucune partie ouverte. Crées-en une !",
     join_btn:"Rejoindre", mine_waiting:"En attente d'un adversaire", see_btn:"Voir", continue_btn:"Continuer", private_tag:"privée",
     rank_title:"Classement global 🏆", rank_hint:"Victoires totales par joueur. Mis à jour après chaque partie terminée.",
-    rank_empty:"Aucune partie terminée pour l'instant.", rank_wl:"{wins} 🏆 · {played} parties", back:"Retour",
+    rank_empty:"Aucune partie terminée pour l'instant.", rank_wl:"{wins} 🏆 · {played} parties", rank_total:"Classement global · {n} joueurs", rank_your_pos:"… ta position : #{n}", back:"Retour",
     rules_title:"Comment jouer", rules_link:"Comment jouer ?", wait_share:"Partager",
     share_text:"Rejoins ma partie de Picas y Fijas ! Code : {code}",
     lbl_numcolors:"Nombre de couleurs", lobby_history:"Historique",
@@ -669,7 +673,7 @@ const ERR = {
 /* Instrucciones del juego (HTML) por idioma */
 const RULES = {
   es:`<ol>
-    <li>Cada jugador entra con un <b>nombre de usuario</b> (sin contraseña). Se usa también en el ranking.</li>
+    <li>Cada jugador registra un <b>nombre de usuario</b> con un PIN. El nombre se usa también en el ranking.</li>
     <li>Uno <b>crea la partida</b> y elige las reglas:
       <ul>
         <li><b>Modo</b>: números 0-9 o <b>colores</b> (6 colores, estilo Mastermind).</li>
@@ -689,7 +693,7 @@ const RULES = {
   <div class="note"><b>Modo colores:</b> mismo cálculo de picas y fijas, solo cambian las cifras por fichas de color.</div>
   <div class="note"><b>Cronómetro:</b> al llegar a 0 el turno pasa automáticamente al rival.</div>`,
   en:`<ol>
-    <li>Each player signs in with a <b>username</b> (no password). It's also used in the ranking.</li>
+    <li>Each player registers a <b>username</b> with a PIN. The name is also used in the ranking.</li>
     <li>One player <b>creates the game</b> and picks the rules:
       <ul>
         <li><b>Mode</b>: numbers 0-9 or <b>colors</b> (6 colors, Mastermind style).</li>
@@ -758,6 +762,7 @@ const COLORS = [
 
 /* -------------------- estado -------------------- */
 let user = localStorage.getItem('pf_user') || '';
+let userPin = localStorage.getItem('pf_pin') || '';
 let cfg = { digits:3, mode:'numbers', numColors:6, allowRepeats:false, isPublic:true, maxAttempts:0, turnSeconds:0 };
 let joinMeta = null, finishedMeta = null;
 let game = { id:'', digits:3, mode:'numbers', numColors:6, allowRepeats:false, maxAttempts:0, turnSeconds:0 };
@@ -807,7 +812,7 @@ function toast(msg, isErr){
 async function api(action, payload={}){
   if(API.indexOf('PEGA_AQUI')===0){ toast(t('api_not_set'),true); throw new Error('API sin configurar'); }
   const res = await fetch(API,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body: JSON.stringify(Object.assign({action}, payload)) });
+    body: JSON.stringify(Object.assign({action, pin:userPin}, payload)) });
   return res.json();
 }
 function esc(s){ return String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
@@ -947,15 +952,23 @@ $('seg-lang').addEventListener('click', e=>{ const b=e.target.closest('button');
   lang=b.dataset.lang; localStorage.setItem('pf_lang', lang); applyI18n(); });
 
 /* -------------------- login -------------------- */
-function doLogin(){
+async function doLogin(){
   const v=$('uname').value.trim();
+  const pin=$('upin').value.trim();
   if(v.length<2){ $('uname-val').className='val err'; $('uname-val').textContent=t('login_min'); return; }
-  user=v; localStorage.setItem('pf_user', user);
+  if(!/^\d{4,8}$/.test(pin)){ $('uname-val').className='val err'; $('uname-val').textContent=t('login_pin_invalid'); return; }
+  $('uname-val').className='val'; $('uname-val').textContent=t('loading');
+  try{
+    userPin=pin;
+    const res=await api('loginUser',{username:v});
+    if(!res.ok){ userPin=''; $('uname-val').className='val err'; $('uname-val').textContent=res.error; return; }
+    user=res.username; localStorage.setItem('pf_user',user); localStorage.setItem('pf_pin',userPin);
+  }catch(e){ userPin=''; $('uname-val').className='val err'; $('uname-val').textContent=t('net_error'); return; }
   unlockAudio();
   try{ if('Notification' in window && Notification.permission==='default') Notification.requestPermission(); }catch(e){}
   enterLobby();
 }
-function logout(){ localStorage.removeItem('pf_user'); user=''; show('login'); $('uname').value=''; }
+function logout(){ localStorage.removeItem('pf_user'); localStorage.removeItem('pf_pin'); user=''; userPin=''; show('login'); $('uname').value=''; $('upin').value=''; }
 function enterLobby(){ $('lobby-greet').textContent=t('lobby_greeting',{name:user}); updateSoundLabel(); show('lobby'); refreshLobby(); handleDeepLink(); }
 
 /* -------------------- lobby -------------------- */
@@ -1020,9 +1033,10 @@ function renderMine(games){
 
 /* -------------------- ranking -------------------- */
 async function openRank(){
-  show('rank'); $('rank-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
+  show('rank'); $('rank-total').textContent=''; $('rank-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
   try{
-    const res=await api('leaderboard'); const list=res.ranking||[];
+    const res=await api('leaderboard',{username:user}); const list=res.ranking||[];
+    $('rank-total').textContent=t('rank_total',{n:res.total||0});
     if(!list.length){ $('rank-list').innerHTML=`<div class="empty">${t('rank_empty')}</div>`; return; }
     $('rank-list').innerHTML='';
     list.forEach((r,i)=>{
@@ -1031,6 +1045,14 @@ async function openRank(){
         <div class="wl">${t('rank_wl',{wins:r.wins,played:r.played})}</div>`;
       $('rank-list').appendChild(el);
     });
+    const me=res.me, visible=me&&list.some(r=>r.user===me.user);
+    if(me&&!visible){
+      const sep=document.createElement('div'); sep.className='rank-separator'; sep.textContent=t('rank_your_pos',{n:me.rank});
+      $('rank-list').appendChild(sep);
+      const el=document.createElement('div'); el.className='rankrow me';
+      el.innerHTML=`<div class="pos">${me.rank}</div><div class="nm">${playerChip(me.country,me.user)}</div><div class="wl">${t('rank_wl',{wins:me.wins,played:me.played})}</div>`;
+      $('rank-list').appendChild(el);
+    }
   }catch(e){ $('rank-list').innerHTML=`<div class="empty">${t('load_error')}</div>`; }
 }
 
@@ -1365,7 +1387,7 @@ function stopPoll(){ if(pollTimer){ clearInterval(pollTimer); pollTimer=null; } 
 /* -------------------- arranque -------------------- */
 applyI18n();
 detectCountry();
-if(user){ enterLobby(); } else { show('login'); }
+if(user&&userPin){ enterLobby(); } else { if(user) $('uname').value=user; show('login'); }
 </script>
 </body>
 </html>
