@@ -155,6 +155,20 @@
   .legend{display:flex;gap:16px;justify-content:center;font-size:12px;color:var(--muted);margin-top:6px;flex-wrap:wrap}
   .legend span{display:inline-flex;align-items:center;gap:6px}
   .legend .pip{width:11px;height:11px}
+
+  .rules{color:var(--text);font-size:14px;line-height:1.6}
+  .rules ol{padding-left:20px;margin:0 0 6px}
+  .rules li{margin-bottom:11px}
+  .rules ul{padding-left:18px;margin:6px 0;color:var(--muted);font-size:13px}
+  .rules ul li{margin-bottom:4px}
+  .rules b{color:var(--text)}
+  .note{background:#141126;border:1px solid var(--edge);border-left:3px solid var(--accent);
+    border-radius:10px;padding:12px 14px;margin:12px 0;font-size:13px;color:var(--muted)}
+  .note b{color:var(--text)}
+  .pill{display:inline-block;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:700;background:rgba(155,146,196,.18);color:var(--muted)}
+  .flag{width:18px;height:auto;border-radius:2px;vertical-align:-3px;margin-right:5px;box-shadow:0 0 0 1px rgba(255,255,255,.12)}
+  .pill.f{background:rgba(74,222,128,.18);color:var(--fija)}
+  .pill.p{background:rgba(251,191,36,.18);color:var(--pica)}
 </style>
 </head>
 <body>
@@ -179,6 +193,7 @@
     <input type="text" id="uname" maxlength="24" data-i18n-ph="login_name_ph" placeholder="p.ej. Diego" autocomplete="off">
     <div class="val" id="uname-val"></div>
     <button class="btn" onclick="doLogin()" data-i18n="login_enter">Entrar</button>
+    <div class="foot"><span class="link" onclick="openRules()" data-i18n="rules_link">¿Cómo se juega?</span></div>
   </section>
 
   <!-- LOBBY -->
@@ -186,9 +201,11 @@
     <div class="card">
       <h2 id="lobby-greet"></h2>
       <p class="hint" data-i18n="lobby_hint">Crea una partida y comparte el código, o únete a una pública abierta.</p>
+      <button class="btn" onclick="show('create')" data-i18n="lobby_create">Crear partida</button>
+      <div style="height:10px"></div>
       <div class="row">
-        <button class="btn" onclick="show('create')" data-i18n="lobby_create">Crear partida</button>
         <button class="btn ghost" onclick="openRank()" data-i18n="lobby_ranking">Ranking</button>
+        <button class="btn ghost" onclick="openHistory()" data-i18n="lobby_history">Historial</button>
       </div>
       <div style="height:10px"></div>
       <button class="btn ghost" onclick="refreshLobby()" data-i18n="lobby_refresh">Actualizar lista</button>
@@ -204,7 +221,7 @@
       <div class="list" id="open-list"><div class="empty">…</div></div>
     </div>
 
-    <div class="foot"><span class="link" onclick="logout()" data-i18n="lobby_changeuser">Cambiar de usuario</span></div>
+    <div class="foot"><span class="link" id="sound-link" onclick="toggleSound()"></span> · <span class="link" onclick="openRules()" data-i18n="rules_link">¿Cómo se juega?</span> · <span class="link" onclick="logout()" data-i18n="lobby_changeuser">Cambiar de usuario</span></div>
   </section>
 
   <!-- RANKING -->
@@ -218,6 +235,27 @@
     </div>
   </section>
 
+  <!-- HISTORIAL -->
+  <section id="s-history" class="hidden">
+    <div class="card">
+      <h2 data-i18n="hist_title">Historial de partidas</h2>
+      <p class="hint" data-i18n="hist_hint">Tus últimas partidas terminadas.</p>
+      <div class="list" id="hist-list"><div class="empty">…</div></div>
+      <div style="height:16px"></div>
+      <button class="btn ghost" onclick="show('lobby')" data-i18n="back">Volver</button>
+    </div>
+  </section>
+
+  <!-- INSTRUCCIONES -->
+  <section id="s-rules" class="hidden">
+    <div class="card">
+      <h2 data-i18n="rules_title">Cómo se juega</h2>
+      <div id="rules-body" class="rules"></div>
+      <div style="height:8px"></div>
+      <button class="btn ghost" onclick="closeRules()" data-i18n="back">Volver</button>
+    </div>
+  </section>
+
   <!-- CREAR -->
   <section id="s-create" class="hidden">
     <div class="card">
@@ -228,6 +266,15 @@
       <div class="seg" id="seg-mode">
         <button data-m="numbers" class="on" data-i18n="mode_numbers">Números 0-9</button>
         <button data-m="colors" data-i18n="mode_colors">Colores</button>
+      </div>
+
+      <div id="colors-wrap" class="hidden">
+        <label data-i18n="lbl_numcolors">Número de colores</label>
+        <div class="seg mono" id="seg-colors">
+          <button data-nc="4">4</button>
+          <button data-nc="6" class="on">6</button>
+          <button data-nc="8">8</button>
+        </div>
       </div>
 
       <label data-i18n="lbl_positions">Posiciones</label>
@@ -286,6 +333,8 @@
       <div class="scoretxt" id="wait-info"></div>
       <div style="height:16px"></div>
       <button class="btn ghost sm" style="width:100%" onclick="copyCode()" data-i18n="wait_copy">Copiar código</button>
+      <div style="height:8px"></div>
+      <button class="btn sm" style="width:100%" onclick="shareCode()" data-i18n="wait_share">Compartir</button>
       <div style="height:10px"></div>
       <div class="scoretxt" data-i18n="wait_waiting">Esperando a que alguien se una…</div>
       <div style="height:16px"></div>
@@ -397,6 +446,13 @@ const I18N = {
     join_btn:"Unirse", mine_waiting:"Esperando rival", see_btn:"Ver", continue_btn:"Continuar", private_tag:"privada",
     rank_title:"Ranking global 🏆", rank_hint:"Victorias totales por jugador. Se actualiza con cada partida terminada.",
     rank_empty:"Aún no hay partidas terminadas.", rank_wl:"{wins} 🏆 · {played} jug.", back:"Volver",
+    rules_title:"Cómo se juega", rules_link:"¿Cómo se juega?", wait_share:"Compartir",
+    share_text:"¡Únete a mi partida de Picas y Fijas! Código: {code}",
+    lbl_numcolors:"Número de colores", lobby_history:"Historial",
+    hist_title:"Historial de partidas", hist_hint:"Tus últimas partidas terminadas.",
+    hist_empty:"Aún no tienes partidas terminadas.",
+    result_win:"Ganada", result_loss:"Perdida", result_draw:"Empate",
+    sound_label:"Sonido", on:"activado", off:"desactivado", notif_yourturn:"¡Es tu turno!",
     create_title:"Nueva partida", create_hint:"Configura las reglas y define tu código secreto.",
     lbl_mode:"Modo", mode_numbers:"Números 0-9", mode_colors:"Colores",
     lbl_positions:"Posiciones", lbl_repeats:"Repetidos", rep_no:"No permitir", rep_yes:"Permitir",
@@ -431,7 +487,7 @@ const I18N = {
     invalid_guess:"Intento inválido", check_secret:"Revisa tu código secreto", check_code:"Revisa tu código",
     net_error:"Error de red", not_available:"No disponible", api_not_set:"Configura la URL de Apps Script en index.html",
     val_digits:"Solo dígitos 0-9", val_repeats:"Hay repetidos", val_valid:"¡Válido!",
-    rl_colors:"colores", rl_numbers:"números", rl_pos:"{n} pos", rl_norepeat:"sin repetir", rl_repeat:"repetidos ✓",
+    rl_colors:"{n} colores", rl_numbers:"números", rl_pos:"{n} pos", rl_norepeat:"sin repetir", rl_repeat:"repetidos ✓",
     rl_attempts:"{n} intentos", rl_turn:"{n}s/turno"
   },
   en:{
@@ -448,6 +504,13 @@ const I18N = {
     join_btn:"Join", mine_waiting:"Waiting for opponent", see_btn:"View", continue_btn:"Continue", private_tag:"private",
     rank_title:"Global ranking 🏆", rank_hint:"Total wins per player. Updates after each finished game.",
     rank_empty:"No finished games yet.", rank_wl:"{wins} 🏆 · {played} games", back:"Back",
+    rules_title:"How to play", rules_link:"How to play?", wait_share:"Share",
+    share_text:"Join my Picas y Fijas game! Code: {code}",
+    lbl_numcolors:"Number of colors", lobby_history:"History",
+    hist_title:"Match history", hist_hint:"Your latest finished games.",
+    hist_empty:"No finished games yet.",
+    result_win:"Won", result_loss:"Lost", result_draw:"Draw",
+    sound_label:"Sound", on:"on", off:"off", notif_yourturn:"It's your turn!",
     create_title:"New game", create_hint:"Set the rules and choose your secret code.",
     lbl_mode:"Mode", mode_numbers:"Numbers 0-9", mode_colors:"Colors",
     lbl_positions:"Positions", lbl_repeats:"Repeats", rep_no:"Not allowed", rep_yes:"Allowed",
@@ -482,7 +545,7 @@ const I18N = {
     invalid_guess:"Invalid guess", check_secret:"Check your secret code", check_code:"Check your code",
     net_error:"Network error", not_available:"Not available", api_not_set:"Set the Apps Script URL in index.html",
     val_digits:"Digits 0-9 only", val_repeats:"Repeated digits", val_valid:"Valid!",
-    rl_colors:"colors", rl_numbers:"numbers", rl_pos:"{n} pos", rl_norepeat:"no repeats", rl_repeat:"repeats ✓",
+    rl_colors:"{n} colors", rl_numbers:"numbers", rl_pos:"{n} pos", rl_norepeat:"no repeats", rl_repeat:"repeats ✓",
     rl_attempts:"{n} tries", rl_turn:"{n}s/turn"
   },
   fr:{
@@ -499,6 +562,13 @@ const I18N = {
     join_btn:"Rejoindre", mine_waiting:"En attente d'un adversaire", see_btn:"Voir", continue_btn:"Continuer", private_tag:"privée",
     rank_title:"Classement global 🏆", rank_hint:"Victoires totales par joueur. Mis à jour après chaque partie terminée.",
     rank_empty:"Aucune partie terminée pour l'instant.", rank_wl:"{wins} 🏆 · {played} parties", back:"Retour",
+    rules_title:"Comment jouer", rules_link:"Comment jouer ?", wait_share:"Partager",
+    share_text:"Rejoins ma partie de Picas y Fijas ! Code : {code}",
+    lbl_numcolors:"Nombre de couleurs", lobby_history:"Historique",
+    hist_title:"Historique des parties", hist_hint:"Tes dernières parties terminées.",
+    hist_empty:"Aucune partie terminée pour l'instant.",
+    result_win:"Gagnée", result_loss:"Perdue", result_draw:"Égalité",
+    sound_label:"Son", on:"activé", off:"désactivé", notif_yourturn:"À toi de jouer !",
     create_title:"Nouvelle partie", create_hint:"Règle les paramètres et choisis ton code secret.",
     lbl_mode:"Mode", mode_numbers:"Chiffres 0-9", mode_colors:"Couleurs",
     lbl_positions:"Positions", lbl_repeats:"Répétitions", rep_no:"Interdites", rep_yes:"Autorisées",
@@ -533,7 +603,7 @@ const I18N = {
     invalid_guess:"Essai invalide", check_secret:"Vérifie ton code secret", check_code:"Vérifie ton code",
     net_error:"Erreur réseau", not_available:"Indisponible", api_not_set:"Configure l'URL Apps Script dans index.html",
     val_digits:"Chiffres 0-9 uniquement", val_repeats:"Chiffres répétés", val_valid:"Valide !",
-    rl_colors:"couleurs", rl_numbers:"chiffres", rl_pos:"{n} pos", rl_norepeat:"sans répétition", rl_repeat:"répétitions ✓",
+    rl_colors:"{n} couleurs", rl_numbers:"chiffres", rl_pos:"{n} pos", rl_norepeat:"sans répétition", rl_repeat:"répétitions ✓",
     rl_attempts:"{n} essais", rl_turn:"{n}s/tour"
   }
 };
@@ -575,6 +645,70 @@ const ERR = {
   }
 };
 
+/* Instrucciones del juego (HTML) por idioma */
+const RULES = {
+  es:`<ol>
+    <li>Cada jugador entra con un <b>nombre de usuario</b> (sin contraseña). Se usa también en el ranking.</li>
+    <li>Uno <b>crea la partida</b> y elige las reglas:
+      <ul>
+        <li><b>Modo</b>: números 0-9 o <b>colores</b> (6 colores, estilo Mastermind).</li>
+        <li><b>Posiciones</b>: 3, 4, 5 o 6.</li>
+        <li><b>Repetidos</b>: permitir o no.</li>
+        <li><b>Límite de intentos</b>: sin límite, 6 o 10 por jugador.</li>
+        <li><b>Tiempo por turno</b>: sin límite, 30 s, 60 s o 2 min.</li>
+        <li><b>Visibilidad</b>: pública (lobby) o privada (solo por código).</li>
+      </ul>
+      Define su código secreto y obtiene un <b>código de partida de 4 letras</b>.</li>
+    <li>El otro se <b>une</b> desde el lobby o con el código, y define su propio secreto con las mismas reglas.</li>
+    <li>Se turnan para adivinar. Tras cada intento se responde con <span class="pill f">Fijas</span> y <span class="pill p">Picas</span>.</li>
+    <li>Gana quien <b>descifra primero</b> el código del rival. Si quien empezó acierta, el otro tiene un <b>último intento para igualar</b>. Con límite de intentos, si nadie acierta → <b>empate</b>.</li>
+    <li>Al terminar: botón <b>Revancha</b> (misma configuración, mismo rival). Cuando uno la propone, el otro ve <b>“Ir a la revancha”</b>.</li>
+  </ol>
+  <div class="note"><b>Fija</b> = dígito correcto en la <b>posición correcta</b>. &nbsp; <b>Pica</b> = dígito correcto pero en <b>otra posición</b>.</div>
+  <div class="note"><b>Modo colores:</b> mismo cálculo de picas y fijas, solo cambian las cifras por fichas de color.</div>
+  <div class="note"><b>Cronómetro:</b> al llegar a 0 el turno pasa automáticamente al rival.</div>`,
+  en:`<ol>
+    <li>Each player signs in with a <b>username</b> (no password). It's also used in the ranking.</li>
+    <li>One player <b>creates the game</b> and picks the rules:
+      <ul>
+        <li><b>Mode</b>: numbers 0-9 or <b>colors</b> (6 colors, Mastermind style).</li>
+        <li><b>Positions</b>: 3, 4, 5 or 6.</li>
+        <li><b>Repeats</b>: allowed or not.</li>
+        <li><b>Attempt limit</b>: none, 6 or 10 per player.</li>
+        <li><b>Time per turn</b>: none, 30 s, 60 s or 2 min.</li>
+        <li><b>Visibility</b>: public (lobby) or private (code only).</li>
+      </ul>
+      They set their secret code and get a <b>4-letter game code</b>.</li>
+    <li>The other player <b>joins</b> from the lobby or with the code, and sets their own secret with the same rules.</li>
+    <li>Players take turns guessing. Each guess is answered with <span class="pill f">Fixed</span> and <span class="pill p">Present</span>.</li>
+    <li>Whoever <b>cracks the opponent's code first</b> wins. If the player who started cracks it, the other gets one <b>last try to tie</b>. With an attempt limit, if nobody cracks it → <b>draw</b>.</li>
+    <li>When it ends: a <b>Rematch</b> button (same settings, same opponent). When one proposes it, the other sees <b>“Go to rematch”</b>.</li>
+  </ol>
+  <div class="note"><b>Fixed (F)</b> = correct digit in the <b>correct position</b>. &nbsp; <b>Present (P)</b> = correct digit in a <b>different position</b>.</div>
+  <div class="note"><b>Colors mode:</b> same F/P scoring, colored pegs instead of digits.</div>
+  <div class="note"><b>Timer:</b> when it reaches 0, the turn automatically passes to the opponent.</div>`,
+  fr:`<ol>
+    <li>Chaque joueur se connecte avec un <b>nom d'utilisateur</b> (sans mot de passe). Il sert aussi au classement.</li>
+    <li>Un joueur <b>crée la partie</b> et choisit les règles :
+      <ul>
+        <li><b>Mode</b> : chiffres 0-9 ou <b>couleurs</b> (6 couleurs, style Mastermind).</li>
+        <li><b>Positions</b> : 3, 4, 5 ou 6.</li>
+        <li><b>Répétitions</b> : autorisées ou non.</li>
+        <li><b>Limite d'essais</b> : illimité, 6 ou 10 par joueur.</li>
+        <li><b>Temps par tour</b> : illimité, 30 s, 60 s ou 2 min.</li>
+        <li><b>Visibilité</b> : publique (lobby) ou privée (code seulement).</li>
+      </ul>
+      Il choisit son code secret et obtient un <b>code de partie de 4 lettres</b>.</li>
+    <li>L'autre joueur <b>rejoint</b> depuis le lobby ou avec le code, et choisit son propre secret avec les mêmes règles.</li>
+    <li>Les joueurs devinent à tour de rôle. Chaque essai reçoit <span class="pill f">Fixes</span> et <span class="pill p">Présents</span>.</li>
+    <li>Celui qui <b>trouve le code adverse en premier</b> gagne. Si le joueur qui a commencé trouve, l'autre a un <b>dernier essai pour égaliser</b>. Avec une limite d'essais, si personne ne trouve → <b>égalité</b>.</li>
+    <li>À la fin : bouton <b>Revanche</b> (mêmes réglages, même adversaire). Quand l'un la propose, l'autre voit <b>« Aller à la revanche »</b>.</li>
+  </ol>
+  <div class="note"><b>Fixe (F)</b> = bon chiffre à la <b>bonne position</b>. &nbsp; <b>Présent (P)</b> = bon chiffre à une <b>autre position</b>.</div>
+  <div class="note"><b>Mode couleurs :</b> même calcul F/P, des pions colorés à la place des chiffres.</div>
+  <div class="note"><b>Chrono :</b> à 0, le tour passe automatiquement à l'adversaire.</div>`
+};
+
 let lang = localStorage.getItem('pf_lang') || 'es';
 function t(key, p){
   let s = (I18N[lang] && I18N[lang][key]) || I18N.es[key] || key;
@@ -587,26 +721,46 @@ function applyI18n(){
   document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ el.placeholder = t(el.dataset.i18nPh); });
   document.querySelectorAll('#seg-lang button').forEach(b=> b.classList.toggle('on', b.dataset.lang===lang));
+  if(typeof updateSoundLabel==='function') updateSoundLabel();
 }
 
-/* Paleta de 6 colores (índices 0-5) */
+/* Paleta de hasta 8 colores (índices 0-7) */
 const COLORS = [
-  {c:'#F87171'}, {c:'#FBBF24'}, {c:'#4ADE80'},
-  {c:'#22D3EE'}, {c:'#818CF8'}, {c:'#F472B6'}
+  {c:'#F87171'}, {c:'#FB923C'}, {c:'#FBBF24'}, {c:'#4ADE80'},
+  {c:'#22D3EE'}, {c:'#60A5FA'}, {c:'#A78BFA'}, {c:'#F472B6'}
 ];
 
 /* -------------------- estado -------------------- */
 let user = localStorage.getItem('pf_user') || '';
-let cfg = { digits:3, mode:'numbers', allowRepeats:false, isPublic:true, maxAttempts:0, turnSeconds:0 };
+let cfg = { digits:3, mode:'numbers', numColors:6, allowRepeats:false, isPublic:true, maxAttempts:0, turnSeconds:0 };
 let joinMeta = null, finishedMeta = null;
-let game = { id:'', digits:3, mode:'numbers', allowRepeats:false, maxAttempts:0, turnSeconds:0 };
+let game = { id:'', digits:3, mode:'numbers', numColors:6, allowRepeats:false, maxAttempts:0, turnSeconds:0 };
 let gState = null;
 let pollTimer = null, tickTimer = null, passRequested = false, lastTurnStart = '';
+let lastYourTurn = null;
+let soundOn = localStorage.getItem('pf_sound')!=='0';
+let audioCtx = null;
+let myCountry = localStorage.getItem('pf_country') || '';
+async function detectCountry(){
+  try{
+    const r=await fetch('https://get.geojs.io/v1/ip/country.json');
+    if(r.ok){ const j=await r.json(); if(j&&j.country){ myCountry=String(j.country).toLowerCase(); localStorage.setItem('pf_country',myCountry); return; } }
+  }catch(e){}
+  try{
+    const r=await fetch('https://api.country.is/');
+    if(r.ok){ const j=await r.json(); if(j&&j.country){ myCountry=String(j.country).toLowerCase(); localStorage.setItem('pf_country',myCountry); return; } }
+  }catch(e){}
+}
+function flagHTML(cc){
+  cc=String(cc||'').toLowerCase();
+  if(!/^[a-z]{2}$/.test(cc)) return '';
+  return `<img class="flag" src="https://flagcdn.com/20x15/${cc}.png" srcset="https://flagcdn.com/40x30/${cc}.png 2x" alt="${cc.toUpperCase()}" loading="lazy">`;
+}
 
 /* -------------------- utilidades -------------------- */
 const $ = id => document.getElementById(id);
 function show(name){
-  ['login','lobby','rank','create','wait','join','rematch','game'].forEach(s=>{
+  ['login','lobby','rank','history','rules','create','wait','join','rematch','game'].forEach(s=>{
     $('s-'+s).classList.toggle('hidden', s!==name);
   });
   if(name!=='game') stopTick();
@@ -633,11 +787,47 @@ function validateLive(v, digits, allowRepeats){
   return {cls:'ok',msg:t('val_valid')};
 }
 function rulesLabel(m){
-  const parts=[ (m.mode==='colors'?t('rl_colors'):t('rl_numbers')), t('rl_pos',{n:m.digits}),
+  const parts=[ (m.mode==='colors'?t('rl_colors',{n:m.numColors||6}):t('rl_numbers')), t('rl_pos',{n:m.digits}),
     (m.allowRepeats?t('rl_repeat'):t('rl_norepeat')) ];
   if(m.maxAttempts>0) parts.push(t('rl_attempts',{n:m.maxAttempts}));
   if(m.turnSeconds>0) parts.push(t('rl_turn',{n:m.turnSeconds}));
   return parts.join(' · ');
+}
+
+/* -------------------- aviso de turno (sonido / vibración / notificación) -------------------- */
+function unlockAudio(){
+  try{ audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended') audioCtx.resume(); }catch(e){}
+}
+function chime(){
+  if(!soundOn) return;
+  try{
+    unlockAudio(); if(!audioCtx) return;
+    const now=audioCtx.currentTime;
+    [[880,0],[1174.7,0.13]].forEach(([f,dt])=>{
+      const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+      o.type='sine'; o.frequency.value=f; o.connect(g); g.connect(audioCtx.destination);
+      g.gain.setValueAtTime(0.0001, now+dt);
+      g.gain.exponentialRampToValueAtTime(0.18, now+dt+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, now+dt+0.3);
+      o.start(now+dt); o.stop(now+dt+0.32);
+    });
+  }catch(e){}
+}
+function notifyTurn(){
+  chime();
+  try{ navigator.vibrate && navigator.vibrate([120,60,120]); }catch(e){}
+  try{
+    if(document.hidden && 'Notification' in window && Notification.permission==='granted'){
+      new Notification('Picas y Fijas', { body: t('notif_yourturn'), tag:'pf-turn' });
+    }
+  }catch(e){}
+}
+function toggleSound(){
+  soundOn=!soundOn; localStorage.setItem('pf_sound', soundOn?'1':'0');
+  updateSoundLabel(); if(soundOn){ unlockAudio(); chime(); }
+}
+function updateSoundLabel(){
+  const el=$('sound-link'); if(el) el.textContent = (soundOn?'🔔 ':'🔕 ')+t('sound_label')+': '+t(soundOn?'on':'off');
 }
 function codeViewHTML(str, mode){
   if(mode==='colors'){
@@ -648,7 +838,7 @@ function codeViewHTML(str, mode){
 }
 
 /* -------------------- color pads -------------------- */
-function makePad(slotsId, paletteId, getLen, onChange){
+function makePad(slotsId, paletteId, getLen, getColors, onChange){
   let value='';
   const slots=$(slotsId), pal=$(paletteId);
   function drawSlots(){
@@ -661,11 +851,12 @@ function makePad(slotsId, paletteId, getLen, onChange){
   }
   function drawPalette(){
     pal.innerHTML='';
-    COLORS.forEach((col,idx)=>{
-      const b=document.createElement('button'); b.type='button'; b.className='sw'; b.style.background=col.c;
+    const n=Math.min(getColors(), COLORS.length);
+    for(let idx=0; idx<n; idx++){
+      const b=document.createElement('button'); b.type='button'; b.className='sw'; b.style.background=COLORS[idx].c;
       b.onclick=()=>{ if(value.length<getLen()){ value+=idx; drawSlots(); onChange&&onChange(value); } };
       pal.appendChild(b);
-    });
+    }
     const bs=document.createElement('button'); bs.type='button'; bs.className='sw bs'; bs.textContent='⌫';
     bs.onclick=()=>{ value=value.slice(0,-1); drawSlots(); onChange&&onChange(value); };
     pal.appendChild(bs);
@@ -673,10 +864,10 @@ function makePad(slotsId, paletteId, getLen, onChange){
   drawPalette(); drawSlots();
   return { get:()=>value, reset:()=>{value='';drawSlots();}, refresh:()=>{drawSlots();drawPalette();} };
 }
-const padC = makePad('slots-c','palette-c', ()=>cfg.digits, v=>setVal('secret-c-val', v, cfg.digits, cfg.allowRepeats));
-const padJ = makePad('slots-j','palette-j', ()=>joinMeta?joinMeta.digits:3, v=>setVal('secret-j-val', v, joinMeta.digits, joinMeta.allowRepeats));
-const padR = makePad('slots-r','palette-r', ()=>finishedMeta?finishedMeta.digits:3, v=>setVal('secret-r-val', v, finishedMeta.digits, finishedMeta.allowRepeats));
-const padG = makePad('slots-g','palette-g', ()=>game.digits, v=>setVal('g-guess-val', v, game.digits, game.allowRepeats));
+const padC = makePad('slots-c','palette-c', ()=>cfg.digits, ()=>cfg.numColors, v=>setVal('secret-c-val', v, cfg.digits, cfg.allowRepeats));
+const padJ = makePad('slots-j','palette-j', ()=>joinMeta?joinMeta.digits:3, ()=>joinMeta?joinMeta.numColors:6, v=>setVal('secret-j-val', v, joinMeta.digits, joinMeta.allowRepeats));
+const padR = makePad('slots-r','palette-r', ()=>finishedMeta?finishedMeta.digits:3, ()=>finishedMeta?finishedMeta.numColors:6, v=>setVal('secret-r-val', v, finishedMeta.digits, finishedMeta.allowRepeats));
+const padG = makePad('slots-g','palette-g', ()=>game.digits, ()=>game.numColors||6, v=>setVal('g-guess-val', v, game.digits, game.allowRepeats));
 function setVal(elId, v, digits, allowRepeats){
   const r=validateLive(v, digits, allowRepeats); $(elId).className='val '+r.cls; $(elId).textContent=r.msg;
 }
@@ -695,10 +886,13 @@ $('seg-lang').addEventListener('click', e=>{ const b=e.target.closest('button');
 function doLogin(){
   const v=$('uname').value.trim();
   if(v.length<2){ $('uname-val').className='val err'; $('uname-val').textContent=t('login_min'); return; }
-  user=v; localStorage.setItem('pf_user', user); enterLobby();
+  user=v; localStorage.setItem('pf_user', user);
+  unlockAudio();
+  try{ if('Notification' in window && Notification.permission==='default') Notification.requestPermission(); }catch(e){}
+  enterLobby();
 }
 function logout(){ localStorage.removeItem('pf_user'); user=''; show('login'); $('uname').value=''; }
-function enterLobby(){ $('lobby-greet').textContent=t('lobby_greeting',{name:user}); show('lobby'); refreshLobby(); }
+function enterLobby(){ $('lobby-greet').textContent=t('lobby_greeting',{name:user}); updateSoundLabel(); show('lobby'); refreshLobby(); }
 
 /* -------------------- lobby -------------------- */
 async function refreshLobby(){
@@ -715,7 +909,7 @@ function renderOpen(games){
   list.forEach(g=>{
     const el=document.createElement('div'); el.className='gitem';
     el.innerHTML=`<div class="gid">${g.gameId}</div>
-      <div class="meta"><div class="who">${esc(g.p1)}</div><div class="det">${rulesLabel(g)}</div></div>`;
+      <div class="meta"><div class="who">${flagHTML(g.country1)}${esc(g.p1)}</div><div class="det">${rulesLabel(g)}</div></div>`;
     const b=document.createElement('button'); b.className='btn pink sm'; b.textContent=t('join_btn');
     b.onclick=()=>openJoin(g); el.appendChild(b); box.appendChild(el);
   });
@@ -726,12 +920,13 @@ function renderMine(games){
   $('mine-card').classList.remove('hidden'); box.innerHTML='';
   games.forEach(g=>{
     const opp = g.p1===user ? g.p2 : g.p1;
+    const oppCountry = g.p1===user ? g.country2 : g.country1;
     const label = g.status==='waiting' ? t('mine_waiting') : t('vs',{name:opp||'—'});
     const el=document.createElement('div'); el.className='gitem';
     el.innerHTML=`<div class="gid">${g.gameId}</div>
-      <div class="meta"><div class="who">${esc(label)}</div><div class="det">${rulesLabel(g)}${g.isPublic?'':' · '+t('private_tag')}</div></div>`;
+      <div class="meta"><div class="who">${g.status==='waiting'?'':flagHTML(oppCountry)}${esc(label)}</div><div class="det">${rulesLabel(g)}${g.isPublic?'':' · '+t('private_tag')}</div></div>`;
     const b=document.createElement('button'); b.className='btn sm'; b.textContent= g.status==='waiting'?t('see_btn'):t('continue_btn');
-    b.onclick=()=>{ const meta={id:g.gameId,digits:g.digits,mode:g.mode,allowRepeats:g.allowRepeats,maxAttempts:g.maxAttempts,turnSeconds:g.turnSeconds};
+    b.onclick=()=>{ const meta={id:g.gameId,digits:g.digits,mode:g.mode,numColors:g.numColors,allowRepeats:g.allowRepeats,maxAttempts:g.maxAttempts,turnSeconds:g.turnSeconds};
       if(g.status==='waiting'){ enterWait(meta); } else { enterGame(meta); } };
     el.appendChild(b); box.appendChild(el);
   });
@@ -746,18 +941,44 @@ async function openRank(){
     $('rank-list').innerHTML='';
     list.forEach((r,i)=>{
       const el=document.createElement('div'); el.className='rankrow'+(r.user===user?' me':'');
-      el.innerHTML=`<div class="pos">${i+1}</div><div class="nm">${esc(r.user)}</div>
+      el.innerHTML=`<div class="pos">${i+1}</div><div class="nm">${flagHTML(r.country)}${esc(r.user)}</div>
         <div class="wl">${t('rank_wl',{wins:r.wins,played:r.played})}</div>`;
       $('rank-list').appendChild(el);
     });
   }catch(e){ $('rank-list').innerHTML=`<div class="empty">${t('load_error')}</div>`; }
 }
 
+/* -------------------- historial -------------------- */
+const LOCALE={es:'es',en:'en',fr:'fr'};
+async function openHistory(){
+  show('history'); $('hist-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
+  try{
+    const res=await api('history',{username:user}); const list=res.history||[];
+    if(!list.length){ $('hist-list').innerHTML=`<div class="empty">${t('hist_empty')}</div>`; return; }
+    $('hist-list').innerHTML='';
+    list.forEach(h=>{
+      const cls = h.result==='win'?'f':(h.result==='draw'?'':'p');
+      const badge = h.result==='win'?t('result_win'):(h.result==='draw'?t('result_draw'):t('result_loss'));
+      const badgeCls = h.result==='win'?'pill f':(h.result==='draw'?'pill':'pill p');
+      let date=''; try{ date=new Date(h.updatedAt).toLocaleDateString(LOCALE[lang]||'es',{day:'2-digit',month:'short'}); }catch(e){}
+      const el=document.createElement('div'); el.className='gitem';
+      el.innerHTML=`<div class="meta"><div class="who">${flagHTML(h.oppCountry)}${t('vs',{name:esc(h.opp||'—')})}</div>
+        <div class="det">${rulesLabel(h)} · ${date}</div></div>
+        <span class="${badgeCls}">${badge}</span>`;
+      $('hist-list').appendChild(el);
+    });
+  }catch(e){ $('hist-list').innerHTML=`<div class="empty">${t('load_error')}</div>`; }
+}
+
 /* -------------------- crear -------------------- */
 function segPick(container, btn){ [...container.children].forEach(x=>x.classList.toggle('on', x===btn)); }
 $('seg-mode').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
   cfg.mode=b.dataset.m; segPick($('seg-mode'),b);
+  $('colors-wrap').classList.toggle('hidden', cfg.mode!=='colors');
   padC.reset(); applyMode('c', cfg.mode, 'secret-c', 'pad-c', padC); $('secret-c-val').textContent=''; });
+$('seg-colors').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
+  cfg.numColors=parseInt(b.dataset.nc,10); segPick($('seg-colors'),b);
+  padC.reset(); padC.refresh(); $('secret-c-val').textContent=''; });
 $('seg-digits').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
   cfg.digits=parseInt(b.dataset.d,10); segPick($('seg-digits'),b);
   const inp=$('secret-c'); inp.maxLength=cfg.digits; inp.value=''; inp.placeholder='•'.repeat(cfg.digits);
@@ -786,17 +1007,17 @@ async function createGame(){
   if(r.cls!=='ok'){ toast(t('check_secret'),true); return; }
   $('btn-create').disabled=true;
   try{
-    const res=await api('createGame',{username:user, digits:cfg.digits, secret, mode:cfg.mode, numColors:6,
-      allowRepeats:cfg.allowRepeats, isPublic:cfg.isPublic, maxAttempts:cfg.maxAttempts, turnSeconds:cfg.turnSeconds});
+    const res=await api('createGame',{username:user, digits:cfg.digits, secret, mode:cfg.mode, numColors:cfg.numColors,
+      allowRepeats:cfg.allowRepeats, isPublic:cfg.isPublic, maxAttempts:cfg.maxAttempts, turnSeconds:cfg.turnSeconds, country:myCountry});
     if(!res.ok){ toast(te(res.error),true); return; }
     localStorage.setItem('pf_secret_'+res.gameId, secret);
-    enterWait({id:res.gameId, digits:cfg.digits, mode:cfg.mode, allowRepeats:cfg.allowRepeats, maxAttempts:cfg.maxAttempts, turnSeconds:cfg.turnSeconds});
+    enterWait({id:res.gameId, digits:cfg.digits, mode:cfg.mode, numColors:cfg.numColors, allowRepeats:cfg.allowRepeats, maxAttempts:cfg.maxAttempts, turnSeconds:cfg.turnSeconds});
   }catch(e){ toast(t('net_error'),true); } finally{ $('btn-create').disabled=false; }
 }
 
 /* -------------------- sala de espera -------------------- */
 function enterWait(meta){
-  game={id:meta.id, digits:meta.digits, mode:meta.mode, allowRepeats:meta.allowRepeats, maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0};
+  game={id:meta.id, digits:meta.digits, mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats, maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0};
   $('wait-code').textContent=meta.id; $('wait-info').textContent=rulesLabel(meta);
   show('wait'); startPoll(pollWait);
 }
@@ -806,10 +1027,26 @@ async function pollWait(){
 }
 function cancelWait(){ stopPoll(); enterLobby(); }
 function copyCode(){ navigator.clipboard?.writeText(game.id).then(()=>toast(t('copied',{code:game.id}))).catch(()=>toast(game.id)); }
+function shareCode(){
+  const url=location.href.split('#')[0].split('?')[0];
+  const text=t('share_text',{code:game.id});
+  if(navigator.share){ navigator.share({title:'Picas y Fijas', text:text, url:url}).catch(()=>{}); }
+  else { navigator.clipboard?.writeText(text+' '+url).then(()=>toast(t('copied',{code:game.id}))).catch(()=>toast(game.id)); }
+}
+
+/* -------------------- instrucciones -------------------- */
+let rulesReturn='login';
+function openRules(){
+  const cur=document.querySelector('section:not(.hidden)');
+  rulesReturn = cur ? cur.id.replace('s-','') : 'lobby';
+  $('rules-body').innerHTML = RULES[lang] || RULES.es;
+  show('rules');
+}
+function closeRules(){ show(rulesReturn); }
 
 /* -------------------- unirse -------------------- */
 function openJoin(meta){
-  joinMeta={gameId:meta.gameId||meta.id, digits:meta.digits, mode:meta.mode, allowRepeats:meta.allowRepeats,
+  joinMeta={gameId:meta.gameId||meta.id, digits:meta.digits, mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats,
     maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0};
   $('join-code').textContent=joinMeta.gameId;
   $('join-rules-txt').textContent=t('join_rules',{rules:rulesLabel(joinMeta)});
@@ -824,16 +1061,16 @@ async function confirmJoin(){
   if(r.cls!=='ok'){ toast(t('check_secret'),true); return; }
   $('btn-join').disabled=true;
   try{
-    const res=await api('joinGame',{gameId:joinMeta.gameId, username:user, secret});
+    const res=await api('joinGame',{gameId:joinMeta.gameId, username:user, secret, country:myCountry});
     if(!res.ok){ toast(te(res.error),true); return; }
     localStorage.setItem('pf_secret_'+joinMeta.gameId, secret);
-    enterGame({id:joinMeta.gameId, digits:joinMeta.digits, mode:joinMeta.mode, allowRepeats:joinMeta.allowRepeats, maxAttempts:joinMeta.maxAttempts, turnSeconds:joinMeta.turnSeconds});
+    enterGame({id:joinMeta.gameId, digits:joinMeta.digits, mode:joinMeta.mode, numColors:joinMeta.numColors, allowRepeats:joinMeta.allowRepeats, maxAttempts:joinMeta.maxAttempts, turnSeconds:joinMeta.turnSeconds});
   }catch(e){ toast(t('net_error'),true); } finally{ $('btn-join').disabled=false; }
 }
 
 /* -------------------- revancha -------------------- */
 function openRematch(){
-  finishedMeta={gameId:gState.gameId, digits:gState.digits, mode:gState.mode, allowRepeats:gState.allowRepeats,
+  finishedMeta={gameId:gState.gameId, digits:gState.digits, mode:gState.mode, numColors:gState.numColors||6, allowRepeats:gState.allowRepeats,
     maxAttempts:gState.maxAttempts, turnSeconds:gState.turnSeconds};
   $('rematch-rules-txt').textContent=t('rematch_rules',{rules:rulesLabel(finishedMeta)});
   const inp=$('secret-r'); inp.maxLength=finishedMeta.digits; inp.value=''; inp.placeholder='•'.repeat(finishedMeta.digits);
@@ -847,10 +1084,10 @@ async function sendRematch(){
   if(r.cls!=='ok'){ toast(t('check_code'),true); return; }
   $('btn-rematch').disabled=true;
   try{
-    const res=await api('rematch',{gameId:finishedMeta.gameId, username:user, secret});
+    const res=await api('rematch',{gameId:finishedMeta.gameId, username:user, secret, country:myCountry});
     if(!res.ok){ toast(te(res.error),true); return; }
     localStorage.setItem('pf_secret_'+res.gameId, secret);
-    enterWait({id:res.gameId, digits:finishedMeta.digits, mode:finishedMeta.mode, allowRepeats:finishedMeta.allowRepeats, maxAttempts:finishedMeta.maxAttempts, turnSeconds:finishedMeta.turnSeconds});
+    enterWait({id:res.gameId, digits:finishedMeta.digits, mode:finishedMeta.mode, numColors:finishedMeta.numColors, allowRepeats:finishedMeta.allowRepeats, maxAttempts:finishedMeta.maxAttempts, turnSeconds:finishedMeta.turnSeconds});
   }catch(e){ toast(t('net_error'),true); } finally{ $('btn-rematch').disabled=false; }
 }
 async function goToRematch(rematchId){
@@ -866,16 +1103,16 @@ async function goToRematch(rematchId){
 
 /* -------------------- juego -------------------- */
 function metaFromState(st){
-  return {id:st.gameId, digits:parseInt(st.digits,10), mode:st.mode, allowRepeats:st.allowRepeats,
+  return {id:st.gameId, digits:parseInt(st.digits,10), mode:st.mode, numColors:st.numColors||6, allowRepeats:st.allowRepeats,
     maxAttempts:st.maxAttempts||0, turnSeconds:st.turnSeconds||0};
 }
 function enterGame(meta){
-  game={id:meta.id, digits:parseInt(meta.digits,10), mode:meta.mode, allowRepeats:meta.allowRepeats,
+  game={id:meta.id, digits:parseInt(meta.digits,10), mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats,
     maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0};
   const inp=$('g-guess'); inp.maxLength=game.digits; inp.value=''; inp.placeholder='•'.repeat(game.digits);
   padG.reset(); applyMode('g', game.mode, 'g-guess', 'pad-g', padG);
   $('g-code').textContent=meta.id; $('g-guess-val').textContent='';
-  gState=null; passRequested=false; lastTurnStart='';
+  gState=null; passRequested=false; lastTurnStart=''; lastYourTurn=null;
   show('game'); refreshGame(); startPoll(refreshGame); startTick();
 }
 async function refreshGame(){
@@ -892,7 +1129,8 @@ function renderGame(st){
   if(st.turnStartedAt!==lastTurnStart){ lastTurnStart=st.turnStartedAt; passRequested=false; }
 
   const me=st.youAre; const oppName = me===1 ? st.p2 : st.p1; const oppLabel = oppName||t('rival');
-  $('g-vs').textContent=(oppName? t('vs',{name:oppName}) : t('waiting_short'))+' · '+rulesLabel(metaFromState(st));
+  const oppCountry = me===1 ? st.country2 : st.country1;
+  $('g-vs').innerHTML=(oppName? flagHTML(oppCountry)+t('vs',{name:esc(oppName)}) : t('waiting_short'))+' · '+rulesLabel(metaFromState(st));
   $('colhead-mine').textContent=t('colhead_mine',{name:oppLabel});
   $('colhead-theirs').textContent=t('colhead_theirs',{name:oppLabel});
 
@@ -955,10 +1193,13 @@ function renderGame(st){
     turn.className='turnbar theirs';
     $('g-turn-txt').textContent= st.whoseTurn ? t('turn_of',{name:st.whoseTurn}) : t('waiting_generic');
     $('g-guess-btn').disabled=true; $('g-guess').disabled=true;
+    $('g-guess').value=''; padG.reset(); $('g-guess-val').textContent='';
     if(pending && pending===user){
       $('g-turn-txt').textContent=t('solved_wait',{name:oppLabel});
     }
   }
+  if(st.yourTurn && lastYourTurn===false) notifyTurn();
+  lastYourTurn = st.yourTurn;
   updateTimer();
 }
 function renderLog(id, arr, emptyMsg){
@@ -981,11 +1222,12 @@ async function submitGuess(){
   const guess=getSecret('g');
   const r=validateLive(guess, game.digits, game.allowRepeats);
   if(r.cls!=='ok'){ toast(t('invalid_guess'),true); return; }
+  // Limpia el campo de inmediato (ya tenemos el valor capturado en 'guess').
+  $('g-guess').value=''; padG.reset(); $('g-guess-val').textContent='';
   $('g-guess-btn').disabled=true;
   try{
     const res=await api('guess',{gameId:game.id, username:user, guess});
     if(!res.ok){ toast(te(res.error),true); $('g-guess-btn').disabled=false; return; }
-    $('g-guess').value=''; padG.reset(); $('g-guess-val').textContent='';
     if(res.tie) toast(t('toast_tie'));
     else if(res.win) toast(t('win_title'));
     else if(res.pending) toast(t('toast_solved'));
@@ -1019,6 +1261,7 @@ function stopPoll(){ if(pollTimer){ clearInterval(pollTimer); pollTimer=null; } 
 
 /* -------------------- arranque -------------------- */
 applyI18n();
+detectCountry();
 if(user){ enterLobby(); } else { show('login'); }
 </script>
 </body>
