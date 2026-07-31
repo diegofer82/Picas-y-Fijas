@@ -150,6 +150,9 @@
   .toast.err{border-color:var(--pink)}
 
   .foot{text-align:center;color:var(--muted);font-size:11px;margin-top:24px;letter-spacing:.05em}
+  .credits{margin-top:12px;line-height:1.7}
+  .credits a{color:var(--accent);text-decoration:none}
+  .credits a:hover{text-decoration:underline}
   .link{color:var(--accent);cursor:pointer;text-decoration:underline;font-size:13px}
   .hidden{display:none!important}
   .legend{display:flex;gap:16px;justify-content:center;font-size:12px;color:var(--muted);margin-top:6px;flex-wrap:wrap}
@@ -194,6 +197,7 @@
     <div class="val" id="uname-val"></div>
     <button class="btn" onclick="doLogin()" data-i18n="login_enter">Entrar</button>
     <div class="foot"><span class="link" onclick="openRules()" data-i18n="rules_link">¿Cómo se juega?</span></div>
+    <div class="foot credits"></div>
   </section>
 
   <!-- LOBBY -->
@@ -218,6 +222,7 @@
 
     <div class="card">
       <h2 data-i18n="lobby_open">Partidas públicas abiertas</h2>
+      <div class="scoretxt" id="online-now" style="margin:2px 0 12px"></div>
       <div class="list" id="open-list"><div class="empty">…</div></div>
     </div>
 
@@ -253,6 +258,7 @@
       <div id="rules-body" class="rules"></div>
       <div style="height:8px"></div>
       <button class="btn ghost" onclick="closeRules()" data-i18n="back">Volver</button>
+      <div class="foot credits"></div>
     </div>
   </section>
 
@@ -377,7 +383,7 @@
     <div class="card">
       <div class="mysecret">
         <span><span data-i18n="game_match">Partida</span> <b class="n" style="letter-spacing:3px" id="g-code"></b> · <span id="g-vs"></span></span>
-        <span class="code-view"><span data-i18n="game_yourcode">Tu código:</span>&nbsp;<span id="g-mysecret"></span></span>
+        <span class="code-view"><span id="g-myflag"></span><span data-i18n="game_yourcode">Tu código:</span>&nbsp;<span id="g-mysecret"></span></span>
       </div>
 
       <div id="g-banner"></div>
@@ -427,6 +433,14 @@
    CONFIG — pega aquí la URL /exec de tu Aplicación web de Apps Script
    ========================================================================== */
 const API = 'https://script.google.com/macros/s/AKfycbyjJRp_ZokFiKyRK3-P2kA8shD1SR73zjP3DMbynf09BvCOpGDGNoHULXf-uDy40pEI/exec';
+const APP_VERSION = '1.0';
+/* Enlace de invitación: ...?game=SZ93 */
+let pendingJoinCode = '';
+(function(){
+  try{ const p=new URLSearchParams(location.search); const g=(p.get('game')||'').toUpperCase().trim();
+    if(/^[A-Z0-9]{4,6}$/.test(g)){ pendingJoinCode=g; history.replaceState({}, '', location.pathname); } }catch(e){}
+})();
+function gameLink(code){ return location.origin+location.pathname+'?game='+code; }
 
 /* ==========================================================================
    TRADUCCIONES  (es / en / fr)
@@ -452,7 +466,7 @@ const I18N = {
     hist_title:"Historial de partidas", hist_hint:"Tus últimas partidas terminadas.",
     hist_empty:"Aún no tienes partidas terminadas.",
     result_win:"Ganada", result_loss:"Perdida", result_draw:"Empate",
-    sound_label:"Sonido", on:"activado", off:"desactivado", notif_yourturn:"¡Es tu turno!",
+    sound_label:"Sonido", on:"activado", off:"desactivado", notif_yourturn:"¡Es tu turno!", notif_joined:"¡Un rival se ha unido! 🎮", game_expired:"La partida abierta expiró (nadie se unió).", online_now:"🟢 {n} en curso ahora", credits_by:"Creado por",
     create_title:"Nueva partida", create_hint:"Configura las reglas y define tu código secreto.",
     lbl_mode:"Modo", mode_numbers:"Números 0-9", mode_colors:"Colores",
     lbl_positions:"Posiciones", lbl_repeats:"Repetidos", rep_no:"No permitir", rep_yes:"Permitir",
@@ -510,7 +524,7 @@ const I18N = {
     hist_title:"Match history", hist_hint:"Your latest finished games.",
     hist_empty:"No finished games yet.",
     result_win:"Won", result_loss:"Lost", result_draw:"Draw",
-    sound_label:"Sound", on:"on", off:"off", notif_yourturn:"It's your turn!",
+    sound_label:"Sound", on:"on", off:"off", notif_yourturn:"It's your turn!", notif_joined:"An opponent joined! 🎮", game_expired:"The open game expired (nobody joined).", online_now:"🟢 {n} in progress now", credits_by:"Created by",
     create_title:"New game", create_hint:"Set the rules and choose your secret code.",
     lbl_mode:"Mode", mode_numbers:"Numbers 0-9", mode_colors:"Colors",
     lbl_positions:"Positions", lbl_repeats:"Repeats", rep_no:"Not allowed", rep_yes:"Allowed",
@@ -568,7 +582,7 @@ const I18N = {
     hist_title:"Historique des parties", hist_hint:"Tes dernières parties terminées.",
     hist_empty:"Aucune partie terminée pour l'instant.",
     result_win:"Gagnée", result_loss:"Perdue", result_draw:"Égalité",
-    sound_label:"Son", on:"activé", off:"désactivé", notif_yourturn:"À toi de jouer !",
+    sound_label:"Son", on:"activé", off:"désactivé", notif_yourturn:"À toi de jouer !", notif_joined:"Un adversaire a rejoint ! 🎮", game_expired:"La partie ouverte a expiré (personne n'a rejoint).", online_now:"🟢 {n} en cours maintenant", credits_by:"Créé par",
     create_title:"Nouvelle partie", create_hint:"Règle les paramètres et choisis ton code secret.",
     lbl_mode:"Mode", mode_numbers:"Chiffres 0-9", mode_colors:"Couleurs",
     lbl_positions:"Positions", lbl_repeats:"Répétitions", rep_no:"Interdites", rep_yes:"Autorisées",
@@ -621,6 +635,7 @@ const ERR = {
     "Esta partida no tiene cronómetro.":"This game has no timer.",
     "Aún queda tiempo.":"There's still time left.",
     "La partida aún no ha terminado.":"The game hasn't finished yet.",
+    "La partida ha expirado.":"The game has expired.",
     "Longitud debe ser 3, 4, 5 o 6.":"Length must be 3, 4, 5 or 6.",
     "Código inválido.":"Invalid code.",
     "Símbolo fuera de rango.":"Symbol out of range.",
@@ -638,6 +653,7 @@ const ERR = {
     "Esta partida no tiene cronómetro.":"Cette partie n'a pas de chrono.",
     "Aún queda tiempo.":"Il reste encore du temps.",
     "La partida aún no ha terminado.":"La partie n'est pas encore terminée.",
+    "La partida ha expirado.":"La partie a expiré.",
     "Longitud debe ser 3, 4, 5 o 6.":"La longueur doit être 3, 4, 5 ou 6.",
     "Código inválido.":"Code invalide.",
     "Símbolo fuera de rango.":"Symbole hors limites.",
@@ -716,12 +732,17 @@ function t(key, p){
   return s;
 }
 function te(msg){ return (ERR[lang] && ERR[lang][msg]) || msg; }
+function creditsHTML(){
+  return `${t('credits_by')} <a href="https://www.linkedin.com/in/diego-olaya-857bb6105" target="_blank" rel="noopener">Diego OLAYA</a> · powered by Claude · 2026 · v${APP_VERSION}`;
+}
+function setCredits(){ document.querySelectorAll('.credits').forEach(el=>{ el.innerHTML=creditsHTML(); }); }
 function applyI18n(){
   document.documentElement.lang = lang;
   document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ el.placeholder = t(el.dataset.i18nPh); });
   document.querySelectorAll('#seg-lang button').forEach(b=> b.classList.toggle('on', b.dataset.lang===lang));
   if(typeof updateSoundLabel==='function') updateSoundLabel();
+  setCredits();
 }
 
 /* Paleta de hasta 8 colores (índices 0-7) */
@@ -737,7 +758,9 @@ let joinMeta = null, finishedMeta = null;
 let game = { id:'', digits:3, mode:'numbers', numColors:6, allowRepeats:false, maxAttempts:0, turnSeconds:0 };
 let gState = null;
 let pollTimer = null, tickTimer = null, passRequested = false, lastTurnStart = '';
+let lobbyPollTimer = null;
 let lastYourTurn = null;
+let endSoundPlayed = false;
 let soundOn = localStorage.getItem('pf_sound')!=='0';
 let audioCtx = null;
 let myCountry = localStorage.getItem('pf_country') || '';
@@ -765,6 +788,7 @@ function show(name){
   });
   if(name!=='game') stopTick();
   if(!['game','wait'].includes(name)) stopPoll();
+  if(name==='lobby') startLobbyPoll(); else stopLobbyPoll();
   window.scrollTo(0,0);
 }
 function toast(msg, isErr){
@@ -821,6 +845,37 @@ function notifyTurn(){
       new Notification('Picas y Fijas', { body: t('notif_yourturn'), tag:'pf-turn' });
     }
   }catch(e){}
+}
+function notifyJoin(){
+  chime();
+  try{ navigator.vibrate && navigator.vibrate([120,60,120,60,200]); }catch(e){}
+  try{
+    if('Notification' in window && Notification.permission==='granted'){
+      new Notification('Picas y Fijas', { body: t('notif_joined'), tag:'pf-join' });
+    }
+  }catch(e){}
+  toast(t('notif_joined'));
+}
+/* Remates sonoros al terminar la partida */
+function chord(notes){
+  if(!soundOn) return;
+  try{
+    unlockAudio(); if(!audioCtx) return;
+    const now=audioCtx.currentTime;
+    notes.forEach(([f,dt,dur])=>{
+      const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+      o.type='sine'; o.frequency.value=f; o.connect(g); g.connect(audioCtx.destination);
+      g.gain.setValueAtTime(0.0001, now+dt);
+      g.gain.exponentialRampToValueAtTime(0.2, now+dt+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, now+dt+(dur||0.3));
+      o.start(now+dt); o.stop(now+dt+(dur||0.3)+0.03);
+    });
+  }catch(e){}
+}
+function endSound(kind){
+  if(kind==='win') chord([[523.25,0,0.18],[659.25,0.14,0.18],[783.99,0.28,0.4]]);      // Do-Mi-Sol ascendente (alegre)
+  else if(kind==='lose') chord([[440,0,0.32],[349.23,0.2,0.5]]);                        // La-Fa descendente (suave)
+  else chord([[523.25,0,0.22],[523.25,0.18,0.32]]);                                     // empate: dos notas iguales
 }
 function toggleSound(){
   soundOn=!soundOn; localStorage.setItem('pf_sound', soundOn?'1':'0');
@@ -892,16 +947,34 @@ function doLogin(){
   enterLobby();
 }
 function logout(){ localStorage.removeItem('pf_user'); user=''; show('login'); $('uname').value=''; }
-function enterLobby(){ $('lobby-greet').textContent=t('lobby_greeting',{name:user}); updateSoundLabel(); show('lobby'); refreshLobby(); }
+function enterLobby(){ $('lobby-greet').textContent=t('lobby_greeting',{name:user}); updateSoundLabel(); show('lobby'); refreshLobby(); handleDeepLink(); }
 
 /* -------------------- lobby -------------------- */
-async function refreshLobby(){
-  $('open-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
+let myWaitingIds = new Set();
+let myTurnIds = new Set();
+async function lobbyRefresh(detect){
+  if(!detect) $('open-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
   try{
     const [open, mine] = await Promise.all([ api('listGames'), api('myGames',{username:user}) ]);
-    renderOpen(open.games||[]); renderMine(mine.games||[]);
-  }catch(e){ $('open-list').innerHTML=`<div class="empty">${t('load_error')}</div>`; }
+    const games = mine.games||[];
+    const nowWaiting = new Set(games.filter(g=>g.status==='waiting').map(g=>g.gameId));
+    const nowTurn = new Set(games.filter(g=>g.status==='active' && g.yourTurn).map(g=>g.gameId));
+    if(detect){
+      let joined=false; myWaitingIds.forEach(id=>{ const g=games.find(x=>x.gameId===id); if(g && g.status==='active') joined=true; });
+      let turnHit=false; nowTurn.forEach(id=>{ if(!myTurnIds.has(id)) turnHit=true; });
+      if(joined) notifyJoin();
+      else if(turnHit) notifyTurn();
+    }
+    myWaitingIds = nowWaiting; myTurnIds = nowTurn;
+    const oc = (typeof open.activeCount==='number') ? open.activeCount : 0;
+    $('online-now').textContent = t('online_now',{n:oc});
+    renderOpen(open.games||[]); renderMine(games);
+  }catch(e){ if(!detect) $('open-list').innerHTML=`<div class="empty">${t('load_error')}</div>`; }
 }
+function refreshLobby(){ lobbyRefresh(false); }
+function lobbyTick(){ lobbyRefresh(true); }
+function startLobbyPoll(){ stopLobbyPoll(); lobbyPollTimer=setInterval(lobbyTick, 5000); }
+function stopLobbyPoll(){ if(lobbyPollTimer){ clearInterval(lobbyPollTimer); lobbyPollTimer=null; } }
 function renderOpen(games){
   const box=$('open-list'); const list=games.filter(g=>g.p1!==user);
   if(!list.length){ box.innerHTML=`<div class="empty">${t('open_empty')}</div>`; return; }
@@ -909,7 +982,8 @@ function renderOpen(games){
   list.forEach(g=>{
     const el=document.createElement('div'); el.className='gitem';
     el.innerHTML=`<div class="gid">${g.gameId}</div>
-      <div class="meta"><div class="who">${flagHTML(g.country1)}${esc(g.p1)}</div><div class="det">${rulesLabel(g)}</div></div>`;
+      <div class="meta"><div class="who">${flagHTML(g.country1)}${esc(g.p1)}</div><div class="det">${rulesLabel(g)}</div></div>
+      <span class="pill" style="margin-right:2px">1/2</span>`;
     const b=document.createElement('button'); b.className='btn pink sm'; b.textContent=t('join_btn');
     b.onclick=()=>openJoin(g); el.appendChild(b); box.appendChild(el);
   });
@@ -923,8 +997,11 @@ function renderMine(games){
     const oppCountry = g.p1===user ? g.country2 : g.country1;
     const label = g.status==='waiting' ? t('mine_waiting') : t('vs',{name:opp||'—'});
     const el=document.createElement('div'); el.className='gitem';
+    const cnt = g.status==='waiting' ? '1/2' : '2/2';
+    const cntCls = g.status==='waiting' ? 'pill' : 'pill f';
     el.innerHTML=`<div class="gid">${g.gameId}</div>
-      <div class="meta"><div class="who">${g.status==='waiting'?'':flagHTML(oppCountry)}${esc(label)}</div><div class="det">${rulesLabel(g)}${g.isPublic?'':' · '+t('private_tag')}</div></div>`;
+      <div class="meta"><div class="who">${g.status==='waiting'?'':flagHTML(oppCountry)}${esc(label)}</div><div class="det">${rulesLabel(g)}${g.isPublic?'':' · '+t('private_tag')}</div></div>
+      <span class="${cntCls}" style="margin-right:2px">${cnt}</span>`;
     const b=document.createElement('button'); b.className='btn sm'; b.textContent= g.status==='waiting'?t('see_btn'):t('continue_btn');
     b.onclick=()=>{ const meta={id:g.gameId,digits:g.digits,mode:g.mode,numColors:g.numColors,allowRepeats:g.allowRepeats,maxAttempts:g.maxAttempts,turnSeconds:g.turnSeconds};
       if(g.status==='waiting'){ enterWait(meta); } else { enterGame(meta); } };
@@ -1022,16 +1099,27 @@ function enterWait(meta){
   show('wait'); startPoll(pollWait);
 }
 async function pollWait(){
-  try{ const st=await api('state',{gameId:game.id, username:user});
-    if(st.ok && st.status==='active'){ enterGame(metaFromState(st)); } }catch(e){}
+  try{
+    const st=await api('state',{gameId:game.id, username:user});
+    if(!st.ok){ stopPoll(); toast(t('game_expired'),true); enterLobby(); return; }
+    if(st.status==='active'){ notifyJoin(); enterGame(metaFromState(st)); return; }
+    if(st.status!=='waiting'){ stopPoll(); toast(t('game_expired'),true); enterLobby(); return; }
+    const c=new Date(st.createdAt).getTime();
+    if(c && Date.now()-c > 30*60*1000){ stopPoll(); toast(t('game_expired'),true); enterLobby(); return; }
+  }catch(e){}
 }
 function cancelWait(){ stopPoll(); enterLobby(); }
 function copyCode(){ navigator.clipboard?.writeText(game.id).then(()=>toast(t('copied',{code:game.id}))).catch(()=>toast(game.id)); }
 function shareCode(){
-  const url=location.href.split('#')[0].split('?')[0];
+  const url=gameLink(game.id);
   const text=t('share_text',{code:game.id});
   if(navigator.share){ navigator.share({title:'Picas y Fijas', text:text, url:url}).catch(()=>{}); }
-  else { navigator.clipboard?.writeText(text+' '+url).then(()=>toast(t('copied',{code:game.id}))).catch(()=>toast(game.id)); }
+  else { navigator.clipboard?.writeText(text+' '+url).then(()=>toast(t('copied',{code:game.id}))).catch(()=>toast(url)); }
+}
+async function handleDeepLink(){
+  if(!pendingJoinCode || !user) return;
+  const code=pendingJoinCode; pendingJoinCode='';
+  goToRematch(code); // enruta según estado: unirse / esperar / entrar
 }
 
 /* -------------------- instrucciones -------------------- */
@@ -1062,7 +1150,7 @@ async function confirmJoin(){
   $('btn-join').disabled=true;
   try{
     const res=await api('joinGame',{gameId:joinMeta.gameId, username:user, secret, country:myCountry});
-    if(!res.ok){ toast(te(res.error),true); return; }
+    if(!res.ok){ toast(te(res.error),true); enterLobby(); return; }
     localStorage.setItem('pf_secret_'+joinMeta.gameId, secret);
     enterGame({id:joinMeta.gameId, digits:joinMeta.digits, mode:joinMeta.mode, numColors:joinMeta.numColors, allowRepeats:joinMeta.allowRepeats, maxAttempts:joinMeta.maxAttempts, turnSeconds:joinMeta.turnSeconds});
   }catch(e){ toast(t('net_error'),true); } finally{ $('btn-join').disabled=false; }
@@ -1112,7 +1200,7 @@ function enterGame(meta){
   const inp=$('g-guess'); inp.maxLength=game.digits; inp.value=''; inp.placeholder='•'.repeat(game.digits);
   padG.reset(); applyMode('g', game.mode, 'g-guess', 'pad-g', padG);
   $('g-code').textContent=meta.id; $('g-guess-val').textContent='';
-  gState=null; passRequested=false; lastTurnStart=''; lastYourTurn=null;
+  gState=null; passRequested=false; lastTurnStart=''; lastYourTurn=null; endSoundPlayed=false;
   show('game'); refreshGame(); startPoll(refreshGame); startTick();
 }
 async function refreshGame(){
@@ -1135,6 +1223,7 @@ function renderGame(st){
   $('colhead-theirs').textContent=t('colhead_theirs',{name:oppLabel});
 
   const local=localStorage.getItem('pf_secret_'+game.id);
+  $('g-myflag').innerHTML = flagHTML(myCountry);
   $('g-mysecret').innerHTML = local ? codeViewHTML(local, game.mode) : '•••';
 
   const mine=st.guesses.filter(g=>g.by===user);
@@ -1149,6 +1238,7 @@ function renderGame(st){
     turn.classList.add('hidden'); guessarea.classList.add('hidden'); statusrow.classList.add('hidden'); legend.style.display='none';
     stopTick();
     const won = st.winner===user;
+    if(!endSoundPlayed){ endSoundPlayed=true; endSound(st.isDraw?'draw':(won?'win':'lose')); }
     if(st.isDraw){
       const solvedBy = n => st.guesses.some(x=>x.by===n && x.fijas===parseInt(st.digits,10));
       const bothSolved = solvedBy(st.p1) && solvedBy(st.p2);
