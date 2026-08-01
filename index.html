@@ -38,6 +38,7 @@
     box-shadow:0 8px 24px rgba(34,211,238,.25);}
   .brand h1{font-size:20px;margin:0;font-weight:700;letter-spacing:-.02em}
   .brand .sub{font-size:12px;color:var(--muted);margin-top:2px;letter-spacing:.14em;text-transform:uppercase}
+  .brand .aka{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.25;letter-spacing:.01em}
 
   .card{background:linear-gradient(180deg,var(--panel),var(--panel-2));
     border:1px solid var(--edge);border-radius:var(--r);padding:20px;margin-bottom:16px;
@@ -113,10 +114,10 @@
   .vs-sep{color:var(--muted);font-size:13px;font-weight:600}
   .mysecret .code-view{display:inline-flex;align-items:center;gap:5px}
   .n{font-family:'JetBrains Mono',monospace;font-weight:800;letter-spacing:4px;color:var(--text)}
-  /* Cero con barra: distingue claramente 0 de 8 */
+  /* Cero abierto: evita que la barra diagonal se confunda con la cintura del 8. */
   .code,.n,.seg.mono button,#wait-code,.gid,.chip,.scoretxt,.rankrow .pos,.rankrow .wl{
-    font-variant-numeric:slashed-zero;
-    font-feature-settings:"zero" 1;
+    font-variant-numeric:normal;
+    font-feature-settings:"zero" 0;
   }
   .mini{width:16px;height:16px;border-radius:5px;display:inline-block;border:1px solid rgba(255,255,255,.15)}
 
@@ -191,7 +192,7 @@
 
   <div class="brand">
     <div class="logo">P·F</div>
-    <div><h1>Picas y Fijas</h1><div class="sub" data-i18n="brand_sub">Duelo de deducción online</div></div>
+    <div><h1>Picas y Fijas</h1><div class="sub" data-i18n="brand_sub">Duelo de deducción online</div><div class="aka" data-i18n="brand_alias">También conocido como “Bulls and Cows” · inspirado en “Mastermind”</div></div>
   </div>
 
   <!-- LOGIN -->
@@ -473,7 +474,7 @@ function gameLink(code){ return location.origin+location.pathname+'?game='+code;
    ========================================================================== */
 const I18N = {
   es:{
-    brand_sub:"Duelo de deducción online",
+    brand_sub:"Duelo de deducción online", brand_alias:"También conocido como “Bulls and Cows” · inspirado en “Mastermind”",
     login_title:"Elige tu nombre de jugador",
     login_hint:"Tu nombre aparecerá en las partidas y el ranking. Elige un PIN para protegerlo.",
     login_lang:"Idioma", login_name:"Nombre de usuario", login_name_ph:"p.ej. Diego", login_pin:"PIN de acceso", login_pin_ph:"4–8 dígitos",
@@ -519,7 +520,7 @@ const I18N = {
     tiebreak_you:"⚡ Último intento: {name} ya descifró tu código. ¡Aciértalo para empatar!",
     turn_of:"Turno de {name} …", waiting_generic:"Esperando… …", activity_now:"Activo ahora", activity_min:"Activo hace {n} min", activity_hours:"Activo hace {n} h", activity_days:"Activo hace {n} días",
     solved_wait:"✅ ¡Descifraste su código! Esperando el último intento de {name} para ver si empata…",
-    attempts_chip:"Intentos: {left}/{max}",
+    attempts_chip:"Intentos: {left}/{max}", timer_paused:"⏸ En pausa · esperando reconexión",
     win_title:"¡Ganaste! 🎉", lose_title:"Perdiste", draw_title:"Empate 🤝",
     win_msg:"Descifraste el código de {name}", lose_msg:"{name} descifró tu código primero",
     draw_both:"Ambos descifraron el código en el mismo número de intentos",
@@ -534,7 +535,7 @@ const I18N = {
     rl_attempts:"{n} intentos", rl_turn:"{n}s/turno"
   },
   en:{
-    brand_sub:"Online deduction duel",
+    brand_sub:"Online deduction duel", brand_alias:"Also known as “Bulls and Cows” · inspired by “Mastermind”",
     login_title:"Choose your player name",
     login_hint:"Your name appears in games and on the ranking. Choose a PIN to protect it.",
     login_lang:"Language", login_name:"Username", login_name_ph:"e.g. Diego", login_pin:"Access PIN", login_pin_ph:"4–8 digits",
@@ -580,7 +581,7 @@ const I18N = {
     tiebreak_you:"⚡ Last try: {name} already cracked your code. Match it to tie!",
     turn_of:"{name}'s turn …", waiting_generic:"Waiting… …", activity_now:"Active now", activity_min:"Active {n} min ago", activity_hours:"Active {n} h ago", activity_days:"Active {n} days ago",
     solved_wait:"✅ You cracked their code! Waiting for {name}'s last try to see if it's a tie…",
-    attempts_chip:"Attempts: {left}/{max}",
+    attempts_chip:"Attempts: {left}/{max}", timer_paused:"⏸ Paused · waiting for reconnection",
     win_title:"You won! 🎉", lose_title:"You lost", draw_title:"Draw 🤝",
     win_msg:"You cracked {name}'s code", lose_msg:"{name} cracked your code first",
     draw_both:"Both cracked the code in the same number of tries",
@@ -595,7 +596,7 @@ const I18N = {
     rl_attempts:"{n} tries", rl_turn:"{n}s/turn"
   },
   fr:{
-    brand_sub:"Duel de déduction en ligne",
+    brand_sub:"Duel de déduction en ligne", brand_alias:"Aussi appelé « Bulls and Cows » · inspiré de « Mastermind »",
     login_title:"Choisis ton nom de joueur",
     login_hint:"Ton nom apparaît dans les parties et le classement. Choisis un PIN pour le protéger.",
     login_lang:"Langue", login_name:"Nom d'utilisateur", login_name_ph:"ex. Diego", login_pin:"PIN d'accès", login_pin_ph:"4–8 chiffres",
@@ -641,7 +642,7 @@ const I18N = {
     tiebreak_you:"⚡ Dernier essai : {name} a déjà trouvé ton code. Réussis pour égaliser !",
     turn_of:"Tour de {name} …", waiting_generic:"En attente… …", activity_now:"Actif maintenant", activity_min:"Actif il y a {n} min", activity_hours:"Actif il y a {n} h", activity_days:"Actif il y a {n} jours",
     solved_wait:"✅ Tu as trouvé son code ! En attente du dernier essai de {name} pour voir si c'est une égalité…",
-    attempts_chip:"Essais : {left}/{max}",
+    attempts_chip:"Essais : {left}/{max}", timer_paused:"⏸ En pause · reconnexion en attente",
     win_title:"Tu as gagné ! 🎉", lose_title:"Tu as perdu", draw_title:"Égalité 🤝",
     win_msg:"Tu as trouvé le code de {name}", lose_msg:"{name} a trouvé ton code en premier",
     draw_both:"Vous avez trouvé le code au même nombre d'essais",
@@ -669,6 +670,7 @@ const ERR = {
     "Sin intentos restantes.":"No attempts left.",
     "Esta partida no tiene cronómetro.":"This game has no timer.",
     "Aún queda tiempo.":"There's still time left.",
+    "El cronómetro está en pausa.":"The timer is paused.",
     "La partida aún no ha terminado.":"The game hasn't finished yet.",
     "La partida ha expirado.":"The game has expired.",
     "La partida se cerró tras 48 horas sin actividad.":"The game was closed after 48 hours without activity.",
@@ -694,6 +696,7 @@ const ERR = {
     "Sin intentos restantes.":"Plus d'essais disponibles.",
     "Esta partida no tiene cronómetro.":"Cette partie n'a pas de chrono.",
     "Aún queda tiempo.":"Il reste encore du temps.",
+    "El cronómetro está en pausa.":"Le chronomètre est en pause.",
     "La partida aún no ha terminado.":"La partie n'est pas encore terminée.",
     "La partida ha expirado.":"La partie a expiré.",
     "La partida se cerró tras 48 horas sin actividad.":"La partie a été fermée après 48 heures sans activité.",
@@ -1297,7 +1300,10 @@ async function joinByCode(){
 async function goToRematch(rematchId){
   try{
     const st=await api('state',{gameId:rematchId, username:user});
-    if(!st.ok){ toast(te(st.error)||t('not_available'),true); return; }
+    if(!st.ok){
+      if(terminalGameError(st.error)) localStorage.removeItem('pf_current_game');
+      toast(te(st.error)||t('not_available'),true); return;
+    }
     const meta=metaFromState(st);
     if(st.status==='finished'&&st.youAre){ enterGame(meta); }
     else if(st.status==='active'&&st.p1&&st.p2){ enterGame(meta); }
@@ -1319,14 +1325,21 @@ function enterGame(meta){
   padG.reset(); applyMode('g', game.mode, 'g-guess', 'pad-g', padG);
   $('g-code').textContent=meta.id; $('g-guess-val').textContent='';
   gState=null; passRequested=false; lastTurnStart=''; lastYourTurn=null; endSoundPlayed=false;
+  localStorage.setItem('pf_current_game',game.id);
   show('game'); refreshGame(); startPoll(refreshGame); startTick();
+}
+function terminalGameError(msg){
+  return ['Partida no encontrada.','La partida ha expirado.','La partida se cerró tras 48 horas sin actividad.',
+    'Un jugador abandonó la partida.','La partida fue cancelada.','No eres jugador de esta partida.'].includes(String(msg||''));
 }
 async function refreshGame(){
   try{
-    const st=await api('state',{gameId:game.id, username:user});
+    const st=await api('state',{gameId:game.id, username:user, inGame:true});
     if(st.ok) renderGame(st);
-    else { stopPoll(); stopTick(); toast(te(st.error)||t('not_available'),true); enterLobby(); }
-  }catch(e){}
+    else if(terminalGameError(st.error)){
+      localStorage.removeItem('pf_current_game'); stopPoll(); stopTick(); toast(te(st.error)||t('not_available'),true); enterLobby();
+    }else toast(te(st.error)||t('net_error'),true);
+  }catch(e){ /* Un fallo transitorio no expulsa al jugador de la partida. */ }
 }
 $('g-guess').addEventListener('input', e=>setVal('g-guess-val', e.target.value, game.digits, game.allowRepeats));
 
@@ -1404,7 +1417,7 @@ function renderGame(st){
   const pending = st.pendingWinner || '';
   if(st.yourTurn){
     turn.className='turnbar mine'; $('g-turn-txt').textContent=t('your_turn');
-    const ok=canGuessAttempts;
+    const ok=canGuessAttempts&&!st.timerPaused;
     $('g-guess-btn').disabled=!ok; $('g-guess').disabled=!ok;
     if(!ok) $('g-turn-txt').textContent=t('no_attempts_wait');
     if(pending && pending!==user){
@@ -1420,6 +1433,7 @@ function renderGame(st){
       $('g-turn-txt').textContent=t('solved_wait',{name:oppLabel});
     }
   }
+  if(st.timerPaused) $('g-turn-txt').textContent=t('timer_paused');
   if(st.yourTurn && lastYourTurn===false) notifyTurn();
   lastYourTurn = st.yourTurn;
   updateTimer();
@@ -1458,22 +1472,30 @@ async function submitGuess(){
     refreshGame();
   }catch(e){ toast(t('net_error'),true); $('g-guess-btn').disabled=false; }
 }
-function leaveGame(){ stopPoll(); stopTick(); enterLobby(); }
+async function leaveGame(){
+  const id=game.id; localStorage.removeItem('pf_current_game'); stopPoll(); stopTick();
+  try{ if(id) await api('gamePresence',{gameId:id,username:user,connected:false}); }catch(e){}
+  enterLobby();
+}
 async function abandonGame(){
   if(!gState||gState.status!=='active'||!confirm(t('abandon_confirm'))) return;
   try{
     const res=await api('closeGame',{gameId:game.id,username:user,intent:'abandon'});
     if(!res.ok){ toast(te(res.error),true); return; }
-    localStorage.removeItem('pf_secret_'+game.id); stopPoll(); stopTick(); toast(t('abandon_done')); enterLobby();
+    localStorage.removeItem('pf_secret_'+game.id); localStorage.removeItem('pf_current_game'); stopPoll(); stopTick(); toast(t('abandon_done')); enterLobby();
   }catch(e){ toast(t('net_error'),true); }
 }
 
 /* -------------------- cronómetro por turno -------------------- */
 function updateTimer(){
   if(!gState || gState.status!=='active' || !(gState.turnSeconds>0)){ return; }
-  const started=new Date(gState.turnStartedAt).getTime();
-  const remaining=Math.max(0, gState.turnSeconds - Math.floor((Date.now()-started)/1000));
   const el=$('g-timer'); el.classList.remove('hidden');
+  if(gState.timerPaused){
+    el.textContent=t('timer_paused'); el.className='chip warn'; passRequested=false; return;
+  }
+  const started=new Date(gState.turnStartedAt).getTime();
+  const base=Number.isFinite(Number(gState.turnRemaining))?Number(gState.turnRemaining):gState.turnSeconds;
+  const remaining=Math.max(0, base - Math.floor((Date.now()-started)/1000));
   const mm=Math.floor(remaining/60), ss=remaining%60;
   el.textContent='⏱ '+(mm>0?mm+':'+String(ss).padStart(2,'0'):ss+'s');
   el.className='chip'+(remaining<=5?' hot':(remaining<=10?' warn':''));
@@ -1489,10 +1511,30 @@ function stopTick(){ if(tickTimer){ clearInterval(tickTimer); tickTimer=null; } 
 function startPoll(fn){ stopPoll(); pollTimer=setInterval(fn, 2500); }
 function stopPoll(){ if(pollTimer){ clearInterval(pollTimer); pollTimer=null; } }
 
+function signalGameDisconnected(){
+  const id=localStorage.getItem('pf_current_game');
+  if(!id||!user||!userPin) return;
+  const payload=JSON.stringify({action:'gamePresence',gameId:id,username:user,pin:userPin,connected:false});
+  try{
+    if(navigator.sendBeacon) navigator.sendBeacon(API,new Blob([payload],{type:'text/plain;charset=UTF-8'}));
+    else fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:payload,keepalive:true}).catch(()=>{});
+  }catch(e){}
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden) signalGameDisconnected();
+  else if(!$('s-game').classList.contains('hidden')&&game.id) refreshGame();
+});
+window.addEventListener('pagehide',signalGameDisconnected);
+
 /* -------------------- arranque -------------------- */
 applyI18n();
 detectCountry();
-if(user&&userPin){ enterLobby(); } else { if(user) $('uname').value=user; show('login'); }
+if(user&&userPin){
+  const deepLinkPending=!!pendingJoinCode;
+  enterLobby();
+  const resumeId=localStorage.getItem('pf_current_game');
+  if(resumeId&&!deepLinkPending) goToRematch(resumeId);
+} else { if(user) $('uname').value=user; show('login'); }
 </script>
 </body>
 </html>
