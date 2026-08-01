@@ -229,6 +229,7 @@
 
     <div class="card">
       <h2 data-i18n="lobby_open">Partidas públicas abiertas</h2>
+      <div class="scoretxt" id="players-online" style="margin:2px 0 4px"></div>
       <div class="scoretxt" id="online-now" style="margin:2px 0 12px"></div>
       <div class="list" id="open-list"><div class="empty">…</div></div>
     </div>
@@ -430,7 +431,7 @@
       </div>
     </div>
 
-    <div class="foot"><span class="link" onclick="leaveGame()" data-i18n="back_home">Volver al inicio</span></div>
+    <div class="foot"><span class="link" onclick="leaveGame()" data-i18n="back_home">Volver al inicio</span><span id="g-abandon-wrap"> · <span class="link" onclick="abandonGame()" data-i18n="abandon_game">Abandonar partida</span></span></div>
   </section>
 
 </div>
@@ -442,7 +443,7 @@
    CONFIG — pega aquí la URL /exec de tu Aplicación web de Apps Script
    ========================================================================== */
 const API = 'https://script.google.com/macros/s/AKfycbyjJRp_ZokFiKyRK3-P2kA8shD1SR73zjP3DMbynf09BvCOpGDGNoHULXf-uDy40pEI/exec';
-const APP_VERSION = '1.0';
+const APP_VERSION = '1.2';
 /* Enlace de invitación: ...?game=SZ93 */
 let pendingJoinCode = '';
 (function(){
@@ -475,7 +476,7 @@ const I18N = {
     hist_title:"Historial de partidas", hist_hint:"Tus últimas partidas terminadas.",
     hist_empty:"Aún no tienes partidas terminadas.",
     result_win:"Ganada", result_loss:"Perdida", result_draw:"Empate",
-    sound_label:"Sonido", on:"activado", off:"desactivado", notif_yourturn:"¡Es tu turno!", notif_joined:"¡Un rival se ha unido! 🎮", game_expired:"La partida abierta expiró (nadie se unió).", online_now:"🟢 {n} en curso ahora", credits_by:"Creado por",
+    sound_label:"Sonido", on:"activado", off:"desactivado", notif_yourturn:"¡Es tu turno!", notif_joined:"¡Un rival se ha unido! 🎮", game_expired:"La partida abierta expiró (nadie se unió).", online_now:"🟢 {n} en curso ahora", online_players_one:"👥 1 jugador conectado ahora", online_players_many:"👥 {n} jugadores conectados ahora", credits_by:"Creado por",
     create_title:"Nueva partida", create_hint:"Configura las reglas y define tu código secreto.",
     lbl_mode:"Modo", mode_numbers:"Números 0-9", mode_colors:"Colores",
     lbl_positions:"Posiciones", lbl_repeats:"Repetidos", rep_no:"No permitir", rep_yes:"Permitir",
@@ -486,7 +487,7 @@ const I18N = {
     lbl_secret:"Tu código secreto", create_btn:"Crear y esperar rival",
     wait_title:"Partida creada", wait_hint:"Comparte este código con tu rival. Empieza en cuanto se una.",
     wait_copy:"Copiar código", wait_waiting:"Esperando a que alguien se una…", wait_cancel:"Cancelar y volver",
-    copied:"Código copiado: {code}",
+    copied:"Código copiado: {code}", cancel_confirm:"¿Cancelar esta partida abierta?", cancel_done:"Partida cancelada", abandon_game:"Abandonar partida", abandon_confirm:"¿Abandonar esta partida? No contará como victoria para nadie.", abandon_done:"Partida abandonada",
     join_to:"Unirse a", join_rules:"Reglas: {rules}. Define tu código secreto.", join_btn2:"Unirse y jugar",
     rematch_title:"Revancha 🔁", rematch_hint:"Mismas reglas, mismo rival. Define tu nuevo código secreto.",
     rematch_rules:"Reglas: {rules}. Define tu nuevo código.", lbl_newsecret:"Tu nuevo código secreto",
@@ -497,7 +498,7 @@ const I18N = {
     rival:"rival", log_empty_mine:"Aún no has adivinado", log_empty_theirs:"Sin intentos todavía", log_nada:"nada",
     your_turn:"Es tu turno — adivina el código rival", no_attempts_wait:"Sin intentos restantes — esperando al rival",
     tiebreak_you:"⚡ Último intento: {name} ya descifró tu código. ¡Aciértalo para empatar!",
-    turn_of:"Turno de {name} …", waiting_generic:"Esperando… …",
+    turn_of:"Turno de {name} …", waiting_generic:"Esperando… …", activity_now:"Activo ahora", activity_min:"Activo hace {n} min", activity_hours:"Activo hace {n} h", activity_days:"Activo hace {n} días",
     solved_wait:"✅ ¡Descifraste su código! Esperando el último intento de {name} para ver si empata…",
     attempts_chip:"Intentos: {left}/{max}",
     win_title:"¡Ganaste! 🎉", lose_title:"Perdiste", draw_title:"Empate 🤝",
@@ -533,7 +534,7 @@ const I18N = {
     hist_title:"Match history", hist_hint:"Your latest finished games.",
     hist_empty:"No finished games yet.",
     result_win:"Won", result_loss:"Lost", result_draw:"Draw",
-    sound_label:"Sound", on:"on", off:"off", notif_yourturn:"It's your turn!", notif_joined:"An opponent joined! 🎮", game_expired:"The open game expired (nobody joined).", online_now:"🟢 {n} in progress now", credits_by:"Created by",
+    sound_label:"Sound", on:"on", off:"off", notif_yourturn:"It's your turn!", notif_joined:"An opponent joined! 🎮", game_expired:"The open game expired (nobody joined).", online_now:"🟢 {n} in progress now", online_players_one:"👥 1 player connected now", online_players_many:"👥 {n} players connected now", credits_by:"Created by",
     create_title:"New game", create_hint:"Set the rules and choose your secret code.",
     lbl_mode:"Mode", mode_numbers:"Numbers 0-9", mode_colors:"Colors",
     lbl_positions:"Positions", lbl_repeats:"Repeats", rep_no:"Not allowed", rep_yes:"Allowed",
@@ -544,7 +545,7 @@ const I18N = {
     lbl_secret:"Your secret code", create_btn:"Create and wait for opponent",
     wait_title:"Game created", wait_hint:"Share this code with your opponent. It starts as soon as they join.",
     wait_copy:"Copy code", wait_waiting:"Waiting for someone to join…", wait_cancel:"Cancel and go back",
-    copied:"Code copied: {code}",
+    copied:"Code copied: {code}", cancel_confirm:"Cancel this open game?", cancel_done:"Game cancelled", abandon_game:"Abandon game", abandon_confirm:"Abandon this game? It won't count as a win for anyone.", abandon_done:"Game abandoned",
     join_to:"Join", join_rules:"Rules: {rules}. Choose your secret code.", join_btn2:"Join and play",
     rematch_title:"Rematch 🔁", rematch_hint:"Same rules, same opponent. Choose your new secret code.",
     rematch_rules:"Rules: {rules}. Choose your new code.", lbl_newsecret:"Your new secret code",
@@ -555,7 +556,7 @@ const I18N = {
     rival:"opponent", log_empty_mine:"No guesses yet", log_empty_theirs:"No guesses yet", log_nada:"none",
     your_turn:"Your turn — guess the opponent's code", no_attempts_wait:"No attempts left — waiting for opponent",
     tiebreak_you:"⚡ Last try: {name} already cracked your code. Match it to tie!",
-    turn_of:"{name}'s turn …", waiting_generic:"Waiting… …",
+    turn_of:"{name}'s turn …", waiting_generic:"Waiting… …", activity_now:"Active now", activity_min:"Active {n} min ago", activity_hours:"Active {n} h ago", activity_days:"Active {n} days ago",
     solved_wait:"✅ You cracked their code! Waiting for {name}'s last try to see if it's a tie…",
     attempts_chip:"Attempts: {left}/{max}",
     win_title:"You won! 🎉", lose_title:"You lost", draw_title:"Draw 🤝",
@@ -591,7 +592,7 @@ const I18N = {
     hist_title:"Historique des parties", hist_hint:"Tes dernières parties terminées.",
     hist_empty:"Aucune partie terminée pour l'instant.",
     result_win:"Gagnée", result_loss:"Perdue", result_draw:"Égalité",
-    sound_label:"Son", on:"activé", off:"désactivé", notif_yourturn:"À toi de jouer !", notif_joined:"Un adversaire a rejoint ! 🎮", game_expired:"La partie ouverte a expiré (personne n'a rejoint).", online_now:"🟢 {n} en cours maintenant", credits_by:"Créé par",
+    sound_label:"Son", on:"activé", off:"désactivé", notif_yourturn:"À toi de jouer !", notif_joined:"Un adversaire a rejoint ! 🎮", game_expired:"La partie ouverte a expiré (personne n'a rejoint).", online_now:"🟢 {n} en cours maintenant", online_players_one:"👥 1 joueur connecté maintenant", online_players_many:"👥 {n} joueurs connectés maintenant", credits_by:"Créé par",
     create_title:"Nouvelle partie", create_hint:"Règle les paramètres et choisis ton code secret.",
     lbl_mode:"Mode", mode_numbers:"Chiffres 0-9", mode_colors:"Couleurs",
     lbl_positions:"Positions", lbl_repeats:"Répétitions", rep_no:"Interdites", rep_yes:"Autorisées",
@@ -602,7 +603,7 @@ const I18N = {
     lbl_secret:"Ton code secret", create_btn:"Créer et attendre l'adversaire",
     wait_title:"Partie créée", wait_hint:"Partage ce code avec ton adversaire. La partie démarre dès qu'il rejoint.",
     wait_copy:"Copier le code", wait_waiting:"En attente d'un joueur…", wait_cancel:"Annuler et revenir",
-    copied:"Code copié : {code}",
+    copied:"Code copié : {code}", cancel_confirm:"Annuler cette partie ouverte ?", cancel_done:"Partie annulée", abandon_game:"Abandonner la partie", abandon_confirm:"Abandonner cette partie ? Elle ne comptera comme victoire pour personne.", abandon_done:"Partie abandonnée",
     join_to:"Rejoindre", join_rules:"Règles : {rules}. Choisis ton code secret.", join_btn2:"Rejoindre et jouer",
     rematch_title:"Revanche 🔁", rematch_hint:"Mêmes règles, même adversaire. Choisis ton nouveau code secret.",
     rematch_rules:"Règles : {rules}. Choisis ton nouveau code.", lbl_newsecret:"Ton nouveau code secret",
@@ -613,7 +614,7 @@ const I18N = {
     rival:"adversaire", log_empty_mine:"Aucun essai pour l'instant", log_empty_theirs:"Aucun essai pour l'instant", log_nada:"rien",
     your_turn:"À toi — devine le code de l'adversaire", no_attempts_wait:"Plus d'essais — en attente de l'adversaire",
     tiebreak_you:"⚡ Dernier essai : {name} a déjà trouvé ton code. Réussis pour égaliser !",
-    turn_of:"Tour de {name} …", waiting_generic:"En attente… …",
+    turn_of:"Tour de {name} …", waiting_generic:"En attente… …", activity_now:"Actif maintenant", activity_min:"Actif il y a {n} min", activity_hours:"Actif il y a {n} h", activity_days:"Actif il y a {n} jours",
     solved_wait:"✅ Tu as trouvé son code ! En attente du dernier essai de {name} pour voir si c'est une égalité…",
     attempts_chip:"Essais : {left}/{max}",
     win_title:"Tu as gagné ! 🎉", lose_title:"Tu as perdu", draw_title:"Égalité 🤝",
@@ -645,6 +646,13 @@ const ERR = {
     "Aún queda tiempo.":"There's still time left.",
     "La partida aún no ha terminado.":"The game hasn't finished yet.",
     "La partida ha expirado.":"The game has expired.",
+    "La partida se cerró tras 48 horas sin actividad.":"The game was closed after 48 hours without activity.",
+    "Un jugador abandonó la partida.":"A player abandoned the game.",
+    "La partida fue cancelada.":"The game was cancelled.",
+    "El rival ya se unió; la partida ya comenzó.":"The opponent already joined; the game has started.",
+    "Solo puedes tener 3 partidas abiertas o activas al mismo tiempo.":"You can only have 3 open or active games at the same time.",
+    "Espera 10 segundos antes de crear otra partida.":"Wait 10 seconds before creating another game.",
+    "Demasiados PIN incorrectos. Inténtalo de nuevo en 15 minutos.":"Too many incorrect PIN attempts. Try again in 15 minutes.",
     "Longitud debe ser 3, 4, 5 o 6.":"Length must be 3, 4, 5 or 6.",
     "Código inválido.":"Invalid code.",
     "Símbolo fuera de rango.":"Symbol out of range.",
@@ -663,6 +671,13 @@ const ERR = {
     "Aún queda tiempo.":"Il reste encore du temps.",
     "La partida aún no ha terminado.":"La partie n'est pas encore terminée.",
     "La partida ha expirado.":"La partie a expiré.",
+    "La partida se cerró tras 48 horas sin actividad.":"La partie a été fermée après 48 heures sans activité.",
+    "Un jugador abandonó la partida.":"Un joueur a abandonné la partie.",
+    "La partida fue cancelada.":"La partie a été annulée.",
+    "El rival ya se unió; la partida ya comenzó.":"L'adversaire a déjà rejoint ; la partie a commencé.",
+    "Solo puedes tener 3 partidas abiertas o activas al mismo tiempo.":"Tu peux avoir au maximum 3 parties ouvertes ou actives en même temps.",
+    "Espera 10 segundos antes de crear otra partida.":"Attends 10 secondes avant de créer une autre partie.",
+    "Demasiados PIN incorrectos. Inténtalo de nuevo en 15 minutos.":"Trop de PIN incorrects. Réessaie dans 15 minutes.",
     "Longitud debe ser 3, 4, 5 o 6.":"La longueur doit être 3, 4, 5 ou 6.",
     "Código inválido.":"Code invalide.",
     "Símbolo fuera de rango.":"Symbole hors limites.",
@@ -831,6 +846,16 @@ function rulesLabel(m){
   if(m.turnSeconds>0) parts.push(t('rl_turn',{n:m.turnSeconds}));
   return parts.join(' · ');
 }
+function relativeActivity(iso){
+  const stamp=new Date(iso).getTime();
+  if(!stamp) return '';
+  const mins=Math.max(0,Math.floor((Date.now()-stamp)/60000));
+  if(mins<1) return t('activity_now');
+  if(mins<60) return t('activity_min',{n:mins});
+  const hours=Math.floor(mins/60);
+  if(hours<24) return t('activity_hours',{n:hours});
+  return t('activity_days',{n:Math.floor(hours/24)});
+}
 
 /* -------------------- aviso de turno (sonido / vibración / notificación) -------------------- */
 function unlockAudio(){
@@ -961,14 +986,18 @@ async function doLogin(){
   try{
     userPin=pin;
     const res=await api('loginUser',{username:v});
-    if(!res.ok){ userPin=''; $('uname-val').className='val err'; $('uname-val').textContent=res.error; return; }
+    if(!res.ok){ userPin=''; $('uname-val').className='val err'; $('uname-val').textContent=te(res.error); return; }
     user=res.username; localStorage.setItem('pf_user',user); localStorage.setItem('pf_pin',userPin);
   }catch(e){ userPin=''; $('uname-val').className='val err'; $('uname-val').textContent=t('net_error'); return; }
   unlockAudio();
   try{ if('Notification' in window && Notification.permission==='default') Notification.requestPermission(); }catch(e){}
   enterLobby();
 }
-function logout(){ localStorage.removeItem('pf_user'); localStorage.removeItem('pf_pin'); user=''; userPin=''; show('login'); $('uname').value=''; $('upin').value=''; }
+async function logout(){
+  try{ if(user&&userPin) await api('leavePresence',{username:user}); }catch(e){}
+  localStorage.removeItem('pf_user'); localStorage.removeItem('pf_pin'); user=''; userPin='';
+  show('login'); $('uname').value=''; $('upin').value='';
+}
 function enterLobby(){ $('lobby-greet').textContent=t('lobby_greeting',{name:user}); updateSoundLabel(); show('lobby'); refreshLobby(); handleDeepLink(); }
 
 /* -------------------- lobby -------------------- */
@@ -977,7 +1006,7 @@ let myTurnIds = new Set();
 async function lobbyRefresh(detect){
   if(!detect) $('open-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
   try{
-    const [open, mine] = await Promise.all([ api('listGames'), api('myGames',{username:user}) ]);
+    const [open, mine, presence] = await Promise.all([ api('listGames'), api('myGames',{username:user}), api('presence',{username:user}) ]);
     const games = mine.games||[];
     const nowWaiting = new Set(games.filter(g=>g.status==='waiting').map(g=>g.gameId));
     const nowTurn = new Set(games.filter(g=>g.status==='active' && g.yourTurn).map(g=>g.gameId));
@@ -989,6 +1018,8 @@ async function lobbyRefresh(detect){
     }
     myWaitingIds = nowWaiting; myTurnIds = nowTurn;
     const oc = (typeof open.activeCount==='number') ? open.activeCount : 0;
+    const pc = (typeof presence.onlineCount==='number') ? presence.onlineCount : (open.onlineCount||0);
+    $('players-online').textContent=t(pc===1?'online_players_one':'online_players_many',{n:pc});
     $('online-now').textContent = t('online_now',{n:oc});
     renderOpen(open.games||[]); renderMine(games);
   }catch(e){ if(!detect) $('open-list').innerHTML=`<div class="empty">${t('load_error')}</div>`; }
@@ -1023,7 +1054,7 @@ function renderMine(games){
     const cnt = complete ? '2/2' : '1/2';
     const cntCls = complete ? 'pill f' : 'pill';
     el.innerHTML=`<div class="gid">${g.gameId}</div>
-      <div class="meta"><div class="who">${who}</div><div class="det">${rulesLabel(g)}${g.isPublic?'':' · '+t('private_tag')}</div></div>
+      <div class="meta"><div class="who">${who}</div><div class="det">${rulesLabel(g)}${g.isPublic?'':' · '+t('private_tag')} · ${relativeActivity(g.updatedAt)}</div></div>
       <span class="${cntCls}" style="margin-right:2px">${cnt}</span>`;
     const b=document.createElement('button'); b.className='btn sm'; b.textContent= g.status==='waiting'?t('see_btn'):t('continue_btn');
     b.onclick=()=>{ const meta={id:g.gameId,digits:g.digits,mode:g.mode,numColors:g.numColors,allowRepeats:g.allowRepeats,maxAttempts:g.maxAttempts,turnSeconds:g.turnSeconds};
@@ -1140,7 +1171,14 @@ async function pollWait(){
     if(c && Date.now()-c > 2*60*60*1000){ stopPoll(); toast(t('game_expired'),true); enterLobby(); return; }
   }catch(e){}
 }
-function cancelWait(){ stopPoll(); enterLobby(); }
+async function cancelWait(){
+  if(!confirm(t('cancel_confirm'))) return;
+  try{
+    const res=await api('closeGame',{gameId:game.id,username:user,intent:'cancel'});
+    if(!res.ok){ toast(te(res.error),true); goToRematch(game.id); return; }
+    localStorage.removeItem('pf_secret_'+game.id); stopPoll(); toast(t('cancel_done')); enterLobby();
+  }catch(e){ toast(t('net_error'),true); }
+}
 function copyCode(){ navigator.clipboard?.writeText(game.id).then(()=>toast(t('copied',{code:game.id}))).catch(()=>toast(game.id)); }
 function shareCode(){
   const url=gameLink(game.id);
@@ -1238,7 +1276,11 @@ function enterGame(meta){
   show('game'); refreshGame(); startPoll(refreshGame); startTick();
 }
 async function refreshGame(){
-  try{ const st=await api('state',{gameId:game.id, username:user}); if(st.ok) renderGame(st); }catch(e){}
+  try{
+    const st=await api('state',{gameId:game.id, username:user});
+    if(st.ok) renderGame(st);
+    else { stopPoll(); stopTick(); toast(te(st.error)||t('not_available'),true); enterLobby(); }
+  }catch(e){}
 }
 $('g-guess').addEventListener('input', e=>setVal('g-guess-val', e.target.value, game.digits, game.allowRepeats));
 
@@ -1277,6 +1319,7 @@ function renderGame(st){
   const guessarea=$('g-guessarea'); const legend=document.querySelector('.legend'); const statusrow=$('g-statusrow');
 
   if(st.status==='finished'){
+    $('g-abandon-wrap').classList.add('hidden');
     turn.classList.add('hidden'); guessarea.classList.add('hidden'); statusrow.classList.add('hidden'); legend.style.display='none';
     stopTick();
     const won = st.winner===user;
@@ -1298,6 +1341,7 @@ function renderGame(st){
   }
 
   banner.innerHTML=''; rz.innerHTML=''; legend.style.display='flex';
+  $('g-abandon-wrap').classList.toggle('hidden',st.status!=='active');
   turn.classList.remove('hidden'); guessarea.classList.remove('hidden');
 
   const myAttempts = me===1 ? st.attemptsP1 : st.attemptsP2;
@@ -1369,6 +1413,14 @@ async function submitGuess(){
   }catch(e){ toast(t('net_error'),true); $('g-guess-btn').disabled=false; }
 }
 function leaveGame(){ stopPoll(); stopTick(); enterLobby(); }
+async function abandonGame(){
+  if(!gState||gState.status!=='active'||!confirm(t('abandon_confirm'))) return;
+  try{
+    const res=await api('closeGame',{gameId:game.id,username:user,intent:'abandon'});
+    if(!res.ok){ toast(te(res.error),true); return; }
+    localStorage.removeItem('pf_secret_'+game.id); stopPoll(); stopTick(); toast(t('abandon_done')); enterLobby();
+  }catch(e){ toast(t('net_error'),true); }
+}
 
 /* -------------------- cronómetro por turno -------------------- */
 function updateTimer(){
