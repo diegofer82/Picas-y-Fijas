@@ -1102,13 +1102,22 @@ function enterLobby(){ $('lobby-greet').textContent=t('lobby_greeting',{name:use
 /* -------------------- lobby -------------------- */
 let myWaitingIds = new Set();
 let myTurnIds = new Set();
+let lobbyRefreshBusy = false;
 async function lobbyRefresh(detect){
+  if(lobbyRefreshBusy) return;
+  lobbyRefreshBusy=true;
   if(!detect){
     $('open-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
     $('private-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
   }
   try{
-    const [open, mine, presence] = await Promise.all([ api('listGames'), api('myGames',{username:user}), api('presence',{username:user}) ]);
+    const settled=await Promise.allSettled([ api('listGames'), api('myGames',{username:user}), api('presence',{username:user}) ]);
+    const openOk=settled[0].status==='fulfilled'&&settled[0].value&&settled[0].value.ok;
+    const mineOk=settled[1].status==='fulfilled'&&settled[1].value&&settled[1].value.ok;
+    const presenceOk=settled[2].status==='fulfilled'&&settled[2].value&&settled[2].value.ok;
+    const open=openOk?settled[0].value:{games:[],activeCount:0,privateCount:0,publicActiveCount:0,publicOpenCount:0,onlineCount:0};
+    const mine=mineOk?settled[1].value:{games:[]};
+    const presence=presenceOk?settled[2].value:{onlineCount:open.onlineCount||0};
     const games = mine.games||[];
     const nowWaiting = new Set(games.filter(g=>g.status==='waiting').map(g=>g.gameId));
     const nowTurn = new Set(games.filter(g=>g.status==='active' && g.yourTurn).map(g=>g.gameId));
@@ -1128,13 +1137,19 @@ async function lobbyRefresh(detect){
     $('players-online').textContent=t(pc===1?'online_players_one':'online_players_many',{n:pc});
     $('private-now').textContent=t('private_now',{n:privateCount});
     $('public-now').textContent=t('public_now',{active:publicActive,open:publicOpen});
-    renderOpen(open.games||[]); renderPrivate(privateGames); renderMine(publicMine);
+    if(openOk) renderOpen(open.games||[]);
+    else if(!detect) $('open-list').innerHTML=`<div class="empty">${t('load_error')}</div>`;
+    if(mineOk){ renderPrivate(privateGames); renderMine(publicMine); }
+    else if(!detect){
+      $('private-list').innerHTML=`<div class="empty">${t('load_error')}</div>`;
+      $('mine-card').classList.add('hidden');
+    }
   }catch(e){
     if(!detect){
       $('open-list').innerHTML=`<div class="empty">${t('load_error')}</div>`;
       $('private-list').innerHTML=`<div class="empty">${t('load_error')}</div>`;
     }
-  }
+  }finally{ lobbyRefreshBusy=false; }
 }
 function refreshLobby(){ lobbyRefresh(false); }
 function lobbyTick(){ lobbyRefresh(true); }
