@@ -51,6 +51,8 @@
     border-radius:12px;padding:14px 15px;font-size:16px;outline:none;
     font-family:'Space Grotesk',sans-serif;transition:border-color .15s,box-shadow .15s;}
   input[type=text].code{font-family:'JetBrains Mono',monospace;font-size:26px;letter-spacing:12px;text-align:center;font-weight:700}
+  input[type=text].codeinp{font-family:'JetBrains Mono',monospace;font-size:16px;letter-spacing:6px;text-align:center;
+    font-weight:700;text-transform:uppercase;padding:11px 12px}
   input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(34,211,238,.18)}
 
   .btn{width:100%;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:600;
@@ -90,6 +92,7 @@
   .gitem .meta{flex:1;min-width:0}
   .gitem .meta .who{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .gitem .meta .det{font-size:12px;color:var(--muted)}
+  .gitem.invite{border-color:rgba(74,222,128,.45);background:#131f1c}
   .empty{color:var(--muted);font-size:13px;text-align:center;padding:14px 0}
 
   .turnbar{display:flex;align-items:center;gap:10px;border-radius:12px;padding:12px 14px;margin-bottom:12px;font-weight:600;font-size:14px;}
@@ -160,6 +163,10 @@
   .credits a:hover{text-decoration:underline}
   .link{color:var(--accent);cursor:pointer;text-decoration:underline;font-size:13px}
   .hidden{display:none!important}
+  .fieldnote{margin:7px 0 0;font-size:12px;line-height:1.45;color:var(--muted)}
+  .invite-banner{background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.4);border-radius:12px;
+    padding:11px 13px;margin:0 0 14px;font-size:13px;line-height:1.5;color:var(--fija)}
+  .invite-banner b{font-family:'JetBrains Mono',monospace;letter-spacing:2px;font-size:15px}
   .legend{display:flex;gap:16px;justify-content:center;font-size:12px;color:var(--muted);margin-top:6px;flex-wrap:wrap}
   .legend span{display:inline-flex;align-items:center;gap:6px}
   .legend .pip{width:11px;height:11px}
@@ -189,6 +196,7 @@
 
   <!-- LOGIN -->
   <section id="s-login" class="card">
+    <div class="invite-banner hidden" id="login-invite"></div>
     <h2 data-i18n="login_title">Elige tu nombre de jugador</h2>
     <p class="hint" data-i18n="login_hint">Tu nombre aparecerá en las partidas y el ranking. Elige un PIN para protegerlo.</p>
     <label data-i18n="login_lang">Idioma</label>
@@ -201,6 +209,7 @@
     <input type="text" id="uname" maxlength="24" data-i18n-ph="login_name_ph" placeholder="p.ej. Diego" autocomplete="off">
     <label for="upin" data-i18n="login_pin">PIN de acceso</label>
     <input type="password" id="upin" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" data-i18n-ph="login_pin_ph" placeholder="4–8 dígitos" autocomplete="current-password">
+    <p class="fieldnote" data-i18n="login_pin_note">🔒 Es tu contraseña para entrar en la app. No es el código secreto del juego ni el código de la partida.</p>
     <div class="val" id="uname-val"></div>
     <button class="btn" onclick="doLogin()" data-i18n="login_enter">Entrar</button>
     <div class="foot"><span class="link" onclick="openRules()" data-i18n="rules_link">¿Cómo se juega?</span></div>
@@ -213,6 +222,13 @@
       <h2 id="lobby-greet"></h2>
       <p class="hint" data-i18n="lobby_hint">Crea una partida y comparte el código, o únete a una pública abierta.</p>
       <button class="btn" onclick="show('create')" data-i18n="lobby_create">Crear partida</button>
+      <div style="height:10px"></div>
+      <div class="row">
+        <input type="text" id="join-code-inp" class="codeinp" maxlength="6" autocomplete="off"
+               autocapitalize="characters" spellcheck="false" data-i18n-ph="lobby_code_ph" placeholder="Código de partida"
+               onkeydown="if(event.key==='Enter'){event.preventDefault();joinByCode();}">
+        <button class="btn ghost sm" style="flex:0 0 auto" onclick="joinByCode()" data-i18n="join_btn">Unirse</button>
+      </div>
       <div style="height:10px"></div>
       <div class="row">
         <button class="btn ghost" onclick="openRank()" data-i18n="lobby_ranking">Ranking</button>
@@ -443,7 +459,7 @@
    CONFIG — pega aquí la URL /exec de tu Aplicación web de Apps Script
    ========================================================================== */
 const API = 'https://script.google.com/macros/s/AKfycbyjJRp_ZokFiKyRK3-P2kA8shD1SR73zjP3DMbynf09BvCOpGDGNoHULXf-uDy40pEI/exec';
-const APP_VERSION = '1.2';
+const APP_VERSION = '1.3';
 /* Enlace de invitación: ...?game=SZ93 */
 let pendingJoinCode = '';
 (function(){
@@ -461,13 +477,16 @@ const I18N = {
     login_title:"Elige tu nombre de jugador",
     login_hint:"Tu nombre aparecerá en las partidas y el ranking. Elige un PIN para protegerlo.",
     login_lang:"Idioma", login_name:"Nombre de usuario", login_name_ph:"p.ej. Diego", login_pin:"PIN de acceso", login_pin_ph:"4–8 dígitos",
+    login_pin_note:"🔒 Es tu contraseña para entrar en la app. No es el código secreto del juego ni el código de la partida.",
+    login_invite:"🎮 Te han invitado a la partida {code}. Crea tu nombre y tu PIN y entrarás directo.",
     login_enter:"Entrar", login_min:"Mínimo 2 caracteres", login_pin_invalid:"El PIN debe tener entre 4 y 8 dígitos",
     lobby_greeting:"Hola, {name} 👋",
     lobby_hint:"Crea una partida y comparte el código, o únete a una pública abierta.",
     lobby_create:"Crear partida", lobby_ranking:"Ranking", lobby_refresh:"Actualizar lista",
     lobby_mine:"Tus partidas activas", lobby_open:"Partidas públicas abiertas", lobby_changeuser:"Cambiar de usuario",
     loading:"Cargando…", load_error:"No se pudo cargar", open_empty:"No hay partidas abiertas. ¡Crea una!",
-    join_btn:"Unirse", mine_waiting:"Esperando rival", see_btn:"Ver", continue_btn:"Continuar", private_tag:"privada",
+    join_btn:"Unirse", lobby_code_ph:"Código de partida", code_invalid:"Escribe el código de la partida (4 caracteres).",
+    mine_waiting:"Esperando rival", mine_rematch_from:"🔁 Revancha de {name}", see_btn:"Ver", continue_btn:"Continuar", private_tag:"privada",
     rank_title:"Ranking global 🏆", rank_hint:"Victorias totales por jugador. Se actualiza con cada partida terminada.",
     rank_empty:"Aún no hay partidas terminadas.", rank_wl:"{wins} 🏆 · {played} jug.", rank_total:"Ranking global · {n} jugadores", rank_your_pos:"… tu posición: #{n}", back:"Volver",
     rules_title:"Cómo se juega", rules_link:"¿Cómo se juega?", wait_share:"Compartir",
@@ -519,13 +538,16 @@ const I18N = {
     login_title:"Choose your player name",
     login_hint:"Your name appears in games and on the ranking. Choose a PIN to protect it.",
     login_lang:"Language", login_name:"Username", login_name_ph:"e.g. Diego", login_pin:"Access PIN", login_pin_ph:"4–8 digits",
+    login_pin_note:"🔒 It's your password to sign in to the app. It is not the game's secret code nor the game code.",
+    login_invite:"🎮 You've been invited to game {code}. Choose your name and PIN and you'll go straight in.",
     login_enter:"Enter", login_min:"At least 2 characters", login_pin_invalid:"The PIN must contain 4 to 8 digits",
     lobby_greeting:"Hi, {name} 👋",
     lobby_hint:"Create a game and share the code, or join an open public one.",
     lobby_create:"Create game", lobby_ranking:"Ranking", lobby_refresh:"Refresh list",
     lobby_mine:"Your active games", lobby_open:"Open public games", lobby_changeuser:"Change user",
     loading:"Loading…", load_error:"Couldn't load", open_empty:"No open games. Create one!",
-    join_btn:"Join", mine_waiting:"Waiting for opponent", see_btn:"View", continue_btn:"Continue", private_tag:"private",
+    join_btn:"Join", lobby_code_ph:"Game code", code_invalid:"Enter the game code (4 characters).",
+    mine_waiting:"Waiting for opponent", mine_rematch_from:"🔁 Rematch from {name}", see_btn:"View", continue_btn:"Continue", private_tag:"private",
     rank_title:"Global ranking 🏆", rank_hint:"Total wins per player. Updates after each finished game.",
     rank_empty:"No finished games yet.", rank_wl:"{wins} 🏆 · {played} games", rank_total:"Global ranking · {n} players", rank_your_pos:"… your position: #{n}", back:"Back",
     rules_title:"How to play", rules_link:"How to play?", wait_share:"Share",
@@ -577,13 +599,16 @@ const I18N = {
     login_title:"Choisis ton nom de joueur",
     login_hint:"Ton nom apparaît dans les parties et le classement. Choisis un PIN pour le protéger.",
     login_lang:"Langue", login_name:"Nom d'utilisateur", login_name_ph:"ex. Diego", login_pin:"PIN d'accès", login_pin_ph:"4–8 chiffres",
+    login_pin_note:"🔒 C'est ton mot de passe pour entrer dans l'app. Ce n'est ni le code secret du jeu ni le code de la partie.",
+    login_invite:"🎮 Tu es invité à la partie {code}. Choisis ton nom et ton PIN et tu entreras directement.",
     login_enter:"Entrer", login_min:"2 caractères minimum", login_pin_invalid:"Le PIN doit contenir de 4 à 8 chiffres",
     lobby_greeting:"Salut, {name} 👋",
     lobby_hint:"Crée une partie et partage le code, ou rejoins une partie publique ouverte.",
     lobby_create:"Créer une partie", lobby_ranking:"Classement", lobby_refresh:"Actualiser la liste",
     lobby_mine:"Tes parties en cours", lobby_open:"Parties publiques ouvertes", lobby_changeuser:"Changer d'utilisateur",
     loading:"Chargement…", load_error:"Échec du chargement", open_empty:"Aucune partie ouverte. Crées-en une !",
-    join_btn:"Rejoindre", mine_waiting:"En attente d'un adversaire", see_btn:"Voir", continue_btn:"Continuer", private_tag:"privée",
+    join_btn:"Rejoindre", lobby_code_ph:"Code de la partie", code_invalid:"Saisis le code de la partie (4 caractères).",
+    mine_waiting:"En attente d'un adversaire", mine_rematch_from:"🔁 Revanche de {name}", see_btn:"Voir", continue_btn:"Continuer", private_tag:"privée",
     rank_title:"Classement global 🏆", rank_hint:"Victoires totales par joueur. Mis à jour après chaque partie terminée.",
     rank_empty:"Aucune partie terminée pour l'instant.", rank_wl:"{wins} 🏆 · {played} parties", rank_total:"Classement global · {n} joueurs", rank_your_pos:"… ta position : #{n}", back:"Retour",
     rules_title:"Comment jouer", rules_link:"Comment jouer ?", wait_share:"Partager",
@@ -766,7 +791,15 @@ function applyI18n(){
   document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ el.placeholder = t(el.dataset.i18nPh); });
   document.querySelectorAll('#seg-lang button').forEach(b=> b.classList.toggle('on', b.dataset.lang===lang));
   if(typeof updateSoundLabel==='function') updateSoundLabel();
+  if(typeof renderLoginInvite==='function') renderLoginInvite();
   setCredits();
+}
+/* Aviso en el registro cuando se llega por un enlace de invitación (?game=XXXX). */
+function renderLoginInvite(){
+  const el=$('login-invite'); if(!el) return;
+  if(!pendingJoinCode){ el.classList.add('hidden'); el.innerHTML=''; return; }
+  el.innerHTML=t('login_invite',{code:'<b>'+pendingJoinCode+'</b>'});
+  el.classList.remove('hidden');
 }
 
 /* Paleta de hasta 8 colores (índices 0-7) */
@@ -1048,17 +1081,22 @@ function renderMine(games){
   games.forEach(g=>{
     const opp = g.p1===user ? g.p2 : g.p1;
     const oppCountry = g.p1===user ? g.country2 : g.country1;
-    const who = g.status==='waiting' ? esc(t('mine_waiting')) : vsPlayer(oppCountry, opp||'—');
-    const el=document.createElement('div'); el.className='gitem';
+    // Revancha que me ha propuesto el rival: todavía no soy jugador, hay que unirse.
+    const invite = !!g.rematchInvite;
+    const who = invite ? t('mine_rematch_from',{name:esc(opp||'—')})
+              : (g.status==='waiting' ? esc(t('mine_waiting')) : vsPlayer(oppCountry, opp||'—'));
+    const el=document.createElement('div'); el.className='gitem'+(invite?' invite':'');
     const complete=!!(g.p1&&g.p2);
-    const cnt = complete ? '2/2' : '1/2';
-    const cntCls = complete ? 'pill f' : 'pill';
+    const cnt = invite ? '🔁' : (complete ? '2/2' : '1/2');
+    const cntCls = (invite||complete) ? 'pill f' : 'pill';
     el.innerHTML=`<div class="gid">${g.gameId}</div>
       <div class="meta"><div class="who">${who}</div><div class="det">${rulesLabel(g)}${g.isPublic?'':' · '+t('private_tag')} · ${relativeActivity(g.updatedAt)}</div></div>
       <span class="${cntCls}" style="margin-right:2px">${cnt}</span>`;
-    const b=document.createElement('button'); b.className='btn sm'; b.textContent= g.status==='waiting'?t('see_btn'):t('continue_btn');
+    const b=document.createElement('button'); b.className='btn sm'+(invite?' green':'');
+    b.textContent= invite ? t('join_btn') : (g.status==='waiting'?t('see_btn'):t('continue_btn'));
     b.onclick=()=>{ const meta={id:g.gameId,digits:g.digits,mode:g.mode,numColors:g.numColors,allowRepeats:g.allowRepeats,maxAttempts:g.maxAttempts,turnSeconds:g.turnSeconds};
-      if(g.status==='waiting'||!complete){ enterWait(meta); } else { enterGame(meta); } };
+      if(invite){ goToRematch(g.gameId); }
+      else if(g.status==='waiting'||!complete){ enterWait(meta); } else { enterGame(meta); } };
     el.appendChild(b); box.appendChild(el);
   });
 }
@@ -1188,7 +1226,7 @@ function shareCode(){
 }
 async function handleDeepLink(){
   if(!pendingJoinCode || !user) return;
-  const code=pendingJoinCode; pendingJoinCode='';
+  const code=pendingJoinCode; pendingJoinCode=''; renderLoginInvite();
   goToRematch(code); // enruta según estado: unirse / esperar / entrar
 }
 
@@ -1247,6 +1285,14 @@ async function sendRematch(){
     localStorage.setItem('pf_secret_'+res.gameId, secret);
     enterWait({id:res.gameId, digits:finishedMeta.digits, mode:finishedMeta.mode, numColors:finishedMeta.numColors, allowRepeats:finishedMeta.allowRepeats, maxAttempts:finishedMeta.maxAttempts, turnSeconds:finishedMeta.turnSeconds});
   }catch(e){ toast(t('net_error'),true); } finally{ $('btn-rematch').disabled=false; }
+}
+/* Unirse a una partida privada escribiendo su código en el lobby. */
+async function joinByCode(){
+  const inp=$('join-code-inp');
+  const code=String(inp.value||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(code.length<4){ toast(t('code_invalid'),true); inp.focus(); return; }
+  inp.value='';
+  await goToRematch(code); // enruta según estado: unirse / esperar / entrar
 }
 async function goToRematch(rematchId){
   try{
