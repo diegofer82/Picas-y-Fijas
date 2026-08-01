@@ -107,8 +107,12 @@
   .turnbar .dot{width:9px;height:9px;border-radius:50%;background:currentColor;animation:pulse 1.4s infinite}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
-  .statusrow{display:flex;gap:10px;margin-bottom:14px}
+  .statusrow{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+  .statusrow .pause-inline{margin-left:0}
   .chip{font-size:12px;color:var(--muted);background:#141126;border:1px solid var(--edge);border-radius:999px;padding:6px 12px;font-family:'JetBrains Mono',monospace}
+  button.pause-chip{width:auto;min-width:38px;height:32px;padding:0 11px;background:#141126;border:1px solid var(--edge);border-radius:999px;color:var(--muted);font-size:14px;line-height:1;cursor:pointer;display:inline-grid;place-items:center}
+  button.pause-chip:hover{color:var(--text);border-color:var(--muted)}
+  button.pause-chip:disabled{opacity:.55;cursor:not-allowed}
   .chip.warn{color:var(--pica);border-color:rgba(251,191,36,.4)}
   .chip.hot{color:var(--pink);border-color:rgba(244,114,182,.5)}
 
@@ -441,10 +445,9 @@
       <div class="turnbar theirs" id="g-turn"><span class="dot"></span><span id="g-turn-txt"></span></div>
       <div class="statusrow hidden" id="g-statusrow">
         <span class="chip hidden" id="g-timer"></span>
+        <button class="pause-chip pause-inline" id="g-pause-btn" onclick="requestGamePause()" aria-label="Pausar partida" title="Pausar partida">⏸</button>
         <span class="chip hidden" id="g-attempts"></span>
       </div>
-      <button class="btn ghost sm" id="g-pause-btn" onclick="requestGamePause()" data-i18n="pause_btn">Pausar partida</button>
-      <div style="height:12px" id="g-pause-space"></div>
 
       <div class="guessarea" id="g-guessarea">
         <div class="field">
@@ -559,7 +562,7 @@ const I18N = {
     attempts_chip:"Intentos: {left}/{max}", timer_paused:"⏸ En pausa · esperando reconexión",
     pause_btn:"Pausar partida", pause_title:"Partida en pausa", pause_confirm:"¿Pausar la partida? Los dos jugadores dejarán de ver códigos e intentos.",
     pause_mine:"Tú solicitaste la pausa. Puedes reanudar cuando estés listo.", pause_other:"{name} solicitó la pausa. La partida se reanudará cuando regrese.",
-    pause_auto:"Reanudación automática en {time}", resume_btn:"Quitar pausa", pause_limit:"La pausa dura como máximo 5 minutos.", auto_pause_message:"Conexión interrumpida. La partida está oculta hasta que ambos jugadores regresen.",
+    pause_auto:"Reanudación automática en {time}", resume_btn:"▶ Quitar pausa", pause_limit:"La pausa dura como máximo 5 minutos.", lobby_pause_message:"{name} volvió al lobby. La partida continuará automáticamente cuando regrese.",
     win_title:"¡Ganaste! 🎉", lose_title:"Perdiste", draw_title:"Empate 🤝",
     win_msg:"Descifraste el código de {name}", lose_msg:"{name} descifró tu código primero",
     draw_both:"Ambos descifraron el código en el mismo número de intentos",
@@ -626,7 +629,7 @@ const I18N = {
     attempts_chip:"Attempts: {left}/{max}", timer_paused:"⏸ Paused · waiting for reconnection",
     pause_btn:"Pause game", pause_title:"Game paused", pause_confirm:"Pause the game? Both players will stop seeing codes and attempts.",
     pause_mine:"You requested the pause. Resume when you're ready.", pause_other:"{name} requested the pause. The game will resume when they return.",
-    pause_auto:"Automatic resume in {time}", resume_btn:"Resume game", pause_limit:"The pause lasts up to 5 minutes.", auto_pause_message:"Connection interrupted. The game is hidden until both players return.",
+    pause_auto:"Automatic resume in {time}", resume_btn:"▶ Resume game", pause_limit:"The pause lasts up to 5 minutes.", lobby_pause_message:"{name} returned to the lobby. The game will continue automatically when they return.",
     win_title:"You won! 🎉", lose_title:"You lost", draw_title:"Draw 🤝",
     win_msg:"You cracked {name}'s code", lose_msg:"{name} cracked your code first",
     draw_both:"Both cracked the code in the same number of tries",
@@ -693,7 +696,7 @@ const I18N = {
     attempts_chip:"Essais : {left}/{max}", timer_paused:"⏸ En pause · reconnexion en attente",
     pause_btn:"Mettre en pause", pause_title:"Partie en pause", pause_confirm:"Mettre la partie en pause ? Les codes et les essais seront masqués pour les deux joueurs.",
     pause_mine:"Tu as demandé la pause. Reprends la partie quand tu es prêt.", pause_other:"{name} a demandé la pause. La partie reprendra à son retour.",
-    pause_auto:"Reprise automatique dans {time}", resume_btn:"Reprendre la partie", pause_limit:"La pause dure au maximum 5 minutes.", auto_pause_message:"Connexion interrompue. La partie reste masquée jusqu'au retour des deux joueurs.",
+    pause_auto:"Reprise automatique dans {time}", resume_btn:"▶ Reprendre la partie", pause_limit:"La pause dure au maximum 5 minutes.", lobby_pause_message:"{name} est retourné à l'accueil. La partie reprendra automatiquement à son retour.",
     win_title:"Tu as gagné ! 🎉", lose_title:"Tu as perdu", draw_title:"Égalité 🤝",
     win_msg:"Tu as trouvé le code de {name}", lose_msg:"{name} a trouvé ton code en premier",
     draw_both:"Vous avez trouvé le code au même nombre d'essais",
@@ -879,7 +882,6 @@ let game = { id:'', digits:3, mode:'numbers', numColors:6, allowRepeats:false, m
 let gState = null;
 let gameViewEpoch = 0, routeEpoch = 0, gameRequestSeq = 0;
 let pollTimer = null, tickTimer = null, passRequested = false, lastTurnStart = '';
-let connectionLost = false;
 let lobbyPollTimer = null;
 let lastYourTurn = null;
 let endSoundPlayed = false;
@@ -925,9 +927,17 @@ function toast(msg, isErr){
 function hideToast(){ const el=$('toast'); clearTimeout(el._h); el.className='toast'; el.textContent=''; }
 async function api(action, payload={}){
   if(API.indexOf('PEGA_AQUI')===0){ toast(t('api_not_set'),true); throw new Error('API sin configurar'); }
-  const res = await fetch(API,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body: JSON.stringify(Object.assign({action, pin:userPin}, payload)) });
-  return res.json();
+  // Apps Script puede dejar ocasionalmente una conexión pendiente. Sin límite,
+  // el polling secuencial se detenía para siempre hasta que el usuario hacía F5.
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),12000);
+  try{
+    const res = await fetch(API,{ method:'POST', cache:'no-store', signal:controller.signal,
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(Object.assign({action, pin:userPin}, payload)) });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    return await res.json();
+  }finally{ clearTimeout(timeout); }
 }
 function esc(s){ return String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
 function noRepeat(v){ return new Set(v.split('')).size === v.length; }
@@ -1442,7 +1452,7 @@ function resetGameView(){
   $('g-statusrow').classList.add('hidden'); $('g-timer').classList.add('hidden'); $('g-attempts').classList.add('hidden');
   $('g-guessarea').classList.toggle('hidden',!!game.spectator); $('g-guess').disabled=true; $('g-guess-btn').disabled=true;
   $('g-abandon-wrap').classList.add('hidden'); document.querySelector('.legend').style.display='flex';
-  $('g-pause-cover').classList.add('hidden'); $('g-pause-btn').classList.add('hidden'); $('g-pause-space').classList.add('hidden');
+  $('g-pause-cover').classList.add('hidden'); $('g-pause-btn').classList.add('hidden');
 }
 function enterGame(meta){
   const epoch=++gameViewEpoch;
@@ -1452,7 +1462,6 @@ function enterGame(meta){
   padG.reset(); applyMode('g', game.mode, 'g-guess', 'pad-g', padG);
   $('g-code').textContent=meta.id; $('g-guess-val').textContent='';
   gState=null; passRequested=false; lastTurnStart=''; lastYourTurn=null; endSoundPlayed=false;
-  connectionLost=false;
   resetGameView();
   localStorage.setItem('pf_current_game',game.id);
   show('game'); refreshGame(epoch,game.id); startPoll(()=>refreshGame(epoch,game.id)); startTick();
@@ -1467,16 +1476,11 @@ async function refreshGame(expectedEpoch=gameViewEpoch, expectedGameId=game.id){
   try{
     const st=await api('state',{gameId:requestGameId, username:user, inGame:true});
     if(requestSeq!==gameRequestSeq||requestEpoch!==gameViewEpoch||requestGameId!==game.id||$('s-game').classList.contains('hidden')) return;
-    if(st.ok){ connectionLost=false; renderGame(st); }
+    if(st.ok) renderGame(st);
     else if(terminalGameError(st.error)){
       localStorage.removeItem('pf_current_game'); stopPoll(); stopTick(); toast(te(st.error)||t('not_available'),true); enterLobby();
     }else toast(te(st.error)||t('net_error'),true);
-  }catch(e){
-    /* Conserva la partida, pero oculta el tablero local mientras no haya comunicación. */
-    if(requestEpoch===gameViewEpoch&&requestGameId===game.id&&!$('s-game').classList.contains('hidden')){
-      connectionLost=true; updatePauseCover();
-    }
-  }
+  }catch(e){ /* Un fallo transitorio conserva visible el último estado válido. */ }
 }
 $('g-guess').addEventListener('input', e=>setVal('g-guess-val', e.target.value, game.digits, game.allowRepeats));
 
@@ -1524,7 +1528,7 @@ function renderGame(st){
 
   if(st.status==='finished'){
     $('g-abandon-wrap').classList.add('hidden');
-    $('g-pause-cover').classList.add('hidden'); $('g-pause-btn').classList.add('hidden'); $('g-pause-space').classList.add('hidden');
+    $('g-pause-cover').classList.add('hidden'); $('g-pause-btn').classList.add('hidden');
     turn.classList.add('hidden'); guessarea.classList.add('hidden'); statusrow.classList.add('hidden'); legend.style.display='none';
     stopTick();
     const won = st.winner===user;
@@ -1552,13 +1556,13 @@ function renderGame(st){
   banner.innerHTML=''; rz.innerHTML=''; legend.style.display='flex';
   $('g-abandon-wrap').classList.toggle('hidden',st.status!=='active'||spectator);
   $('g-pause-btn').classList.toggle('hidden',st.status!=='active'||spectator||!!st.manualPausedBy);
-  $('g-pause-space').classList.toggle('hidden',st.status!=='active'||spectator||!!st.manualPausedBy);
+  $('g-pause-btn').title=t('pause_btn'); $('g-pause-btn').setAttribute('aria-label',t('pause_btn'));
   turn.classList.remove('hidden'); guessarea.classList.toggle('hidden',spectator);
   updatePauseCover();
 
   const myAttempts = me===1 ? st.attemptsP1 : st.attemptsP2;
   const canGuessAttempts = !(st.maxAttempts>0 && myAttempts>=st.maxAttempts);
-  if(st.maxAttempts>0 || st.turnSeconds>0){
+  if(st.maxAttempts>0 || st.turnSeconds>0 || (!spectator&&st.status==='active')){
     statusrow.classList.remove('hidden');
     if(st.maxAttempts>0){ const left=Math.max(0, st.maxAttempts-myAttempts);
       const a=$('g-attempts'); a.classList.remove('hidden'); a.className='chip'+(left<=1?' hot':(left<=2?' warn':''));
@@ -1627,7 +1631,7 @@ async function submitGuess(){
 }
 async function leaveGame(){
   const id=game.id; localStorage.removeItem('pf_current_game'); stopPoll(); stopTick();
-  try{ if(id) await api('gamePresence',{gameId:id,username:user,connected:false}); }catch(e){}
+  try{ if(id) await api('gamePresence',{gameId:id,username:user,connected:false,reason:'lobby'}); }catch(e){}
   enterLobby();
 }
 async function abandonGame(){
@@ -1661,11 +1665,11 @@ async function resumeGame(){
 function updatePauseCover(){
   const cover=$('g-pause-cover');
   const manual=!!(gState&&gState.manualPausedBy);
-  const automatic=!!(connectionLost||(gState&&gState.status==='active'&&!manual&&gState.timerPaused&&gState.turnSeconds>0));
-  if((!connectionLost&&(!gState||gState.status!=='active'))||(!manual&&!automatic)){ cover.classList.add('hidden'); return; }
+  const automatic=!!(gState&&gState.status==='active'&&!manual&&gState.lobbyPausedBy);
+  if(!gState||gState.status!=='active'||(!manual&&!automatic)){ cover.classList.add('hidden'); return; }
   cover.classList.remove('hidden');
   if(automatic){
-    $('g-pause-message').textContent=t('auto_pause_message');
+    $('g-pause-message').textContent=t('lobby_pause_message',{name:gState.lobbyPausedBy});
     $('g-pause-countdown').textContent='';
     $('g-resume-btn').classList.add('hidden');
     return;
@@ -1714,23 +1718,9 @@ function startPoll(fn){
 }
 function stopPoll(){ pollGeneration++; if(pollTimer){ clearTimeout(pollTimer); pollTimer=null; } }
 
-function signalGameDisconnected(){
-  const id=localStorage.getItem('pf_current_game');
-  if(!id||!user||!userPin) return;
-  const payload=JSON.stringify({action:'gamePresence',gameId:id,username:user,pin:userPin,connected:false});
-  try{
-    if(navigator.sendBeacon) navigator.sendBeacon(API,new Blob([payload],{type:'text/plain;charset=UTF-8'}));
-    else fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:payload,keepalive:true}).catch(()=>{});
-  }catch(e){}
-}
 document.addEventListener('visibilitychange',()=>{
-  if(document.hidden){
-    if(!$('s-game').classList.contains('hidden')){ connectionLost=true; updatePauseCover(); }
-    signalGameDisconnected();
-  }
-  else if(!$('s-game').classList.contains('hidden')&&game.id) refreshGame();
+  if(!document.hidden&&!$('s-game').classList.contains('hidden')&&game.id) refreshGame();
 });
-window.addEventListener('pagehide',signalGameDisconnected);
 
 /* -------------------- arranque -------------------- */
 applyI18n();
