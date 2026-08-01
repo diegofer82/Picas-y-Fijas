@@ -1019,14 +1019,15 @@ function renderMine(games){
     const oppCountry = g.p1===user ? g.country2 : g.country1;
     const who = g.status==='waiting' ? esc(t('mine_waiting')) : vsPlayer(oppCountry, opp||'—');
     const el=document.createElement('div'); el.className='gitem';
-    const cnt = g.status==='waiting' ? '1/2' : '2/2';
-    const cntCls = g.status==='waiting' ? 'pill' : 'pill f';
+    const complete=!!(g.p1&&g.p2);
+    const cnt = complete ? '2/2' : '1/2';
+    const cntCls = complete ? 'pill f' : 'pill';
     el.innerHTML=`<div class="gid">${g.gameId}</div>
       <div class="meta"><div class="who">${who}</div><div class="det">${rulesLabel(g)}${g.isPublic?'':' · '+t('private_tag')}</div></div>
       <span class="${cntCls}" style="margin-right:2px">${cnt}</span>`;
     const b=document.createElement('button'); b.className='btn sm'; b.textContent= g.status==='waiting'?t('see_btn'):t('continue_btn');
     b.onclick=()=>{ const meta={id:g.gameId,digits:g.digits,mode:g.mode,numColors:g.numColors,allowRepeats:g.allowRepeats,maxAttempts:g.maxAttempts,turnSeconds:g.turnSeconds};
-      if(g.status==='waiting'){ enterWait(meta); } else { enterGame(meta); } };
+      if(g.status==='waiting'||!complete){ enterWait(meta); } else { enterGame(meta); } };
     el.appendChild(b); box.appendChild(el);
   });
 }
@@ -1136,7 +1137,7 @@ async function pollWait(){
     if(st.status==='active'){ notifyJoin(); enterGame(metaFromState(st)); return; }
     if(st.status!=='waiting'){ stopPoll(); toast(t('game_expired'),true); enterLobby(); return; }
     const c=new Date(st.createdAt).getTime();
-    if(c && Date.now()-c > 30*60*1000){ stopPoll(); toast(t('game_expired'),true); enterLobby(); return; }
+    if(c && Date.now()-c > 2*60*60*1000){ stopPoll(); toast(t('game_expired'),true); enterLobby(); return; }
   }catch(e){}
 }
 function cancelWait(){ stopPoll(); enterLobby(); }
@@ -1214,9 +1215,11 @@ async function goToRematch(rematchId){
     const st=await api('state',{gameId:rematchId, username:user});
     if(!st.ok){ toast(te(st.error)||t('not_available'),true); return; }
     const meta=metaFromState(st);
-    if(st.status==='active'){ enterGame(meta); }
-    else if(st.youAre===1){ enterWait(meta); }
-    else { openJoin(Object.assign({gameId:rematchId}, meta)); }
+    if(st.status==='finished'&&st.youAre){ enterGame(meta); }
+    else if(st.status==='active'&&st.p1&&st.p2){ enterGame(meta); }
+    else if(st.status==='waiting'&&st.youAre===1){ enterWait(meta); }
+    else if(st.status==='waiting'){ openJoin(Object.assign({gameId:rematchId}, meta)); }
+    else { toast(t('game_expired'),true); enterLobby(); }
   }catch(e){ toast(t('net_error'),true); }
 }
 
