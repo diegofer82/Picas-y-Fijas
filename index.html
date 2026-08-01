@@ -1689,7 +1689,7 @@ async function resumeGame(){
 function updatePauseCover(){
   const cover=$('g-pause-cover');
   const manual=!!(gState&&gState.manualPausedBy);
-  const automatic=!!(gState&&gState.status==='active'&&!manual&&gState.lobbyPausedBy);
+  const automatic=!!(gState&&gState.status==='active'&&!manual&&(gState.waitingForOpponent||gState.lobbyPausedBy));
   if(!gState||gState.status!=='active'||(!manual&&!automatic)){ cover.classList.add('hidden'); return; }
   cover.classList.remove('hidden');
   if(automatic){
