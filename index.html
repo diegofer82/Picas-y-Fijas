@@ -488,7 +488,7 @@
     <div class="pause-cover hidden" id="g-pause-cover">
       <div class="pause-box">
         <div class="pause-icon">⏸</div>
-        <h2 data-i18n="pause_title">Partida en pausa</h2>
+        <h2 id="g-pause-title" data-i18n="pause_title">Partida en pausa</h2>
         <p id="g-pause-message"></p>
         <div class="pause-countdown" id="g-pause-countdown"></div>
         <button class="btn green hidden" id="g-resume-btn" onclick="resumeGame()" data-i18n="resume_btn">Quitar pausa</button>
@@ -571,7 +571,7 @@ const I18N = {
     attempts_chip:"Intentos: {left}/{max}", timer_paused:"⏸ En pausa · esperando reconexión",
     pause_btn:"Pausar partida", pause_title:"Partida en pausa", pause_confirm:"¿Pausar la partida? Los dos jugadores dejarán de ver códigos e intentos.",
     pause_mine:"Tú solicitaste la pausa. Puedes reanudar cuando estés listo.", pause_other:"{name} solicitó la pausa. La partida se reanudará cuando regrese.",
-    pause_auto:"Reanudación automática en {time}", resume_btn:"▶ Quitar pausa", pause_limit:"La pausa dura como máximo 5 minutos.", lobby_pause_message:"{name} volvió al lobby. La partida continuará automáticamente cuando regrese.",
+    pause_auto:"Reanudación automática en {time}", resume_btn:"▶ Quitar pausa", pause_limit:"La pausa dura como máximo 5 minutos.", lobby_pause_message:"{name} volvió al lobby. La partida continuará automáticamente cuando regrese.", waiting_rival_title:"Esperando a tu rival", waiting_rival_message:"La partida permanecerá oculta hasta que {name} vuelva a entrar.",
     win_title:"¡Ganaste! 🎉", lose_title:"Perdiste", draw_title:"Empate 🤝",
     win_msg:"Descifraste el código de {name}", lose_msg:"{name} descifró tu código primero",
     draw_both:"Ambos descifraron el código en el mismo número de intentos",
@@ -638,7 +638,7 @@ const I18N = {
     attempts_chip:"Attempts: {left}/{max}", timer_paused:"⏸ Paused · waiting for reconnection",
     pause_btn:"Pause game", pause_title:"Game paused", pause_confirm:"Pause the game? Both players will stop seeing codes and attempts.",
     pause_mine:"You requested the pause. Resume when you're ready.", pause_other:"{name} requested the pause. The game will resume when they return.",
-    pause_auto:"Automatic resume in {time}", resume_btn:"▶ Resume game", pause_limit:"The pause lasts up to 5 minutes.", lobby_pause_message:"{name} returned to the lobby. The game will continue automatically when they return.",
+    pause_auto:"Automatic resume in {time}", resume_btn:"▶ Resume game", pause_limit:"The pause lasts up to 5 minutes.", lobby_pause_message:"{name} returned to the lobby. The game will continue automatically when they return.", waiting_rival_title:"Waiting for your opponent", waiting_rival_message:"The game will remain hidden until {name} returns.",
     win_title:"You won! 🎉", lose_title:"You lost", draw_title:"Draw 🤝",
     win_msg:"You cracked {name}'s code", lose_msg:"{name} cracked your code first",
     draw_both:"Both cracked the code in the same number of tries",
@@ -705,7 +705,7 @@ const I18N = {
     attempts_chip:"Essais : {left}/{max}", timer_paused:"⏸ En pause · reconnexion en attente",
     pause_btn:"Mettre en pause", pause_title:"Partie en pause", pause_confirm:"Mettre la partie en pause ? Les codes et les essais seront masqués pour les deux joueurs.",
     pause_mine:"Tu as demandé la pause. Reprends la partie quand tu es prêt.", pause_other:"{name} a demandé la pause. La partie reprendra à son retour.",
-    pause_auto:"Reprise automatique dans {time}", resume_btn:"▶ Reprendre la partie", pause_limit:"La pause dure au maximum 5 minutes.", lobby_pause_message:"{name} est retourné à l'accueil. La partie reprendra automatiquement à son retour.",
+    pause_auto:"Reprise automatique dans {time}", resume_btn:"▶ Reprendre la partie", pause_limit:"La pause dure au maximum 5 minutes.", lobby_pause_message:"{name} est retourné à l'accueil. La partie reprendra automatiquement à son retour.", waiting_rival_title:"En attente de ton adversaire", waiting_rival_message:"La partie restera masquée jusqu'au retour de {name}.",
     win_title:"Tu as gagné ! 🎉", lose_title:"Tu as perdu", draw_title:"Égalité 🤝",
     win_msg:"Tu as trouvé le code de {name}", lose_msg:"{name} a trouvé ton code en premier",
     draw_both:"Vous avez trouvé le code au même nombre d'essais",
@@ -806,7 +806,7 @@ const RULES = {
   </ol>
   <div class="note"><b>Fija</b> = dígito correcto en la <b>posición correcta</b>. &nbsp; <b>Pica</b> = dígito correcto pero en <b>otra posición</b>.</div>
   <div class="note"><b>Modo colores:</b> mismo cálculo de picas y fijas, solo cambian las cifras por fichas de color.</div>
-  <div class="note"><b>Cronómetro:</b> al llegar a 0 el turno pasa automáticamente al rival. En partidas con tiempo, se pausa si un jugador vuelve al lobby o pierde la conexión; también puede solicitarse una pausa manual temporal.</div>
+  <div class="note"><b>Cronómetro y lobby:</b> al llegar a 0 el turno pasa automáticamente al rival. Si un jugador vuelve al lobby, el tablero queda oculto y la partida espera hasta que ambos regresen; también puede solicitarse una pausa manual temporal.</div>
   <div class="note"><b>Salir o cancelar:</b> volver al lobby no elimina la partida. El creador puede cancelar una partida que aún espera rival; una partida ya iniciada puede abandonarse sin otorgar una victoria.</div>`,
   en:`<ol>
     <li>Each player registers a <b>username</b> and protects it with a <b>4-to-8-digit PIN</b>. The name is also used in the ranking.</li>
@@ -828,7 +828,7 @@ const RULES = {
   </ol>
   <div class="note"><b>Fixed (F)</b> = correct digit in the <b>correct position</b>. &nbsp; <b>Present (P)</b> = correct digit in a <b>different position</b>.</div>
   <div class="note"><b>Colors mode:</b> same F/P scoring, colored pegs instead of digits.</div>
-  <div class="note"><b>Timer:</b> when it reaches 0, the turn automatically passes to the opponent. In timed games, it pauses if either player returns to the lobby or loses connection; a temporary manual pause can also be requested.</div>
+  <div class="note"><b>Timer and lobby:</b> when it reaches 0, the turn automatically passes to the opponent. If either player returns to the lobby, the board is hidden and the game waits until both return; a temporary manual pause can also be requested.</div>
   <div class="note"><b>Leaving or cancelling:</b> returning to the lobby does not delete the game. The creator can cancel a game that is still waiting for an opponent; a game already in progress can be abandoned without awarding a win.</div>`,
   fr:`<ol>
     <li>Chaque joueur enregistre un <b>nom d'utilisateur</b> et le protège avec un <b>PIN de 4 à 8 chiffres</b>. Le nom sert aussi au classement.</li>
@@ -850,7 +850,7 @@ const RULES = {
   </ol>
   <div class="note"><b>Fixe (F)</b> = bon chiffre à la <b>bonne position</b>. &nbsp; <b>Présent (P)</b> = bon chiffre à une <b>autre position</b>.</div>
   <div class="note"><b>Mode couleurs :</b> même calcul F/P, des pions colorés à la place des chiffres.</div>
-  <div class="note"><b>Chrono :</b> à 0, le tour passe automatiquement à l'adversaire. Dans une partie chronométrée, il se met en pause si un joueur retourne au lobby ou perd la connexion ; une pause manuelle temporaire peut aussi être demandée.</div>
+  <div class="note"><b>Chrono et lobby :</b> à 0, le tour passe automatiquement à l'adversaire. Si un joueur retourne au lobby, le plateau est masqué et la partie attend le retour des deux joueurs ; une pause manuelle temporaire peut aussi être demandée.</div>
   <div class="note"><b>Quitter ou annuler :</b> retourner au lobby ne supprime pas la partie. Le créateur peut annuler une partie qui attend encore un adversaire ; une partie déjà commencée peut être abandonnée sans attribuer de victoire.</div>`
 };
 
@@ -1693,11 +1693,14 @@ function updatePauseCover(){
   if(!gState||gState.status!=='active'||(!manual&&!automatic)){ cover.classList.add('hidden'); return; }
   cover.classList.remove('hidden');
   if(automatic){
-    $('g-pause-message').textContent=t('lobby_pause_message',{name:gState.lobbyPausedBy});
+    const me=gState.youAre, opponent=me===1?gState.p2:gState.p1;
+    $('g-pause-title').textContent=t('waiting_rival_title');
+    $('g-pause-message').textContent=t('waiting_rival_message',{name:opponent||gState.lobbyPausedBy||t('rival')});
     $('g-pause-countdown').textContent='';
     $('g-resume-btn').classList.add('hidden');
     return;
   }
+  $('g-pause-title').textContent=t('pause_title');
   const mine=gState.manualPausedBy===user;
   $('g-pause-message').textContent=mine?t('pause_mine'):t('pause_other',{name:gState.manualPausedBy});
   $('g-resume-btn').classList.toggle('hidden',!mine);
