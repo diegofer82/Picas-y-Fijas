@@ -818,6 +818,7 @@ let cfg = { digits:3, mode:'numbers', numColors:6, allowRepeats:false, isPublic:
 let joinMeta = null, finishedMeta = null;
 let game = { id:'', digits:3, mode:'numbers', numColors:6, allowRepeats:false, maxAttempts:0, turnSeconds:0 };
 let gState = null;
+let gameViewEpoch = 0, routeEpoch = 0;
 let pollTimer = null, tickTimer = null, passRequested = false, lastTurnStart = '';
 let lobbyPollTimer = null;
 let lastYourTurn = null;
@@ -848,6 +849,7 @@ function vsPlayer(cc, name){ return `vs ${playerChip(cc, name)}`; }
 /* -------------------- utilidades -------------------- */
 const $ = id => document.getElementById(id);
 function show(name){
+  if(name!=='game') gameViewEpoch++;
   ['login','lobby','rank','history','rules','create','wait','join','rematch','game'].forEach(s=>{
     $('s-'+s).classList.toggle('hidden', s!==name);
   });
@@ -860,6 +862,7 @@ function toast(msg, isErr){
   const t=$('toast'); t.textContent=msg; t.className='toast show'+(isErr?' err':'');
   clearTimeout(t._h); t._h=setTimeout(()=>t.className='toast',2600);
 }
+function hideToast(){ const el=$('toast'); clearTimeout(el._h); el.className='toast'; el.textContent=''; }
 async function api(action, payload={}){
   if(API.indexOf('PEGA_AQUI')===0){ toast(t('api_not_set'),true); throw new Error('API sin configurar'); }
   const res = await fetch(API,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
@@ -1198,13 +1201,17 @@ async function createGame(){
 
 /* -------------------- sala de espera -------------------- */
 function enterWait(meta){
+  localStorage.removeItem('pf_current_game');
   game={id:meta.id, digits:meta.digits, mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats, maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0};
   $('wait-code').textContent=meta.id; $('wait-info').textContent=rulesLabel(meta);
-  show('wait'); startPoll(pollWait);
+  show('wait');
+  const waitEpoch=gameViewEpoch, waitGameId=game.id;
+  startPoll(()=>pollWait(waitEpoch,waitGameId));
 }
-async function pollWait(){
+async function pollWait(expectedEpoch=gameViewEpoch, expectedGameId=game.id){
   try{
-    const st=await api('state',{gameId:game.id, username:user});
+    const st=await api('state',{gameId:expectedGameId, username:user});
+    if(expectedEpoch!==gameViewEpoch||expectedGameId!==game.id||$('s-wait').classList.contains('hidden')) return;
     if(!st.ok){ stopPoll(); toast(t('game_expired'),true); enterLobby(); return; }
     if(st.status==='active'){ notifyJoin(); enterGame(metaFromState(st)); return; }
     if(st.status!=='waiting'){ stopPoll(); toast(t('game_expired'),true); enterLobby(); return; }
@@ -1245,6 +1252,7 @@ function closeRules(){ show(rulesReturn); }
 
 /* -------------------- unirse -------------------- */
 function openJoin(meta){
+  localStorage.removeItem('pf_current_game');
   joinMeta={gameId:meta.gameId||meta.id, digits:meta.digits, mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats,
     maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0};
   $('join-code').textContent=joinMeta.gameId;
@@ -1298,8 +1306,12 @@ async function joinByCode(){
   await goToRematch(code); // enruta según estado: unirse / esperar / entrar
 }
 async function goToRematch(rematchId){
+  const route=++routeEpoch;
+  // Invalida cualquier respuesta que aún esté llegando de la partida terminada.
+  gameViewEpoch++; stopPoll(); stopTick(); hideToast();
   try{
     const st=await api('state',{gameId:rematchId, username:user});
+    if(route!==routeEpoch) return;
     if(!st.ok){
       if(terminalGameError(st.error)) localStorage.removeItem('pf_current_game');
       toast(te(st.error)||t('not_available'),true); return;
@@ -1310,7 +1322,7 @@ async function goToRematch(rematchId){
     else if(st.status==='waiting'&&st.youAre===1){ enterWait(meta); }
     else if(st.status==='waiting'){ openJoin(Object.assign({gameId:rematchId}, meta)); }
     else { toast(t('game_expired'),true); enterLobby(); }
-  }catch(e){ toast(t('net_error'),true); }
+  }catch(e){ if(route===routeEpoch) toast(t('net_error'),true); }
 }
 
 /* -------------------- juego -------------------- */
@@ -1318,33 +1330,49 @@ function metaFromState(st){
   return {id:st.gameId, digits:parseInt(st.digits,10), mode:st.mode, numColors:st.numColors||6, allowRepeats:st.allowRepeats,
     maxAttempts:st.maxAttempts||0, turnSeconds:st.turnSeconds||0};
 }
+function resetGameView(){
+  hideToast();
+  $('g-players').innerHTML=''; $('g-mysecret').textContent='•'.repeat(game.digits);
+  $('g-banner').innerHTML=''; $('g-rematch-zone').innerHTML='';
+  $('g-mylog').innerHTML=`<div class="empty">${t('loading')}</div>`;
+  $('g-theirlog').innerHTML=`<div class="empty">${t('loading')}</div>`;
+  $('g-turn').className='turnbar theirs'; $('g-turn').classList.remove('hidden');
+  $('g-turn-txt').textContent=t('waiting_generic');
+  $('g-statusrow').classList.add('hidden'); $('g-timer').classList.add('hidden'); $('g-attempts').classList.add('hidden');
+  $('g-guessarea').classList.remove('hidden'); $('g-guess').disabled=true; $('g-guess-btn').disabled=true;
+  $('g-abandon-wrap').classList.add('hidden'); document.querySelector('.legend').style.display='flex';
+}
 function enterGame(meta){
+  const epoch=++gameViewEpoch;
   game={id:meta.id, digits:parseInt(meta.digits,10), mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats,
     maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0};
   const inp=$('g-guess'); inp.maxLength=game.digits; inp.value=''; inp.placeholder='•'.repeat(game.digits);
   padG.reset(); applyMode('g', game.mode, 'g-guess', 'pad-g', padG);
   $('g-code').textContent=meta.id; $('g-guess-val').textContent='';
   gState=null; passRequested=false; lastTurnStart=''; lastYourTurn=null; endSoundPlayed=false;
+  resetGameView();
   localStorage.setItem('pf_current_game',game.id);
-  show('game'); refreshGame(); startPoll(refreshGame); startTick();
+  show('game'); refreshGame(epoch,game.id); startPoll(()=>refreshGame(epoch,game.id)); startTick();
 }
 function terminalGameError(msg){
   return ['Partida no encontrada.','La partida ha expirado.','La partida se cerró tras 48 horas sin actividad.',
     'Un jugador abandonó la partida.','La partida fue cancelada.','No eres jugador de esta partida.'].includes(String(msg||''));
 }
-async function refreshGame(){
+async function refreshGame(expectedEpoch=gameViewEpoch, expectedGameId=game.id){
+  const requestEpoch=expectedEpoch, requestGameId=expectedGameId;
   try{
-    const st=await api('state',{gameId:game.id, username:user, inGame:true});
+    const st=await api('state',{gameId:requestGameId, username:user, inGame:true});
+    if(requestEpoch!==gameViewEpoch||requestGameId!==game.id||$('s-game').classList.contains('hidden')) return;
     if(st.ok) renderGame(st);
     else if(terminalGameError(st.error)){
       localStorage.removeItem('pf_current_game'); stopPoll(); stopTick(); toast(te(st.error)||t('not_available'),true); enterLobby();
     }else toast(te(st.error)||t('net_error'),true);
-  }catch(e){ /* Un fallo transitorio no expulsa al jugador de la partida. */ }
+  }catch(e){ /* Un fallo transitorio o una respuesta obsoleta no expulsa al jugador. */ }
 }
 $('g-guess').addEventListener('input', e=>setVal('g-guess-val', e.target.value, game.digits, game.allowRepeats));
 
 function renderGame(st){
-  if(!st) return;
+  if(!st||String(st.gameId)!==String(game.id)||$('s-game').classList.contains('hidden')) return;
   gState=st;
   if(typeof st.allowRepeats==='boolean') game.allowRepeats=st.allowRepeats;
   if(st.mode) game.mode=st.mode;
