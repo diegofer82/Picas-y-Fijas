@@ -1259,7 +1259,11 @@ function renderGame(st){
   $('colhead-theirs').textContent=t('colhead_theirs',{name:oppLabel});
 
   const local=localStorage.getItem('pf_secret_'+game.id);
-  $('g-mysecret').innerHTML = local ? codeViewHTML(local, game.mode) : '•••';
+  const mySecret=st.yourSecret||local||'';
+  // El backend devuelve únicamente el secreto del usuario autenticado. Guardarlo
+  // localmente permite seguir mostrándolo si una actualización puntual falla.
+  if(st.yourSecret) localStorage.setItem('pf_secret_'+game.id,st.yourSecret);
+  $('g-mysecret').innerHTML = mySecret ? codeViewHTML(mySecret, game.mode) : '•'.repeat(game.digits);
 
   const mine=st.guesses.filter(g=>g.by===user);
   const theirs=st.guesses.filter(g=>g.by!==user);
