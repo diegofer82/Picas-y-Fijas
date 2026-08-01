@@ -51,7 +51,7 @@
   input[type=text]{width:100%;background:#141126;border:1px solid var(--edge);color:var(--text);
     border-radius:12px;padding:14px 15px;font-size:16px;outline:none;
     font-family:'Space Grotesk',sans-serif;transition:border-color .15s,box-shadow .15s;}
-  input[type=text].code{font-family:'JetBrains Mono',monospace;font-size:26px;letter-spacing:12px;text-align:center;font-weight:700}
+  input[type=text].code{font-family:'Space Grotesk',system-ui,sans-serif;font-size:26px;letter-spacing:12px;text-align:center;font-weight:700}
   input[type=text].codeinp{font-family:'JetBrains Mono',monospace;font-size:16px;letter-spacing:6px;text-align:center;
     font-weight:700;text-transform:uppercase;padding:11px 12px}
   input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(34,211,238,.18)}
@@ -88,6 +88,11 @@
   .sw.bs{background:#141126;border-color:var(--edge);color:var(--text);font-size:18px;display:grid;place-items:center}
 
   .list{display:flex;flex-direction:column;gap:10px}
+  .availability-stats{display:grid;gap:6px;margin:10px 0 18px;padding:12px 14px;background:#141126;border:1px solid var(--edge);border-radius:12px}
+  .availability-line{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  .lobby-section{padding-top:16px;margin-top:16px;border-top:1px solid var(--edge)}
+  .lobby-section-title{font-size:14px;font-weight:700;margin-bottom:3px}
+  .lobby-section-hint{font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.4}
   .gitem{display:flex;align-items:center;gap:12px;background:#141126;border:1px solid var(--edge);border-radius:12px;padding:12px 14px;}
   .gitem .gid{font-family:'JetBrains Mono',monospace;font-weight:800;letter-spacing:3px;font-size:16px;color:var(--accent)}
   .gitem .meta{flex:1;min-width:0}
@@ -113,11 +118,10 @@
   .pl b{font-weight:700;color:var(--text)}
   .vs-sep{color:var(--muted);font-size:13px;font-weight:600}
   .mysecret .code-view{display:inline-flex;align-items:center;gap:5px}
-  .n{font-family:'JetBrains Mono',monospace;font-weight:800;letter-spacing:4px;color:var(--text)}
-  /* Cero abierto: evita que la barra diagonal se confunda con la cintura del 8. */
+  .n{font-family:'Space Grotesk',system-ui,sans-serif;font-weight:800;letter-spacing:4px;color:var(--text);font-variant-numeric:tabular-nums}
+  /* Space Grotesk distingue el cero del 8 con una silueta abierta y sin barra interna. */
   .code,.n,.seg.mono button,#wait-code,.gid,.chip,.scoretxt,.rankrow .pos,.rankrow .wl{
-    font-variant-numeric:normal;
-    font-feature-settings:"zero" 0;
+    font-feature-settings:"zero" 0,"tnum" 1;
   }
   .mini{width:16px;height:16px;border-radius:5px;display:inline-block;border:1px solid rgba(255,255,255,.15)}
 
@@ -245,10 +249,21 @@
     </div>
 
     <div class="card">
-      <h2 data-i18n="lobby_open">Partidas públicas abiertas</h2>
-      <div class="scoretxt" id="players-online" style="margin:2px 0 4px"></div>
-      <div class="scoretxt" id="online-now" style="margin:2px 0 12px"></div>
-      <div class="list" id="open-list"><div class="empty">…</div></div>
+      <h2 data-i18n="available_title">Partidas disponibles</h2>
+      <div class="availability-stats">
+        <div class="availability-line" id="players-online"></div>
+        <div class="availability-line" id="private-now"></div>
+        <div class="availability-line" id="public-now"></div>
+      </div>
+      <div class="lobby-section">
+        <div class="lobby-section-title" data-i18n="private_games_title">Tus partidas privadas</div>
+        <div class="lobby-section-hint" data-i18n="private_games_hint">Por privacidad, solo se muestran las partidas privadas en las que participas.</div>
+        <div class="list" id="private-list"><div class="empty">…</div></div>
+      </div>
+      <div class="lobby-section">
+        <div class="lobby-section-title" data-i18n="lobby_open">Partidas públicas abiertas</div>
+        <div class="list" id="open-list"><div class="empty">…</div></div>
+      </div>
     </div>
 
     <div class="foot"><span class="link" id="sound-link" onclick="toggleSound()"></span> · <span class="link" onclick="openRules()" data-i18n="rules_link">¿Cómo se juega?</span> · <span class="link" onclick="logout()" data-i18n="lobby_changeuser">Cambiar de usuario</span></div>
@@ -485,7 +500,9 @@ const I18N = {
     lobby_hint:"Crea una partida y comparte el código, o únete a una pública abierta.",
     lobby_create:"Crear partida", lobby_ranking:"Ranking", lobby_refresh:"Actualizar lista",
     lobby_mine:"Tus partidas activas", lobby_open:"Partidas públicas abiertas", lobby_changeuser:"Cambiar de usuario",
-    loading:"Cargando…", load_error:"No se pudo cargar", open_empty:"No hay partidas abiertas. ¡Crea una!",
+    available_title:"Partidas disponibles", private_games_title:"Tus partidas privadas", private_games_hint:"Por privacidad, solo se muestran las partidas privadas en las que participas.",
+    private_empty:"No tienes partidas privadas abiertas o en curso.", private_now:"🔒 {n} privadas abiertas o en curso", public_now:"🟢 {active} públicas en curso · {open} abiertas",
+    loading:"Cargando…", load_error:"No se pudo cargar", open_empty:"No hay partidas públicas abiertas. ¡Crea una!",
     join_btn:"Unirse", lobby_code_ph:"Código de partida", code_invalid:"Escribe el código de la partida (4 caracteres).",
     mine_waiting:"Esperando rival", mine_rematch_from:"🔁 Revancha de {name}", see_btn:"Ver", continue_btn:"Continuar", private_tag:"privada",
     rank_title:"Ranking global 🏆", rank_hint:"Victorias totales por jugador. Se actualiza con cada partida terminada.",
@@ -547,7 +564,9 @@ const I18N = {
     lobby_hint:"Create a game and share the code, or join an open public one.",
     lobby_create:"Create game", lobby_ranking:"Ranking", lobby_refresh:"Refresh list",
     lobby_mine:"Your active games", lobby_open:"Open public games", lobby_changeuser:"Change user",
-    loading:"Loading…", load_error:"Couldn't load", open_empty:"No open games. Create one!",
+    available_title:"Available games", private_games_title:"Your private games", private_games_hint:"For privacy, only private games you participate in are shown.",
+    private_empty:"You have no open or active private games.", private_now:"🔒 {n} private open or in progress", public_now:"🟢 {active} public in progress · {open} open",
+    loading:"Loading…", load_error:"Couldn't load", open_empty:"No open public games. Create one!",
     join_btn:"Join", lobby_code_ph:"Game code", code_invalid:"Enter the game code (4 characters).",
     mine_waiting:"Waiting for opponent", mine_rematch_from:"🔁 Rematch from {name}", see_btn:"View", continue_btn:"Continue", private_tag:"private",
     rank_title:"Global ranking 🏆", rank_hint:"Total wins per player. Updates after each finished game.",
@@ -609,7 +628,9 @@ const I18N = {
     lobby_hint:"Crée une partie et partage le code, ou rejoins une partie publique ouverte.",
     lobby_create:"Créer une partie", lobby_ranking:"Classement", lobby_refresh:"Actualiser la liste",
     lobby_mine:"Tes parties en cours", lobby_open:"Parties publiques ouvertes", lobby_changeuser:"Changer d'utilisateur",
-    loading:"Chargement…", load_error:"Échec du chargement", open_empty:"Aucune partie ouverte. Crées-en une !",
+    available_title:"Parties disponibles", private_games_title:"Tes parties privées", private_games_hint:"Pour préserver la confidentialité, seules les parties privées auxquelles tu participes sont affichées.",
+    private_empty:"Tu n'as aucune partie privée ouverte ou en cours.", private_now:"🔒 {n} privées ouvertes ou en cours", public_now:"🟢 {active} publiques en cours · {open} ouvertes",
+    loading:"Chargement…", load_error:"Échec du chargement", open_empty:"Aucune partie publique ouverte. Crées-en une !",
     join_btn:"Rejoindre", lobby_code_ph:"Code de la partie", code_invalid:"Saisis le code de la partie (4 caractères).",
     mine_waiting:"En attente d'un adversaire", mine_rematch_from:"🔁 Revanche de {name}", see_btn:"Voir", continue_btn:"Continuer", private_tag:"privée",
     rank_title:"Classement global 🏆", rank_hint:"Victoires totales par joueur. Mis à jour après chaque partie terminée.",
@@ -1046,7 +1067,10 @@ function enterLobby(){ $('lobby-greet').textContent=t('lobby_greeting',{name:use
 let myWaitingIds = new Set();
 let myTurnIds = new Set();
 async function lobbyRefresh(detect){
-  if(!detect) $('open-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
+  if(!detect){
+    $('open-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
+    $('private-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
+  }
   try{
     const [open, mine, presence] = await Promise.all([ api('listGames'), api('myGames',{username:user}), api('presence',{username:user}) ]);
     const games = mine.games||[];
@@ -1059,12 +1083,22 @@ async function lobbyRefresh(detect){
       else if(turnHit) notifyTurn();
     }
     myWaitingIds = nowWaiting; myTurnIds = nowTurn;
-    const oc = (typeof open.activeCount==='number') ? open.activeCount : 0;
+    const privateGames = games.filter(g=>!g.isPublic);
+    const publicMine = games.filter(g=>g.isPublic);
+    const privateCount = (typeof open.privateCount==='number') ? open.privateCount : privateGames.length;
+    const publicActive = (typeof open.publicActiveCount==='number') ? open.publicActiveCount : ((typeof open.activeCount==='number')?open.activeCount:0);
+    const publicOpen = (typeof open.publicOpenCount==='number') ? open.publicOpenCount : (open.games||[]).length;
     const pc = (typeof presence.onlineCount==='number') ? presence.onlineCount : (open.onlineCount||0);
     $('players-online').textContent=t(pc===1?'online_players_one':'online_players_many',{n:pc});
-    $('online-now').textContent = t('online_now',{n:oc});
-    renderOpen(open.games||[]); renderMine(games);
-  }catch(e){ if(!detect) $('open-list').innerHTML=`<div class="empty">${t('load_error')}</div>`; }
+    $('private-now').textContent=t('private_now',{n:privateCount});
+    $('public-now').textContent=t('public_now',{active:publicActive,open:publicOpen});
+    renderOpen(open.games||[]); renderPrivate(privateGames); renderMine(publicMine);
+  }catch(e){
+    if(!detect){
+      $('open-list').innerHTML=`<div class="empty">${t('load_error')}</div>`;
+      $('private-list').innerHTML=`<div class="empty">${t('load_error')}</div>`;
+    }
+  }
 }
 function refreshLobby(){ lobbyRefresh(false); }
 function lobbyTick(){ lobbyRefresh(true); }
@@ -1083,10 +1117,18 @@ function renderOpen(games){
     b.onclick=()=>openJoin(g); el.appendChild(b); box.appendChild(el);
   });
 }
+function renderPrivate(games){
+  const box=$('private-list');
+  if(!games.length){ box.innerHTML=`<div class="empty">${t('private_empty')}</div>`; return; }
+  renderGameItems(box, games);
+}
 function renderMine(games){
   const box=$('mine-list');
   if(!games.length){ $('mine-card').classList.add('hidden'); return; }
-  $('mine-card').classList.remove('hidden'); box.innerHTML='';
+  $('mine-card').classList.remove('hidden'); renderGameItems(box, games);
+}
+function renderGameItems(box, games){
+  box.innerHTML='';
   games.forEach(g=>{
     const opp = g.p1===user ? g.p2 : g.p1;
     const oppCountry = g.p1===user ? g.country2 : g.country1;
