@@ -1,1041 +1,1731 @@
-/**
- * PICAS Y FIJAS — Backend (Google Apps Script)
- * -------------------------------------------------
- * Base de datos: la Google Sheet ligada a este script.
- * Se crea sola la pestaña "Partidas" con sus encabezados en el primer uso.
- *
- * Despliegue: Implementar > Nueva implementación > Aplicación web
- *   - Ejecutar como: Yo
- *   - Quién tiene acceso: Cualquier persona
- * Copia la URL /exec y pégala en index.html (constante API).
- *
- * Opciones de partida (al crear):
- *   - digits: 3, 4, 5 o 6         (longitud del código)
- *   - mode: 'numbers' | 'colors'  (cifras 0-9 o 6 colores 0-5)
- *   - allowRepeats: true/false
- *   - isPublic: true/false        (lobby público o solo por código)
- *   - maxAttempts: 0 = ilimitado, o nº de intentos por jugador
- *   - turnSeconds: 0 = sin límite, o segundos por turno
- *
- * NOTA: en modo colores los colores se guardan como dígitos 0..numColors-1,
- * así que evaluate() y toda la lógica numérica funcionan sin cambios.
- */
-
-var SHEET_NAME = 'Partidas';
-var USERS_SHEET_NAME = 'Usuarios';
-var USER_HEADERS = ['username','usernameKey','pinSalt','pinHash','createdAt','lastLoginAt'];
-var WAITING_TTL_MS = 2 * 60 * 60 * 1000; // 2 h: expira partidas abiertas sin rival
-var ACTIVE_TTL_MS = 48 * 60 * 60 * 1000; // 48 h sin actividad: abandona partidas comenzadas
-var MAX_OPEN_GAMES_PER_USER = 3;
-var CREATE_COOLDOWN_SECONDS = 10;
-var PIN_MAX_FAILURES = 5;
-var PIN_LOCK_SECONDS = 15 * 60;
-var AUTH_CACHE_SECONDS = 5 * 60;
-var PRESENCE_WINDOW_MS = 2 * 60 * 1000;
-var PRESENCE_TOUCH_SECONDS = 30;
-var PRESENCE_PROPERTY = 'pf_presence_v1';
-var GAME_PRESENCE_CACHE_SECONDS = 30;
-var MANUAL_PAUSE_MAX_MS = 5 * 60 * 1000;
-var MANUAL_PAUSE_COOLDOWN_MS = 60 * 1000;
-var HEADERS = ['gameId','status','digits','p1','secret1','p2','secret2','turn','guesses','winner',
-               'createdAt','updatedAt','allowRepeats','isPublic','mode','numColors',
-               'maxAttempts','turnSeconds','turnStartedAt','rematchId','pendingWinner','country1','country2',
-               'turnRemaining','timerPaused','manualPausedBy','manualPauseUntil','lastManualPauseAt'];
-
-function doGet(e)  { return handle(e); }
-function doPost(e) { return handle(e); }
-
-function handle(e) {
-  var params = (e && e.parameter) ? e.parameter : {};
-  if (e && e.postData && e.postData.contents) {
-    try {
-      var body = JSON.parse(e.postData.contents);
-      for (var k in body) { params[k] = body[k]; }
-    } catch (err) { /* cuerpo no-JSON */ }
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1a1730">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Picas y Fijas">
+<title>Picas y Fijas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a1730; --panel:#262042; --panel-2:#2f2752; --edge:#3d3468;
+    --text:#ECE7FF; --muted:#9B92C4;
+    --fija:#4ADE80; --pica:#FBBF24; --accent:#22D3EE; --pink:#F472B6;
+    --r:16px;
   }
-  var action = params.action || '';
-  var result;
-  try {
-    var protectedActions = ['createGame','joinGame','state','guess','passTurn','togglePause','myGames','history','rematch','closeGame','presence','leavePresence','gamePresence'];
-    if (protectedActions.indexOf(action) >= 0) {
-      var authError = authenticateUser(params);
-      if (authError) return jsonOutput(authError);
-    }
-    switch (action) {
-      case 'loginUser':   result = loginUser(params);    break;
-      case 'createGame':  result = createGame(params);  break;
-      case 'listGames':   result = listGames(params);   break;
-      case 'joinGame':    result = joinGame(params);    break;
-      case 'state':       result = getState(params);    break;
-      case 'guess':       result = makeGuess(params);   break;
-      case 'passTurn':    result = passTurn(params);    break;
-      case 'togglePause': result = toggleManualPause(params); break;
-      case 'myGames':     result = myGames(params);     break;
-      case 'history':     result = history(params);     break;
-      case 'rematch':     result = rematch(params);     break;
-      case 'closeGame':   result = closeGame(params);   break;
-      case 'leavePresence': result = leavePresence(params); break;
-      case 'presence':     result = { ok: true, onlineCount: onlinePlayerCount() }; break;
-      case 'gamePresence': result = setGamePresence(params); break;
-      case 'leaderboard': result = leaderboard(params); break;
-      default:            result = { ok: false, error: 'Acción desconocida: ' + action };
-    }
-  } catch (err) {
-    result = { ok: false, error: String(err) };
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%}
+  body{
+    font-family:'Space Grotesk',system-ui,sans-serif;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(34,211,238,.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(244,114,182,.10), transparent 55%),
+      var(--ink);
+    color:var(--text);min-height:100dvh;
+    padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
   }
-  return jsonOutput(result);
-}
+  .wrap{max-width:520px;margin:0 auto;padding:20px 18px 40px}
+  .brand{display:flex;align-items:center;gap:12px;margin:6px 0 22px}
+  .logo{width:44px;height:44px;border-radius:12px;flex:0 0 auto;
+    background:linear-gradient(135deg,var(--accent),var(--pink));
+    display:grid;place-items:center;font-family:'JetBrains Mono',monospace;
+    font-weight:800;color:#141126;font-size:18px;letter-spacing:-1px;
+    box-shadow:0 8px 24px rgba(34,211,238,.25);}
+  .brand h1{font-size:20px;margin:0;font-weight:700;letter-spacing:-.02em}
+  .brand .sub{font-size:12px;color:var(--muted);margin-top:2px;letter-spacing:.14em;text-transform:uppercase}
+  .brand .aka{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.25;letter-spacing:.01em}
 
-function jsonOutput(result) {
-  return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
-}
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--edge);border-radius:var(--r);padding:20px;margin-bottom:16px;
+    box-shadow:0 10px 30px rgba(0,0,0,.25);}
+  .card h2{margin:0 0 4px;font-size:17px;font-weight:600}
+  .card p.hint{margin:0 0 16px;color:var(--muted);font-size:13px;line-height:1.5}
 
-/* ---------- Hoja / utilidades ---------- */
+  label{display:block;font-size:12px;color:var(--muted);margin:14px 0 7px;letter-spacing:.03em}
+  label:first-of-type{margin-top:0}
+  input[type=text]{width:100%;background:#141126;border:1px solid var(--edge);color:var(--text);
+    border-radius:12px;padding:14px 15px;font-size:16px;outline:none;
+    font-family:'Space Grotesk',sans-serif;transition:border-color .15s,box-shadow .15s;}
+  input[type=text].code{font-family:'Space Grotesk',system-ui,sans-serif;font-size:26px;letter-spacing:12px;text-align:center;font-weight:700}
+  input[type=text].codeinp{font-family:'JetBrains Mono',monospace;font-size:16px;letter-spacing:6px;text-align:center;
+    font-weight:700;text-transform:uppercase;padding:11px 12px}
+  input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(34,211,238,.18)}
 
-function getSheet() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sh = ss.getSheetByName(SHEET_NAME);
-  if (!sh) {
-    sh = ss.insertSheet(SHEET_NAME);
-    sh.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
-    sh.setFrozenRows(1);
-    // Fuerza formato TEXTO en las columnas de código para no perder ceros a la izquierda.
-    var maxR = sh.getMaxRows();
-    sh.getRange(1, 5, maxR, 1).setNumberFormat('@'); // secret1
-    sh.getRange(1, 7, maxR, 1).setNumberFormat('@'); // secret2
-    sh.getRange(1, 9, maxR, 1).setNumberFormat('@'); // guesses
-  } else {
-    if (sh.getMaxColumns() < HEADERS.length) sh.insertColumnsAfter(sh.getMaxColumns(), HEADERS.length - sh.getMaxColumns());
-    sh.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+  .btn{width:100%;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:600;
+    font-family:'Space Grotesk',sans-serif;cursor:pointer;letter-spacing:.01em;
+    background:linear-gradient(135deg,var(--accent),#3aa0ff);color:#0c1020;transition:transform .06s ease,filter .15s;}
+  .btn:active{transform:translateY(1px)}
+  .btn:disabled{filter:grayscale(.6) brightness(.7);cursor:not-allowed}
+  .btn.ghost{background:transparent;border:1px solid var(--edge);color:var(--text)}
+  .btn.pink{background:linear-gradient(135deg,var(--pink),#c84fd6);color:#160814}
+  .btn.green{background:linear-gradient(135deg,var(--fija),#22c55e);color:#06210f}
+  .btn.sm{width:auto;padding:9px 16px;font-size:13px;border-radius:10px}
+  .row{display:flex;gap:10px}
+  .row .btn{flex:1}
+
+  .seg{display:flex;gap:8px;flex-wrap:wrap}
+  .seg button{flex:1;min-width:64px;background:#141126;border:1px solid var(--edge);color:var(--muted);
+    border-radius:12px;padding:13px 6px;font-size:14px;font-weight:600;cursor:pointer;
+    font-family:'Space Grotesk',sans-serif;transition:.15s;}
+  .seg.mono button{font-family:'JetBrains Mono',monospace}
+  .seg button.on{background:rgba(34,211,238,.14);border-color:var(--accent);color:var(--text)}
+
+  .val{font-size:12px;margin-top:8px;min-height:16px}
+  .val.err{color:var(--pink)} .val.ok{color:var(--fija)}
+
+  .pad{margin-top:4px}
+  .slots{display:flex;gap:8px;justify-content:center;margin-bottom:12px;min-height:40px}
+  .slot{width:40px;height:40px;border-radius:10px;border:2px dashed var(--edge);background:#141126}
+  .slot.filled{border-style:solid;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+  .palette{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .sw{width:44px;height:44px;border-radius:12px;border:2px solid rgba(255,255,255,.15);cursor:pointer;padding:0}
+  .sw:active{transform:translateY(1px)}
+  .sw.bs{background:#141126;border-color:var(--edge);color:var(--text);font-size:18px;display:grid;place-items:center}
+
+  .list{display:flex;flex-direction:column;gap:10px}
+  .availability-stats{display:grid;gap:6px;margin:10px 0 18px;padding:12px 14px;background:#141126;border:1px solid var(--edge);border-radius:12px}
+  .availability-line{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  .lobby-section{padding-top:16px;margin-top:16px;border-top:1px solid var(--edge)}
+  .lobby-section-title{font-size:14px;font-weight:700;margin-bottom:3px}
+  .lobby-section-hint{font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.4}
+  .gitem{display:flex;align-items:center;gap:12px;background:#141126;border:1px solid var(--edge);border-radius:12px;padding:12px 14px;}
+  .gitem .gid{font-family:'JetBrains Mono',monospace;font-weight:800;letter-spacing:3px;font-size:16px;color:var(--accent)}
+  .gitem .meta{flex:1;min-width:0}
+  .gitem .meta .who{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .gitem .meta .det{font-size:12px;color:var(--muted)}
+  .gitem.invite{border-color:rgba(74,222,128,.45);background:#131f1c}
+  .empty{color:var(--muted);font-size:13px;text-align:center;padding:14px 0}
+
+  .turnbar{display:flex;align-items:center;gap:10px;border-radius:12px;padding:12px 14px;margin-bottom:12px;font-weight:600;font-size:14px;}
+  .turnbar.mine{background:rgba(74,222,128,.13);border:1px solid rgba(74,222,128,.4);color:var(--fija)}
+  .turnbar.theirs{background:rgba(155,146,196,.12);border:1px solid var(--edge);color:var(--muted)}
+  .turnbar .dot{width:9px;height:9px;border-radius:50%;background:currentColor;animation:pulse 1.4s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+  .statusrow{display:flex;gap:10px;margin-bottom:14px}
+  .chip{font-size:12px;color:var(--muted);background:#141126;border:1px solid var(--edge);border-radius:999px;padding:6px 12px;font-family:'JetBrains Mono',monospace}
+  .chip.warn{color:var(--pica);border-color:rgba(251,191,36,.4)}
+  .chip.hot{color:var(--pink);border-color:rgba(244,114,182,.5)}
+
+  .mysecret{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted);margin-bottom:14px;flex-wrap:wrap}
+  .players{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;font-size:16px}
+  .pl{display:inline-flex;align-items:center;gap:2px}
+  .pl b{font-weight:700;color:var(--text)}
+  .vs-sep{color:var(--muted);font-size:13px;font-weight:600}
+  .mysecret .code-view{display:inline-flex;align-items:center;gap:5px}
+  .n{font-family:'Space Grotesk',system-ui,sans-serif;font-weight:800;letter-spacing:4px;color:var(--text);font-variant-numeric:tabular-nums}
+  /* Space Grotesk distingue el cero del 8 con una silueta abierta y sin barra interna. */
+  .code,.n,.seg.mono button,#wait-code,.gid,.chip,.scoretxt,.rankrow .pos,.rankrow .wl{
+    font-feature-settings:"zero" 0,"tnum" 1;
   }
-  return sh;
-}
+  .mini{width:16px;height:16px;border-radius:5px;display:inline-block;border:1px solid rgba(255,255,255,.15)}
 
-function getUsersSheet() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sh = ss.getSheetByName(USERS_SHEET_NAME);
-  if (!sh) {
-    sh = ss.insertSheet(USERS_SHEET_NAME);
-    sh.getRange(1, 1, 1, USER_HEADERS.length).setValues([USER_HEADERS]);
-    sh.setFrozenRows(1);
+  .guessarea{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
+  .guessarea .field{flex:1}
+  .guessarea .btn{width:auto;flex:0 0 auto;padding:0 20px;align-self:stretch}
+
+  .cols{display:grid;grid-template-columns:1fr;gap:16px}
+  .colhead{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px}
+  .glog{display:flex;flex-direction:column;gap:8px}
+  .glog .g{display:flex;align-items:center;gap:12px;background:#141126;border:1px solid var(--edge);border-radius:10px;padding:10px 12px;}
+  .glog .g .n{font-size:20px}
+  .glog .g .mini{width:20px;height:20px;border-radius:6px}
+  .code-view{display:inline-flex;align-items:center;gap:5px}
+  .pips{display:flex;gap:5px;margin-left:auto}
+  .pip{width:12px;height:12px;border-radius:50%;background:#2a2450;border:1px solid var(--edge)}
+  .pip.f{background:var(--fija);border-color:var(--fija);box-shadow:0 0 8px rgba(74,222,128,.5)}
+  .pip.p{background:var(--pica);border-color:var(--pica);box-shadow:0 0 8px rgba(251,191,36,.5)}
+  .scoretxt{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+
+  .banner{border-radius:14px;padding:22px;text-align:center;margin-bottom:16px}
+  .banner.win{background:linear-gradient(135deg,rgba(74,222,128,.2),rgba(34,211,238,.15));border:1px solid rgba(74,222,128,.5)}
+  .banner.lose{background:rgba(244,114,182,.12);border:1px solid rgba(244,114,182,.4)}
+  .banner.draw{background:rgba(155,146,196,.14);border:1px solid var(--edge)}
+  .banner h2{font-size:26px;margin:0 0 4px}
+  .banner p{margin:0;color:var(--muted);font-size:14px}
+
+  .rankrow{display:flex;align-items:center;gap:12px;background:#141126;border:1px solid var(--edge);border-radius:10px;padding:11px 13px}
+  .rankrow .pos{font-family:'JetBrains Mono',monospace;font-weight:800;color:var(--accent);width:28px}
+  .rankrow .nm{flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rankrow .wl{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  .rankrow.me{border-color:var(--accent);background:rgba(34,211,238,.08)}
+  .rank-separator{padding:7px 13px;color:var(--muted);font-size:13px;border-left:1px dashed var(--edge);margin-left:20px}
+
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+    background:#0f0c22;border:1px solid var(--edge);color:var(--text);padding:12px 18px;border-radius:12px;
+    font-size:14px;max-width:90vw;box-shadow:0 12px 30px rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:.25s;z-index:50;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.err{border-color:var(--pink)}
+  .pause-cover{position:fixed;inset:0;z-index:45;background:#050507;color:#fff;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center}
+  .pause-cover.hidden{display:none}
+  .pause-box{width:min(360px,100%)}
+  .pause-icon{font-size:42px;margin-bottom:14px}
+  .pause-box h2{font-size:25px;margin:0 0 8px}
+  .pause-box p{color:#aaa;margin:0 0 8px;line-height:1.5}
+  .pause-countdown{font-family:'JetBrains Mono',monospace;font-size:18px;margin:18px 0;color:var(--pica)}
+
+  .foot{text-align:center;color:var(--muted);font-size:11px;margin-top:24px;letter-spacing:.05em}
+  .credits{margin-top:12px;line-height:1.7}
+  .credits a{color:var(--accent);text-decoration:none}
+  .credits a:hover{text-decoration:underline}
+  .link{color:var(--accent);cursor:pointer;text-decoration:underline;font-size:13px}
+  .hidden{display:none!important}
+  .fieldnote{margin:7px 0 0;font-size:12px;line-height:1.45;color:var(--muted)}
+  .invite-banner{background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.4);border-radius:12px;
+    padding:11px 13px;margin:0 0 14px;font-size:13px;line-height:1.5;color:var(--fija)}
+  .invite-banner b{font-family:'JetBrains Mono',monospace;letter-spacing:2px;font-size:15px}
+  .legend{display:flex;gap:16px;justify-content:center;font-size:12px;color:var(--muted);margin-top:6px;flex-wrap:wrap}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend .pip{width:11px;height:11px}
+
+  .rules{color:var(--text);font-size:14px;line-height:1.6}
+  .rules ol{padding-left:20px;margin:0 0 6px}
+  .rules li{margin-bottom:11px}
+  .rules ul{padding-left:18px;margin:6px 0;color:var(--muted);font-size:13px}
+  .rules ul li{margin-bottom:4px}
+  .rules b{color:var(--text)}
+  .note{background:#141126;border:1px solid var(--edge);border-left:3px solid var(--accent);
+    border-radius:10px;padding:12px 14px;margin:12px 0;font-size:13px;color:var(--muted)}
+  .note b{color:var(--text)}
+  .pill{display:inline-block;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:700;background:rgba(155,146,196,.18);color:var(--muted)}
+  .flag{width:18px;height:auto;border-radius:2px;vertical-align:-3px;margin-right:5px;box-shadow:0 0 0 1px rgba(255,255,255,.12)}
+  .pill.f{background:rgba(74,222,128,.18);color:var(--fija)}
+  .pill.p{background:rgba(251,191,36,.18);color:var(--pica)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand">
+    <div class="logo">P·F</div>
+    <div><h1>Picas y Fijas</h1><div class="sub" data-i18n="brand_sub">Duelo de deducción online</div><div class="aka" data-i18n="brand_alias">También conocido como “Bulls and Cows” · inspirado en “Mastermind”</div></div>
+  </div>
+
+  <!-- LOGIN -->
+  <section id="s-login" class="card">
+    <div class="invite-banner hidden" id="login-invite"></div>
+    <h2 data-i18n="login_title">Elige tu nombre de jugador</h2>
+    <p class="hint" data-i18n="login_hint">Tu nombre aparecerá en las partidas y el ranking. Elige un PIN para protegerlo.</p>
+    <label data-i18n="login_lang">Idioma</label>
+    <div class="seg" id="seg-lang">
+      <button data-lang="es">Español</button>
+      <button data-lang="en">English</button>
+      <button data-lang="fr">Français</button>
+    </div>
+    <label for="uname" data-i18n="login_name">Nombre de usuario</label>
+    <input type="text" id="uname" maxlength="24" data-i18n-ph="login_name_ph" placeholder="p.ej. Diego" autocomplete="off">
+    <label for="upin" data-i18n="login_pin">PIN de acceso</label>
+    <input type="password" id="upin" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" data-i18n-ph="login_pin_ph" placeholder="4–8 dígitos" autocomplete="current-password">
+    <p class="fieldnote" data-i18n="login_pin_note">🔒 Es tu contraseña para entrar en la app. No es el código secreto del juego ni el código de la partida.</p>
+    <div class="val" id="uname-val"></div>
+    <button class="btn" onclick="doLogin()" data-i18n="login_enter">Entrar</button>
+    <div class="foot"><span class="link" onclick="openRules()" data-i18n="rules_link">¿Cómo se juega?</span></div>
+    <div class="foot credits"></div>
+  </section>
+
+  <!-- LOBBY -->
+  <section id="s-lobby" class="hidden">
+    <div class="card">
+      <h2 id="lobby-greet"></h2>
+      <p class="hint" data-i18n="lobby_hint">Crea una partida y comparte el código, o únete a una pública abierta.</p>
+      <button class="btn" onclick="show('create')" data-i18n="lobby_create">Crear partida</button>
+      <div style="height:10px"></div>
+      <div class="row">
+        <input type="text" id="join-code-inp" class="codeinp" maxlength="6" autocomplete="off"
+               autocapitalize="characters" spellcheck="false" data-i18n-ph="lobby_code_ph" placeholder="Código de partida"
+               onkeydown="if(event.key==='Enter'){event.preventDefault();joinByCode();}">
+        <button class="btn ghost sm" style="flex:0 0 auto" onclick="joinByCode()" data-i18n="join_btn">Unirse</button>
+      </div>
+      <div style="height:10px"></div>
+      <div class="row">
+        <button class="btn ghost" onclick="openRank()" data-i18n="lobby_ranking">Ranking</button>
+        <button class="btn ghost" onclick="openHistory()" data-i18n="lobby_history">Historial</button>
+      </div>
+      <div style="height:10px"></div>
+      <button class="btn ghost" onclick="refreshLobby()" data-i18n="lobby_refresh">Actualizar lista</button>
+    </div>
+
+    <div class="card" id="mine-card">
+      <h2 data-i18n="lobby_mine">Tus partidas activas</h2>
+      <div class="list" id="mine-list"><div class="empty">—</div></div>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="available_title">Partidas disponibles</h2>
+      <div class="availability-stats">
+        <div class="availability-line" id="players-online"></div>
+        <div class="availability-line" id="private-now"></div>
+        <div class="availability-line" id="public-now"></div>
+      </div>
+      <div class="lobby-section">
+        <div class="lobby-section-title" data-i18n="private_games_title">Tus partidas privadas</div>
+        <div class="lobby-section-hint" data-i18n="private_games_hint">Por privacidad, solo se muestran las partidas privadas en las que participas.</div>
+        <div class="list" id="private-list"><div class="empty">…</div></div>
+      </div>
+      <div class="lobby-section">
+        <div class="lobby-section-title" data-i18n="lobby_open">Partidas públicas abiertas</div>
+        <div class="list" id="open-list"><div class="empty">…</div></div>
+      </div>
+    </div>
+
+    <div class="foot"><span class="link" id="sound-link" onclick="toggleSound()"></span> · <span class="link" onclick="openRules()" data-i18n="rules_link">¿Cómo se juega?</span> · <span class="link" onclick="logout()" data-i18n="lobby_changeuser">Cambiar de usuario</span></div>
+  </section>
+
+  <!-- RANKING -->
+  <section id="s-rank" class="hidden">
+    <div class="card">
+      <h2 data-i18n="rank_title">Ranking global 🏆</h2>
+      <p class="hint" data-i18n="rank_hint">Victorias totales por jugador. Se actualiza con cada partida terminada.</p>
+      <div class="scoretxt" id="rank-total" style="margin:2px 0 12px"></div>
+      <div class="list" id="rank-list"><div class="empty">…</div></div>
+      <div style="height:16px"></div>
+      <button class="btn ghost" onclick="show('lobby')" data-i18n="back">Volver</button>
+    </div>
+  </section>
+
+  <!-- HISTORIAL -->
+  <section id="s-history" class="hidden">
+    <div class="card">
+      <h2 data-i18n="hist_title">Historial de partidas</h2>
+      <p class="hint" data-i18n="hist_hint">Tus últimas partidas terminadas.</p>
+      <div class="list" id="hist-list"><div class="empty">…</div></div>
+      <div style="height:16px"></div>
+      <button class="btn ghost" onclick="show('lobby')" data-i18n="back">Volver</button>
+    </div>
+  </section>
+
+  <!-- INSTRUCCIONES -->
+  <section id="s-rules" class="hidden">
+    <div class="card">
+      <h2 data-i18n="rules_title">Cómo se juega</h2>
+      <div id="rules-body" class="rules"></div>
+      <div style="height:8px"></div>
+      <button class="btn ghost" onclick="closeRules()" data-i18n="back">Volver</button>
+      <div class="foot credits"></div>
+    </div>
+  </section>
+
+  <!-- CREAR -->
+  <section id="s-create" class="hidden">
+    <div class="card">
+      <h2 data-i18n="create_title">Nueva partida</h2>
+      <p class="hint" data-i18n="create_hint">Configura las reglas y define tu código secreto.</p>
+
+      <label data-i18n="lbl_mode">Modo</label>
+      <div class="seg" id="seg-mode">
+        <button data-m="numbers" class="on" data-i18n="mode_numbers">Números 0-9</button>
+        <button data-m="colors" data-i18n="mode_colors">Colores</button>
+      </div>
+
+      <div id="colors-wrap" class="hidden">
+        <label data-i18n="lbl_numcolors">Número de colores</label>
+        <div class="seg mono" id="seg-colors">
+          <button data-nc="4">4</button>
+          <button data-nc="6" class="on">6</button>
+          <button data-nc="8">8</button>
+        </div>
+      </div>
+
+      <label data-i18n="lbl_positions">Posiciones</label>
+      <div class="seg mono" id="seg-digits">
+        <button data-d="3" class="on">3</button>
+        <button data-d="4">4</button>
+        <button data-d="5">5</button>
+        <button data-d="6">6</button>
+      </div>
+
+      <label data-i18n="lbl_repeats">Repetidos</label>
+      <div class="seg" id="seg-repeat">
+        <button data-r="0" class="on" data-i18n="rep_no">No permitir</button>
+        <button data-r="1" data-i18n="rep_yes">Permitir</button>
+      </div>
+
+      <label data-i18n="lbl_attempts">Límite de intentos</label>
+      <div class="seg mono" id="seg-attempts">
+        <button data-a="0" class="on" data-i18n="nolimit">Sin límite</button>
+        <button data-a="6">6</button>
+        <button data-a="10">10</button>
+      </div>
+
+      <label data-i18n="lbl_time">Tiempo por turno</label>
+      <div class="seg mono" id="seg-time">
+        <button data-t="0" class="on" data-i18n="nolimit">Sin límite</button>
+        <button data-t="30">30s</button>
+        <button data-t="60">60s</button>
+        <button data-t="120">2min</button>
+      </div>
+
+      <label data-i18n="lbl_visibility">Visibilidad</label>
+      <div class="seg" id="seg-public">
+        <button data-p="1" class="on" data-i18n="vis_public">Pública</button>
+        <button data-p="0" data-i18n="vis_private">Privada</button>
+      </div>
+      <p class="hint" id="pub-hint" data-i18n="pub_hint_public" style="margin:8px 0 0">Aparece en el lobby: cualquiera puede unirse.</p>
+
+      <label data-i18n="lbl_secret">Tu código secreto</label>
+      <input type="text" id="secret-c" class="code" inputmode="numeric" maxlength="3" placeholder="•••">
+      <div class="pad hidden" id="pad-c"><div class="slots" id="slots-c"></div><div class="palette" id="palette-c"></div></div>
+      <div class="val" id="secret-c-val"></div>
+
+      <button class="btn" id="btn-create" onclick="createGame()" data-i18n="create_btn">Crear y esperar rival</button>
+      <div style="height:10px"></div>
+      <button class="btn ghost" onclick="show('lobby')" data-i18n="back">Volver</button>
+    </div>
+  </section>
+
+  <!-- SALA DE ESPERA -->
+  <section id="s-wait" class="hidden">
+    <div class="card" style="text-align:center">
+      <h2 data-i18n="wait_title">Partida creada</h2>
+      <p class="hint" data-i18n="wait_hint">Comparte este código con tu rival. Empieza en cuanto se una.</p>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:44px;font-weight:800;letter-spacing:10px;color:var(--accent);margin:6px 0 4px" id="wait-code">····</div>
+      <div class="scoretxt" id="wait-info"></div>
+      <div style="height:16px"></div>
+      <button class="btn ghost sm" style="width:100%" onclick="copyCode()" data-i18n="wait_copy">Copiar código</button>
+      <div style="height:8px"></div>
+      <button class="btn sm" style="width:100%" onclick="shareCode()" data-i18n="wait_share">Compartir</button>
+      <div style="height:10px"></div>
+      <div class="scoretxt" data-i18n="wait_waiting">Esperando a que alguien se una…</div>
+      <div style="height:16px"></div>
+      <button class="btn ghost" onclick="cancelWait()" data-i18n="wait_cancel">Cancelar y volver</button>
+    </div>
+  </section>
+
+  <!-- UNIRSE -->
+  <section id="s-join" class="hidden">
+    <div class="card">
+      <h2><span data-i18n="join_to">Unirse a</span> <span id="join-code" style="font-family:'JetBrains Mono',monospace;color:var(--accent)"></span></h2>
+      <p class="hint" id="join-rules-txt">Define tu código secreto.</p>
+      <label data-i18n="lbl_secret">Tu código secreto</label>
+      <input type="text" id="secret-j" class="code" inputmode="numeric" maxlength="3" placeholder="•••">
+      <div class="pad hidden" id="pad-j"><div class="slots" id="slots-j"></div><div class="palette" id="palette-j"></div></div>
+      <div class="val" id="secret-j-val"></div>
+      <button class="btn" id="btn-join" onclick="confirmJoin()" data-i18n="join_btn2">Unirse y jugar</button>
+      <div style="height:10px"></div>
+      <button class="btn ghost" onclick="show('lobby')" data-i18n="back">Volver</button>
+    </div>
+  </section>
+
+  <!-- REVANCHA -->
+  <section id="s-rematch" class="hidden">
+    <div class="card">
+      <h2 data-i18n="rematch_title">Revancha 🔁</h2>
+      <p class="hint" id="rematch-rules-txt">Mismas reglas, mismo rival. Define tu nuevo código secreto.</p>
+      <label data-i18n="lbl_newsecret">Tu nuevo código secreto</label>
+      <input type="text" id="secret-r" class="code" inputmode="numeric" maxlength="3" placeholder="•••">
+      <div class="pad hidden" id="pad-r"><div class="slots" id="slots-r"></div><div class="palette" id="palette-r"></div></div>
+      <div class="val" id="secret-r-val"></div>
+      <button class="btn green" id="btn-rematch" onclick="sendRematch()" data-i18n="rematch_send">Enviar revancha</button>
+      <div style="height:10px"></div>
+      <button class="btn ghost" onclick="enterLobby()" data-i18n="back_home">Volver al inicio</button>
+    </div>
+  </section>
+
+  <!-- JUEGO -->
+  <section id="s-game" class="hidden">
+    <div class="card">
+      <div class="players" id="g-players"></div>
+      <div class="mysecret">
+        <span><span data-i18n="game_match">Partida</span> <b class="n" style="letter-spacing:3px" id="g-code"></b> · <span id="g-rules"></span></span>
+        <span class="code-view"><span data-i18n="game_yourcode">Tu código:</span>&nbsp;<span id="g-mysecret"></span></span>
+      </div>
+
+      <div id="g-banner"></div>
+      <div id="g-rematch-zone"></div>
+
+      <div class="turnbar theirs" id="g-turn"><span class="dot"></span><span id="g-turn-txt"></span></div>
+      <div class="statusrow hidden" id="g-statusrow">
+        <span class="chip hidden" id="g-timer"></span>
+        <span class="chip hidden" id="g-attempts"></span>
+      </div>
+      <button class="btn ghost sm" id="g-pause-btn" onclick="requestGamePause()" data-i18n="pause_btn">Pausar partida</button>
+      <div style="height:12px" id="g-pause-space"></div>
+
+      <div class="guessarea" id="g-guessarea">
+        <div class="field">
+          <input type="text" id="g-guess" class="code" inputmode="numeric" placeholder="•••" style="letter-spacing:8px;font-size:22px">
+          <div class="pad hidden" id="pad-g"><div class="slots" id="slots-g"></div><div class="palette" id="palette-g"></div></div>
+        </div>
+        <button class="btn" id="g-guess-btn" onclick="submitGuess()" data-i18n="guess_btn">Adivinar</button>
+      </div>
+      <div class="val" id="g-guess-val" style="margin-top:0;margin-bottom:8px"></div>
+
+      <div class="legend">
+        <span><span class="pip f"></span> <span data-i18n="legend_fija">F = posición correcta</span></span>
+        <span><span class="pip p"></span> <span data-i18n="legend_pica">P = presente, mal colocada</span></span>
+      </div>
+    </div>
+
+    <div class="cols">
+      <div class="card">
+        <div class="colhead" id="colhead-mine"></div>
+        <div class="glog" id="g-mylog"></div>
+      </div>
+      <div class="card">
+        <div class="colhead" id="colhead-theirs"></div>
+        <div class="glog" id="g-theirlog"></div>
+      </div>
+    </div>
+
+    <div class="foot"><span class="link" onclick="leaveGame()" data-i18n="back_home">Volver al inicio</span><span id="g-abandon-wrap"> · <span class="link" onclick="abandonGame()" data-i18n="abandon_game">Abandonar partida</span></span></div>
+    <div class="pause-cover hidden" id="g-pause-cover">
+      <div class="pause-box">
+        <div class="pause-icon">⏸</div>
+        <h2 data-i18n="pause_title">Partida en pausa</h2>
+        <p id="g-pause-message"></p>
+        <div class="pause-countdown" id="g-pause-countdown"></div>
+        <button class="btn green hidden" id="g-resume-btn" onclick="resumeGame()" data-i18n="resume_btn">Quitar pausa</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ==========================================================================
+   CONFIG — pega aquí la URL /exec de tu Aplicación web de Apps Script
+   ========================================================================== */
+const API = 'https://script.google.com/macros/s/AKfycbyjJRp_ZokFiKyRK3-P2kA8shD1SR73zjP3DMbynf09BvCOpGDGNoHULXf-uDy40pEI/exec';
+const APP_VERSION = '1.3';
+/* Enlace de invitación: ...?game=SZ93 */
+let pendingJoinCode = '';
+(function(){
+  try{ const p=new URLSearchParams(location.search); const g=(p.get('game')||'').toUpperCase().trim();
+    if(/^[A-Z0-9]{4,6}$/.test(g)){ pendingJoinCode=g; history.replaceState({}, '', location.pathname); } }catch(e){}
+})();
+function gameLink(code){ return location.origin+location.pathname+'?game='+code; }
+
+/* ==========================================================================
+   TRADUCCIONES  (es / en / fr)
+   ========================================================================== */
+const I18N = {
+  es:{
+    brand_sub:"Duelo de deducción online", brand_alias:"También conocido como “Bulls and Cows” · inspirado en “Mastermind”",
+    login_title:"Elige tu nombre de jugador",
+    login_hint:"Tu nombre aparecerá en las partidas y el ranking. Elige un PIN para protegerlo.",
+    login_lang:"Idioma", login_name:"Nombre de usuario", login_name_ph:"p.ej. Diego", login_pin:"PIN de acceso", login_pin_ph:"4–8 dígitos",
+    login_pin_note:"🔒 Es tu contraseña para entrar en la app. No es el código secreto del juego ni el código de la partida.",
+    login_invite:"🎮 Te han invitado a la partida {code}. Crea tu nombre y tu PIN y entrarás directo.",
+    login_enter:"Entrar", login_min:"Mínimo 2 caracteres", login_pin_invalid:"El PIN debe tener entre 4 y 8 dígitos",
+    lobby_greeting:"Hola, {name} 👋",
+    lobby_hint:"Crea una partida y comparte el código, o únete a una pública abierta.",
+    lobby_create:"Crear partida", lobby_ranking:"Ranking", lobby_refresh:"Actualizar lista",
+    lobby_mine:"Tus partidas activas", lobby_open:"Partidas públicas abiertas", lobby_changeuser:"Cambiar de usuario",
+    available_title:"Partidas disponibles", private_games_title:"Tus partidas privadas", private_games_hint:"Por privacidad, solo se muestran las partidas privadas en las que participas.",
+    private_empty:"No tienes partidas privadas abiertas o en curso.", private_now:"🔒 {n} privadas abiertas o en curso", public_now:"🟢 {active} públicas en curso · {open} abiertas",
+    loading:"Cargando…", load_error:"No se pudo cargar", open_empty:"No hay partidas públicas abiertas. ¡Crea una!",
+    join_btn:"Unirse", lobby_code_ph:"Código de partida", code_invalid:"Escribe el código de la partida (4 caracteres).",
+    mine_waiting:"Esperando rival", mine_rematch_from:"🔁 Revancha de {name}", see_btn:"Ver", continue_btn:"Continuar", private_tag:"privada",
+    rank_title:"Ranking global 🏆", rank_hint:"Victorias totales por jugador. Se actualiza con cada partida terminada.",
+    rank_empty:"Aún no hay partidas terminadas.", rank_wl:"{wins} 🏆 · {played} jug.", rank_total:"Ranking global · {n} jugadores", rank_your_pos:"… tu posición: #{n}", back:"Volver",
+    rules_title:"Cómo se juega", rules_link:"¿Cómo se juega?", wait_share:"Compartir",
+    share_text:"¡Únete a mi partida de Picas y Fijas! Código: {code}",
+    lbl_numcolors:"Número de colores", lobby_history:"Historial",
+    hist_title:"Historial de partidas", hist_hint:"Tus últimas partidas terminadas.",
+    hist_empty:"Aún no tienes partidas terminadas.",
+    result_win:"Ganada", result_loss:"Perdida", result_draw:"Empate",
+    sound_label:"Sonido", on:"activado", off:"desactivado", notif_yourturn:"¡Es tu turno!", notif_joined:"¡Un rival se ha unido! 🎮", game_expired:"La partida abierta expiró (nadie se unió).", online_now:"🟢 {n} en curso ahora", online_players_one:"👥 1 jugador conectado ahora", online_players_many:"👥 {n} jugadores conectados ahora", credits_by:"Creado por",
+    create_title:"Nueva partida", create_hint:"Configura las reglas y define tu código secreto.",
+    lbl_mode:"Modo", mode_numbers:"Números 0-9", mode_colors:"Colores",
+    lbl_positions:"Posiciones", lbl_repeats:"Repetidos", rep_no:"No permitir", rep_yes:"Permitir",
+    lbl_attempts:"Límite de intentos", nolimit:"Sin límite", lbl_time:"Tiempo por turno",
+    lbl_visibility:"Visibilidad", vis_public:"Pública", vis_private:"Privada",
+    pub_hint_public:"Aparece en el lobby: cualquiera puede unirse.",
+    pub_hint_private:"No aparece en el lobby: solo se entra con el código.",
+    lbl_secret:"Tu código secreto", create_btn:"Crear y esperar rival",
+    wait_title:"Partida creada", wait_hint:"Comparte este código con tu rival. Empieza en cuanto se una.",
+    wait_copy:"Copiar código", wait_waiting:"Esperando a que alguien se una…", wait_cancel:"Cancelar y volver",
+    copied:"Código copiado: {code}", cancel_confirm:"¿Cancelar esta partida abierta?", cancel_done:"Partida cancelada", abandon_game:"Abandonar partida", abandon_confirm:"¿Abandonar esta partida? No contará como victoria para nadie.", abandon_done:"Partida abandonada",
+    join_to:"Unirse a", join_rules:"Reglas: {rules}. Define tu código secreto.", join_btn2:"Unirse y jugar",
+    rematch_title:"Revancha 🔁", rematch_hint:"Mismas reglas, mismo rival. Define tu nuevo código secreto.",
+    rematch_rules:"Reglas: {rules}. Define tu nuevo código.", lbl_newsecret:"Tu nuevo código secreto",
+    rematch_send:"Enviar revancha", back_home:"Volver al inicio",
+    game_match:"Partida", game_yourcode:"Tu código:", vs:"vs {name}", waiting_short:"esperando…",
+    spectator_confirm:"La partida está llena. ¿Deseas continuar como espectador?", spectator_mode:"Espectador", spectator_p1:"Intentos de {name} → código de {opp}", spectator_p2:"Intentos de {name} → código de {opp}", spectator_winner:"Ganó {name} 🏆",
+    guess_btn:"Adivinar", legend_fija:"F = posición correcta", legend_pica:"P = presente, mal colocada",
+    colhead_mine:"Tus intentos → código de {name}", colhead_theirs:"Intentos de {name} → tu código",
+    rival:"rival", log_empty_mine:"Aún no has adivinado", log_empty_theirs:"Sin intentos todavía", log_nada:"nada",
+    your_turn:"Es tu turno — adivina el código rival", no_attempts_wait:"Sin intentos restantes — esperando al rival",
+    tiebreak_you:"⚡ Último intento: {name} ya descifró tu código. ¡Aciértalo para empatar!",
+    turn_of:"Turno de {name} …", waiting_generic:"Esperando… …", activity_now:"Activo ahora", activity_min:"Activo hace {n} min", activity_hours:"Activo hace {n} h", activity_days:"Activo hace {n} días",
+    solved_wait:"✅ ¡Descifraste su código! Esperando el último intento de {name} para ver si empata…",
+    attempts_chip:"Intentos: {left}/{max}", timer_paused:"⏸ En pausa · esperando reconexión",
+    pause_btn:"Pausar partida", pause_title:"Partida en pausa", pause_confirm:"¿Pausar la partida? Los dos jugadores dejarán de ver códigos e intentos.",
+    pause_mine:"Tú solicitaste la pausa. Puedes reanudar cuando estés listo.", pause_other:"{name} solicitó la pausa. La partida se reanudará cuando regrese.",
+    pause_auto:"Reanudación automática en {time}", resume_btn:"Quitar pausa", pause_limit:"La pausa dura como máximo 5 minutos.", auto_pause_message:"Conexión interrumpida. La partida está oculta hasta que ambos jugadores regresen.",
+    win_title:"¡Ganaste! 🎉", lose_title:"Perdiste", draw_title:"Empate 🤝",
+    win_msg:"Descifraste el código de {name}", lose_msg:"{name} descifró tu código primero",
+    draw_both:"Ambos descifraron el código en el mismo número de intentos",
+    draw_limit:"Nadie descifró el código dentro del límite de intentos",
+    rematch_go:"Ir a la revancha 🔁", rematch_btn:"Revancha 🔁",
+    toast_tie:"¡Empate! ambos acertaron 🤝", toast_solved:"✅ ¡Descifrado! esperando el último intento del rival",
+    toast_score:"{f} fijas · {p} picas",
+    invalid_guess:"Intento inválido", check_secret:"Revisa tu código secreto", check_code:"Revisa tu código",
+    net_error:"Error de red", not_available:"No disponible", api_not_set:"Configura la URL de Apps Script en index.html",
+    val_digits:"Solo dígitos 0-9", val_repeats:"Hay repetidos", val_valid:"¡Válido!",
+    rl_colors:"{n} colores", rl_numbers:"números", rl_pos:"{n} pos", rl_norepeat:"sin repetir", rl_repeat:"repetidos ✓",
+    rl_attempts:"{n} intentos", rl_turn:"{n}s/turno"
+  },
+  en:{
+    brand_sub:"Online deduction duel", brand_alias:"Also known as “Bulls and Cows” · inspired by “Mastermind”",
+    login_title:"Choose your player name",
+    login_hint:"Your name appears in games and on the ranking. Choose a PIN to protect it.",
+    login_lang:"Language", login_name:"Username", login_name_ph:"e.g. Diego", login_pin:"Access PIN", login_pin_ph:"4–8 digits",
+    login_pin_note:"🔒 It's your password to sign in to the app. It is not the game's secret code nor the game code.",
+    login_invite:"🎮 You've been invited to game {code}. Choose your name and PIN and you'll go straight in.",
+    login_enter:"Enter", login_min:"At least 2 characters", login_pin_invalid:"The PIN must contain 4 to 8 digits",
+    lobby_greeting:"Hi, {name} 👋",
+    lobby_hint:"Create a game and share the code, or join an open public one.",
+    lobby_create:"Create game", lobby_ranking:"Ranking", lobby_refresh:"Refresh list",
+    lobby_mine:"Your active games", lobby_open:"Open public games", lobby_changeuser:"Change user",
+    available_title:"Available games", private_games_title:"Your private games", private_games_hint:"For privacy, only private games you participate in are shown.",
+    private_empty:"You have no open or active private games.", private_now:"🔒 {n} private open or in progress", public_now:"🟢 {active} public in progress · {open} open",
+    loading:"Loading…", load_error:"Couldn't load", open_empty:"No open public games. Create one!",
+    join_btn:"Join", lobby_code_ph:"Game code", code_invalid:"Enter the game code (4 characters).",
+    mine_waiting:"Waiting for opponent", mine_rematch_from:"🔁 Rematch from {name}", see_btn:"View", continue_btn:"Continue", private_tag:"private",
+    rank_title:"Global ranking 🏆", rank_hint:"Total wins per player. Updates after each finished game.",
+    rank_empty:"No finished games yet.", rank_wl:"{wins} 🏆 · {played} games", rank_total:"Global ranking · {n} players", rank_your_pos:"… your position: #{n}", back:"Back",
+    rules_title:"How to play", rules_link:"How to play?", wait_share:"Share",
+    share_text:"Join my Picas y Fijas game! Code: {code}",
+    lbl_numcolors:"Number of colors", lobby_history:"History",
+    hist_title:"Match history", hist_hint:"Your latest finished games.",
+    hist_empty:"No finished games yet.",
+    result_win:"Won", result_loss:"Lost", result_draw:"Draw",
+    sound_label:"Sound", on:"on", off:"off", notif_yourturn:"It's your turn!", notif_joined:"An opponent joined! 🎮", game_expired:"The open game expired (nobody joined).", online_now:"🟢 {n} in progress now", online_players_one:"👥 1 player connected now", online_players_many:"👥 {n} players connected now", credits_by:"Created by",
+    create_title:"New game", create_hint:"Set the rules and choose your secret code.",
+    lbl_mode:"Mode", mode_numbers:"Numbers 0-9", mode_colors:"Colors",
+    lbl_positions:"Positions", lbl_repeats:"Repeats", rep_no:"Not allowed", rep_yes:"Allowed",
+    lbl_attempts:"Attempt limit", nolimit:"No limit", lbl_time:"Time per turn",
+    lbl_visibility:"Visibility", vis_public:"Public", vis_private:"Private",
+    pub_hint_public:"Shown in the lobby: anyone can join.",
+    pub_hint_private:"Not shown in the lobby: join only with the code.",
+    lbl_secret:"Your secret code", create_btn:"Create and wait for opponent",
+    wait_title:"Game created", wait_hint:"Share this code with your opponent. It starts as soon as they join.",
+    wait_copy:"Copy code", wait_waiting:"Waiting for someone to join…", wait_cancel:"Cancel and go back",
+    copied:"Code copied: {code}", cancel_confirm:"Cancel this open game?", cancel_done:"Game cancelled", abandon_game:"Abandon game", abandon_confirm:"Abandon this game? It won't count as a win for anyone.", abandon_done:"Game abandoned",
+    join_to:"Join", join_rules:"Rules: {rules}. Choose your secret code.", join_btn2:"Join and play",
+    rematch_title:"Rematch 🔁", rematch_hint:"Same rules, same opponent. Choose your new secret code.",
+    rematch_rules:"Rules: {rules}. Choose your new code.", lbl_newsecret:"Your new secret code",
+    rematch_send:"Send rematch", back_home:"Back to home",
+    game_match:"Game", game_yourcode:"Your code:", vs:"vs {name}", waiting_short:"waiting…",
+    spectator_confirm:"This game is full. Continue as a spectator?", spectator_mode:"Spectator", spectator_p1:"{name}'s guesses → {opp}'s code", spectator_p2:"{name}'s guesses → {opp}'s code", spectator_winner:"{name} won 🏆",
+    guess_btn:"Guess", legend_fija:"F = correct position", legend_pica:"P = present, wrong spot",
+    colhead_mine:"Your guesses → {name}'s code", colhead_theirs:"{name}'s guesses → your code",
+    rival:"opponent", log_empty_mine:"No guesses yet", log_empty_theirs:"No guesses yet", log_nada:"none",
+    your_turn:"Your turn — guess the opponent's code", no_attempts_wait:"No attempts left — waiting for opponent",
+    tiebreak_you:"⚡ Last try: {name} already cracked your code. Match it to tie!",
+    turn_of:"{name}'s turn …", waiting_generic:"Waiting… …", activity_now:"Active now", activity_min:"Active {n} min ago", activity_hours:"Active {n} h ago", activity_days:"Active {n} days ago",
+    solved_wait:"✅ You cracked their code! Waiting for {name}'s last try to see if it's a tie…",
+    attempts_chip:"Attempts: {left}/{max}", timer_paused:"⏸ Paused · waiting for reconnection",
+    pause_btn:"Pause game", pause_title:"Game paused", pause_confirm:"Pause the game? Both players will stop seeing codes and attempts.",
+    pause_mine:"You requested the pause. Resume when you're ready.", pause_other:"{name} requested the pause. The game will resume when they return.",
+    pause_auto:"Automatic resume in {time}", resume_btn:"Resume game", pause_limit:"The pause lasts up to 5 minutes.", auto_pause_message:"Connection interrupted. The game is hidden until both players return.",
+    win_title:"You won! 🎉", lose_title:"You lost", draw_title:"Draw 🤝",
+    win_msg:"You cracked {name}'s code", lose_msg:"{name} cracked your code first",
+    draw_both:"Both cracked the code in the same number of tries",
+    draw_limit:"Nobody cracked the code within the attempt limit",
+    rematch_go:"Go to rematch 🔁", rematch_btn:"Rematch 🔁",
+    toast_tie:"Draw! both guessed 🤝", toast_solved:"✅ Cracked! waiting for opponent's last try",
+    toast_score:"{f} F · {p} P",
+    invalid_guess:"Invalid guess", check_secret:"Check your secret code", check_code:"Check your code",
+    net_error:"Network error", not_available:"Not available", api_not_set:"Set the Apps Script URL in index.html",
+    val_digits:"Digits 0-9 only", val_repeats:"Repeated digits", val_valid:"Valid!",
+    rl_colors:"{n} colors", rl_numbers:"numbers", rl_pos:"{n} pos", rl_norepeat:"no repeats", rl_repeat:"repeats ✓",
+    rl_attempts:"{n} tries", rl_turn:"{n}s/turn"
+  },
+  fr:{
+    brand_sub:"Duel de déduction en ligne", brand_alias:"Aussi appelé « Bulls and Cows » · inspiré de « Mastermind »",
+    login_title:"Choisis ton nom de joueur",
+    login_hint:"Ton nom apparaît dans les parties et le classement. Choisis un PIN pour le protéger.",
+    login_lang:"Langue", login_name:"Nom d'utilisateur", login_name_ph:"ex. Diego", login_pin:"PIN d'accès", login_pin_ph:"4–8 chiffres",
+    login_pin_note:"🔒 C'est ton mot de passe pour entrer dans l'app. Ce n'est ni le code secret du jeu ni le code de la partie.",
+    login_invite:"🎮 Tu es invité à la partie {code}. Choisis ton nom et ton PIN et tu entreras directement.",
+    login_enter:"Entrer", login_min:"2 caractères minimum", login_pin_invalid:"Le PIN doit contenir de 4 à 8 chiffres",
+    lobby_greeting:"Salut, {name} 👋",
+    lobby_hint:"Crée une partie et partage le code, ou rejoins une partie publique ouverte.",
+    lobby_create:"Créer une partie", lobby_ranking:"Classement", lobby_refresh:"Actualiser la liste",
+    lobby_mine:"Tes parties en cours", lobby_open:"Parties publiques ouvertes", lobby_changeuser:"Changer d'utilisateur",
+    available_title:"Parties disponibles", private_games_title:"Tes parties privées", private_games_hint:"Pour préserver la confidentialité, seules les parties privées auxquelles tu participes sont affichées.",
+    private_empty:"Tu n'as aucune partie privée ouverte ou en cours.", private_now:"🔒 {n} privées ouvertes ou en cours", public_now:"🟢 {active} publiques en cours · {open} ouvertes",
+    loading:"Chargement…", load_error:"Échec du chargement", open_empty:"Aucune partie publique ouverte. Crées-en une !",
+    join_btn:"Rejoindre", lobby_code_ph:"Code de la partie", code_invalid:"Saisis le code de la partie (4 caractères).",
+    mine_waiting:"En attente d'un adversaire", mine_rematch_from:"🔁 Revanche de {name}", see_btn:"Voir", continue_btn:"Continuer", private_tag:"privée",
+    rank_title:"Classement global 🏆", rank_hint:"Victoires totales par joueur. Mis à jour après chaque partie terminée.",
+    rank_empty:"Aucune partie terminée pour l'instant.", rank_wl:"{wins} 🏆 · {played} parties", rank_total:"Classement global · {n} joueurs", rank_your_pos:"… ta position : #{n}", back:"Retour",
+    rules_title:"Comment jouer", rules_link:"Comment jouer ?", wait_share:"Partager",
+    share_text:"Rejoins ma partie de Picas y Fijas ! Code : {code}",
+    lbl_numcolors:"Nombre de couleurs", lobby_history:"Historique",
+    hist_title:"Historique des parties", hist_hint:"Tes dernières parties terminées.",
+    hist_empty:"Aucune partie terminée pour l'instant.",
+    result_win:"Gagnée", result_loss:"Perdue", result_draw:"Égalité",
+    sound_label:"Son", on:"activé", off:"désactivé", notif_yourturn:"À toi de jouer !", notif_joined:"Un adversaire a rejoint ! 🎮", game_expired:"La partie ouverte a expiré (personne n'a rejoint).", online_now:"🟢 {n} en cours maintenant", online_players_one:"👥 1 joueur connecté maintenant", online_players_many:"👥 {n} joueurs connectés maintenant", credits_by:"Créé par",
+    create_title:"Nouvelle partie", create_hint:"Règle les paramètres et choisis ton code secret.",
+    lbl_mode:"Mode", mode_numbers:"Chiffres 0-9", mode_colors:"Couleurs",
+    lbl_positions:"Positions", lbl_repeats:"Répétitions", rep_no:"Interdites", rep_yes:"Autorisées",
+    lbl_attempts:"Limite d'essais", nolimit:"Illimité", lbl_time:"Temps par tour",
+    lbl_visibility:"Visibilité", vis_public:"Publique", vis_private:"Privée",
+    pub_hint_public:"Visible dans le lobby : tout le monde peut rejoindre.",
+    pub_hint_private:"Absente du lobby : on rejoint uniquement avec le code.",
+    lbl_secret:"Ton code secret", create_btn:"Créer et attendre l'adversaire",
+    wait_title:"Partie créée", wait_hint:"Partage ce code avec ton adversaire. La partie démarre dès qu'il rejoint.",
+    wait_copy:"Copier le code", wait_waiting:"En attente d'un joueur…", wait_cancel:"Annuler et revenir",
+    copied:"Code copié : {code}", cancel_confirm:"Annuler cette partie ouverte ?", cancel_done:"Partie annulée", abandon_game:"Abandonner la partie", abandon_confirm:"Abandonner cette partie ? Elle ne comptera comme victoire pour personne.", abandon_done:"Partie abandonnée",
+    join_to:"Rejoindre", join_rules:"Règles : {rules}. Choisis ton code secret.", join_btn2:"Rejoindre et jouer",
+    rematch_title:"Revanche 🔁", rematch_hint:"Mêmes règles, même adversaire. Choisis ton nouveau code secret.",
+    rematch_rules:"Règles : {rules}. Choisis ton nouveau code.", lbl_newsecret:"Ton nouveau code secret",
+    rematch_send:"Envoyer la revanche", back_home:"Retour à l'accueil",
+    game_match:"Partie", game_yourcode:"Ton code :", vs:"vs {name}", waiting_short:"en attente…",
+    spectator_confirm:"Cette partie est complète. Continuer comme spectateur ?", spectator_mode:"Spectateur", spectator_p1:"Essais de {name} → code de {opp}", spectator_p2:"Essais de {name} → code de {opp}", spectator_winner:"{name} a gagné 🏆",
+    guess_btn:"Deviner", legend_fija:"F = bonne position", legend_pica:"P = présent, mal placé",
+    colhead_mine:"Tes essais → code de {name}", colhead_theirs:"Essais de {name} → ton code",
+    rival:"adversaire", log_empty_mine:"Aucun essai pour l'instant", log_empty_theirs:"Aucun essai pour l'instant", log_nada:"rien",
+    your_turn:"À toi — devine le code de l'adversaire", no_attempts_wait:"Plus d'essais — en attente de l'adversaire",
+    tiebreak_you:"⚡ Dernier essai : {name} a déjà trouvé ton code. Réussis pour égaliser !",
+    turn_of:"Tour de {name} …", waiting_generic:"En attente… …", activity_now:"Actif maintenant", activity_min:"Actif il y a {n} min", activity_hours:"Actif il y a {n} h", activity_days:"Actif il y a {n} jours",
+    solved_wait:"✅ Tu as trouvé son code ! En attente du dernier essai de {name} pour voir si c'est une égalité…",
+    attempts_chip:"Essais : {left}/{max}", timer_paused:"⏸ En pause · reconnexion en attente",
+    pause_btn:"Mettre en pause", pause_title:"Partie en pause", pause_confirm:"Mettre la partie en pause ? Les codes et les essais seront masqués pour les deux joueurs.",
+    pause_mine:"Tu as demandé la pause. Reprends la partie quand tu es prêt.", pause_other:"{name} a demandé la pause. La partie reprendra à son retour.",
+    pause_auto:"Reprise automatique dans {time}", resume_btn:"Reprendre la partie", pause_limit:"La pause dure au maximum 5 minutes.", auto_pause_message:"Connexion interrompue. La partie reste masquée jusqu'au retour des deux joueurs.",
+    win_title:"Tu as gagné ! 🎉", lose_title:"Tu as perdu", draw_title:"Égalité 🤝",
+    win_msg:"Tu as trouvé le code de {name}", lose_msg:"{name} a trouvé ton code en premier",
+    draw_both:"Vous avez trouvé le code au même nombre d'essais",
+    draw_limit:"Personne n'a trouvé le code dans la limite d'essais",
+    rematch_go:"Aller à la revanche 🔁", rematch_btn:"Revanche 🔁",
+    toast_tie:"Égalité ! les deux ont trouvé 🤝", toast_solved:"✅ Trouvé ! en attente du dernier essai de l'adversaire",
+    toast_score:"{f} F · {p} P",
+    invalid_guess:"Essai invalide", check_secret:"Vérifie ton code secret", check_code:"Vérifie ton code",
+    net_error:"Erreur réseau", not_available:"Indisponible", api_not_set:"Configure l'URL Apps Script dans index.html",
+    val_digits:"Chiffres 0-9 uniquement", val_repeats:"Chiffres répétés", val_valid:"Valide !",
+    rl_colors:"{n} couleurs", rl_numbers:"chiffres", rl_pos:"{n} pos", rl_norepeat:"sans répétition", rl_repeat:"répétitions ✓",
+    rl_attempts:"{n} essais", rl_turn:"{n}s/tour"
   }
-  return sh;
-}
-
-function usernameKey(name) { return cleanName(name).toLowerCase(); }
-function validPin(pin) { return /^\d{4,8}$/.test(String(pin || '')); }
-function hashPin(pin, salt) {
-  var bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, salt + ':' + String(pin), Utilities.Charset.UTF_8);
-  return bytes.map(function (b) { var v = b < 0 ? b + 256 : b; return ('0' + v.toString(16)).slice(-2); }).join('');
-}
-function findUser(name) {
-  var key = usernameKey(name), sh = getUsersSheet(), last = sh.getLastRow();
-  if (!key || last < 2) return null;
-  var values = sh.getRange(2, 1, last - 1, USER_HEADERS.length).getValues();
-  for (var i = 0; i < values.length; i++) {
-    if (String(values[i][1]) === key) return { _row: i + 2, username: values[i][0], salt: values[i][2], hash: values[i][3] };
+};
+/* Mensajes de error del backend (español) → traducción */
+const ERR = {
+  en:{
+    "Falta el nombre de usuario.":"Username is missing.",
+    "Partida no encontrada.":"Game not found.",
+    "Esta partida ya no acepta jugadores.":"This game is no longer accepting players.",
+    "No puedes unirte a tu propia partida con el mismo nombre.":"You can't join your own game with the same name.",
+    "La partida no está activa.":"The game is not active.",
+    "No eres jugador de esta partida.":"You're not a player in this game.",
+    "No es tu turno.":"It's not your turn.",
+    "Sin intentos restantes.":"No attempts left.",
+    "Esta partida no tiene cronómetro.":"This game has no timer.",
+    "Aún queda tiempo.":"There's still time left.",
+    "El cronómetro está en pausa.":"The timer is paused.",
+    "La partida está en pausa.":"The game is paused.",
+    "Solo quien pidió la pausa puede reanudar.":"Only the player who requested the pause can resume.",
+    "La partida ya está pausada.":"The game is already paused.",
+    "Espera un minuto antes de volver a pausar.":"Wait one minute before pausing again.",
+    "La partida aún no ha terminado.":"The game hasn't finished yet.",
+    "La partida ha expirado.":"The game has expired.",
+    "La partida se cerró tras 48 horas sin actividad.":"The game was closed after 48 hours without activity.",
+    "Un jugador abandonó la partida.":"A player abandoned the game.",
+    "La partida fue cancelada.":"The game was cancelled.",
+    "El rival ya se unió; la partida ya comenzó.":"The opponent already joined; the game has started.",
+    "Solo puedes tener 3 partidas abiertas o activas al mismo tiempo.":"You can only have 3 open or active games at the same time.",
+    "Espera 10 segundos antes de crear otra partida.":"Wait 10 seconds before creating another game.",
+    "Demasiados PIN incorrectos. Inténtalo de nuevo en 15 minutos.":"Too many incorrect PIN attempts. Try again in 15 minutes.",
+    "Longitud debe ser 3, 4, 5 o 6.":"Length must be 3, 4, 5 or 6.",
+    "Código inválido.":"Invalid code.",
+    "Símbolo fuera de rango.":"Symbol out of range.",
+    "No se permiten repetidos en esta partida.":"Repeats aren't allowed in this game."
+  },
+  fr:{
+    "Falta el nombre de usuario.":"Nom d'utilisateur manquant.",
+    "Partida no encontrada.":"Partie introuvable.",
+    "Esta partida ya no acepta jugadores.":"Cette partie n'accepte plus de joueurs.",
+    "No puedes unirte a tu propia partida con el mismo nombre.":"Tu ne peux pas rejoindre ta propre partie avec le même nom.",
+    "La partida no está activa.":"La partie n'est pas active.",
+    "No eres jugador de esta partida.":"Tu n'es pas joueur de cette partie.",
+    "No es tu turno.":"Ce n'est pas ton tour.",
+    "Sin intentos restantes.":"Plus d'essais disponibles.",
+    "Esta partida no tiene cronómetro.":"Cette partie n'a pas de chrono.",
+    "Aún queda tiempo.":"Il reste encore du temps.",
+    "El cronómetro está en pausa.":"Le chronomètre est en pause.",
+    "La partida está en pausa.":"La partie est en pause.",
+    "Solo quien pidió la pausa puede reanudar.":"Seul le joueur qui a demandé la pause peut reprendre.",
+    "La partida ya está pausada.":"La partie est déjà en pause.",
+    "Espera un minuto antes de volver a pausar.":"Attends une minute avant de remettre en pause.",
+    "La partida aún no ha terminado.":"La partie n'est pas encore terminée.",
+    "La partida ha expirado.":"La partie a expiré.",
+    "La partida se cerró tras 48 horas sin actividad.":"La partie a été fermée après 48 heures sans activité.",
+    "Un jugador abandonó la partida.":"Un joueur a abandonné la partie.",
+    "La partida fue cancelada.":"La partie a été annulée.",
+    "El rival ya se unió; la partida ya comenzó.":"L'adversaire a déjà rejoint ; la partie a commencé.",
+    "Solo puedes tener 3 partidas abiertas o activas al mismo tiempo.":"Tu peux avoir au maximum 3 parties ouvertes ou actives en même temps.",
+    "Espera 10 segundos antes de crear otra partida.":"Attends 10 secondes avant de créer une autre partie.",
+    "Demasiados PIN incorrectos. Inténtalo de nuevo en 15 minutos.":"Trop de PIN incorrects. Réessaie dans 15 minutes.",
+    "Longitud debe ser 3, 4, 5 o 6.":"La longueur doit être 3, 4, 5 ou 6.",
+    "Código inválido.":"Code invalide.",
+    "Símbolo fuera de rango.":"Symbole hors limites.",
+    "No se permiten repetidos en esta partida.":"Les répétitions ne sont pas autorisées dans cette partie."
   }
-  return null;
-}
+};
 
-/** Registra un nombre nuevo o inicia sesión con su PIN. */
-function loginUser(p) {
-  var username = cleanName(p.username), pin = String(p.pin || '');
-  if (username.length < 2) return { ok: false, error: 'El nombre debe tener al menos 2 caracteres.' };
-  if (!validPin(pin)) return { ok: false, error: 'El PIN debe tener entre 4 y 8 dígitos.' };
-  var throttleKey = 'pin_' + usernameKey(username);
-  var cache = CacheService.getScriptCache();
-  var failures = parseInt(cache.get(throttleKey) || '0', 10);
-  if (failures >= PIN_MAX_FAILURES) return { ok: false, error: 'Demasiados PIN incorrectos. Inténtalo de nuevo en 15 minutos.' };
-  var lock = LockService.getScriptLock(); lock.waitLock(10000);
-  try {
-    var existing = findUser(username), sh = getUsersSheet();
-    if (existing) {
-      if (hashPin(pin, existing.salt) !== existing.hash) {
-        failures++;
-        cache.put(throttleKey, String(failures), PIN_LOCK_SECONDS);
-        return { ok: false, error: failures >= PIN_MAX_FAILURES ?
-          'Demasiados PIN incorrectos. Inténtalo de nuevo en 15 minutos.' :
-          'Ese nombre ya existe y el PIN no es correcto.' };
-      }
-      cache.remove(throttleKey);
-      sh.getRange(existing._row, 6).setValue(now());
-      return { ok: true, username: existing.username, registered: false };
-    }
-    var salt = Utilities.getUuid();
-    sh.appendRow([username, usernameKey(username), salt, hashPin(pin, salt), now(), now()]);
-    return { ok: true, username: username, registered: true };
-  } finally { lock.releaseLock(); }
-}
+/* Instrucciones del juego (HTML) por idioma */
+const RULES = {
+  es:`<ol>
+    <li>Cada jugador registra un <b>nombre de usuario</b> con un PIN. El nombre se usa también en el ranking.</li>
+    <li>Uno <b>crea la partida</b> y elige las reglas:
+      <ul>
+        <li><b>Modo</b>: números 0-9 o <b>colores</b> (6 colores, estilo Mastermind).</li>
+        <li><b>Posiciones</b>: 3, 4, 5 o 6.</li>
+        <li><b>Repetidos</b>: permitir o no.</li>
+        <li><b>Límite de intentos</b>: sin límite, 6 o 10 por jugador.</li>
+        <li><b>Tiempo por turno</b>: sin límite, 30 s, 60 s o 2 min.</li>
+        <li><b>Visibilidad</b>: pública (lobby) o privada (solo por código).</li>
+      </ul>
+      Define su código secreto y obtiene un <b>código de partida de 4 letras</b>.</li>
+    <li>El otro se <b>une</b> desde el lobby o con el código, y define su propio secreto con las mismas reglas.</li>
+    <li>Se turnan para adivinar. Tras cada intento se responde con <span class="pill f">Fijas</span> y <span class="pill p">Picas</span>.</li>
+    <li>Gana quien <b>descifra primero</b> el código del rival. Si quien empezó acierta, el otro tiene un <b>último intento para igualar</b>. Con límite de intentos, si nadie acierta → <b>empate</b>.</li>
+    <li>Al terminar: botón <b>Revancha</b> (misma configuración, mismo rival). Cuando uno la propone, el otro ve <b>“Ir a la revancha”</b>.</li>
+  </ol>
+  <div class="note"><b>Fija</b> = dígito correcto en la <b>posición correcta</b>. &nbsp; <b>Pica</b> = dígito correcto pero en <b>otra posición</b>.</div>
+  <div class="note"><b>Modo colores:</b> mismo cálculo de picas y fijas, solo cambian las cifras por fichas de color.</div>
+  <div class="note"><b>Cronómetro:</b> al llegar a 0 el turno pasa automáticamente al rival.</div>`,
+  en:`<ol>
+    <li>Each player registers a <b>username</b> with a PIN. The name is also used in the ranking.</li>
+    <li>One player <b>creates the game</b> and picks the rules:
+      <ul>
+        <li><b>Mode</b>: numbers 0-9 or <b>colors</b> (6 colors, Mastermind style).</li>
+        <li><b>Positions</b>: 3, 4, 5 or 6.</li>
+        <li><b>Repeats</b>: allowed or not.</li>
+        <li><b>Attempt limit</b>: none, 6 or 10 per player.</li>
+        <li><b>Time per turn</b>: none, 30 s, 60 s or 2 min.</li>
+        <li><b>Visibility</b>: public (lobby) or private (code only).</li>
+      </ul>
+      They set their secret code and get a <b>4-letter game code</b>.</li>
+    <li>The other player <b>joins</b> from the lobby or with the code, and sets their own secret with the same rules.</li>
+    <li>Players take turns guessing. Each guess is answered with <span class="pill f">Fixed</span> and <span class="pill p">Present</span>.</li>
+    <li>Whoever <b>cracks the opponent's code first</b> wins. If the player who started cracks it, the other gets one <b>last try to tie</b>. With an attempt limit, if nobody cracks it → <b>draw</b>.</li>
+    <li>When it ends: a <b>Rematch</b> button (same settings, same opponent). When one proposes it, the other sees <b>“Go to rematch”</b>.</li>
+  </ol>
+  <div class="note"><b>Fixed (F)</b> = correct digit in the <b>correct position</b>. &nbsp; <b>Present (P)</b> = correct digit in a <b>different position</b>.</div>
+  <div class="note"><b>Colors mode:</b> same F/P scoring, colored pegs instead of digits.</div>
+  <div class="note"><b>Timer:</b> when it reaches 0, the turn automatically passes to the opponent.</div>`,
+  fr:`<ol>
+    <li>Chaque joueur se connecte avec un <b>nom d'utilisateur</b> (sans mot de passe). Il sert aussi au classement.</li>
+    <li>Un joueur <b>crée la partie</b> et choisit les règles :
+      <ul>
+        <li><b>Mode</b> : chiffres 0-9 ou <b>couleurs</b> (6 couleurs, style Mastermind).</li>
+        <li><b>Positions</b> : 3, 4, 5 ou 6.</li>
+        <li><b>Répétitions</b> : autorisées ou non.</li>
+        <li><b>Limite d'essais</b> : illimité, 6 ou 10 par joueur.</li>
+        <li><b>Temps par tour</b> : illimité, 30 s, 60 s ou 2 min.</li>
+        <li><b>Visibilité</b> : publique (lobby) ou privée (code seulement).</li>
+      </ul>
+      Il choisit son code secret et obtient un <b>code de partie de 4 lettres</b>.</li>
+    <li>L'autre joueur <b>rejoint</b> depuis le lobby ou avec le code, et choisit son propre secret avec les mêmes règles.</li>
+    <li>Les joueurs devinent à tour de rôle. Chaque essai reçoit <span class="pill f">Fixes</span> et <span class="pill p">Présents</span>.</li>
+    <li>Celui qui <b>trouve le code adverse en premier</b> gagne. Si le joueur qui a commencé trouve, l'autre a un <b>dernier essai pour égaliser</b>. Avec une limite d'essais, si personne ne trouve → <b>égalité</b>.</li>
+    <li>À la fin : bouton <b>Revanche</b> (mêmes réglages, même adversaire). Quand l'un la propose, l'autre voit <b>« Aller à la revanche »</b>.</li>
+  </ol>
+  <div class="note"><b>Fixe (F)</b> = bon chiffre à la <b>bonne position</b>. &nbsp; <b>Présent (P)</b> = bon chiffre à une <b>autre position</b>.</div>
+  <div class="note"><b>Mode couleurs :</b> même calcul F/P, des pions colorés à la place des chiffres.</div>
+  <div class="note"><b>Chrono :</b> à 0, le tour passe automatiquement à l'adversaire.</div>`
+};
 
-function authenticateUser(p) {
-  var username = cleanName(p.username), pin = String(p.pin || '');
-  var key = 'pin_' + usernameKey(username);
-  var cache = CacheService.getScriptCache();
-  var failures = parseInt(cache.get(key) || '0', 10);
-  if (failures >= PIN_MAX_FAILURES) {
-    return { ok: false, error: 'Demasiados PIN incorrectos. Inténtalo de nuevo en 15 minutos.' };
-  }
-  if (validPin(pin)) {
-    var authKey = 'auth_' + hashPin(pin, usernameKey(username)).slice(0, 40);
-    var cachedName = cache.get(authKey);
-    if (cachedName && usernameKey(cachedName) === usernameKey(username)) {
-      p.username = cachedName;
-      return null;
-    }
-  }
-  var u = findUser(username);
-  if (!u || !validPin(pin) || hashPin(pin, u.salt) !== u.hash) {
-    failures++;
-    cache.put(key, String(failures), PIN_LOCK_SECONDS);
-    return { ok: false, error: failures >= PIN_MAX_FAILURES ?
-      'Demasiados PIN incorrectos. Inténtalo de nuevo en 15 minutos.' :
-      'Sesión inválida. Vuelve a entrar con tu nombre y PIN.' };
-  }
-  cache.remove(key);
-  cache.put(authKey, u.username, AUTH_CACHE_SECONDS);
-  // Conserva la capitalización registrada para que identidad, historial y ranking coincidan.
-  p.username = u.username;
-  touchPresence(u.username);
-  return null;
-}
-
-function readPresence() {
-  try { return JSON.parse(PropertiesService.getScriptProperties().getProperty(PRESENCE_PROPERTY) || '{}'); }
-  catch (e) { return {}; }
-}
-
-/** Actualiza como máximo cada 30 s para no escribir en cada polling. */
-function touchPresence(username) {
-  var key = usernameKey(username);
-  if (!key) return;
-  var cacheKey = 'presence_' + key;
-  var cache = CacheService.getScriptCache();
-  if (cache.get(cacheKey)) return;
-  var lock = LockService.getScriptLock();
-  if (!lock.tryLock(1000)) return;
-  try {
-    if (cache.get(cacheKey)) return;
-    var map = readPresence(), cutoff = Date.now() - PRESENCE_WINDOW_MS * 3;
-    for (var k in map) if (Number(map[k]) < cutoff) delete map[k];
-    map[key] = Date.now();
-    PropertiesService.getScriptProperties().setProperty(PRESENCE_PROPERTY, JSON.stringify(map));
-    cache.put(cacheKey, '1', PRESENCE_TOUCH_SECONDS);
-  } finally { lock.releaseLock(); }
-}
-
-function onlinePlayerCount() {
-  var map = readPresence(), cutoff = Date.now() - PRESENCE_WINDOW_MS, count = 0;
-  for (var k in map) if (Number(map[k]) >= cutoff) count++;
-  return count;
-}
-
-function leavePresence(p) {
-  var key = usernameKey(p.username), lock = LockService.getScriptLock();
-  lock.waitLock(10000);
-  try {
-    var map = readPresence();
-    delete map[key];
-    PropertiesService.getScriptProperties().setProperty(PRESENCE_PROPERTY, JSON.stringify(map));
-    CacheService.getScriptCache().remove('presence_' + key);
-    return { ok: true };
-  } finally { lock.releaseLock(); }
-}
-
-function gamePresenceKey(gameId, username) {
-  return 'game_live_' + String(gameId || '').toUpperCase() + '_' + usernameKey(username);
-}
-
-function touchGamePresence(gameId, username, connected) {
-  var key = gamePresenceKey(gameId, username);
-  if (!gameId || !usernameKey(username)) return;
-  var cache = CacheService.getScriptCache();
-  if (connected) cache.put(key, '1', GAME_PRESENCE_CACHE_SECONDS);
-  else cache.remove(key);
-}
-
-function bothPlayersInGame(g) {
-  if (!g.p1 || !g.p2) return false;
-  var cache = CacheService.getScriptCache();
-  return !!cache.get(gamePresenceKey(g.gameId, g.p1)) && !!cache.get(gamePresenceKey(g.gameId, g.p2));
-}
-
-function timerRemaining(g) {
-  var total = Math.max(0, toInt(g.turnSeconds, 0));
-  var base = Math.max(0, toInt(g.turnRemaining, total));
-  if (truthy(g.timerPaused) || !ms(g.turnStartedAt)) return Math.min(total, base);
-  return Math.max(0, Math.min(total, base - Math.floor((Date.now() - ms(g.turnStartedAt)) / 1000)));
-}
-
-/** Pausa o reanuda el reloj según ambos jugadores estén viendo esta partida. */
-function syncGameTimer(g) {
-  if (g.status !== 'active') return g;
-  var manualUntil = ms(g.manualPauseUntil);
-  if (g.manualPausedBy && manualUntil > Date.now()) {
-    if (!truthy(g.timerPaused)) {
-      return writeGameFields(g, { timerPaused: true, turnRemaining: timerRemaining(g), turnStartedAt: '' });
-    }
-    return g;
-  }
-  if (g.manualPausedBy) {
-    var afterPauseRemaining = timerRemaining(g), playersBack = bothPlayersInGame(g);
-    return writeGameFields(g, {
-      manualPausedBy: '', manualPauseUntil: '',
-      lastManualPauseAt: now(),
-      timerPaused: toInt(g.turnSeconds, 0) > 0 && !playersBack,
-      turnRemaining: afterPauseRemaining,
-      turnStartedAt: toInt(g.turnSeconds, 0) > 0 && playersBack ? now() : ''
-    });
-  }
-  if (toInt(g.turnSeconds, 0) <= 0) return g;
-  var both = bothPlayersInGame(g), paused = truthy(g.timerPaused), remaining = timerRemaining(g);
-  if (!both && !paused) {
-    return writeGameFields(g, { timerPaused: true, turnRemaining: remaining, turnStartedAt: '' });
-  }
-  if (both && paused) {
-    return writeGameFields(g, { timerPaused: false, turnRemaining: remaining, turnStartedAt: now() });
-  }
-  return g;
-}
-
-/** Pausa voluntaria compartida. Solo quien la pidió puede reanudar; expira a los 5 min. */
-function toggleManualPause(p) {
-  var username = cleanName(p.username), lock = LockService.getScriptLock();
-  lock.waitLock(10000);
-  try {
-    var g = findGame(p.gameId);
-    if (!g) return { ok: false, error: 'Partida no encontrada.' };
-    g = normalizeGameState(g);
-    if (g.status !== 'active') return { ok: false, error: 'La partida no está activa.' };
-    if (g.p1 !== username && g.p2 !== username) return { ok: false, error: 'No eres jugador de esta partida.' };
-    g = syncGameTimer(g);
-    var intent = String(p.intent || 'pause');
-    if (intent === 'resume') {
-      if (!g.manualPausedBy) return { ok: true };
-      if (g.manualPausedBy !== username) return { ok: false, error: 'Solo quien pidió la pausa puede reanudar.' };
-      var remaining = timerRemaining(g), both = bothPlayersInGame(g), timed = toInt(g.turnSeconds, 0) > 0;
-      writeGameRow(g, { manualPausedBy: '', manualPauseUntil: '', lastManualPauseAt: now(), timerPaused: timed && !both,
-        turnRemaining: remaining, turnStartedAt: timed && both ? now() : '', updatedAt: now() });
-      return { ok: true };
-    }
-    if (g.manualPausedBy) return { ok: false, error: 'La partida ya está pausada.' };
-    var lastPause = ms(g.lastManualPauseAt);
-    if (lastPause && Date.now() - lastPause < MANUAL_PAUSE_COOLDOWN_MS) {
-      return { ok: false, error: 'Espera un minuto antes de volver a pausar.' };
-    }
-    var stamp = now(), until = new Date(Date.now() + MANUAL_PAUSE_MAX_MS).toISOString();
-    writeGameRow(g, { manualPausedBy: username, manualPauseUntil: until,
-      timerPaused: true, turnRemaining: timerRemaining(g), turnStartedAt: '', updatedAt: stamp });
-    return { ok: true, manualPauseUntil: until };
-  } finally { lock.releaseLock(); }
-}
-
-function resetTurnClock(g) {
-  var changes = freshTurnClock(g);
-  for (var k in changes) writeCell(g._row, k, changes[k]);
-}
-
-function freshTurnClock(g) {
-  var seconds = Math.max(0, toInt(g.turnSeconds, 0));
-  if (seconds <= 0) return { turnStartedAt: now(), turnRemaining: 0, timerPaused: false };
-  var paused = !bothPlayersInGame(g);
-  return { turnRemaining: seconds, timerPaused: paused, turnStartedAt: paused ? '' : now() };
-}
-
-function setGamePresence(p) {
-  var g = findGame(p.gameId);
-  if (!g) return { ok: false, error: 'Partida no encontrada.' };
-  var username = cleanName(p.username);
-  if (g.p1 !== username && g.p2 !== username) return { ok: false, error: 'No eres jugador de esta partida.' };
-  touchGamePresence(g.gameId, username, truthy(p.connected));
-  g = syncGameTimer(g);
-  return { ok: true, timerPaused: truthy(g.timerPaused), turnRemaining: timerRemaining(g) };
-}
-
-function readAll() {
-  var sh = getSheet();
-  var last = sh.getLastRow();
-  if (last < 2) return [];
-  var values = sh.getRange(2, 1, last - 1, HEADERS.length).getValues();
-  var rows = [];
-  for (var i = 0; i < values.length; i++) {
-    var obj = { _row: i + 2 };
-    for (var c = 0; c < HEADERS.length; c++) obj[HEADERS[c]] = values[i][c];
-    rows.push(obj);
-  }
-  return rows;
-}
-
-function findGame(gameId) {
-  gameId = String(gameId || '').toUpperCase().trim();
-  var rows = readAll();
-  for (var i = 0; i < rows.length; i++) {
-    if (String(rows[i].gameId).toUpperCase() === gameId) return rows[i];
-  }
-  return null;
-}
-
-function writeCell(row, header, value) {
-  var col = HEADERS.indexOf(header) + 1;
-  getSheet().getRange(row, col).setValue(value);
-}
-
-/** Actualiza una fila completa en una sola operación para evitar estados parciales. */
-function writeGameRow(g, changes) {
-  for (var k in changes) g[k] = changes[k];
-  var row = [];
-  for (var c = 0; c < HEADERS.length; c++) row.push(g[HEADERS[c]]);
-  getSheet().getRange(g._row, 1, 1, HEADERS.length).setValues([row]);
-  return g;
-}
-
-/** Actualiza solo los campos indicados para no restaurar una fila obsoleta desde el polling. */
-function writeGameFields(g, changes) {
-  for (var k in changes) {
-    g[k] = changes[k];
-    writeCell(g._row, k, changes[k]);
-  }
-  return g;
-}
-
-function now() { return new Date().toISOString(); }
-function ms(iso) { var t = new Date(iso).getTime(); return isNaN(t) ? 0 : t; }
-
-/** ¿Es una partida abierta que caducó por falta de rival? */
-function isExpiredWaiting(g) {
-  if (g.status !== 'waiting') return false;
-  var c = ms(g.createdAt);
-  return c > 0 && (Date.now() - c) > WAITING_TTL_MS;
-}
-
-function hasStoredValue(v) { return v !== '' && v !== null && v !== undefined; }
-
-/**
- * Repara filas antiguas o incompletas y devuelve su estado efectivo.
- * - active sin rival vuelve a waiting (o expired si superó el TTL).
- * - waiting con los dos jugadores completos se promueve a active.
- * - active completa sin actividad durante 48 h pasa a inactive.
- */
-function normalizeGameState(g) {
-  var hasP1 = !!cleanName(g.p1), hasP2 = !!cleanName(g.p2);
-  var hasS1 = hasStoredValue(g.secret1), hasS2 = hasStoredValue(g.secret2);
-  var expiredByAge = ms(g.createdAt) > 0 && (Date.now() - ms(g.createdAt)) > WAITING_TTL_MS;
-  if (g.status === 'waiting' && expiredByAge) {
-    return writeGameRow(g, { status: 'expired', turn: 0, turnStartedAt: '', updatedAt: now() });
-  }
-  if (g.status === 'active' && (!hasP1 || !hasS1 || !hasP2 || !hasS2)) {
-    if (hasP1 && hasS1 && !expiredByAge) {
-      return writeGameRow(g, { status: 'waiting', p2: '', secret2: '', country2: '', turn: 0,
-                               turnStartedAt: '', pendingWinner: '', updatedAt: now() });
-    }
-    return writeGameRow(g, { status: 'expired', turn: 0, turnStartedAt: '', updatedAt: now() });
-  }
-  // Recupera partidas antiguas cuyo último intento se guardó antes de fallar la escritura del resultado.
-  if (g.status === 'active' && g.pendingWinner) {
-    var recoveryGuesses = parseGuesses(g), pendingName = String(g.pendingWinner);
-    var lastGuess = recoveryGuesses.length ? recoveryGuesses[recoveryGuesses.length - 1] : null;
-    var pendingHadSolved = false, required = toInt(g.digits, 0);
-    for (var rg = 0; rg < recoveryGuesses.length; rg++) {
-      if (recoveryGuesses[rg].by === pendingName && toInt(recoveryGuesses[rg].fijas, 0) === required) pendingHadSolved = true;
-    }
-    if (pendingHadSolved && lastGuess && lastGuess.by !== pendingName &&
-        (lastGuess.by === g.p1 || lastGuess.by === g.p2)) {
-      var recoveredTie = toInt(lastGuess.fijas, 0) === required;
-      return writeGameRow(g, { status: 'finished', winner: recoveredTie ? '' : pendingName,
-        pendingWinner: '', timerPaused: true, updatedAt: now() });
-    }
-  }
-  if (g.status === 'active' && hasP1 && hasS1 && hasP2 && hasS2) {
-    var lastActivity = ms(g.updatedAt) || ms(g.createdAt);
-    if (lastActivity > 0 && (Date.now() - lastActivity) > ACTIVE_TTL_MS) {
-      return writeGameRow(g, { status: 'inactive', turn: 0, turnStartedAt: '',
-                               pendingWinner: '', updatedAt: now() });
-    }
-  }
-  if (g.status === 'waiting' && hasP1 && hasS1 && hasP2 && hasS2) {
-    var turn = (g.turn == 1 || g.turn == 2) ? Number(g.turn) : (Math.random() < 0.5 ? 1 : 2);
-    return writeGameRow(g, { status: 'active', turn: turn,
-                             turnStartedAt: g.turnStartedAt || now(), updatedAt: now() });
-  }
-  return g;
-}
-
-function truthy(v) {
-  return v === true || v === 1 || v === '1' ||
-         String(v).toLowerCase() === 'true' || String(v).toLowerCase() === 'si';
-}
-function toInt(v, def) { var n = parseInt(v, 10); return isNaN(n) ? def : n; }
-
-function newGameId() {
-  var alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  var rows = readAll();
-  var existing = {};
-  for (var i = 0; i < rows.length; i++) existing[String(rows[i].gameId).toUpperCase()] = true;
-  for (var attempt = 0; attempt < 50; attempt++) {
-    var id = '';
-    for (var k = 0; k < 4; k++) id += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
-    if (!existing[id]) return id;
-  }
-  return 'G' + String(Date.now()).slice(-5);
-}
-
-/** Símbolos válidos según el modo. */
-function maxSymbolFor(mode, numColors) {
-  return (String(mode) === 'colors') ? toInt(numColors, 6) : 10;
-}
-
-/** Valida un código. Devuelve string de error o null. */
-function validateCode(code, digits, allowRepeats, maxSymbol) {
-  code = String(code == null ? '' : code).trim();
-  digits = parseInt(digits, 10);
-  if (code.length !== digits) return 'El código debe tener ' + digits + ' posiciones.';
-  if (!/^[0-9]+$/.test(code)) return 'Código inválido.';
-  for (var s = 0; s < code.length; s++) {
-    if (parseInt(code[s], 10) >= maxSymbol) return 'Símbolo fuera de rango.';
-  }
-  if (!allowRepeats) {
-    var seen = {};
-    for (var i = 0; i < code.length; i++) {
-      if (seen[code[i]]) return 'No se permiten repetidos en esta partida.';
-      seen[code[i]] = true;
-    }
-  }
-  return null;
-}
-
-/** Picas y fijas — algoritmo general (correcto con y sin repetidos). */
-function evaluate(secret, guess) {
-  secret = String(secret); guess = String(guess);
-  var fijas = 0, restS = {}, restG = {};
-  for (var i = 0; i < secret.length; i++) {
-    if (secret[i] === guess[i]) { fijas++; }
-    else {
-      restS[secret[i]] = (restS[secret[i]] || 0) + 1;
-      restG[guess[i]]  = (restG[guess[i]]  || 0) + 1;
-    }
-  }
-  var picas = 0;
-  for (var d in restG) if (restS[d]) picas += Math.min(restS[d], restG[d]);
-  return { fijas: fijas, picas: picas };
-}
-
-function cleanName(name) { return String(name == null ? '' : name).trim().slice(0, 24); }
-
-/** Código de país ISO alpha-2 en minúsculas, o '' si no es válido. */
-function cleanCountry(v) {
-  v = String(v == null ? '' : v).trim().toLowerCase();
-  return /^[a-z]{2}$/.test(v) ? v : '';
-}
-
-/** Restaura ceros a la izquierda perdidos por la coerción numérica de Sheets. */
-function padCode(v, digits) {
-  var s = ('' + v).trim();
-  digits = parseInt(digits, 10) || 0;
-  while (s.length < digits) s = '0' + s;
+let lang = localStorage.getItem('pf_lang') || 'es';
+function t(key, p){
+  let s = (I18N[lang] && I18N[lang][key]) || I18N.es[key] || key;
+  if(p) for(const k in p) s = s.split('{'+k+'}').join(p[k]);
   return s;
 }
-
-function countGuesses(guesses, username) {
-  var n = 0;
-  for (var i = 0; i < guesses.length; i++) if (guesses[i].by === username) n++;
-  return n;
+function te(msg){ return (ERR[lang] && ERR[lang][msg]) || msg; }
+function creditsHTML(){
+  return `${t('credits_by')} <a href="https://www.linkedin.com/in/diego-olaya-857bb6105" target="_blank" rel="noopener">Diego OLAYA</a> · powered by Claude · 2026 · v${APP_VERSION}`;
 }
-function parseGuesses(g) {
-  try { return JSON.parse(g.guesses || '[]'); } catch (e) { return []; }
+function setCredits(){ document.querySelectorAll('.credits').forEach(el=>{ el.innerHTML=creditsHTML(); }); }
+function applyI18n(){
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ el.placeholder = t(el.dataset.i18nPh); });
+  document.querySelectorAll('#seg-lang button').forEach(b=> b.classList.toggle('on', b.dataset.lang===lang));
+  if(typeof updateSoundLabel==='function') updateSoundLabel();
+  if(typeof renderLoginInvite==='function') renderLoginInvite();
+  setCredits();
 }
-
-function creationLimitError(username, rows) {
-  var open = 0;
-  for (var i = 0; i < rows.length; i++) {
-    var g = normalizeGameState(rows[i]);
-    if ((g.status === 'waiting' || g.status === 'active') && (g.p1 === username || g.p2 === username)) open++;
-  }
-  if (open >= MAX_OPEN_GAMES_PER_USER) return 'Solo puedes tener 3 partidas abiertas o activas al mismo tiempo.';
-  if (CacheService.getScriptCache().get('create_' + usernameKey(username))) {
-    return 'Espera 10 segundos antes de crear otra partida.';
-  }
-  return '';
-}
-
-function markGameCreated(username) {
-  CacheService.getScriptCache().put('create_' + usernameKey(username), '1', CREATE_COOLDOWN_SECONDS);
+/* Aviso en el registro cuando se llega por un enlace de invitación (?game=XXXX). */
+function renderLoginInvite(){
+  const el=$('login-invite'); if(!el) return;
+  if(!pendingJoinCode){ el.classList.add('hidden'); el.innerHTML=''; return; }
+  el.innerHTML=t('login_invite',{code:'<b>'+pendingJoinCode+'</b>'});
+  el.classList.remove('hidden');
 }
 
-/* ---------- Acciones ---------- */
+/* Paleta de hasta 8 colores (índices 0-7) */
+const COLORS = [
+  {c:'#F87171'}, {c:'#FB923C'}, {c:'#FBBF24'}, {c:'#4ADE80'},
+  {c:'#22D3EE'}, {c:'#60A5FA'}, {c:'#A78BFA'}, {c:'#F472B6'}
+];
 
-function createGame(p) {
-  var username = cleanName(p.username);
-  var digits = toInt(p.digits, 3);
-  var mode = (String(p.mode) === 'colors') ? 'colors' : 'numbers';
-  var numColors = (mode === 'colors') ? toInt(p.numColors, 6) : 10;
-  var allowRepeats = truthy(p.allowRepeats);
-  var isPublic = (p.isPublic === undefined) ? true : truthy(p.isPublic);
-  var maxAttempts = Math.max(0, toInt(p.maxAttempts, 0));
-  var turnSeconds = Math.max(0, toInt(p.turnSeconds, 0));
-
-  if (!username) return { ok: false, error: 'Falta el nombre de usuario.' };
-  if ([3, 4, 5, 6].indexOf(digits) < 0) return { ok: false, error: 'Longitud debe ser 3, 4, 5 o 6.' };
-  var err = validateCode(p.secret, digits, allowRepeats, maxSymbolFor(mode, numColors));
-  if (err) return { ok: false, error: err };
-
-  var lock = LockService.getScriptLock();
-  lock.waitLock(10000);
-  try {
-    var all = readAll();
-    var limitError = creationLimitError(username, all);
-    if (limitError) return { ok: false, error: limitError };
-    var id = newGameId();
-    var rowObj = {
-      gameId: id, status: 'waiting', digits: digits, p1: username, secret1: String(p.secret).trim(),
-      p2: '', secret2: '', turn: 0, guesses: '[]', winner: '', createdAt: now(), updatedAt: now(),
-      allowRepeats: allowRepeats, isPublic: isPublic, mode: mode, numColors: numColors,
-      maxAttempts: maxAttempts, turnSeconds: turnSeconds, turnStartedAt: '', rematchId: '', pendingWinner: '',
-      country1: cleanCountry(p.country), country2: '', turnRemaining: turnSeconds, timerPaused: turnSeconds > 0,
-      manualPausedBy: '', manualPauseUntil: '', lastManualPauseAt: ''
-    };
-    var row = [];
-    for (var c = 0; c < HEADERS.length; c++) row.push(rowObj[HEADERS[c]]);
-    getSheet().appendRow(row);
-    markGameCreated(username);
-    return { ok: true, gameId: id };
-  } finally { lock.releaseLock(); }
+/* -------------------- estado -------------------- */
+let user = localStorage.getItem('pf_user') || '';
+let userPin = localStorage.getItem('pf_pin') || '';
+let cfg = { digits:3, mode:'numbers', numColors:6, allowRepeats:false, isPublic:true, maxAttempts:0, turnSeconds:0 };
+let joinMeta = null, finishedMeta = null;
+let game = { id:'', digits:3, mode:'numbers', numColors:6, allowRepeats:false, maxAttempts:0, turnSeconds:0 };
+let gState = null;
+let gameViewEpoch = 0, routeEpoch = 0, gameRequestSeq = 0;
+let pollTimer = null, tickTimer = null, passRequested = false, lastTurnStart = '';
+let connectionLost = false;
+let lobbyPollTimer = null;
+let lastYourTurn = null;
+let endSoundPlayed = false;
+let soundOn = localStorage.getItem('pf_sound')!=='0';
+let audioCtx = null;
+let myCountry = localStorage.getItem('pf_country') || '';
+async function detectCountry(){
+  try{
+    const r=await fetch('https://get.geojs.io/v1/ip/country.json');
+    if(r.ok){ const j=await r.json(); if(j&&j.country){ myCountry=String(j.country).toLowerCase(); localStorage.setItem('pf_country',myCountry); return; } }
+  }catch(e){}
+  try{
+    const r=await fetch('https://api.country.is/');
+    if(r.ok){ const j=await r.json(); if(j&&j.country){ myCountry=String(j.country).toLowerCase(); localStorage.setItem('pf_country',myCountry); return; } }
+  }catch(e){}
 }
-
-function gameMeta(g) {
-  return {
-    gameId: g.gameId, p1: g.p1, p2: g.p2, digits: g.digits,
-    allowRepeats: truthy(g.allowRepeats), isPublic: truthy(g.isPublic),
-    mode: (String(g.mode) === 'colors') ? 'colors' : 'numbers',
-    numColors: toInt(g.numColors, 10),
-    maxAttempts: toInt(g.maxAttempts, 0), turnSeconds: toInt(g.turnSeconds, 0),
-    country1: cleanCountry(g.country1), country2: cleanCountry(g.country2), updatedAt: g.updatedAt
-  };
+function flagHTML(cc){
+  cc=String(cc||'').toLowerCase();
+  if(!/^[a-z]{2}$/.test(cc)) return '';
+  return `<img class="flag" src="https://flagcdn.com/20x15/${cc}.png" srcset="https://flagcdn.com/40x30/${cc}.png 2x" alt="${cc.toUpperCase()}" loading="lazy">`;
 }
+/* Bandera + nombre en negrita (estilo del ranking), reutilizable */
+function playerChip(cc, name){ return `<span class="pl">${flagHTML(cc)}<b>${esc(name||'—')}</b></span>`; }
+/* "vs" + bandera + nombre (para historial y mis partidas) */
+function vsPlayer(cc, name){ return `vs ${playerChip(cc, name)}`; }
 
-function listGames() {
-  var rows = readAll();
-  var out = [];
-  var active = 0;
-  var privateCount = 0;
-  var publicActiveCount = 0;
-  for (var i = 0; i < rows.length; i++) {
-    var g = normalizeGameState(rows[i]);
-    var available = g.status === 'waiting' || g.status === 'active';
-    if (available && !truthy(g.isPublic)) privateCount++;
-    if (g.status === 'active') {
-      active++;
-      if (truthy(g.isPublic)) publicActiveCount++;
-    }
-    if (g.status === 'waiting' && truthy(g.isPublic) && !isExpiredWaiting(g)) {
-      var m = gameMeta(g); m.createdAt = g.createdAt; out.push(m);
-    }
-  }
-  out.sort(function (a, b) { return String(b.createdAt).localeCompare(String(a.createdAt)); });
-  return {
-    ok: true, games: out.slice(0, 30), activeCount: active,
-    privateCount: privateCount, publicActiveCount: publicActiveCount,
-    publicOpenCount: out.length, onlineCount: onlinePlayerCount()
-  };
-}
-
-function myGames(p) {
-  var username = cleanName(p.username);
-  var rows = readAll();
-  var out = [];
-
-  // 1ª pasada: revanchas que un rival ha creado a partir de una partida terminada mía.
-  // Todavía no soy jugador de ellas (p2 vacío) y son privadas, así que no aparecerían
-  // ni en myGames ni en listGames: hay que sacarlas aquí como invitación.
-  var invited = {};
-  for (var i = 0; i < rows.length; i++) {
-    var raw = rows[i];
-    if (raw.status !== 'finished' || !raw.rematchId) continue;
-    if (raw.p1 !== username && raw.p2 !== username) continue;
-    invited[String(raw.rematchId).toUpperCase()] = true;
-  }
-
-  for (var j = 0; j < rows.length; j++) {
-    var g = normalizeGameState(rows[j]);
-    if (g.status === 'finished' || g.status === 'expired' || g.status === 'cancelled' ||
-        g.status === 'abandoned' || g.status === 'inactive') continue;
-
-    var mine = (g.p1 === username || g.p2 === username);
-    var isInvite = !mine && g.status === 'waiting' && !cleanName(g.p2) &&
-                   !!invited[String(g.gameId).toUpperCase()] && !isExpiredWaiting(g);
-    if (!mine && !isInvite) continue;
-
-    var m = gameMeta(g); m.status = g.status; m.updatedAt = g.updatedAt;
-    m.yourTurn = (g.status === 'active') &&
-      ((g.turn == 1 && g.p1 === username) || (g.turn == 2 && g.p2 === username));
-    m.rematchInvite = isInvite;
-    out.push(m);
-  }
-
-  // Las invitaciones de revancha primero; el resto por actividad reciente.
-  out.sort(function (a, b) {
-    if (!!a.rematchInvite !== !!b.rematchInvite) return a.rematchInvite ? -1 : 1;
-    return String(b.updatedAt).localeCompare(String(a.updatedAt));
+/* -------------------- utilidades -------------------- */
+const $ = id => document.getElementById(id);
+function show(name){
+  if(name!=='game') gameViewEpoch++;
+  ['login','lobby','rank','history','rules','create','wait','join','rematch','game'].forEach(s=>{
+    $('s-'+s).classList.toggle('hidden', s!==name);
   });
-  return { ok: true, games: out };
+  if(name!=='game') stopTick();
+  if(!['game','wait'].includes(name)) stopPoll();
+  if(name==='lobby') startLobbyPoll(); else stopLobbyPoll();
+  window.scrollTo(0,0);
+}
+function toast(msg, isErr){
+  const t=$('toast'); t.textContent=msg; t.className='toast show'+(isErr?' err':'');
+  clearTimeout(t._h); t._h=setTimeout(()=>t.className='toast',2600);
+}
+function hideToast(){ const el=$('toast'); clearTimeout(el._h); el.className='toast'; el.textContent=''; }
+async function api(action, payload={}){
+  if(API.indexOf('PEGA_AQUI')===0){ toast(t('api_not_set'),true); throw new Error('API sin configurar'); }
+  const res = await fetch(API,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(Object.assign({action, pin:userPin}, payload)) });
+  return res.json();
+}
+function esc(s){ return String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
+function noRepeat(v){ return new Set(v.split('')).size === v.length; }
+function validateLive(v, digits, allowRepeats){
+  if(v.length===0) return {cls:'',msg:''};
+  if(!/^[0-9]*$/.test(v)) return {cls:'err',msg:t('val_digits')};
+  if(!allowRepeats && !noRepeat(v)) return {cls:'err',msg:t('val_repeats')};
+  if(v.length<digits) return {cls:'',msg:v.length+'/'+digits};
+  return {cls:'ok',msg:t('val_valid')};
+}
+function rulesLabel(m){
+  const parts=[ (m.mode==='colors'?t('rl_colors',{n:m.numColors||6}):t('rl_numbers')), t('rl_pos',{n:m.digits}),
+    (m.allowRepeats?t('rl_repeat'):t('rl_norepeat')) ];
+  if(m.maxAttempts>0) parts.push(t('rl_attempts',{n:m.maxAttempts}));
+  if(m.turnSeconds>0) parts.push(t('rl_turn',{n:m.turnSeconds}));
+  return parts.join(' · ');
+}
+function relativeActivity(iso){
+  const stamp=new Date(iso).getTime();
+  if(!stamp) return '';
+  const mins=Math.max(0,Math.floor((Date.now()-stamp)/60000));
+  if(mins<1) return t('activity_now');
+  if(mins<60) return t('activity_min',{n:mins});
+  const hours=Math.floor(mins/60);
+  if(hours<24) return t('activity_hours',{n:hours});
+  return t('activity_days',{n:Math.floor(hours/24)});
 }
 
-function joinGame(p) {
-  var username = cleanName(p.username);
-  if (!username) return { ok: false, error: 'Falta el nombre de usuario.' };
-
-  var lock = LockService.getScriptLock();
-  lock.waitLock(10000);
-  try {
-    var g = findGame(p.gameId);
-    if (!g) return { ok: false, error: 'Partida no encontrada.' };
-    g = normalizeGameState(g);
-    if (isExpiredWaiting(g)) return { ok: false, error: 'La partida ha expirado.' };
-    if (g.status === 'expired') return { ok: false, error: 'La partida ha expirado.' };
-    if (g.status !== 'waiting') return { ok: false, error: 'Esta partida ya no acepta jugadores.' };
-    if (g.p1 === username) return { ok: false, error: 'No puedes unirte a tu propia partida con el mismo nombre.' };
-
-    var err = validateCode(p.secret, g.digits, truthy(g.allowRepeats),
-                           maxSymbolFor(g.mode, g.numColors));
-    if (err) return { ok: false, error: err };
-
-    var turn = Math.random() < 0.5 ? 1 : 2;
-    // Una sola escritura: nunca deja status='active' con p2 todavía vacío.
-    var timed = toInt(g.turnSeconds, 0) > 0;
-    writeGameRow(g, { p2: username, secret2: String(p.secret).trim(), country2: cleanCountry(p.country),
-                      status: 'active', turn: turn, turnStartedAt: timed ? '' : now(),
-                      turnRemaining: toInt(g.turnSeconds, 0), timerPaused: timed, updatedAt: now() });
-    return { ok: true, gameId: g.gameId };
-  } finally { lock.releaseLock(); }
+/* -------------------- aviso de turno (sonido / vibración / notificación) -------------------- */
+function unlockAudio(){
+  try{ audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended') audioCtx.resume(); }catch(e){}
 }
-
-function sanitize(g, username) {
-  username = cleanName(username);
-  var youAre = (g.p1 === username) ? 1 : (g.p2 === username ? 2 : 0);
-  var whoseTurn = g.turn == 1 ? g.p1 : (g.turn == 2 ? g.p2 : '');
-  var raw = parseGuesses(g);
-  var m = gameMeta(g);
-  // Recalcula picas/fijas usando secretos rellenados (corrige ceros a la izquierda).
-  var s1 = padCode(g.secret1, g.digits), s2 = padCode(g.secret2, g.digits);
-  var guesses = [];
-  for (var i = 0; i < raw.length; i++) {
-    var x = raw[i];
-    var target = (x.by === g.p1) ? s2 : s1;
-    var r = evaluate(target, padCode(x.guess, g.digits));
-    guesses.push({ by: x.by, guess: padCode(x.guess, g.digits), picas: r.picas, fijas: r.fijas, ts: x.ts });
-  }
-  return {
-    ok: true,
-    gameId: g.gameId,
-    status: g.status,
-    digits: g.digits,
-    allowRepeats: m.allowRepeats,
-    isPublic: m.isPublic,
-    mode: m.mode,
-    numColors: m.numColors,
-    maxAttempts: m.maxAttempts,
-    turnSeconds: m.turnSeconds,
-    turnStartedAt: g.turnStartedAt,
-    turnRemaining: toInt(g.turnRemaining, m.turnSeconds),
-    timerPaused: truthy(g.timerPaused),
-    manualPausedBy: g.manualPausedBy || '',
-    manualPauseUntil: g.manualPauseUntil || '',
-    p1: g.p1,
-    p2: g.p2,
-    country1: cleanCountry(g.country1),
-    country2: cleanCountry(g.country2),
-    turn: g.turn,
-    whoseTurn: whoseTurn,
-    youAre: youAre,
-    yourTurn: (youAre !== 0 && g.turn == youAre && g.status === 'active'),
-    guesses: guesses,
-    attemptsP1: countGuesses(guesses, g.p1),
-    attemptsP2: countGuesses(guesses, g.p2),
-    winner: g.winner,
-    isDraw: (g.status === 'finished' && !g.winner),
-    // Solo se revela el código propio al participante autenticado, también al finalizar.
-    // El código del oponente nunca forma parte de la respuesta.
-    yourSecret: youAre === 1 ? s1 : (youAre === 2 ? s2 : ''),
-    pendingWinner: g.pendingWinner || '',
-    rematchId: g.rematchId,
-    createdAt: g.createdAt,
-    updatedAt: g.updatedAt
-    // NUNCA se devuelven secret1 / secret2 ni el secreto del oponente.
-  };
-}
-
-function getState(p) {
-  var g = findGame(p.gameId);
-  if (!g) return { ok: false, error: 'Partida no encontrada.' };
-  g = normalizeGameState(g);
-  if (g.status === 'expired') return { ok: false, error: 'La partida ha expirado.' };
-  if (g.status === 'inactive') return { ok: false, error: 'La partida se cerró tras 48 horas sin actividad.' };
-  if (g.status === 'abandoned') return { ok: false, error: 'Un jugador abandonó la partida.' };
-  if (g.status === 'cancelled') return { ok: false, error: 'La partida fue cancelada.' };
-  // Consultar state como participante significa que está viendo esa partida.
-  // No depende de inGame para seguir siendo compatible con HTML previamente cacheado.
-  if (g.status === 'active' && (g.p1 === p.username || g.p2 === p.username)) {
-    touchGamePresence(g.gameId, p.username, true);
-  }
-  g = syncGameTimer(g);
-  return sanitize(g, p.username);
-}
-
-/** Cancela una espera o abandona una partida activa, siempre sin otorgar victoria. */
-function closeGame(p) {
-  var username = cleanName(p.username);
-  var intent = String(p.intent || '');
-  var lock = LockService.getScriptLock();
-  lock.waitLock(10000);
-  try {
-    var g = findGame(p.gameId);
-    if (!g) return { ok: false, error: 'Partida no encontrada.' };
-    g = normalizeGameState(g);
-    var youAre = g.p1 === username ? 1 : (g.p2 === username ? 2 : 0);
-    if (!youAre) return { ok: false, error: 'No eres jugador de esta partida.' };
-    if (g.status === 'waiting') {
-      if (intent === 'abandon') return { ok: false, error: 'La partida todavía no ha comenzado.' };
-      if (youAre !== 1) return { ok: false, error: 'Solo el creador puede cancelar esta partida.' };
-      writeGameRow(g, { status: 'cancelled', turn: 0, turnStartedAt: '', pendingWinner: '', updatedAt: now() });
-      return { ok: true, status: 'cancelled' };
-    }
-    if (g.status === 'active') {
-      if (intent === 'cancel') return { ok: false, error: 'El rival ya se unió; la partida ya comenzó.' };
-      writeGameRow(g, { status: 'abandoned', winner: '', turn: 0, turnStartedAt: '', pendingWinner: '', updatedAt: now() });
-      return { ok: true, status: 'abandoned' };
-    }
-    return { ok: false, error: 'La partida ya está cerrada.' };
-  } finally { lock.releaseLock(); }
-}
-
-function makeGuess(p) {
-  var username = cleanName(p.username);
-  var lock = LockService.getScriptLock();
-  lock.waitLock(10000);
-  try {
-    var g = findGame(p.gameId);
-    if (!g) return { ok: false, error: 'Partida no encontrada.' };
-    if (g.status !== 'active') return { ok: false, error: 'La partida no está activa.' };
-    g = syncGameTimer(g);
-    if (g.manualPausedBy) return { ok: false, error: 'La partida está en pausa.' };
-    if (toInt(g.turnSeconds, 0) > 0 && truthy(g.timerPaused)) {
-      return { ok: false, error: 'El cronómetro está en pausa.' };
-    }
-
-    var youAre = (g.p1 === username) ? 1 : (g.p2 === username ? 2 : 0);
-    if (youAre === 0) return { ok: false, error: 'No eres jugador de esta partida.' };
-    if (g.turn != youAre) return { ok: false, error: 'No es tu turno.' };
-
-    var err = validateCode(p.guess, g.digits, truthy(g.allowRepeats),
-                           maxSymbolFor(g.mode, g.numColors));
-    if (err) return { ok: false, error: err };
-
-    var maxAttempts = toInt(g.maxAttempts, 0);
-    var guesses = parseGuesses(g);
-    var mineCount = countGuesses(guesses, username);
-    if (maxAttempts > 0 && mineCount >= maxAttempts) {
-      return { ok: false, error: 'Sin intentos restantes.' };
-    }
-
-    var opponent = (youAre === 1) ? g.p2 : g.p1;
-    var opponentSecret = padCode((youAre === 1) ? g.secret2 : g.secret1, g.digits);
-    var res = evaluate(opponentSecret, padCode(p.guess, g.digits));
-
-    guesses.push({ by: username, guess: padCode(p.guess, g.digits), picas: res.picas, fijas: res.fijas, ts: now() });
-    var digits = parseInt(g.digits, 10);
-    var solved = (res.fijas === digits);
-    var pending = g.pendingWinner ? String(g.pendingWinner) : '';
-    var mineNow = mineCount + 1;
-    var oppNow = countGuesses(guesses, opponent);
-    var out = { ok: true, picas: res.picas, fijas: res.fijas,
-                solved: solved, win: false, pending: false, tie: false, draw: false };
-    var changes = { guesses: JSON.stringify(guesses), updatedAt: now() };
-
-    if (pending) {
-      // Turno de desempate: el rival ya había resuelto y este es mi último intento.
-      changes.status = 'finished'; changes.pendingWinner = ''; changes.timerPaused = true;
-      if (solved) { changes.winner = ''; out.tie = true; out.draw = true; } // ambos acertaron
-      else changes.winner = pending;                                        // gana el rival
-      writeGameRow(g, changes);
-      out.state = sanitize(g, username);
-      return out;
-    }
-
-    if (solved) {
-      if (mineNow > oppNow) {
-        // Empecé la ronda: el rival tiene derecho a un último intento para igualar.
-        changes.pendingWinner = username;
-        changes.turn = youAre === 1 ? 2 : 1;
-        var pendingClock = freshTurnClock(g);
-        for (var pk in pendingClock) changes[pk] = pendingClock[pk];
-        out.pending = true;
-      } else {
-        // Ronda completa (yo era el segundo): gano de inmediato.
-        changes.status = 'finished'; changes.winner = username; changes.timerPaused = true;
-        out.win = true;
-      }
-      writeGameRow(g, changes);
-      out.state = sanitize(g, username);
-      return out;
-    }
-
-    // No acerté y no hay desempate pendiente.
-    if (maxAttempts > 0 && mineNow >= maxAttempts && oppNow >= maxAttempts) {
-      changes.status = 'finished'; changes.winner = ''; changes.timerPaused = true;
-      out.draw = true;
-    } else {
-      changes.turn = youAre === 1 ? 2 : 1;
-      var nextClock = freshTurnClock(g);
-      for (var nk in nextClock) changes[nk] = nextClock[nk];
-    }
-    writeGameRow(g, changes);
-    out.state = sanitize(g, username);
-    return out;
-  } finally { lock.releaseLock(); }
-}
-
-/** Pasa el turno si el cronómetro expiró (lo puede invocar cualquiera de los dos). */
-function passTurn(p) {
-  var username = cleanName(p.username);
-  var lock = LockService.getScriptLock();
-  lock.waitLock(10000);
-  try {
-    var g = findGame(p.gameId);
-    if (!g) return { ok: false, error: 'Partida no encontrada.' };
-    if (g.status !== 'active') return { ok: false, error: 'La partida no está activa.' };
-    var turnSeconds = toInt(g.turnSeconds, 0);
-    if (turnSeconds <= 0) return { ok: false, error: 'Esta partida no tiene cronómetro.' };
-    g = syncGameTimer(g);
-    if (truthy(g.timerPaused)) return { ok: false, error: 'El cronómetro está en pausa.' };
-    if (timerRemaining(g) > 0) return { ok: false, error: 'Aún queda tiempo.' };
-
-    // Si había un desempate pendiente y se agotó el tiempo, gana quien ya había resuelto.
-    if (g.pendingWinner) {
-      writeGameRow(g, { status: 'finished', winner: String(g.pendingWinner), pendingWinner: '',
-                        timerPaused: true, updatedAt: now() });
-      return { ok: true, resolved: true };
-    }
-
-    var changes = freshTurnClock(g);
-    changes.turn = g.turn == 1 ? 2 : 1; changes.updatedAt = now();
-    writeGameRow(g, changes);
-    return { ok: true, passed: true };
-  } finally { lock.releaseLock(); }
-}
-
-/** Crea una nueva partida con las mismas reglas y el mismo rival. */
-function rematch(p) {
-  var username = cleanName(p.username);
-  var lock = LockService.getScriptLock();
-  lock.waitLock(10000);
-  try {
-    var g = findGame(p.gameId);
-    if (!g) return { ok: false, error: 'Partida no encontrada.' };
-    if (g.status !== 'finished') return { ok: false, error: 'La partida aún no ha terminado.' };
-    if (g.p1 !== username && g.p2 !== username) return { ok: false, error: 'No eres jugador de esta partida.' };
-
-    // Si ya existe una revancha creada, reutilízala.
-    if (g.rematchId) {
-      var existing = findGame(g.rematchId);
-      if (existing) existing = normalizeGameState(existing);
-      if (existing && existing.status === 'active') return { ok: true, gameId: existing.gameId, reused: true };
-      if (existing && existing.status === 'waiting') {
-        if (existing.p1 === username) return { ok: true, gameId: existing.gameId, reused: true };
-        var joinErr = validateCode(p.secret, existing.digits, truthy(existing.allowRepeats),
-                                   maxSymbolFor(existing.mode, existing.numColors));
-        if (joinErr) return { ok: false, error: joinErr };
-        var joinTurn = Math.random() < 0.5 ? 1 : 2;
-        var timed = toInt(existing.turnSeconds, 0) > 0;
-        writeGameRow(existing, { p2: username, secret2: String(p.secret).trim(), country2: cleanCountry(p.country),
-          status: 'active', turn: joinTurn, turnStartedAt: timed ? '' : now(),
-          turnRemaining: toInt(existing.turnSeconds, 0), timerPaused: timed, updatedAt: now() });
-        return { ok: true, gameId: existing.gameId, joined: true };
-      }
-    }
-
-    var err = validateCode(p.secret, g.digits, truthy(g.allowRepeats),
-                           maxSymbolFor(g.mode, g.numColors));
-    if (err) return { ok: false, error: err };
-
-    var limitError = creationLimitError(username, readAll());
-    if (limitError) return { ok: false, error: limitError };
-
-    var id = newGameId();
-    var rowObj = {
-      gameId: id, status: 'waiting', digits: g.digits, p1: username, secret1: String(p.secret).trim(),
-      p2: '', secret2: '', turn: 0, guesses: '[]', winner: '', createdAt: now(), updatedAt: now(),
-      allowRepeats: truthy(g.allowRepeats), isPublic: false,
-      mode: (String(g.mode) === 'colors') ? 'colors' : 'numbers', numColors: toInt(g.numColors, 10),
-      maxAttempts: toInt(g.maxAttempts, 0), turnSeconds: toInt(g.turnSeconds, 0),
-      turnStartedAt: '', rematchId: '', pendingWinner: '',
-      country1: cleanCountry(p.country), country2: '', turnRemaining: toInt(g.turnSeconds, 0),
-      timerPaused: toInt(g.turnSeconds, 0) > 0,
-      manualPausedBy: '', manualPauseUntil: '', lastManualPauseAt: ''
-    };
-    var row = [];
-    for (var c = 0; c < HEADERS.length; c++) row.push(rowObj[HEADERS[c]]);
-    getSheet().appendRow(row);
-    markGameCreated(username);
-
-    // Marca la revancha en la partida vieja para que el rival la vea.
-    writeCell(g._row, 'rematchId', id);
-    writeCell(g._row, 'updatedAt', now());
-    return { ok: true, gameId: id };
-  } finally { lock.releaseLock(); }
-}
-
-/** Historial de partidas terminadas de un jugador. */
-function history(p) {
-  var username = cleanName(p.username);
-  var rows = readAll();
-  var out = [];
-  for (var i = 0; i < rows.length; i++) {
-    var g = rows[i];
-    if (g.status !== 'finished') continue;
-    if (g.p1 !== username && g.p2 !== username) continue;
-    var opp = (g.p1 === username) ? g.p2 : g.p1;
-    var oppCountry = (g.p1 === username) ? cleanCountry(g.country2) : cleanCountry(g.country1);
-    var result = !g.winner ? 'draw' : (g.winner === username ? 'win' : 'loss');
-    var m = gameMeta(g);
-    out.push({
-      gameId: g.gameId, opp: opp, oppCountry: oppCountry, result: result,
-      digits: g.digits, mode: m.mode, numColors: m.numColors,
-      allowRepeats: m.allowRepeats, maxAttempts: m.maxAttempts, turnSeconds: m.turnSeconds,
-      updatedAt: g.updatedAt
+function chime(){
+  if(!soundOn) return;
+  try{
+    unlockAudio(); if(!audioCtx) return;
+    const now=audioCtx.currentTime;
+    [[880,0],[1174.7,0.13]].forEach(([f,dt])=>{
+      const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+      o.type='sine'; o.frequency.value=f; o.connect(g); g.connect(audioCtx.destination);
+      g.gain.setValueAtTime(0.0001, now+dt);
+      g.gain.exponentialRampToValueAtTime(0.18, now+dt+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, now+dt+0.3);
+      o.start(now+dt); o.stop(now+dt+0.32);
     });
+  }catch(e){}
+}
+function notifyTurn(){
+  chime();
+  try{ navigator.vibrate && navigator.vibrate([120,60,120]); }catch(e){}
+  try{
+    if(document.hidden && 'Notification' in window && Notification.permission==='granted'){
+      new Notification('Picas y Fijas', { body: t('notif_yourturn'), tag:'pf-turn' });
+    }
+  }catch(e){}
+}
+function notifyJoin(){
+  chime();
+  try{ navigator.vibrate && navigator.vibrate([120,60,120,60,200]); }catch(e){}
+  try{
+    if('Notification' in window && Notification.permission==='granted'){
+      new Notification('Picas y Fijas', { body: t('notif_joined'), tag:'pf-join' });
+    }
+  }catch(e){}
+  toast(t('notif_joined'));
+}
+/* Remates sonoros al terminar la partida */
+function chord(notes){
+  if(!soundOn) return;
+  try{
+    unlockAudio(); if(!audioCtx) return;
+    const now=audioCtx.currentTime;
+    notes.forEach(([f,dt,dur])=>{
+      const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+      o.type='sine'; o.frequency.value=f; o.connect(g); g.connect(audioCtx.destination);
+      g.gain.setValueAtTime(0.0001, now+dt);
+      g.gain.exponentialRampToValueAtTime(0.2, now+dt+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, now+dt+(dur||0.3));
+      o.start(now+dt); o.stop(now+dt+(dur||0.3)+0.03);
+    });
+  }catch(e){}
+}
+function endSound(kind){
+  if(kind==='win') chord([[523.25,0,0.18],[659.25,0.14,0.18],[783.99,0.28,0.4]]);      // Do-Mi-Sol ascendente (alegre)
+  else if(kind==='lose') chord([[440,0,0.32],[349.23,0.2,0.5]]);                        // La-Fa descendente (suave)
+  else chord([[523.25,0,0.22],[523.25,0.18,0.32]]);                                     // empate: dos notas iguales
+}
+function toggleSound(){
+  soundOn=!soundOn; localStorage.setItem('pf_sound', soundOn?'1':'0');
+  updateSoundLabel(); if(soundOn){ unlockAudio(); chime(); }
+}
+function updateSoundLabel(){
+  const el=$('sound-link'); if(el) el.textContent = (soundOn?'🔔 ':'🔕 ')+t('sound_label')+': '+t(soundOn?'on':'off');
+}
+function codeViewHTML(str, mode){
+  if(mode==='colors'){
+    let h=''; for(const ch of String(str)){ const col=COLORS[+ch]||{c:'#555'}; h+=`<span class="mini" style="background:${col.c}"></span>`; }
+    return `<span class="code-view">${h}</span>`;
   }
-  out.sort(function (a, b) { return String(b.updatedAt).localeCompare(String(a.updatedAt)); });
-  return { ok: true, history: out.slice(0, 40) };
+  return `<span class="n">${esc(str)}</span>`;
 }
 
-/** Ranking global: victorias y partidas jugadas por usuario. */
-function leaderboard(p) {
-  var username = cleanName(p && p.username);
-  var rows = readAll();
-  var stats = {};
-  function ensure(u) { if (!stats[u]) stats[u] = { user: u, wins: 0, played: 0, country: '', _ts: '' }; return stats[u]; }
-  function seen(u, country, ts) {
-    var s = ensure(u);
-    if (country && String(ts) > String(s._ts)) { s.country = country; s._ts = String(ts); }
-  }
-  for (var i = 0; i < rows.length; i++) {
-    var g = rows[i];
-    if (g.status !== 'finished') continue;
-    if (g.p1) { ensure(g.p1).played++; seen(g.p1, cleanCountry(g.country1), g.updatedAt); }
-    if (g.p2) { ensure(g.p2).played++; seen(g.p2, cleanCountry(g.country2), g.updatedAt); }
-    if (g.winner) ensure(g.winner).wins++;
-  }
-  var list = [];
-  for (var u in stats) { delete stats[u]._ts; list.push(stats[u]); }
-  list.sort(function (a, b) {
-    if (b.wins !== a.wins) return b.wins - a.wins;
-    return a.played - b.played;
-  });
-  var meEntry = null;
-  for (var k = 0; k < list.length; k++) {
-    if (list[k].user === username) {
-      meEntry = { user: list[k].user, wins: list[k].wins, played: list[k].played, country: list[k].country, rank: k + 1 };
-      break;
+/* -------------------- color pads -------------------- */
+function makePad(slotsId, paletteId, getLen, getColors, onChange){
+  let value='';
+  const slots=$(slotsId), pal=$(paletteId);
+  function drawSlots(){
+    const len=getLen(); slots.innerHTML='';
+    for(let i=0;i<len;i++){
+      const d=document.createElement('div'); d.className='slot';
+      if(i<value.length){ d.classList.add('filled'); d.style.background=COLORS[+value[i]].c; }
+      slots.appendChild(d);
     }
   }
-  return { ok: true, ranking: list.slice(0, 50), total: list.length, me: meEntry };
+  function drawPalette(){
+    pal.innerHTML='';
+    const n=Math.min(getColors(), COLORS.length);
+    for(let idx=0; idx<n; idx++){
+      const b=document.createElement('button'); b.type='button'; b.className='sw'; b.style.background=COLORS[idx].c;
+      b.onclick=()=>{ if(value.length<getLen()){ value+=idx; drawSlots(); onChange&&onChange(value); } };
+      pal.appendChild(b);
+    }
+    const bs=document.createElement('button'); bs.type='button'; bs.className='sw bs'; bs.textContent='⌫';
+    bs.onclick=()=>{ value=value.slice(0,-1); drawSlots(); onChange&&onChange(value); };
+    pal.appendChild(bs);
+  }
+  drawPalette(); drawSlots();
+  return { get:()=>value, reset:()=>{value='';drawSlots();}, refresh:()=>{drawSlots();drawPalette();} };
 }
+const padC = makePad('slots-c','palette-c', ()=>cfg.digits, ()=>cfg.numColors, v=>setVal('secret-c-val', v, cfg.digits, cfg.allowRepeats));
+const padJ = makePad('slots-j','palette-j', ()=>joinMeta?joinMeta.digits:3, ()=>joinMeta?joinMeta.numColors:6, v=>setVal('secret-j-val', v, joinMeta.digits, joinMeta.allowRepeats));
+const padR = makePad('slots-r','palette-r', ()=>finishedMeta?finishedMeta.digits:3, ()=>finishedMeta?finishedMeta.numColors:6, v=>setVal('secret-r-val', v, finishedMeta.digits, finishedMeta.allowRepeats));
+const padG = makePad('slots-g','palette-g', ()=>game.digits, ()=>game.numColors||6, v=>setVal('g-guess-val', v, game.digits, game.allowRepeats));
+function setVal(elId, v, digits, allowRepeats){
+  const r=validateLive(v, digits, allowRepeats); $(elId).className='val '+r.cls; $(elId).textContent=r.msg;
+}
+function applyMode(ctx, mode, inputId, padId, pad){
+  const isColors = mode==='colors';
+  $(inputId).classList.toggle('hidden', isColors);
+  $(padId).classList.toggle('hidden', !isColors);
+  if(isColors) pad.refresh(); else { $(inputId).value=''; }
+}
+
+/* -------------------- idioma -------------------- */
+$('seg-lang').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
+  lang=b.dataset.lang; localStorage.setItem('pf_lang', lang); applyI18n(); });
+
+/* -------------------- login -------------------- */
+async function doLogin(){
+  const v=$('uname').value.trim();
+  const pin=$('upin').value.trim();
+  if(v.length<2){ $('uname-val').className='val err'; $('uname-val').textContent=t('login_min'); return; }
+  if(!/^\d{4,8}$/.test(pin)){ $('uname-val').className='val err'; $('uname-val').textContent=t('login_pin_invalid'); return; }
+  $('uname-val').className='val'; $('uname-val').textContent=t('loading');
+  try{
+    userPin=pin;
+    const res=await api('loginUser',{username:v});
+    if(!res.ok){ userPin=''; $('uname-val').className='val err'; $('uname-val').textContent=te(res.error); return; }
+    user=res.username; localStorage.setItem('pf_user',user); localStorage.setItem('pf_pin',userPin);
+  }catch(e){ userPin=''; $('uname-val').className='val err'; $('uname-val').textContent=t('net_error'); return; }
+  unlockAudio();
+  try{ if('Notification' in window && Notification.permission==='default') Notification.requestPermission(); }catch(e){}
+  enterLobby();
+}
+async function logout(){
+  try{ if(user&&userPin) await api('leavePresence',{username:user}); }catch(e){}
+  localStorage.removeItem('pf_user'); localStorage.removeItem('pf_pin'); user=''; userPin='';
+  show('login'); $('uname').value=''; $('upin').value='';
+}
+function enterLobby(){ $('lobby-greet').textContent=t('lobby_greeting',{name:user}); updateSoundLabel(); show('lobby'); refreshLobby(); handleDeepLink(); }
+
+/* -------------------- lobby -------------------- */
+let myWaitingIds = new Set();
+let myTurnIds = new Set();
+async function lobbyRefresh(detect){
+  if(!detect){
+    $('open-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
+    $('private-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
+  }
+  try{
+    const [open, mine, presence] = await Promise.all([ api('listGames'), api('myGames',{username:user}), api('presence',{username:user}) ]);
+    const games = mine.games||[];
+    const nowWaiting = new Set(games.filter(g=>g.status==='waiting').map(g=>g.gameId));
+    const nowTurn = new Set(games.filter(g=>g.status==='active' && g.yourTurn).map(g=>g.gameId));
+    if(detect){
+      let joined=false; myWaitingIds.forEach(id=>{ const g=games.find(x=>x.gameId===id); if(g && g.status==='active') joined=true; });
+      let turnHit=false; nowTurn.forEach(id=>{ if(!myTurnIds.has(id)) turnHit=true; });
+      if(joined) notifyJoin();
+      else if(turnHit) notifyTurn();
+    }
+    myWaitingIds = nowWaiting; myTurnIds = nowTurn;
+    const privateGames = games.filter(g=>!g.isPublic);
+    const publicMine = games.filter(g=>g.isPublic);
+    const privateCount = (typeof open.privateCount==='number') ? open.privateCount : privateGames.length;
+    const publicActive = (typeof open.publicActiveCount==='number') ? open.publicActiveCount : ((typeof open.activeCount==='number')?open.activeCount:0);
+    const publicOpen = (typeof open.publicOpenCount==='number') ? open.publicOpenCount : (open.games||[]).length;
+    const pc = (typeof presence.onlineCount==='number') ? presence.onlineCount : (open.onlineCount||0);
+    $('players-online').textContent=t(pc===1?'online_players_one':'online_players_many',{n:pc});
+    $('private-now').textContent=t('private_now',{n:privateCount});
+    $('public-now').textContent=t('public_now',{active:publicActive,open:publicOpen});
+    renderOpen(open.games||[]); renderPrivate(privateGames); renderMine(publicMine);
+  }catch(e){
+    if(!detect){
+      $('open-list').innerHTML=`<div class="empty">${t('load_error')}</div>`;
+      $('private-list').innerHTML=`<div class="empty">${t('load_error')}</div>`;
+    }
+  }
+}
+function refreshLobby(){ lobbyRefresh(false); }
+function lobbyTick(){ lobbyRefresh(true); }
+function startLobbyPoll(){ stopLobbyPoll(); lobbyPollTimer=setInterval(lobbyTick, 5000); }
+function stopLobbyPoll(){ if(lobbyPollTimer){ clearInterval(lobbyPollTimer); lobbyPollTimer=null; } }
+function renderOpen(games){
+  const box=$('open-list'); const list=games.filter(g=>g.p1!==user);
+  if(!list.length){ box.innerHTML=`<div class="empty">${t('open_empty')}</div>`; return; }
+  box.innerHTML='';
+  list.forEach(g=>{
+    const el=document.createElement('div'); el.className='gitem';
+    el.innerHTML=`<div class="gid">${g.gameId}</div>
+      <div class="meta"><div class="who">${playerChip(g.country1, g.p1)}</div><div class="det">${rulesLabel(g)}</div></div>
+      <span class="pill" style="margin-right:2px">1/2</span>`;
+    const b=document.createElement('button'); b.className='btn pink sm'; b.textContent=t('join_btn');
+    b.onclick=()=>openJoin(g); el.appendChild(b); box.appendChild(el);
+  });
+}
+function renderPrivate(games){
+  const box=$('private-list');
+  if(!games.length){ box.innerHTML=`<div class="empty">${t('private_empty')}</div>`; return; }
+  renderGameItems(box, games);
+}
+function renderMine(games){
+  const box=$('mine-list');
+  if(!games.length){ $('mine-card').classList.add('hidden'); return; }
+  $('mine-card').classList.remove('hidden'); renderGameItems(box, games);
+}
+function renderGameItems(box, games){
+  box.innerHTML='';
+  games.forEach(g=>{
+    const opp = g.p1===user ? g.p2 : g.p1;
+    const oppCountry = g.p1===user ? g.country2 : g.country1;
+    // Revancha que me ha propuesto el rival: todavía no soy jugador, hay que unirse.
+    const invite = !!g.rematchInvite;
+    const who = invite ? t('mine_rematch_from',{name:esc(opp||'—')})
+              : (g.status==='waiting' ? esc(t('mine_waiting')) : vsPlayer(oppCountry, opp||'—'));
+    const el=document.createElement('div'); el.className='gitem'+(invite?' invite':'');
+    const complete=!!(g.p1&&g.p2);
+    const cnt = invite ? '🔁' : (complete ? '2/2' : '1/2');
+    const cntCls = (invite||complete) ? 'pill f' : 'pill';
+    el.innerHTML=`<div class="gid">${g.gameId}</div>
+      <div class="meta"><div class="who">${who}</div><div class="det">${rulesLabel(g)}${g.isPublic?'':' · '+t('private_tag')} · ${relativeActivity(g.updatedAt)}</div></div>
+      <span class="${cntCls}" style="margin-right:2px">${cnt}</span>`;
+    const b=document.createElement('button'); b.className='btn sm'+(invite?' green':'');
+    b.textContent= invite ? t('join_btn') : (g.status==='waiting'?t('see_btn'):t('continue_btn'));
+    b.onclick=()=>{ const meta={id:g.gameId,digits:g.digits,mode:g.mode,numColors:g.numColors,allowRepeats:g.allowRepeats,maxAttempts:g.maxAttempts,turnSeconds:g.turnSeconds};
+      if(invite){ goToRematch(g.gameId); }
+      else if(g.status==='waiting'||!complete){ enterWait(meta); } else { enterGame(meta); } };
+    el.appendChild(b); box.appendChild(el);
+  });
+}
+
+/* -------------------- ranking -------------------- */
+async function openRank(){
+  show('rank'); $('rank-total').textContent=''; $('rank-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
+  try{
+    const res=await api('leaderboard',{username:user}); const list=res.ranking||[];
+    $('rank-total').textContent=t('rank_total',{n:res.total||0});
+    if(!list.length){ $('rank-list').innerHTML=`<div class="empty">${t('rank_empty')}</div>`; return; }
+    $('rank-list').innerHTML='';
+    list.forEach((r,i)=>{
+      const el=document.createElement('div'); el.className='rankrow'+(r.user===user?' me':'');
+      el.innerHTML=`<div class="pos">${i+1}</div><div class="nm">${playerChip(r.country, r.user)}</div>
+        <div class="wl">${t('rank_wl',{wins:r.wins,played:r.played})}</div>`;
+      $('rank-list').appendChild(el);
+    });
+    const me=res.me, visible=me&&list.some(r=>r.user===me.user);
+    if(me&&!visible){
+      const sep=document.createElement('div'); sep.className='rank-separator'; sep.textContent=t('rank_your_pos',{n:me.rank});
+      $('rank-list').appendChild(sep);
+      const el=document.createElement('div'); el.className='rankrow me';
+      el.innerHTML=`<div class="pos">${me.rank}</div><div class="nm">${playerChip(me.country,me.user)}</div><div class="wl">${t('rank_wl',{wins:me.wins,played:me.played})}</div>`;
+      $('rank-list').appendChild(el);
+    }
+  }catch(e){ $('rank-list').innerHTML=`<div class="empty">${t('load_error')}</div>`; }
+}
+
+/* -------------------- historial -------------------- */
+const LOCALE={es:'es',en:'en',fr:'fr'};
+async function openHistory(){
+  show('history'); $('hist-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
+  try{
+    const res=await api('history',{username:user}); const list=res.history||[];
+    if(!list.length){ $('hist-list').innerHTML=`<div class="empty">${t('hist_empty')}</div>`; return; }
+    $('hist-list').innerHTML='';
+    list.forEach(h=>{
+      const cls = h.result==='win'?'f':(h.result==='draw'?'':'p');
+      const badge = h.result==='win'?t('result_win'):(h.result==='draw'?t('result_draw'):t('result_loss'));
+      const badgeCls = h.result==='win'?'pill f':(h.result==='draw'?'pill':'pill p');
+      let date=''; try{ date=new Date(h.updatedAt).toLocaleDateString(LOCALE[lang]||'es',{day:'2-digit',month:'short'}); }catch(e){}
+      const el=document.createElement('div'); el.className='gitem';
+      el.innerHTML=`<div class="meta"><div class="who">${vsPlayer(h.oppCountry, h.opp||'—')}</div>
+        <div class="det">${rulesLabel(h)} · ${date}</div></div>
+        <span class="${badgeCls}">${badge}</span>`;
+      $('hist-list').appendChild(el);
+    });
+  }catch(e){ $('hist-list').innerHTML=`<div class="empty">${t('load_error')}</div>`; }
+}
+
+/* -------------------- crear -------------------- */
+function segPick(container, btn){ [...container.children].forEach(x=>x.classList.toggle('on', x===btn)); }
+$('seg-mode').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
+  cfg.mode=b.dataset.m; segPick($('seg-mode'),b);
+  $('colors-wrap').classList.toggle('hidden', cfg.mode!=='colors');
+  padC.reset(); applyMode('c', cfg.mode, 'secret-c', 'pad-c', padC); $('secret-c-val').textContent=''; });
+$('seg-colors').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
+  cfg.numColors=parseInt(b.dataset.nc,10); segPick($('seg-colors'),b);
+  padC.reset(); padC.refresh(); $('secret-c-val').textContent=''; });
+$('seg-digits').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
+  cfg.digits=parseInt(b.dataset.d,10); segPick($('seg-digits'),b);
+  const inp=$('secret-c'); inp.maxLength=cfg.digits; inp.value=''; inp.placeholder='•'.repeat(cfg.digits);
+  padC.reset(); if(cfg.mode==='colors') padC.refresh(); $('secret-c-val').textContent=''; });
+$('seg-repeat').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
+  cfg.allowRepeats=b.dataset.r==='1'; segPick($('seg-repeat'),b);
+  setVal('secret-c-val', getSecret('c'), cfg.digits, cfg.allowRepeats); });
+$('seg-attempts').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
+  cfg.maxAttempts=parseInt(b.dataset.a,10); segPick($('seg-attempts'),b); });
+$('seg-time').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
+  cfg.turnSeconds=parseInt(b.dataset.t,10); segPick($('seg-time'),b); });
+$('seg-public').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
+  cfg.isPublic=b.dataset.p==='1'; segPick($('seg-public'),b);
+  $('pub-hint').textContent=cfg.isPublic?t('pub_hint_public'):t('pub_hint_private'); });
+$('secret-c').addEventListener('input', e=>setVal('secret-c-val', e.target.value, cfg.digits, cfg.allowRepeats));
+
+function getSecret(ctx){
+  if(ctx==='c') return cfg.mode==='colors'? padC.get() : $('secret-c').value.trim();
+  if(ctx==='j') return joinMeta.mode==='colors'? padJ.get() : $('secret-j').value.trim();
+  if(ctx==='r') return finishedMeta.mode==='colors'? padR.get() : $('secret-r').value.trim();
+  if(ctx==='g') return game.mode==='colors'? padG.get() : $('g-guess').value.trim();
+}
+async function createGame(){
+  const secret=getSecret('c');
+  const r=validateLive(secret, cfg.digits, cfg.allowRepeats);
+  if(r.cls!=='ok'){ toast(t('check_secret'),true); return; }
+  $('btn-create').disabled=true;
+  try{
+    const res=await api('createGame',{username:user, digits:cfg.digits, secret, mode:cfg.mode, numColors:cfg.numColors,
+      allowRepeats:cfg.allowRepeats, isPublic:cfg.isPublic, maxAttempts:cfg.maxAttempts, turnSeconds:cfg.turnSeconds, country:myCountry});
+    if(!res.ok){ toast(te(res.error),true); return; }
+    localStorage.setItem('pf_secret_'+res.gameId, secret);
+    enterWait({id:res.gameId, digits:cfg.digits, mode:cfg.mode, numColors:cfg.numColors, allowRepeats:cfg.allowRepeats, maxAttempts:cfg.maxAttempts, turnSeconds:cfg.turnSeconds});
+  }catch(e){ toast(t('net_error'),true); } finally{ $('btn-create').disabled=false; }
+}
+
+/* -------------------- sala de espera -------------------- */
+function enterWait(meta){
+  localStorage.removeItem('pf_current_game');
+  game={id:meta.id, digits:meta.digits, mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats, maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0};
+  $('wait-code').textContent=meta.id; $('wait-info').textContent=rulesLabel(meta);
+  show('wait');
+  const waitEpoch=gameViewEpoch, waitGameId=game.id;
+  startPoll(()=>pollWait(waitEpoch,waitGameId));
+}
+async function pollWait(expectedEpoch=gameViewEpoch, expectedGameId=game.id){
+  try{
+    const st=await api('state',{gameId:expectedGameId, username:user});
+    if(expectedEpoch!==gameViewEpoch||expectedGameId!==game.id||$('s-wait').classList.contains('hidden')) return;
+    if(!st.ok){ stopPoll(); toast(t('game_expired'),true); enterLobby(); return; }
+    if(st.status==='active'){ notifyJoin(); enterGame(metaFromState(st)); return; }
+    if(st.status!=='waiting'){ stopPoll(); toast(t('game_expired'),true); enterLobby(); return; }
+    const c=new Date(st.createdAt).getTime();
+    if(c && Date.now()-c > 2*60*60*1000){ stopPoll(); toast(t('game_expired'),true); enterLobby(); return; }
+  }catch(e){}
+}
+async function cancelWait(){
+  if(!confirm(t('cancel_confirm'))) return;
+  try{
+    const res=await api('closeGame',{gameId:game.id,username:user,intent:'cancel'});
+    if(!res.ok){ toast(te(res.error),true); goToRematch(game.id); return; }
+    localStorage.removeItem('pf_secret_'+game.id); stopPoll(); toast(t('cancel_done')); enterLobby();
+  }catch(e){ toast(t('net_error'),true); }
+}
+function copyCode(){ navigator.clipboard?.writeText(game.id).then(()=>toast(t('copied',{code:game.id}))).catch(()=>toast(game.id)); }
+function shareCode(){
+  const url=gameLink(game.id);
+  const text=t('share_text',{code:game.id});
+  if(navigator.share){ navigator.share({title:'Picas y Fijas', text:text, url:url}).catch(()=>{}); }
+  else { navigator.clipboard?.writeText(text+' '+url).then(()=>toast(t('copied',{code:game.id}))).catch(()=>toast(url)); }
+}
+async function handleDeepLink(){
+  if(!pendingJoinCode || !user) return;
+  const code=pendingJoinCode; pendingJoinCode=''; renderLoginInvite();
+  goToRematch(code); // enruta según estado: unirse / esperar / entrar
+}
+
+/* -------------------- instrucciones -------------------- */
+let rulesReturn='login';
+function openRules(){
+  const cur=document.querySelector('section:not(.hidden)');
+  rulesReturn = cur ? cur.id.replace('s-','') : 'lobby';
+  $('rules-body').innerHTML = RULES[lang] || RULES.es;
+  show('rules');
+}
+function closeRules(){ show(rulesReturn); }
+
+/* -------------------- unirse -------------------- */
+function openJoin(meta){
+  localStorage.removeItem('pf_current_game');
+  joinMeta={gameId:meta.gameId||meta.id, digits:meta.digits, mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats,
+    maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0};
+  $('join-code').textContent=joinMeta.gameId;
+  $('join-rules-txt').textContent=t('join_rules',{rules:rulesLabel(joinMeta)});
+  const inp=$('secret-j'); inp.maxLength=joinMeta.digits; inp.value=''; inp.placeholder='•'.repeat(joinMeta.digits);
+  padJ.reset(); applyMode('j', joinMeta.mode, 'secret-j', 'pad-j', padJ); $('secret-j-val').textContent='';
+  show('join');
+}
+$('secret-j').addEventListener('input', e=>setVal('secret-j-val', e.target.value, joinMeta.digits, joinMeta.allowRepeats));
+async function confirmJoin(){
+  const secret=getSecret('j');
+  const r=validateLive(secret, joinMeta.digits, joinMeta.allowRepeats);
+  if(r.cls!=='ok'){ toast(t('check_secret'),true); return; }
+  $('btn-join').disabled=true;
+  try{
+    const res=await api('joinGame',{gameId:joinMeta.gameId, username:user, secret, country:myCountry});
+    if(!res.ok){ toast(te(res.error),true); enterLobby(); return; }
+    localStorage.setItem('pf_secret_'+joinMeta.gameId, secret);
+    enterGame({id:joinMeta.gameId, digits:joinMeta.digits, mode:joinMeta.mode, numColors:joinMeta.numColors, allowRepeats:joinMeta.allowRepeats, maxAttempts:joinMeta.maxAttempts, turnSeconds:joinMeta.turnSeconds});
+  }catch(e){ toast(t('net_error'),true); } finally{ $('btn-join').disabled=false; }
+}
+
+/* -------------------- revancha -------------------- */
+function openRematch(){
+  finishedMeta={gameId:gState.gameId, digits:gState.digits, mode:gState.mode, numColors:gState.numColors||6, allowRepeats:gState.allowRepeats,
+    maxAttempts:gState.maxAttempts, turnSeconds:gState.turnSeconds};
+  $('rematch-rules-txt').textContent=t('rematch_rules',{rules:rulesLabel(finishedMeta)});
+  const inp=$('secret-r'); inp.maxLength=finishedMeta.digits; inp.value=''; inp.placeholder='•'.repeat(finishedMeta.digits);
+  padR.reset(); applyMode('r', finishedMeta.mode, 'secret-r', 'pad-r', padR); $('secret-r-val').textContent='';
+  show('rematch');
+}
+$('secret-r').addEventListener('input', e=>setVal('secret-r-val', e.target.value, finishedMeta.digits, finishedMeta.allowRepeats));
+async function sendRematch(){
+  const secret=getSecret('r');
+  const r=validateLive(secret, finishedMeta.digits, finishedMeta.allowRepeats);
+  if(r.cls!=='ok'){ toast(t('check_code'),true); return; }
+  $('btn-rematch').disabled=true;
+  try{
+    const res=await api('rematch',{gameId:finishedMeta.gameId, username:user, secret, country:myCountry});
+    if(!res.ok){ toast(te(res.error),true); return; }
+    localStorage.setItem('pf_secret_'+res.gameId, secret);
+    await goToRematch(res.gameId);
+  }catch(e){ toast(t('net_error'),true); } finally{ $('btn-rematch').disabled=false; }
+}
+/* Unirse a una partida privada escribiendo su código en el lobby. */
+async function joinByCode(){
+  const inp=$('join-code-inp');
+  const code=String(inp.value||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(code.length<4){ toast(t('code_invalid'),true); inp.focus(); return; }
+  inp.value='';
+  await goToRematch(code); // enruta según estado: unirse / esperar / entrar
+}
+async function goToRematch(rematchId){
+  const route=++routeEpoch;
+  // Invalida cualquier respuesta que aún esté llegando de la partida terminada.
+  gameViewEpoch++; stopPoll(); stopTick(); hideToast();
+  try{
+    const st=await api('state',{gameId:rematchId, username:user});
+    if(route!==routeEpoch) return;
+    if(!st.ok){
+      if(terminalGameError(st.error)) localStorage.removeItem('pf_current_game');
+      toast(te(st.error)||t('not_available'),true); return;
+    }
+    const meta=metaFromState(st);
+    if((st.status==='active'||st.status==='finished')&&!st.youAre){
+      if(confirm(t('spectator_confirm'))) enterGame(Object.assign(meta,{spectator:true}));
+      else enterLobby();
+    }
+    else if(st.status==='finished'&&st.youAre){ enterGame(meta); }
+    else if(st.status==='active'&&st.p1&&st.p2){ enterGame(meta); }
+    else if(st.status==='waiting'&&st.youAre===1){ enterWait(meta); }
+    else if(st.status==='waiting'){ openJoin(Object.assign({gameId:rematchId}, meta)); }
+    else { toast(t('game_expired'),true); enterLobby(); }
+  }catch(e){ if(route===routeEpoch) toast(t('net_error'),true); }
+}
+
+/* -------------------- juego -------------------- */
+function metaFromState(st){
+  return {id:st.gameId, digits:parseInt(st.digits,10), mode:st.mode, numColors:st.numColors||6, allowRepeats:st.allowRepeats,
+    maxAttempts:st.maxAttempts||0, turnSeconds:st.turnSeconds||0};
+}
+function resetGameView(){
+  hideToast();
+  $('g-players').innerHTML=''; $('g-mysecret').textContent='•'.repeat(game.digits);
+  $('g-mysecret').closest('.code-view').classList.toggle('hidden',!!game.spectator);
+  $('g-banner').innerHTML=''; $('g-rematch-zone').innerHTML='';
+  $('g-mylog').innerHTML=`<div class="empty">${t('loading')}</div>`;
+  $('g-theirlog').innerHTML=`<div class="empty">${t('loading')}</div>`;
+  $('g-turn').className='turnbar theirs'; $('g-turn').classList.remove('hidden');
+  $('g-turn-txt').textContent=t('waiting_generic');
+  $('g-statusrow').classList.add('hidden'); $('g-timer').classList.add('hidden'); $('g-attempts').classList.add('hidden');
+  $('g-guessarea').classList.toggle('hidden',!!game.spectator); $('g-guess').disabled=true; $('g-guess-btn').disabled=true;
+  $('g-abandon-wrap').classList.add('hidden'); document.querySelector('.legend').style.display='flex';
+  $('g-pause-cover').classList.add('hidden'); $('g-pause-btn').classList.add('hidden'); $('g-pause-space').classList.add('hidden');
+}
+function enterGame(meta){
+  const epoch=++gameViewEpoch;
+  game={id:meta.id, digits:parseInt(meta.digits,10), mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats,
+    maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0, spectator:!!meta.spectator};
+  const inp=$('g-guess'); inp.maxLength=game.digits; inp.value=''; inp.placeholder='•'.repeat(game.digits);
+  padG.reset(); applyMode('g', game.mode, 'g-guess', 'pad-g', padG);
+  $('g-code').textContent=meta.id; $('g-guess-val').textContent='';
+  gState=null; passRequested=false; lastTurnStart=''; lastYourTurn=null; endSoundPlayed=false;
+  connectionLost=false;
+  resetGameView();
+  localStorage.setItem('pf_current_game',game.id);
+  show('game'); refreshGame(epoch,game.id); startPoll(()=>refreshGame(epoch,game.id)); startTick();
+}
+function terminalGameError(msg){
+  return ['Partida no encontrada.','La partida ha expirado.','La partida se cerró tras 48 horas sin actividad.',
+    'Un jugador abandonó la partida.','La partida fue cancelada.','No eres jugador de esta partida.'].includes(String(msg||''));
+}
+async function refreshGame(expectedEpoch=gameViewEpoch, expectedGameId=game.id){
+  const requestEpoch=expectedEpoch, requestGameId=expectedGameId;
+  const requestSeq=++gameRequestSeq;
+  try{
+    const st=await api('state',{gameId:requestGameId, username:user, inGame:true});
+    if(requestSeq!==gameRequestSeq||requestEpoch!==gameViewEpoch||requestGameId!==game.id||$('s-game').classList.contains('hidden')) return;
+    if(st.ok){ connectionLost=false; renderGame(st); }
+    else if(terminalGameError(st.error)){
+      localStorage.removeItem('pf_current_game'); stopPoll(); stopTick(); toast(te(st.error)||t('not_available'),true); enterLobby();
+    }else toast(te(st.error)||t('net_error'),true);
+  }catch(e){
+    /* Conserva la partida, pero oculta el tablero local mientras no haya comunicación. */
+    if(requestEpoch===gameViewEpoch&&requestGameId===game.id&&!$('s-game').classList.contains('hidden')){
+      connectionLost=true; updatePauseCover();
+    }
+  }
+}
+$('g-guess').addEventListener('input', e=>setVal('g-guess-val', e.target.value, game.digits, game.allowRepeats));
+
+function renderGame(st){
+  if(!st||String(st.gameId)!==String(game.id)||$('s-game').classList.contains('hidden')) return;
+  gState=st;
+  if(typeof st.allowRepeats==='boolean') game.allowRepeats=st.allowRepeats;
+  if(st.mode) game.mode=st.mode;
+  if(st.digits) game.digits=parseInt(st.digits,10);
+  if(st.turnStartedAt!==lastTurnStart){ lastTurnStart=st.turnStartedAt; passRequested=false; }
+
+  const me=st.youAre; const oppName = me===1 ? st.p2 : st.p1; const oppLabel = oppName||t('rival');
+  const spectator=me===0;
+  const oppCountry = me===1 ? st.country2 : st.country1;
+  let leftCC, leftName, rightCC, rightName;
+  if(me===0){ leftCC=st.country1; leftName=st.p1; rightCC=st.country2; rightName=st.p2; }
+  else { leftCC=myCountry; leftName=user; rightCC=oppCountry; rightName=oppName; }
+  const rightChip = rightName ? playerChip(rightCC, rightName) : `<span class="pl">${t('waiting_short')}</span>`;
+  $('g-players').innerHTML = playerChip(leftCC, leftName) + `<span class="vs-sep">vs</span>` + rightChip +
+    (spectator?`<span class="pill">${t('spectator_mode')}</span>`:'');
+  $('g-rules').textContent = rulesLabel(metaFromState(st));
+  if(spectator){
+    $('colhead-mine').textContent=t('spectator_p1',{name:st.p1,opp:st.p2});
+    $('colhead-theirs').textContent=t('spectator_p2',{name:st.p2,opp:st.p1});
+  }else{
+    $('colhead-mine').textContent=t('colhead_mine',{name:oppLabel});
+    $('colhead-theirs').textContent=t('colhead_theirs',{name:oppLabel});
+  }
+
+  const local=localStorage.getItem('pf_secret_'+game.id);
+  const mySecret=st.yourSecret||local||'';
+  // El backend devuelve únicamente el secreto del usuario autenticado. Guardarlo
+  // localmente permite seguir mostrándolo si una actualización puntual falla.
+  if(st.yourSecret) localStorage.setItem('pf_secret_'+game.id,st.yourSecret);
+  $('g-mysecret').innerHTML = mySecret ? codeViewHTML(mySecret, game.mode) : '•'.repeat(game.digits);
+  $('g-mysecret').closest('.code-view').classList.toggle('hidden',spectator);
+
+  const mine=st.guesses.filter(g=>g.by===(spectator?st.p1:user));
+  const theirs=st.guesses.filter(g=>g.by===(spectator?st.p2:oppName));
+  renderLog('g-mylog', mine, t('log_empty_mine'));
+  renderLog('g-theirlog', theirs, t('log_empty_theirs'));
+
+  const banner=$('g-banner'); const rz=$('g-rematch-zone'); const turn=$('g-turn');
+  const guessarea=$('g-guessarea'); const legend=document.querySelector('.legend'); const statusrow=$('g-statusrow');
+
+  if(st.status==='finished'){
+    $('g-abandon-wrap').classList.add('hidden');
+    $('g-pause-cover').classList.add('hidden'); $('g-pause-btn').classList.add('hidden'); $('g-pause-space').classList.add('hidden');
+    turn.classList.add('hidden'); guessarea.classList.add('hidden'); statusrow.classList.add('hidden'); legend.style.display='none';
+    stopTick();
+    const won = st.winner===user;
+    if(!endSoundPlayed&&!spectator){ endSoundPlayed=true; endSound(st.isDraw?'draw':(won?'win':'lose')); }
+    if(st.isDraw){
+      const solvedBy = n => st.guesses.some(x=>x.by===n && x.fijas===parseInt(st.digits,10));
+      const bothSolved = solvedBy(st.p1) && solvedBy(st.p2);
+      banner.innerHTML=`<div class="banner draw"><h2>${t('draw_title')}</h2><p>${bothSolved?t('draw_both'):t('draw_limit')}</p></div>`;
+    }else if(spectator){
+      banner.innerHTML=`<div class="banner"><h2>${t('spectator_winner',{name:esc(st.winner)})}</h2></div>`;
+    }else{
+      banner.innerHTML=`<div class="banner ${won?'win':'lose'}"><h2>${won?t('win_title'):t('lose_title')}</h2>
+        <p>${won?t('win_msg',{name:esc(oppLabel)}):t('lose_msg',{name:esc(st.winner)})}</p></div>`;
+    }
+    if(spectator){
+      rz.innerHTML='';
+    }else if(st.rematchId){
+      rz.innerHTML=`<button class="btn green" onclick="goToRematch('${st.rematchId}')">${t('rematch_go')}</button><div style="height:12px"></div>`;
+    }else{
+      rz.innerHTML=`<button class="btn green" onclick="openRematch()">${t('rematch_btn')}</button><div style="height:12px"></div>`;
+    }
+    return;
+  }
+
+  banner.innerHTML=''; rz.innerHTML=''; legend.style.display='flex';
+  $('g-abandon-wrap').classList.toggle('hidden',st.status!=='active'||spectator);
+  $('g-pause-btn').classList.toggle('hidden',st.status!=='active'||spectator||!!st.manualPausedBy);
+  $('g-pause-space').classList.toggle('hidden',st.status!=='active'||spectator||!!st.manualPausedBy);
+  turn.classList.remove('hidden'); guessarea.classList.toggle('hidden',spectator);
+  updatePauseCover();
+
+  const myAttempts = me===1 ? st.attemptsP1 : st.attemptsP2;
+  const canGuessAttempts = !(st.maxAttempts>0 && myAttempts>=st.maxAttempts);
+  if(st.maxAttempts>0 || st.turnSeconds>0){
+    statusrow.classList.remove('hidden');
+    if(st.maxAttempts>0){ const left=Math.max(0, st.maxAttempts-myAttempts);
+      const a=$('g-attempts'); a.classList.remove('hidden'); a.className='chip'+(left<=1?' hot':(left<=2?' warn':''));
+      a.textContent=t('attempts_chip',{left:left,max:st.maxAttempts}); }
+    else $('g-attempts').classList.add('hidden');
+    $('g-timer').classList.toggle('hidden', !(st.turnSeconds>0));
+  }else statusrow.classList.add('hidden');
+
+  const pending = st.pendingWinner || '';
+  if(st.yourTurn){
+    turn.className='turnbar mine'; $('g-turn-txt').textContent=t('your_turn');
+    const ok=canGuessAttempts&&!st.timerPaused;
+    $('g-guess-btn').disabled=!ok; $('g-guess').disabled=!ok;
+    if(!ok) $('g-turn-txt').textContent=t('no_attempts_wait');
+    if(pending && pending!==user){
+      turn.className='turnbar mine';
+      $('g-turn-txt').textContent=t('tiebreak_you',{name:oppLabel});
+    }
+  }else{
+    turn.className='turnbar theirs';
+    $('g-turn-txt').textContent= st.whoseTurn ? t('turn_of',{name:st.whoseTurn}) : t('waiting_generic');
+    $('g-guess-btn').disabled=true; $('g-guess').disabled=true;
+    $('g-guess').value=''; padG.reset(); $('g-guess-val').textContent='';
+    if(pending && pending===user){
+      $('g-turn-txt').textContent=t('solved_wait',{name:oppLabel});
+    }
+  }
+  if(st.timerPaused) $('g-turn-txt').textContent=t('timer_paused');
+  if(st.yourTurn && lastYourTurn===false) notifyTurn();
+  lastYourTurn = st.yourTurn;
+  updateTimer();
+}
+function renderLog(id, arr, emptyMsg){
+  const box=$(id);
+  if(!arr.length){ box.innerHTML=`<div class="empty">${emptyMsg}</div>`; return; }
+  box.innerHTML='';
+  arr.slice().reverse().forEach(g=>{
+    const el=document.createElement('div'); el.className='g';
+    let pips='';
+    for(let i=0;i<g.fijas;i++) pips+='<span class="pip f"></span>';
+    for(let i=0;i<g.picas;i++) pips+='<span class="pip p"></span>';
+    if(g.fijas+g.picas===0) pips=`<span class="scoretxt">${t('log_nada')}</span>`;
+    el.innerHTML=`${codeViewHTML(g.guess, game.mode)}
+      <span class="scoretxt">${g.fijas}F · ${g.picas}P</span>
+      <span class="pips">${pips}</span>`;
+    box.appendChild(el);
+  });
+}
+async function submitGuess(){
+  const guess=getSecret('g');
+  const r=validateLive(guess, game.digits, game.allowRepeats);
+  if(r.cls!=='ok'){ toast(t('invalid_guess'),true); return; }
+  // Limpia el campo de inmediato (ya tenemos el valor capturado en 'guess').
+  $('g-guess').value=''; padG.reset(); $('g-guess-val').textContent='';
+  $('g-guess-btn').disabled=true;
+  try{
+    const res=await api('guess',{gameId:game.id, username:user, guess});
+    if(!res.ok){ toast(te(res.error),true); $('g-guess-btn').disabled=false; refreshGame(); return; }
+    if(res.tie) toast(t('toast_tie'));
+    else if(res.win) toast(t('win_title'));
+    else if(res.pending) toast(t('toast_solved'));
+    else if(res.draw) toast(t('draw_title'));
+    else toast(t('toast_score',{f:res.fijas,p:res.picas}));
+    if(res.state){ gameRequestSeq++; renderGame(res.state); } else refreshGame();
+  }catch(e){ toast(t('net_error'),true); $('g-guess-btn').disabled=false; refreshGame(); }
+}
+async function leaveGame(){
+  const id=game.id; localStorage.removeItem('pf_current_game'); stopPoll(); stopTick();
+  try{ if(id) await api('gamePresence',{gameId:id,username:user,connected:false}); }catch(e){}
+  enterLobby();
+}
+async function abandonGame(){
+  if(!gState||gState.status!=='active'||!confirm(t('abandon_confirm'))) return;
+  try{
+    const res=await api('closeGame',{gameId:game.id,username:user,intent:'abandon'});
+    if(!res.ok){ toast(te(res.error),true); return; }
+    localStorage.removeItem('pf_secret_'+game.id); localStorage.removeItem('pf_current_game'); stopPoll(); stopTick(); toast(t('abandon_done')); enterLobby();
+  }catch(e){ toast(t('net_error'),true); }
+}
+
+async function requestGamePause(){
+  if(!gState||gState.status!=='active'||gState.youAre===0||!confirm(t('pause_confirm')+'\n\n'+t('pause_limit'))) return;
+  $('g-pause-btn').disabled=true;
+  try{
+    const res=await api('togglePause',{gameId:game.id,username:user,intent:'pause'});
+    if(!res.ok){ toast(te(res.error),true); return; }
+    await refreshGame();
+  }catch(e){ toast(t('net_error'),true); }
+  finally{ $('g-pause-btn').disabled=false; }
+}
+async function resumeGame(){
+  $('g-resume-btn').disabled=true;
+  try{
+    const res=await api('togglePause',{gameId:game.id,username:user,intent:'resume'});
+    if(!res.ok){ toast(te(res.error),true); return; }
+    await refreshGame();
+  }catch(e){ toast(t('net_error'),true); }
+  finally{ $('g-resume-btn').disabled=false; }
+}
+function updatePauseCover(){
+  const cover=$('g-pause-cover');
+  const manual=!!(gState&&gState.manualPausedBy);
+  const automatic=!!(connectionLost||(gState&&gState.status==='active'&&!manual&&gState.timerPaused&&gState.turnSeconds>0));
+  if((!connectionLost&&(!gState||gState.status!=='active'))||(!manual&&!automatic)){ cover.classList.add('hidden'); return; }
+  cover.classList.remove('hidden');
+  if(automatic){
+    $('g-pause-message').textContent=t('auto_pause_message');
+    $('g-pause-countdown').textContent='';
+    $('g-resume-btn').classList.add('hidden');
+    return;
+  }
+  const mine=gState.manualPausedBy===user;
+  $('g-pause-message').textContent=mine?t('pause_mine'):t('pause_other',{name:gState.manualPausedBy});
+  $('g-resume-btn').classList.toggle('hidden',!mine);
+  const left=Math.max(0,Math.ceil((new Date(gState.manualPauseUntil).getTime()-Date.now())/1000));
+  const mm=Math.floor(left/60), ss=String(left%60).padStart(2,'0');
+  $('g-pause-countdown').textContent=t('pause_auto',{time:mm+':'+ss});
+  if(left<=0) refreshGame();
+}
+
+/* -------------------- cronómetro por turno -------------------- */
+function updateTimer(){
+  updatePauseCover();
+  if(!gState || gState.status!=='active' || !(gState.turnSeconds>0)){ return; }
+  const el=$('g-timer'); el.classList.remove('hidden');
+  if(gState.timerPaused){
+    el.textContent=t('timer_paused'); el.className='chip warn'; passRequested=false; return;
+  }
+  const started=new Date(gState.turnStartedAt).getTime();
+  const base=Number.isFinite(Number(gState.turnRemaining))?Number(gState.turnRemaining):gState.turnSeconds;
+  const remaining=Math.max(0, base - Math.floor((Date.now()-started)/1000));
+  const mm=Math.floor(remaining/60), ss=remaining%60;
+  el.textContent='⏱ '+(mm>0?mm+':'+String(ss).padStart(2,'0'):ss+'s');
+  el.className='chip'+(remaining<=5?' hot':(remaining<=10?' warn':''));
+  if(remaining<=0 && !passRequested){
+    passRequested=true;
+    api('passTurn',{gameId:game.id, username:user}).then(()=>refreshGame()).catch(()=>{});
+  }
+}
+function startTick(){ stopTick(); tickTimer=setInterval(updateTimer, 1000); }
+function stopTick(){ if(tickTimer){ clearInterval(tickTimer); tickTimer=null; } }
+
+/* -------------------- polling -------------------- */
+let pollGeneration=0;
+function startPoll(fn){
+  stopPoll(); const generation=pollGeneration;
+  const run=async()=>{
+    pollTimer=null;
+    try{ await fn(); }catch(e){}
+    if(generation===pollGeneration) pollTimer=setTimeout(run,900);
+  };
+  pollTimer=setTimeout(run,900);
+}
+function stopPoll(){ pollGeneration++; if(pollTimer){ clearTimeout(pollTimer); pollTimer=null; } }
+
+function signalGameDisconnected(){
+  const id=localStorage.getItem('pf_current_game');
+  if(!id||!user||!userPin) return;
+  const payload=JSON.stringify({action:'gamePresence',gameId:id,username:user,pin:userPin,connected:false});
+  try{
+    if(navigator.sendBeacon) navigator.sendBeacon(API,new Blob([payload],{type:'text/plain;charset=UTF-8'}));
+    else fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:payload,keepalive:true}).catch(()=>{});
+  }catch(e){}
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){
+    if(!$('s-game').classList.contains('hidden')){ connectionLost=true; updatePauseCover(); }
+    signalGameDisconnected();
+  }
+  else if(!$('s-game').classList.contains('hidden')&&game.id) refreshGame();
+});
+window.addEventListener('pagehide',signalGameDisconnected);
+
+/* -------------------- arranque -------------------- */
+applyI18n();
+detectCountry();
+if(user&&userPin){
+  const deepLinkPending=!!pendingJoinCode;
+  enterLobby();
+  const resumeId=localStorage.getItem('pf_current_game');
+  if(resumeId&&!deepLinkPending) goToRematch(resumeId);
+} else { if(user) $('uname').value=user; show('login'); }
+</script>
+</body>
+</html>
