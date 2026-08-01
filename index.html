@@ -513,6 +513,7 @@ const I18N = {
     rematch_rules:"Reglas: {rules}. Define tu nuevo código.", lbl_newsecret:"Tu nuevo código secreto",
     rematch_send:"Enviar revancha", back_home:"Volver al inicio",
     game_match:"Partida", game_yourcode:"Tu código:", vs:"vs {name}", waiting_short:"esperando…",
+    spectator_confirm:"La partida está llena. ¿Deseas continuar como espectador?", spectator_mode:"Espectador", spectator_p1:"Intentos de {name} → código de {opp}", spectator_p2:"Intentos de {name} → código de {opp}", spectator_winner:"Ganó {name} 🏆",
     guess_btn:"Adivinar", legend_fija:"F = posición correcta", legend_pica:"P = presente, mal colocada",
     colhead_mine:"Tus intentos → código de {name}", colhead_theirs:"Intentos de {name} → tu código",
     rival:"rival", log_empty_mine:"Aún no has adivinado", log_empty_theirs:"Sin intentos todavía", log_nada:"nada",
@@ -574,6 +575,7 @@ const I18N = {
     rematch_rules:"Rules: {rules}. Choose your new code.", lbl_newsecret:"Your new secret code",
     rematch_send:"Send rematch", back_home:"Back to home",
     game_match:"Game", game_yourcode:"Your code:", vs:"vs {name}", waiting_short:"waiting…",
+    spectator_confirm:"This game is full. Continue as a spectator?", spectator_mode:"Spectator", spectator_p1:"{name}'s guesses → {opp}'s code", spectator_p2:"{name}'s guesses → {opp}'s code", spectator_winner:"{name} won 🏆",
     guess_btn:"Guess", legend_fija:"F = correct position", legend_pica:"P = present, wrong spot",
     colhead_mine:"Your guesses → {name}'s code", colhead_theirs:"{name}'s guesses → your code",
     rival:"opponent", log_empty_mine:"No guesses yet", log_empty_theirs:"No guesses yet", log_nada:"none",
@@ -635,6 +637,7 @@ const I18N = {
     rematch_rules:"Règles : {rules}. Choisis ton nouveau code.", lbl_newsecret:"Ton nouveau code secret",
     rematch_send:"Envoyer la revanche", back_home:"Retour à l'accueil",
     game_match:"Partie", game_yourcode:"Ton code :", vs:"vs {name}", waiting_short:"en attente…",
+    spectator_confirm:"Cette partie est complète. Continuer comme spectateur ?", spectator_mode:"Spectateur", spectator_p1:"Essais de {name} → code de {opp}", spectator_p2:"Essais de {name} → code de {opp}", spectator_winner:"{name} a gagné 🏆",
     guess_btn:"Deviner", legend_fija:"F = bonne position", legend_pica:"P = présent, mal placé",
     colhead_mine:"Tes essais → code de {name}", colhead_theirs:"Essais de {name} → ton code",
     rival:"adversaire", log_empty_mine:"Aucun essai pour l'instant", log_empty_theirs:"Aucun essai pour l'instant", log_nada:"rien",
@@ -818,7 +821,7 @@ let cfg = { digits:3, mode:'numbers', numColors:6, allowRepeats:false, isPublic:
 let joinMeta = null, finishedMeta = null;
 let game = { id:'', digits:3, mode:'numbers', numColors:6, allowRepeats:false, maxAttempts:0, turnSeconds:0 };
 let gState = null;
-let gameViewEpoch = 0, routeEpoch = 0;
+let gameViewEpoch = 0, routeEpoch = 0, gameRequestSeq = 0;
 let pollTimer = null, tickTimer = null, passRequested = false, lastTurnStart = '';
 let lobbyPollTimer = null;
 let lastYourTurn = null;
@@ -1294,7 +1297,7 @@ async function sendRematch(){
     const res=await api('rematch',{gameId:finishedMeta.gameId, username:user, secret, country:myCountry});
     if(!res.ok){ toast(te(res.error),true); return; }
     localStorage.setItem('pf_secret_'+res.gameId, secret);
-    enterWait({id:res.gameId, digits:finishedMeta.digits, mode:finishedMeta.mode, numColors:finishedMeta.numColors, allowRepeats:finishedMeta.allowRepeats, maxAttempts:finishedMeta.maxAttempts, turnSeconds:finishedMeta.turnSeconds});
+    await goToRematch(res.gameId);
   }catch(e){ toast(t('net_error'),true); } finally{ $('btn-rematch').disabled=false; }
 }
 /* Unirse a una partida privada escribiendo su código en el lobby. */
@@ -1317,7 +1320,11 @@ async function goToRematch(rematchId){
       toast(te(st.error)||t('not_available'),true); return;
     }
     const meta=metaFromState(st);
-    if(st.status==='finished'&&st.youAre){ enterGame(meta); }
+    if((st.status==='active'||st.status==='finished')&&!st.youAre){
+      if(confirm(t('spectator_confirm'))) enterGame(Object.assign(meta,{spectator:true}));
+      else enterLobby();
+    }
+    else if(st.status==='finished'&&st.youAre){ enterGame(meta); }
     else if(st.status==='active'&&st.p1&&st.p2){ enterGame(meta); }
     else if(st.status==='waiting'&&st.youAre===1){ enterWait(meta); }
     else if(st.status==='waiting'){ openJoin(Object.assign({gameId:rematchId}, meta)); }
@@ -1333,19 +1340,20 @@ function metaFromState(st){
 function resetGameView(){
   hideToast();
   $('g-players').innerHTML=''; $('g-mysecret').textContent='•'.repeat(game.digits);
+  $('g-mysecret').closest('.code-view').classList.toggle('hidden',!!game.spectator);
   $('g-banner').innerHTML=''; $('g-rematch-zone').innerHTML='';
   $('g-mylog').innerHTML=`<div class="empty">${t('loading')}</div>`;
   $('g-theirlog').innerHTML=`<div class="empty">${t('loading')}</div>`;
   $('g-turn').className='turnbar theirs'; $('g-turn').classList.remove('hidden');
   $('g-turn-txt').textContent=t('waiting_generic');
   $('g-statusrow').classList.add('hidden'); $('g-timer').classList.add('hidden'); $('g-attempts').classList.add('hidden');
-  $('g-guessarea').classList.remove('hidden'); $('g-guess').disabled=true; $('g-guess-btn').disabled=true;
+  $('g-guessarea').classList.toggle('hidden',!!game.spectator); $('g-guess').disabled=true; $('g-guess-btn').disabled=true;
   $('g-abandon-wrap').classList.add('hidden'); document.querySelector('.legend').style.display='flex';
 }
 function enterGame(meta){
   const epoch=++gameViewEpoch;
   game={id:meta.id, digits:parseInt(meta.digits,10), mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats,
-    maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0};
+    maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0, spectator:!!meta.spectator};
   const inp=$('g-guess'); inp.maxLength=game.digits; inp.value=''; inp.placeholder='•'.repeat(game.digits);
   padG.reset(); applyMode('g', game.mode, 'g-guess', 'pad-g', padG);
   $('g-code').textContent=meta.id; $('g-guess-val').textContent='';
@@ -1360,9 +1368,10 @@ function terminalGameError(msg){
 }
 async function refreshGame(expectedEpoch=gameViewEpoch, expectedGameId=game.id){
   const requestEpoch=expectedEpoch, requestGameId=expectedGameId;
+  const requestSeq=++gameRequestSeq;
   try{
     const st=await api('state',{gameId:requestGameId, username:user, inGame:true});
-    if(requestEpoch!==gameViewEpoch||requestGameId!==game.id||$('s-game').classList.contains('hidden')) return;
+    if(requestSeq!==gameRequestSeq||requestEpoch!==gameViewEpoch||requestGameId!==game.id||$('s-game').classList.contains('hidden')) return;
     if(st.ok) renderGame(st);
     else if(terminalGameError(st.error)){
       localStorage.removeItem('pf_current_game'); stopPoll(); stopTick(); toast(te(st.error)||t('not_available'),true); enterLobby();
@@ -1380,15 +1389,22 @@ function renderGame(st){
   if(st.turnStartedAt!==lastTurnStart){ lastTurnStart=st.turnStartedAt; passRequested=false; }
 
   const me=st.youAre; const oppName = me===1 ? st.p2 : st.p1; const oppLabel = oppName||t('rival');
+  const spectator=me===0;
   const oppCountry = me===1 ? st.country2 : st.country1;
   let leftCC, leftName, rightCC, rightName;
   if(me===0){ leftCC=st.country1; leftName=st.p1; rightCC=st.country2; rightName=st.p2; }
   else { leftCC=myCountry; leftName=user; rightCC=oppCountry; rightName=oppName; }
   const rightChip = rightName ? playerChip(rightCC, rightName) : `<span class="pl">${t('waiting_short')}</span>`;
-  $('g-players').innerHTML = playerChip(leftCC, leftName) + `<span class="vs-sep">vs</span>` + rightChip;
+  $('g-players').innerHTML = playerChip(leftCC, leftName) + `<span class="vs-sep">vs</span>` + rightChip +
+    (spectator?`<span class="pill">${t('spectator_mode')}</span>`:'');
   $('g-rules').textContent = rulesLabel(metaFromState(st));
-  $('colhead-mine').textContent=t('colhead_mine',{name:oppLabel});
-  $('colhead-theirs').textContent=t('colhead_theirs',{name:oppLabel});
+  if(spectator){
+    $('colhead-mine').textContent=t('spectator_p1',{name:st.p1,opp:st.p2});
+    $('colhead-theirs').textContent=t('spectator_p2',{name:st.p2,opp:st.p1});
+  }else{
+    $('colhead-mine').textContent=t('colhead_mine',{name:oppLabel});
+    $('colhead-theirs').textContent=t('colhead_theirs',{name:oppLabel});
+  }
 
   const local=localStorage.getItem('pf_secret_'+game.id);
   const mySecret=st.yourSecret||local||'';
@@ -1396,9 +1412,10 @@ function renderGame(st){
   // localmente permite seguir mostrándolo si una actualización puntual falla.
   if(st.yourSecret) localStorage.setItem('pf_secret_'+game.id,st.yourSecret);
   $('g-mysecret').innerHTML = mySecret ? codeViewHTML(mySecret, game.mode) : '•'.repeat(game.digits);
+  $('g-mysecret').closest('.code-view').classList.toggle('hidden',spectator);
 
-  const mine=st.guesses.filter(g=>g.by===user);
-  const theirs=st.guesses.filter(g=>g.by!==user);
+  const mine=st.guesses.filter(g=>g.by===(spectator?st.p1:user));
+  const theirs=st.guesses.filter(g=>g.by===(spectator?st.p2:oppName));
   renderLog('g-mylog', mine, t('log_empty_mine'));
   renderLog('g-theirlog', theirs, t('log_empty_theirs'));
 
@@ -1410,16 +1427,20 @@ function renderGame(st){
     turn.classList.add('hidden'); guessarea.classList.add('hidden'); statusrow.classList.add('hidden'); legend.style.display='none';
     stopTick();
     const won = st.winner===user;
-    if(!endSoundPlayed){ endSoundPlayed=true; endSound(st.isDraw?'draw':(won?'win':'lose')); }
+    if(!endSoundPlayed&&!spectator){ endSoundPlayed=true; endSound(st.isDraw?'draw':(won?'win':'lose')); }
     if(st.isDraw){
       const solvedBy = n => st.guesses.some(x=>x.by===n && x.fijas===parseInt(st.digits,10));
       const bothSolved = solvedBy(st.p1) && solvedBy(st.p2);
       banner.innerHTML=`<div class="banner draw"><h2>${t('draw_title')}</h2><p>${bothSolved?t('draw_both'):t('draw_limit')}</p></div>`;
+    }else if(spectator){
+      banner.innerHTML=`<div class="banner"><h2>${t('spectator_winner',{name:esc(st.winner)})}</h2></div>`;
     }else{
       banner.innerHTML=`<div class="banner ${won?'win':'lose'}"><h2>${won?t('win_title'):t('lose_title')}</h2>
         <p>${won?t('win_msg',{name:esc(oppLabel)}):t('lose_msg',{name:esc(st.winner)})}</p></div>`;
     }
-    if(st.rematchId){
+    if(spectator){
+      rz.innerHTML='';
+    }else if(st.rematchId){
       rz.innerHTML=`<button class="btn green" onclick="goToRematch('${st.rematchId}')">${t('rematch_go')}</button><div style="height:12px"></div>`;
     }else{
       rz.innerHTML=`<button class="btn green" onclick="openRematch()">${t('rematch_btn')}</button><div style="height:12px"></div>`;
@@ -1428,8 +1449,8 @@ function renderGame(st){
   }
 
   banner.innerHTML=''; rz.innerHTML=''; legend.style.display='flex';
-  $('g-abandon-wrap').classList.toggle('hidden',st.status!=='active');
-  turn.classList.remove('hidden'); guessarea.classList.remove('hidden');
+  $('g-abandon-wrap').classList.toggle('hidden',st.status!=='active'||spectator);
+  turn.classList.remove('hidden'); guessarea.classList.toggle('hidden',spectator);
 
   const myAttempts = me===1 ? st.attemptsP1 : st.attemptsP2;
   const canGuessAttempts = !(st.maxAttempts>0 && myAttempts>=st.maxAttempts);
@@ -1491,14 +1512,14 @@ async function submitGuess(){
   $('g-guess-btn').disabled=true;
   try{
     const res=await api('guess',{gameId:game.id, username:user, guess});
-    if(!res.ok){ toast(te(res.error),true); $('g-guess-btn').disabled=false; return; }
+    if(!res.ok){ toast(te(res.error),true); $('g-guess-btn').disabled=false; refreshGame(); return; }
     if(res.tie) toast(t('toast_tie'));
     else if(res.win) toast(t('win_title'));
     else if(res.pending) toast(t('toast_solved'));
     else if(res.draw) toast(t('draw_title'));
     else toast(t('toast_score',{f:res.fijas,p:res.picas}));
     refreshGame();
-  }catch(e){ toast(t('net_error'),true); $('g-guess-btn').disabled=false; }
+  }catch(e){ toast(t('net_error'),true); $('g-guess-btn').disabled=false; refreshGame(); }
 }
 async function leaveGame(){
   const id=game.id; localStorage.removeItem('pf_current_game'); stopPoll(); stopTick();
