@@ -371,6 +371,13 @@
       </div>
       <p class="hint" id="pub-hint" data-i18n="pub_hint_public" style="margin:8px 0 0">Aparece en el lobby: cualquiera puede unirse.</p>
 
+      <label data-i18n="lbl_reveal">Revelar códigos al terminar</label>
+      <div class="seg" id="seg-reveal">
+        <button data-v="0" class="on" data-i18n="reveal_no">No revelar</button>
+        <button data-v="1" data-i18n="reveal_yes">Revelar</button>
+      </div>
+      <p class="hint" data-i18n="reveal_hint" style="margin:8px 0 0">Si se activa, cada jugador verá el código secreto de su rival cuando termine la partida.</p>
+
       <label data-i18n="lbl_secret">Tu código secreto</label>
       <input type="text" id="secret-c" class="code" inputmode="numeric" maxlength="3" placeholder="•••">
       <div class="pad hidden" id="pad-c"><div class="slots" id="slots-c"></div><div class="palette" id="palette-c"></div></div>
@@ -541,7 +548,7 @@ const I18N = {
     lbl_mode:"Modo", mode_numbers:"Números 0-9", mode_colors:"Colores",
     lbl_positions:"Posiciones", lbl_repeats:"Repetidos", rep_no:"No permitir", rep_yes:"Permitir",
     lbl_attempts:"Límite de intentos", nolimit:"Sin límite", lbl_time:"Tiempo por turno",
-    lbl_visibility:"Visibilidad", vis_public:"Pública", vis_private:"Privada",
+    lbl_visibility:"Visibilidad", vis_public:"Pública", vis_private:"Privada", lbl_reveal:"Revelar códigos al terminar", reveal_no:"No revelar", reveal_yes:"Revelar", reveal_hint:"Si se activa, cada jugador verá el código secreto de su rival cuando termine la partida.",
     pub_hint_public:"Aparece en el lobby: cualquiera puede unirse.",
     pub_hint_private:"No aparece en el lobby: solo se entra con el código.",
     lbl_secret:"Tu código secreto", create_btn:"Crear y esperar rival",
@@ -552,7 +559,7 @@ const I18N = {
     rematch_title:"Revancha 🔁", rematch_hint:"Mismas reglas, mismo rival. Define tu nuevo código secreto.",
     rematch_rules:"Reglas: {rules}. Define tu nuevo código.", lbl_newsecret:"Tu nuevo código secreto",
     rematch_send:"Enviar revancha", back_home:"Volver al inicio",
-    game_match:"Partida", game_yourcode:"Tu código:", vs:"vs {name}", waiting_short:"esperando…",
+    game_match:"Partida", game_yourcode:"Tu código:", opponent_code:"Código secreto de {name}:", vs:"vs {name}", waiting_short:"esperando…",
     spectator_confirm:"La partida está llena. ¿Deseas continuar como espectador?", spectator_mode:"Espectador", spectator_p1:"Intentos de {name} → código de {opp}", spectator_p2:"Intentos de {name} → código de {opp}", spectator_winner:"Ganó {name} 🏆",
     guess_btn:"Adivinar", legend_fija:"F = posición correcta", legend_pica:"P = presente, mal colocada",
     colhead_mine:"Tus intentos → código de {name}", colhead_theirs:"Intentos de {name} → tu código",
@@ -576,7 +583,7 @@ const I18N = {
     net_error:"Error de red", not_available:"No disponible", api_not_set:"Configura la URL de Apps Script en index.html",
     val_digits:"Solo dígitos 0-9", val_repeats:"Hay repetidos", val_valid:"¡Válido!",
     rl_colors:"{n} colores", rl_numbers:"números", rl_pos:"{n} pos", rl_norepeat:"sin repetir", rl_repeat:"repetidos ✓",
-    rl_attempts:"{n} intentos", rl_turn:"{n}s/turno"
+    rl_attempts:"{n} intentos", rl_turn:"{n}s/turno", rl_reveal:"revela códigos al final", rl_noreveal:"códigos ocultos al final"
   },
   en:{
     brand_sub:"Online deduction duel", brand_alias:"Also known as “Bulls and Cows” · inspired by “Mastermind”",
@@ -608,7 +615,7 @@ const I18N = {
     lbl_mode:"Mode", mode_numbers:"Numbers 0-9", mode_colors:"Colors",
     lbl_positions:"Positions", lbl_repeats:"Repeats", rep_no:"Not allowed", rep_yes:"Allowed",
     lbl_attempts:"Attempt limit", nolimit:"No limit", lbl_time:"Time per turn",
-    lbl_visibility:"Visibility", vis_public:"Public", vis_private:"Private",
+    lbl_visibility:"Visibility", vis_public:"Public", vis_private:"Private", lbl_reveal:"Reveal codes at the end", reveal_no:"Do not reveal", reveal_yes:"Reveal", reveal_hint:"When enabled, each player will see their opponent's secret code after the game ends.",
     pub_hint_public:"Shown in the lobby: anyone can join.",
     pub_hint_private:"Not shown in the lobby: join only with the code.",
     lbl_secret:"Your secret code", create_btn:"Create and wait for opponent",
@@ -619,7 +626,7 @@ const I18N = {
     rematch_title:"Rematch 🔁", rematch_hint:"Same rules, same opponent. Choose your new secret code.",
     rematch_rules:"Rules: {rules}. Choose your new code.", lbl_newsecret:"Your new secret code",
     rematch_send:"Send rematch", back_home:"Back to home",
-    game_match:"Game", game_yourcode:"Your code:", vs:"vs {name}", waiting_short:"waiting…",
+    game_match:"Game", game_yourcode:"Your code:", opponent_code:"{name}'s secret code:", vs:"vs {name}", waiting_short:"waiting…",
     spectator_confirm:"This game is full. Continue as a spectator?", spectator_mode:"Spectator", spectator_p1:"{name}'s guesses → {opp}'s code", spectator_p2:"{name}'s guesses → {opp}'s code", spectator_winner:"{name} won 🏆",
     guess_btn:"Guess", legend_fija:"F = correct position", legend_pica:"P = present, wrong spot",
     colhead_mine:"Your guesses → {name}'s code", colhead_theirs:"{name}'s guesses → your code",
@@ -643,7 +650,7 @@ const I18N = {
     net_error:"Network error", not_available:"Not available", api_not_set:"Set the Apps Script URL in index.html",
     val_digits:"Digits 0-9 only", val_repeats:"Repeated digits", val_valid:"Valid!",
     rl_colors:"{n} colors", rl_numbers:"numbers", rl_pos:"{n} pos", rl_norepeat:"no repeats", rl_repeat:"repeats ✓",
-    rl_attempts:"{n} tries", rl_turn:"{n}s/turn"
+    rl_attempts:"{n} tries", rl_turn:"{n}s/turn", rl_reveal:"reveals codes at the end", rl_noreveal:"codes hidden at the end"
   },
   fr:{
     brand_sub:"Duel de déduction en ligne", brand_alias:"Aussi appelé « Bulls and Cows » · inspiré de « Mastermind »",
@@ -675,7 +682,7 @@ const I18N = {
     lbl_mode:"Mode", mode_numbers:"Chiffres 0-9", mode_colors:"Couleurs",
     lbl_positions:"Positions", lbl_repeats:"Répétitions", rep_no:"Interdites", rep_yes:"Autorisées",
     lbl_attempts:"Limite d'essais", nolimit:"Illimité", lbl_time:"Temps par tour",
-    lbl_visibility:"Visibilité", vis_public:"Publique", vis_private:"Privée",
+    lbl_visibility:"Visibilité", vis_public:"Publique", vis_private:"Privée", lbl_reveal:"Révéler les codes à la fin", reveal_no:"Ne pas révéler", reveal_yes:"Révéler", reveal_hint:"Si cette option est activée, chaque joueur verra le code secret de son adversaire à la fin de la partie.",
     pub_hint_public:"Visible dans le lobby : tout le monde peut rejoindre.",
     pub_hint_private:"Absente du lobby : on rejoint uniquement avec le code.",
     lbl_secret:"Ton code secret", create_btn:"Créer et attendre l'adversaire",
@@ -686,7 +693,7 @@ const I18N = {
     rematch_title:"Revanche 🔁", rematch_hint:"Mêmes règles, même adversaire. Choisis ton nouveau code secret.",
     rematch_rules:"Règles : {rules}. Choisis ton nouveau code.", lbl_newsecret:"Ton nouveau code secret",
     rematch_send:"Envoyer la revanche", back_home:"Retour à l'accueil",
-    game_match:"Partie", game_yourcode:"Ton code :", vs:"vs {name}", waiting_short:"en attente…",
+    game_match:"Partie", game_yourcode:"Ton code :", opponent_code:"Code secret de {name} :", vs:"vs {name}", waiting_short:"en attente…",
     spectator_confirm:"Cette partie est complète. Continuer comme spectateur ?", spectator_mode:"Spectateur", spectator_p1:"Essais de {name} → code de {opp}", spectator_p2:"Essais de {name} → code de {opp}", spectator_winner:"{name} a gagné 🏆",
     guess_btn:"Deviner", legend_fija:"F = bonne position", legend_pica:"P = présent, mal placé",
     colhead_mine:"Tes essais → code de {name}", colhead_theirs:"Essais de {name} → ton code",
@@ -710,7 +717,7 @@ const I18N = {
     net_error:"Erreur réseau", not_available:"Indisponible", api_not_set:"Configure l'URL Apps Script dans index.html",
     val_digits:"Chiffres 0-9 uniquement", val_repeats:"Chiffres répétés", val_valid:"Valide !",
     rl_colors:"{n} couleurs", rl_numbers:"chiffres", rl_pos:"{n} pos", rl_norepeat:"sans répétition", rl_repeat:"répétitions ✓",
-    rl_attempts:"{n} essais", rl_turn:"{n}s/tour"
+    rl_attempts:"{n} essais", rl_turn:"{n}s/tour", rl_reveal:"codes révélés à la fin", rl_noreveal:"codes masqués à la fin"
   }
 };
 /* Mensajes de error del backend (español) → traducción */
@@ -789,6 +796,7 @@ const RULES = {
         <li><b>Límite de intentos</b>: sin límite, 6 o 10 por jugador.</li>
         <li><b>Tiempo por turno</b>: sin límite, 30 s, 60 s o 2 min.</li>
         <li><b>Visibilidad</b>: pública (lobby) o privada (solo por código).</li>
+        <li><b>Revelar códigos al terminar</b>: desactivado por defecto; si se activa, cada jugador verá el secreto de su rival al finalizar.</li>
       </ul>
       Define su código secreto y obtiene un <b>código de partida de 4 caracteres</b> para compartir.</li>
     <li>El otro se <b>une</b> desde el lobby o con el código, y define su propio secreto con las mismas reglas.</li>
@@ -810,6 +818,7 @@ const RULES = {
         <li><b>Attempt limit</b>: none, 6 or 10 per player.</li>
         <li><b>Time per turn</b>: none, 30 s, 60 s or 2 min.</li>
         <li><b>Visibility</b>: public (lobby) or private (code only).</li>
+        <li><b>Reveal codes at the end</b>: off by default; when enabled, each player sees their opponent's secret after the game.</li>
       </ul>
       They set their secret code and get a <b>4-character game code</b> to share.</li>
     <li>The other player <b>joins</b> from the lobby or with the code, and sets their own secret with the same rules.</li>
@@ -831,6 +840,7 @@ const RULES = {
         <li><b>Limite d'essais</b> : illimité, 6 ou 10 par joueur.</li>
         <li><b>Temps par tour</b> : illimité, 30 s, 60 s ou 2 min.</li>
         <li><b>Visibilité</b> : publique (lobby) ou privée (code seulement).</li>
+        <li><b>Révéler les codes à la fin</b> : désactivé par défaut ; si activé, chaque joueur voit le secret de son adversaire à la fin.</li>
       </ul>
       Il choisit son code secret et obtient un <b>code de partie de 4 caractères</b> à partager.</li>
     <li>L'autre joueur <b>rejoint</b> depuis le lobby ou avec le code, et choisit son propre secret avec les mêmes règles.</li>
@@ -881,9 +891,9 @@ const COLORS = [
 /* -------------------- estado -------------------- */
 let user = localStorage.getItem('pf_user') || '';
 let userPin = localStorage.getItem('pf_pin') || '';
-let cfg = { digits:3, mode:'numbers', numColors:6, allowRepeats:false, isPublic:true, maxAttempts:0, turnSeconds:0 };
+let cfg = { digits:3, mode:'numbers', numColors:6, allowRepeats:false, isPublic:true, maxAttempts:0, turnSeconds:0, revealSecrets:false };
 let joinMeta = null, finishedMeta = null;
-let game = { id:'', digits:3, mode:'numbers', numColors:6, allowRepeats:false, maxAttempts:0, turnSeconds:0 };
+let game = { id:'', digits:3, mode:'numbers', numColors:6, allowRepeats:false, maxAttempts:0, turnSeconds:0, revealSecrets:false };
 let gState = null;
 let gameViewEpoch = 0, routeEpoch = 0, gameRequestSeq = 0;
 let pollTimer = null, tickTimer = null, passRequested = false, lastTurnStart = '';
@@ -959,6 +969,7 @@ function rulesLabel(m){
     (m.allowRepeats?t('rl_repeat'):t('rl_norepeat')) ];
   if(m.maxAttempts>0) parts.push(t('rl_attempts',{n:m.maxAttempts}));
   if(m.turnSeconds>0) parts.push(t('rl_turn',{n:m.turnSeconds}));
+  parts.push(t(m.revealSecrets?'rl_reveal':'rl_noreveal'));
   return parts.join(' · ');
 }
 function relativeActivity(iso){
@@ -1212,7 +1223,7 @@ function renderGameItems(box, games){
       <span class="${cntCls}" style="margin-right:2px">${cnt}</span>`;
     const b=document.createElement('button'); b.className='btn sm'+(invite?' green':'');
     b.textContent= invite ? t('join_btn') : (g.status==='waiting'?t('see_btn'):t('continue_btn'));
-    b.onclick=()=>{ const meta={id:g.gameId,digits:g.digits,mode:g.mode,numColors:g.numColors,allowRepeats:g.allowRepeats,maxAttempts:g.maxAttempts,turnSeconds:g.turnSeconds};
+    b.onclick=()=>{ const meta={id:g.gameId,digits:g.digits,mode:g.mode,numColors:g.numColors,allowRepeats:g.allowRepeats,maxAttempts:g.maxAttempts,turnSeconds:g.turnSeconds,revealSecrets:g.revealSecrets};
       if(invite){ goToRematch(g.gameId); }
       else if(g.status==='waiting'||!complete){ enterWait(meta); } else { enterGame(meta); } };
     el.appendChild(b); box.appendChild(el);
@@ -1289,6 +1300,8 @@ $('seg-time').addEventListener('click', e=>{ const b=e.target.closest('button');
 $('seg-public').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
   cfg.isPublic=b.dataset.p==='1'; segPick($('seg-public'),b);
   $('pub-hint').textContent=cfg.isPublic?t('pub_hint_public'):t('pub_hint_private'); });
+$('seg-reveal').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
+  cfg.revealSecrets=b.dataset.v==='1'; segPick($('seg-reveal'),b); });
 $('secret-c').addEventListener('input', e=>setVal('secret-c-val', e.target.value, cfg.digits, cfg.allowRepeats));
 
 function getSecret(ctx){
@@ -1304,17 +1317,17 @@ async function createGame(){
   $('btn-create').disabled=true;
   try{
     const res=await api('createGame',{username:user, digits:cfg.digits, secret, mode:cfg.mode, numColors:cfg.numColors,
-      allowRepeats:cfg.allowRepeats, isPublic:cfg.isPublic, maxAttempts:cfg.maxAttempts, turnSeconds:cfg.turnSeconds, country:myCountry});
+      allowRepeats:cfg.allowRepeats, isPublic:cfg.isPublic, maxAttempts:cfg.maxAttempts, turnSeconds:cfg.turnSeconds, revealSecrets:cfg.revealSecrets, country:myCountry});
     if(!res.ok){ toast(te(res.error),true); return; }
     localStorage.setItem('pf_secret_'+res.gameId, secret);
-    enterWait({id:res.gameId, digits:cfg.digits, mode:cfg.mode, numColors:cfg.numColors, allowRepeats:cfg.allowRepeats, maxAttempts:cfg.maxAttempts, turnSeconds:cfg.turnSeconds});
+    enterWait({id:res.gameId, digits:cfg.digits, mode:cfg.mode, numColors:cfg.numColors, allowRepeats:cfg.allowRepeats, maxAttempts:cfg.maxAttempts, turnSeconds:cfg.turnSeconds, revealSecrets:cfg.revealSecrets});
   }catch(e){ toast(t('net_error'),true); } finally{ $('btn-create').disabled=false; }
 }
 
 /* -------------------- sala de espera -------------------- */
 function enterWait(meta){
   localStorage.removeItem('pf_current_game');
-  game={id:meta.id, digits:meta.digits, mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats, maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0};
+  game={id:meta.id, digits:meta.digits, mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats, maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0, revealSecrets:!!meta.revealSecrets};
   $('wait-code').textContent=meta.id; $('wait-info').textContent=rulesLabel(meta);
   show('wait');
   const waitEpoch=gameViewEpoch, waitGameId=game.id;
@@ -1392,7 +1405,7 @@ async function confirmJoin(){
 /* -------------------- revancha -------------------- */
 function openRematch(){
   finishedMeta={gameId:gState.gameId, digits:gState.digits, mode:gState.mode, numColors:gState.numColors||6, allowRepeats:gState.allowRepeats,
-    maxAttempts:gState.maxAttempts, turnSeconds:gState.turnSeconds};
+    maxAttempts:gState.maxAttempts, turnSeconds:gState.turnSeconds, revealSecrets:gState.revealSecrets};
   $('rematch-rules-txt').textContent=t('rematch_rules',{rules:rulesLabel(finishedMeta)});
   const inp=$('secret-r'); inp.maxLength=finishedMeta.digits; inp.value=''; inp.placeholder='•'.repeat(finishedMeta.digits);
   padR.reset(); applyMode('r', finishedMeta.mode, 'secret-r', 'pad-r', padR); $('secret-r-val').textContent='';
@@ -1446,7 +1459,7 @@ async function goToRematch(rematchId){
 /* -------------------- juego -------------------- */
 function metaFromState(st){
   return {id:st.gameId, digits:parseInt(st.digits,10), mode:st.mode, numColors:st.numColors||6, allowRepeats:st.allowRepeats,
-    maxAttempts:st.maxAttempts||0, turnSeconds:st.turnSeconds||0};
+    maxAttempts:st.maxAttempts||0, turnSeconds:st.turnSeconds||0, revealSecrets:!!st.revealSecrets};
 }
 function resetGameView(){
   hideToast();
@@ -1465,7 +1478,7 @@ function resetGameView(){
 function enterGame(meta){
   const epoch=++gameViewEpoch;
   game={id:meta.id, digits:parseInt(meta.digits,10), mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats,
-    maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0, spectator:!!meta.spectator};
+    maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0, revealSecrets:!!meta.revealSecrets, spectator:!!meta.spectator};
   const inp=$('g-guess'); inp.maxLength=game.digits; inp.value=''; inp.placeholder='•'.repeat(game.digits);
   padG.reset(); applyMode('g', game.mode, 'g-guess', 'pad-g', padG);
   $('g-code').textContent=meta.id; $('g-guess-val').textContent='';
@@ -1550,6 +1563,9 @@ function renderGame(st){
     }else{
       banner.innerHTML=`<div class="banner ${won?'win':'lose'}"><h2>${won?t('win_title'):t('lose_title')}</h2>
         <p>${won?t('win_msg',{name:esc(oppLabel)}):t('lose_msg',{name:esc(st.winner)})}</p></div>`;
+    }
+    if(!spectator&&st.opponentSecret){
+      banner.insertAdjacentHTML('beforeend',`<div class="note"><b>${t('opponent_code',{name:esc(oppLabel)})}</b> ${codeViewHTML(st.opponentSecret,game.mode)}</div>`);
     }
     if(spectator){
       rz.innerHTML='';
