@@ -1,6 +1,6 @@
 # Migración de Picas y Fijas
 
-Última actualización: 2026-08-02
+Última actualización: 2026-08-03
 
 ## Objetivo
 
@@ -12,9 +12,9 @@ La versión actual seguirá disponible hasta que la nueva versión haya superado
 
 ## Estado general
 
-**Fase actual:** 6. Preparación de publicación de prueba.
+**Fase actual:** 11. Validación pública del Worker de prueba.
 
-**Siguiente acción:** recibir confirmación para subir los commits a GitHub y desplegar el Worker de prueba.
+**Siguiente acción:** validar el juego desde dispositivos reales y preparar la importación final de Excel.
 
 ## Plan de trabajo
 
@@ -25,10 +25,10 @@ La versión actual seguirá disponible hasta que la nueva versión haya superado
 - [x] 5. Adaptar la interfaz y migrar la lógica de `Code.gs`.
 - [x] 6. Implementar autenticación, validación, idempotencia y control de turnos.
 - [ ] 7. Reducir el polling y optimizar presencia y actualización de partidas. _(presencia optimizada; polling pendiente de medición)_
-- [ ] 8. Crear pruebas automáticas y simulaciones de varios jugadores. _(pruebas esenciales completadas; ampliar matriz pendiente)_
-- [ ] 9. Configurar el repositorio y el despliegue automático en Cloudflare.
+- [x] 8. Crear pruebas automáticas y simulaciones de varios jugadores.
+- [ ] 9. Configurar el repositorio y el despliegue automático en Cloudflare. _(repositorio publicado y despliegue manual funcionando; conexión automática pendiente)_
 - [ ] 10. Migrar los datos que se decida conservar.
-- [ ] 11. Publicar una versión de prueba y validarla desde varios países/dispositivos.
+- [ ] 11. Publicar una versión de prueba y validarla desde varios países/dispositivos. _(Worker público funcionando; validación del propietario pendiente)_
 - [ ] 12. Publicar la versión final, documentar copias y preparar reversión.
 
 ## Criterios mínimos antes de publicar
@@ -90,6 +90,19 @@ La versión actual seguirá disponible hasta que la nueva versión haya superado
 - Aplicada y verificada la migración remota `0001_initial.sql`; datos remotos todavía vacíos.
 - Repetida la prueba integral después de los cambios oficiales: correcta.
 
+### 2026-08-03
+
+- Publicados en GitHub los commits `506a12e` y `b658423` tras autorización expresa.
+- Desplegado el Worker público en `https://picas-y-fijas.picas-y-fijas.workers.dev`.
+- Confirmado el subdominio gratuito de la cuenta `picas-y-fijas.workers.dev`; no se necesita comprar ni transferir un dominio.
+- Detectado en la primera comprobación un bucle de redirección en `/admin` causado por el manejo automático de archivos HTML.
+- Corregida la configuración de recursos estáticos y repetidas las 4 pruebas automáticas y la validación de despliegue, todas correctas.
+- Desplegada la corrección como versión Cloudflare `badcd849-2fa6-478c-ac46-ff35e53e9688`.
+- Verificadas públicamente la portada, la API y la ruta administrativa separada `/admin`, todas con respuesta correcta.
+- Ejecutada una prueba remota con tres usuarios ficticios: una sola unión ganó la plaza, el secreto rival quedó protegido y una petición duplicada guardó una sola jugada.
+- Retirados exclusivamente los tres usuarios y la partida ficticios; verificado que la base remota vuelve a tener 0 usuarios, 0 partidas, 0 sesiones, 0 presencias y 0 recibos.
+- Acordado reservar para el final el reemplazo del `index.html` antiguo por una página de aviso y redirección al nuevo enlace, después de validar y migrar los datos.
+
 ## Decisiones confirmadas
 
 - Código fuente: GitHub.
@@ -109,5 +122,5 @@ La versión actual seguirá disponible hasta que la nueva versión haya superado
 
 ## Decisiones pendientes
 
-- Nombre final disponible del subdominio `workers.dev`.
-- Compatibilidad del algoritmo actual de hash de PIN con Web Crypto en Cloudflare.
+- Fecha del cambio definitivo y de la importación reciente de `Picas y Fijas.xlsx`.
+- Momento de activar la página de aviso y redirección desde la versión antigua.
