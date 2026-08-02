@@ -555,7 +555,7 @@ const I18N = {
     lbl_secret:"Tu código secreto", create_btn:"Crear y esperar rival",
     wait_title:"Partida creada", wait_hint:"Comparte este código con tu rival. Empieza en cuanto se una.",
     wait_copy:"Copiar código", wait_waiting:"Esperando a que alguien se una…", wait_cancel:"Cancelar partida", wait_back:"Volver atrás",
-    copied:"Código copiado: {code}", cancel_confirm:"¿Cancelar esta partida abierta?", cancel_done:"Partida cancelada", abandon_game:"Abandonar partida", abandon_confirm:"¿Abandonar esta partida? No contará como victoria para nadie.", abandon_done:"Partida abandonada",
+    copied:"Código copiado: {code}", cancel_confirm:"¿Cancelar esta partida abierta?", cancel_done:"Partida cancelada", abandon_game:"Abandonar partida", abandon_confirm:"¿Abandonar esta partida? Perderás automáticamente y la victoria será otorgada a tu rival.", abandon_done:"Partida abandonada · victoria otorgada a tu rival",
     join_to:"Unirse a", join_rules:"Reglas: {rules}. Define tu código secreto.", join_btn2:"Unirse y jugar",
     rematch_title:"Revancha 🔁", rematch_hint:"Mismas reglas, mismo rival. Define tu nuevo código secreto.",
     rematch_rules:"Reglas: {rules}. Define tu nuevo código.", lbl_newsecret:"Tu nuevo código secreto",
@@ -574,7 +574,7 @@ const I18N = {
     pause_mine:"Tú solicitaste la pausa. Puedes reanudar cuando estés listo.", pause_other:"{name} solicitó la pausa. La partida se reanudará cuando regrese.",
     pause_auto:"Reanudación automática en {time}", resume_btn:"▶ Quitar pausa", pause_limit:"La pausa dura como máximo 5 minutos y solo está disponible en partidas con tiempo por turno.",
     win_title:"¡Ganaste! 🎉", lose_title:"Perdiste", draw_title:"Empate 🤝",
-    win_msg:"Descifraste el código de {name}", lose_msg:"{name} descifró tu código primero",
+    win_msg:"Descifraste el código de {name}", lose_msg:"{name} descifró tu código primero", win_abandon:"{name} abandonó la partida; recibes la victoria", lose_abandon:"Abandonaste la partida; {name} recibe la victoria",
     draw_both:"Ambos descifraron el código en el mismo número de intentos",
     draw_limit:"Nadie descifró el código dentro del límite de intentos",
     rematch_go:"Ir a la revancha 🔁", rematch_btn:"Revancha 🔁",
@@ -622,7 +622,7 @@ const I18N = {
     lbl_secret:"Your secret code", create_btn:"Create and wait for opponent",
     wait_title:"Game created", wait_hint:"Share this code with your opponent. It starts as soon as they join.",
     wait_copy:"Copy code", wait_waiting:"Waiting for someone to join…", wait_cancel:"Cancel game", wait_back:"Go back",
-    copied:"Code copied: {code}", cancel_confirm:"Cancel this open game?", cancel_done:"Game cancelled", abandon_game:"Abandon game", abandon_confirm:"Abandon this game? It won't count as a win for anyone.", abandon_done:"Game abandoned",
+    copied:"Code copied: {code}", cancel_confirm:"Cancel this open game?", cancel_done:"Game cancelled", abandon_game:"Abandon game", abandon_confirm:"Abandon this game? You will automatically lose and your opponent will receive the win.", abandon_done:"Game abandoned · win awarded to your opponent",
     join_to:"Join", join_rules:"Rules: {rules}. Choose your secret code.", join_btn2:"Join and play",
     rematch_title:"Rematch 🔁", rematch_hint:"Same rules, same opponent. Choose your new secret code.",
     rematch_rules:"Rules: {rules}. Choose your new code.", lbl_newsecret:"Your new secret code",
@@ -641,7 +641,7 @@ const I18N = {
     pause_mine:"You requested the pause. Resume when you're ready.", pause_other:"{name} requested the pause. The game will resume when they return.",
     pause_auto:"Automatic resume in {time}", resume_btn:"▶ Resume game", pause_limit:"The pause lasts up to 5 minutes and is only available in games with a turn timer.",
     win_title:"You won! 🎉", lose_title:"You lost", draw_title:"Draw 🤝",
-    win_msg:"You cracked {name}'s code", lose_msg:"{name} cracked your code first",
+    win_msg:"You cracked {name}'s code", lose_msg:"{name} cracked your code first", win_abandon:"{name} abandoned the game; you receive the win", lose_abandon:"You abandoned the game; {name} receives the win",
     draw_both:"Both cracked the code in the same number of tries",
     draw_limit:"Nobody cracked the code within the attempt limit",
     rematch_go:"Go to rematch 🔁", rematch_btn:"Rematch 🔁",
@@ -689,7 +689,7 @@ const I18N = {
     lbl_secret:"Ton code secret", create_btn:"Créer et attendre l'adversaire",
     wait_title:"Partie créée", wait_hint:"Partage ce code avec ton adversaire. La partie démarre dès qu'il rejoint.",
     wait_copy:"Copier le code", wait_waiting:"En attente d'un joueur…", wait_cancel:"Annuler la partie", wait_back:"Retour",
-    copied:"Code copié : {code}", cancel_confirm:"Annuler cette partie ouverte ?", cancel_done:"Partie annulée", abandon_game:"Abandonner la partie", abandon_confirm:"Abandonner cette partie ? Elle ne comptera comme victoire pour personne.", abandon_done:"Partie abandonnée",
+    copied:"Code copié : {code}", cancel_confirm:"Annuler cette partie ouverte ?", cancel_done:"Partie annulée", abandon_game:"Abandonner la partie", abandon_confirm:"Abandonner cette partie ? Tu perdras automatiquement et la victoire sera attribuée à ton adversaire.", abandon_done:"Partie abandonnée · victoire attribuée à ton adversaire",
     join_to:"Rejoindre", join_rules:"Règles : {rules}. Choisis ton code secret.", join_btn2:"Rejoindre et jouer",
     rematch_title:"Revanche 🔁", rematch_hint:"Mêmes règles, même adversaire. Choisis ton nouveau code secret.",
     rematch_rules:"Règles : {rules}. Choisis ton nouveau code.", lbl_newsecret:"Ton nouveau code secret",
@@ -708,7 +708,7 @@ const I18N = {
     pause_mine:"Tu as demandé la pause. Reprends la partie quand tu es prêt.", pause_other:"{name} a demandé la pause. La partie reprendra à son retour.",
     pause_auto:"Reprise automatique dans {time}", resume_btn:"▶ Reprendre la partie", pause_limit:"La pause dure au maximum 5 minutes et n'est disponible que dans les parties avec un temps par tour.",
     win_title:"Tu as gagné ! 🎉", lose_title:"Tu as perdu", draw_title:"Égalité 🤝",
-    win_msg:"Tu as trouvé le code de {name}", lose_msg:"{name} a trouvé ton code en premier",
+    win_msg:"Tu as trouvé le code de {name}", lose_msg:"{name} a trouvé ton code en premier", win_abandon:"{name} a abandonné la partie ; la victoire t'est attribuée", lose_abandon:"Tu as abandonné la partie ; la victoire est attribuée à {name}",
     draw_both:"Vous avez trouvé le code au même nombre d'essais",
     draw_limit:"Personne n'a trouvé le code dans la limite d'essais",
     rematch_go:"Aller à la revanche 🔁", rematch_btn:"Revanche 🔁",
@@ -817,7 +817,7 @@ const RULES = {
   <div class="note"><b>Modo colores:</b> mismo cálculo de picas y fijas, solo cambian las cifras por fichas de color.</div>
   <div class="note"><b>Juego asíncrono:</b> sin tiempo por turno, puedes volver al lobby y continuar minutos u horas después; el rival también puede jugar cuando esté disponible.</div>
   <div class="note"><b>Cronómetro:</b> al llegar a 0 el turno pasa automáticamente al rival. Si alguien vuelve al lobby, el reloj se detiene hasta que ambos regresen. La pausa manual temporal solo está disponible en partidas con tiempo.</div>
-  <div class="note"><b>Salir o cancelar:</b> volver al lobby no elimina la partida. El creador puede cancelar una partida que aún espera rival; una partida ya iniciada puede abandonarse sin otorgar una victoria.</div>`,
+  <div class="note"><b>Salir o cancelar:</b> volver al lobby no elimina la partida. El creador puede cancelar una partida que aún espera rival. Abandonar una partida iniciada concede la victoria al rival y registra una derrota.</div>`,
   en:`<ol>
     <li>Each player registers a <b>username</b> and protects it with a <b>4-to-8-digit PIN</b>. The name is also used in the ranking.</li>
     <li>One player <b>creates the game</b> and picks the rules:
@@ -840,7 +840,7 @@ const RULES = {
   <div class="note"><b>Colors mode:</b> same F/P scoring, colored pegs instead of digits.</div>
   <div class="note"><b>Asynchronous play:</b> without a turn timer, you can return to the lobby and continue minutes or hours later; your opponent can also play when available.</div>
   <div class="note"><b>Timer:</b> when it reaches 0, the turn automatically passes to the opponent. If someone returns to the lobby, the clock stops until both return. A temporary manual pause is only available in timed games.</div>
-  <div class="note"><b>Leaving or cancelling:</b> returning to the lobby does not delete the game. The creator can cancel a game that is still waiting for an opponent; a game already in progress can be abandoned without awarding a win.</div>`,
+  <div class="note"><b>Leaving or cancelling:</b> returning to the lobby does not delete the game. The creator can cancel a game that is still waiting for an opponent. Abandoning a game in progress awards the win to the opponent and records a loss.</div>`,
   fr:`<ol>
     <li>Chaque joueur enregistre un <b>nom d'utilisateur</b> et le protège avec un <b>PIN de 4 à 8 chiffres</b>. Le nom sert aussi au classement.</li>
     <li>Un joueur <b>crée la partie</b> et choisit les règles :
@@ -863,7 +863,7 @@ const RULES = {
   <div class="note"><b>Mode couleurs :</b> même calcul F/P, des pions colorés à la place des chiffres.</div>
   <div class="note"><b>Jeu asynchrone :</b> sans temps par tour, tu peux retourner au lobby et continuer quelques minutes ou heures plus tard ; ton adversaire peut aussi jouer lorsqu'il est disponible.</div>
   <div class="note"><b>Chrono :</b> à 0, le tour passe automatiquement à l'adversaire. Si quelqu'un retourne au lobby, le chrono s'arrête jusqu'au retour des deux joueurs. La pause manuelle temporaire n'est disponible que dans les parties chronométrées.</div>
-  <div class="note"><b>Quitter ou annuler :</b> retourner au lobby ne supprime pas la partie. Le créateur peut annuler une partie qui attend encore un adversaire ; une partie déjà commencée peut être abandonnée sans attribuer de victoire.</div>`
+  <div class="note"><b>Quitter ou annuler :</b> retourner au lobby ne supprime pas la partie. Le créateur peut annuler une partie qui attend encore un adversaire. Abandonner une partie commencée attribue la victoire à l'adversaire et enregistre une défaite.</div>`
 };
 
 let lang = localStorage.getItem('pf_lang') || 'es';
@@ -1575,8 +1575,11 @@ function renderGame(st){
     }else if(spectator){
       banner.innerHTML=`<div class="banner"><h2>${t('spectator_winner',{name:esc(st.winner)})}</h2></div>`;
     }else{
+      const resultMsg = st.finishReason==='abandon'
+        ? (won?t('win_abandon',{name:esc(oppLabel)}):t('lose_abandon',{name:esc(st.winner)}))
+        : (won?t('win_msg',{name:esc(oppLabel)}):t('lose_msg',{name:esc(st.winner)}));
       banner.innerHTML=`<div class="banner ${won?'win':'lose'}"><h2>${won?t('win_title'):t('lose_title')}</h2>
-        <p>${won?t('win_msg',{name:esc(oppLabel)}):t('lose_msg',{name:esc(st.winner)})}</p></div>`;
+        <p>${resultMsg}</p></div>`;
     }
     if(!spectator&&st.opponentSecret){
       banner.insertAdjacentHTML('beforeend',`<div class="note"><b>${t('opponent_code',{name:esc(oppLabel)})}</b> ${codeViewHTML(st.opponentSecret,game.mode)}</div>`);
