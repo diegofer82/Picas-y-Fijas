@@ -102,6 +102,10 @@ La versión actual seguirá disponible hasta que la nueva versión haya superado
 - Ejecutada una prueba remota con tres usuarios ficticios: una sola unión ganó la plaza, el secreto rival quedó protegido y una petición duplicada guardó una sola jugada.
 - Retirados exclusivamente los tres usuarios y la partida ficticios; verificado que la base remota vuelve a tener 0 usuarios, 0 partidas, 0 sesiones, 0 presencias y 0 recibos.
 - Acordado reservar para el final el reemplazo del `index.html` antiguo por una página de aviso y redirección al nuevo enlace, después de validar y migrar los datos.
+- Detectado durante la validación visual que `/` devolvía 404 aunque `/admin` funcionaba, debido a que el modo HTML estricto no asignaba automáticamente `index.html`.
+- Añadido enrutamiento explícito de `/` hacia `index.html` y una prueba automática para las dos entradas públicas.
+- Superadas 5 de 5 pruebas y desplegada la corrección como versión Cloudflare `b29d3e1f-c3e1-44d9-8b51-d64bd01c6388`.
+- Verificado el contenido público real: `/` responde 200 con el juego completo y `/admin` responde 200 con el panel administrativo.
 
 ## Decisiones confirmadas
 
