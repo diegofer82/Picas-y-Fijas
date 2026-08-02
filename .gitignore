@@ -1,0 +1,30 @@
+# Datos privados y copias de Google Sheets
+*.xlsx
+*.xls
+*.csv
+*.tsv
+datos/
+backups/
+.private/
+
+# Secretos y configuración local
+.env
+.env.*
+!.env.example
+.dev.vars
+*.pem
+*.key
+
+# Herramientas y archivos temporales
+node_modules/
+.wrangler/
+.codex-tmp/
+dist/
+coverage/
+*.log
+
+# Sistema operativo y editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

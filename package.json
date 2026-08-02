@@ -1,0 +1,17 @@
+{
+  "name": "picas-y-fijas",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "test": "node --test",
+    "check": "node --check src/index.js && node --check src/game.js && node --test",
+    "deploy": "wrangler deploy",
+    "db:local": "wrangler d1 migrations apply picas-y-fijas-db --local",
+    "db:remote": "wrangler d1 migrations apply picas-y-fijas-db --remote"
+  },
+  "devDependencies": {
+    "wrangler": "^4.28.1"
+  }
+}

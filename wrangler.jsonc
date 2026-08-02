@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "picas-y-fijas",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-02",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*", "/admin", "/admin/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "picas-y-fijas-db",
+      "database_id": "REPLACE_AFTER_D1_CREATION",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    "SESSION_TTL_HOURS": "168",
+    "ADMIN_PATH": "/admin",
+    "DEBUG_ERRORS": "0"
+  }
+}
