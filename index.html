@@ -1173,7 +1173,7 @@ async function lobbyRefresh(detect){
     const privateCount = (typeof open.privateCount==='number') ? open.privateCount : privateGames.length;
     const publicActive = (typeof open.publicActiveCount==='number') ? open.publicActiveCount : ((typeof open.activeCount==='number')?open.activeCount:0);
     const publicOpen = (typeof open.publicOpenCount==='number') ? open.publicOpenCount : (open.games||[]).length;
-    const pc = open.onlineCount||0;
+    const pc = (typeof mine.onlineCount==='number') ? mine.onlineCount : (open.onlineCount||0);
     $('players-online').textContent=t(pc===1?'online_players_one':'online_players_many',{n:pc});
     $('private-now').textContent=t('private_now',{n:privateCount});
     $('public-now').textContent=t('public_now',{active:publicActive,open:publicOpen});
