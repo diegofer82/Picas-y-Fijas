@@ -568,7 +568,7 @@ const I18N = {
     tiebreak_you:"⚡ Último intento: {name} ya descifró tu código. ¡Aciértalo para empatar!",
     turn_of:"Turno de {name} …", waiting_generic:"Esperando… …", activity_now:"Activo ahora", activity_min:"Activo hace {n} min", activity_hours:"Activo hace {n} h", activity_days:"Activo hace {n} días",
     solved_wait:"✅ ¡Descifraste su código! Esperando el último intento de {name} para ver si empata…",
-    attempts_chip:"Intentos: {left}/{max}", timer_paused:"⏸ En pausa · esperando reconexión",
+    attempts_chip:"Intentos: {left}/{max}", timer_paused:"⏸ En pausa", timer_paused_lobby:"⏸ En pausa · esperando que {name} regrese a la partida", timer_paused_manual:"⏸ En pausa · {name} pausó la partida; esperando reanudación",
     pause_btn:"Pausar partida", pause_title:"Partida en pausa", pause_confirm:"¿Pausar la partida? Los dos jugadores dejarán de ver códigos e intentos.",
     pause_mine:"Tú solicitaste la pausa. Puedes reanudar cuando estés listo.", pause_other:"{name} solicitó la pausa. La partida se reanudará cuando regrese.",
     pause_auto:"Reanudación automática en {time}", resume_btn:"▶ Quitar pausa", pause_limit:"La pausa dura como máximo 5 minutos y solo está disponible en partidas con tiempo por turno.",
@@ -635,7 +635,7 @@ const I18N = {
     tiebreak_you:"⚡ Last try: {name} already cracked your code. Match it to tie!",
     turn_of:"{name}'s turn …", waiting_generic:"Waiting… …", activity_now:"Active now", activity_min:"Active {n} min ago", activity_hours:"Active {n} h ago", activity_days:"Active {n} days ago",
     solved_wait:"✅ You cracked their code! Waiting for {name}'s last try to see if it's a tie…",
-    attempts_chip:"Attempts: {left}/{max}", timer_paused:"⏸ Paused · waiting for reconnection",
+    attempts_chip:"Attempts: {left}/{max}", timer_paused:"⏸ Paused", timer_paused_lobby:"⏸ Paused · waiting for {name} to return to the game", timer_paused_manual:"⏸ Paused · {name} paused the game; waiting to resume",
     pause_btn:"Pause game", pause_title:"Game paused", pause_confirm:"Pause the game? Both players will stop seeing codes and attempts.",
     pause_mine:"You requested the pause. Resume when you're ready.", pause_other:"{name} requested the pause. The game will resume when they return.",
     pause_auto:"Automatic resume in {time}", resume_btn:"▶ Resume game", pause_limit:"The pause lasts up to 5 minutes and is only available in games with a turn timer.",
@@ -702,7 +702,7 @@ const I18N = {
     tiebreak_you:"⚡ Dernier essai : {name} a déjà trouvé ton code. Réussis pour égaliser !",
     turn_of:"Tour de {name} …", waiting_generic:"En attente… …", activity_now:"Actif maintenant", activity_min:"Actif il y a {n} min", activity_hours:"Actif il y a {n} h", activity_days:"Actif il y a {n} jours",
     solved_wait:"✅ Tu as trouvé son code ! En attente du dernier essai de {name} pour voir si c'est une égalité…",
-    attempts_chip:"Essais : {left}/{max}", timer_paused:"⏸ En pause · reconnexion en attente",
+    attempts_chip:"Essais : {left}/{max}", timer_paused:"⏸ En pause", timer_paused_lobby:"⏸ En pause · en attente du retour de {name} dans la partie", timer_paused_manual:"⏸ En pause · {name} a mis la partie en pause ; reprise en attente",
     pause_btn:"Mettre en pause", pause_title:"Partie en pause", pause_confirm:"Mettre la partie en pause ? Les codes et les essais seront masqués pour les deux joueurs.",
     pause_mine:"Tu as demandé la pause. Reprends la partie quand tu es prêt.", pause_other:"{name} a demandé la pause. La partie reprendra à son retour.",
     pause_auto:"Reprise automatique dans {time}", resume_btn:"▶ Reprendre la partie", pause_limit:"La pause dure au maximum 5 minutes et n'est disponible que dans les parties avec un temps par tour.",
@@ -1627,7 +1627,7 @@ function renderGame(st){
       $('g-turn-txt').textContent=t('solved_wait',{name:oppLabel});
     }
   }
-  if(st.timerPaused) $('g-turn-txt').textContent=t('timer_paused');
+  if(st.timerPaused) $('g-turn-txt').textContent=pausedStatusText(st);
   if(st.yourTurn && lastYourTurn===false) notifyTurn();
   lastYourTurn = st.yourTurn;
   updateTimer();
@@ -1724,13 +1724,19 @@ function updatePauseCover(){
   if(left<=0) refreshGame();
 }
 
+function pausedStatusText(st){
+  if(st&&st.manualPausedBy) return t('timer_paused_manual',{name:st.manualPausedBy});
+  if(st&&st.lobbyPausedBy) return t('timer_paused_lobby',{name:st.lobbyPausedBy});
+  return t('timer_paused');
+}
+
 /* -------------------- cronómetro por turno -------------------- */
 function updateTimer(){
   updatePauseCover();
   if(!gState || gState.status!=='active' || !(gState.turnSeconds>0)){ return; }
   const el=$('g-timer'); el.classList.remove('hidden');
   if(gState.timerPaused){
-    el.textContent=t('timer_paused'); el.className='chip warn'; passRequested=false; return;
+    el.textContent=pausedStatusText(gState); el.className='chip warn'; passRequested=false; return;
   }
   const started=new Date(gState.turnStartedAt).getTime();
   const base=Number.isFinite(Number(gState.turnRemaining))?Number(gState.turnRemaining):gState.turnSeconds;
