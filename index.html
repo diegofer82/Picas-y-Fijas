@@ -80,10 +80,10 @@
 
   .pad{margin-top:4px}
   .slots{display:flex;gap:8px;justify-content:center;margin-bottom:12px;min-height:40px}
-  .slot{width:40px;height:40px;border-radius:10px;border:2px dashed var(--edge);background:#141126}
+  .slot{width:40px;height:40px;border-radius:10px;border:2px dashed var(--edge);background:#141126;display:grid;place-items:center;font-size:24px;font-weight:800;color:#171225;text-shadow:0 1px rgba(255,255,255,.35)}
   .slot.filled{border-style:solid;box-shadow:0 2px 10px rgba(0,0,0,.35)}
   .palette{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-  .sw{width:44px;height:44px;border-radius:12px;border:2px solid rgba(255,255,255,.15);cursor:pointer;padding:0}
+  .sw{width:44px;height:44px;border-radius:12px;border:2px solid rgba(255,255,255,.15);cursor:pointer;padding:0;display:grid;place-items:center;font-size:26px;font-weight:800;color:#171225;text-shadow:0 1px rgba(255,255,255,.35)}
   .sw:active{transform:translateY(1px)}
   .sw.bs{background:#141126;border-color:var(--edge);color:var(--text);font-size:18px;display:grid;place-items:center}
 
@@ -128,7 +128,7 @@
   .code,.n,.seg.mono button,#wait-code,.gid,.chip,.scoretxt,.rankrow .pos,.rankrow .wl{
     font-feature-settings:"zero" 0,"tnum" 1;
   }
-  .mini{width:16px;height:16px;border-radius:5px;display:inline-block;border:1px solid rgba(255,255,255,.15)}
+  .mini{width:18px;height:18px;border-radius:5px;display:inline-grid;place-items:center;border:1px solid rgba(255,255,255,.15);color:#171225;font-family:Arial,sans-serif;font-size:12px;font-weight:800;line-height:1;text-shadow:0 1px rgba(255,255,255,.35)}
 
   .guessarea{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
   .guessarea .field{flex:1}
@@ -139,7 +139,7 @@
   .glog{display:flex;flex-direction:column;gap:8px}
   .glog .g{display:flex;align-items:center;gap:12px;background:#141126;border:1px solid var(--edge);border-radius:10px;padding:10px 12px;}
   .glog .g .n{font-size:20px}
-  .glog .g .mini{width:20px;height:20px;border-radius:6px}
+  .glog .g .mini{width:22px;height:22px;border-radius:6px;font-size:15px}
   .code-view{display:inline-flex;align-items:center;gap:5px}
   .pips{display:flex;gap:5px;margin-left:auto}
   .pip{width:12px;height:12px;border-radius:50%;background:#2a2450;border:1px solid var(--edge)}
@@ -894,10 +894,10 @@ function renderLoginInvite(){
   el.classList.remove('hidden');
 }
 
-/* Paleta de hasta 8 colores (índices 0-7) */
+/* Paleta de hasta 8 colores (índices 0-7). Cada color conserva siempre su figura. */
 const COLORS = [
-  {c:'#F87171'}, {c:'#FB923C'}, {c:'#FBBF24'}, {c:'#4ADE80'},
-  {c:'#22D3EE'}, {c:'#60A5FA'}, {c:'#A78BFA'}, {c:'#F472B6'}
+  {c:'#F87171',s:'◆'}, {c:'#FB923C',s:'●'}, {c:'#FBBF24',s:'▲'}, {c:'#4ADE80',s:'■'},
+  {c:'#22D3EE',s:'★'}, {c:'#60A5FA',s:'⬢'}, {c:'#A78BFA',s:'✚'}, {c:'#F472B6',s:'♥'}
 ];
 
 /* -------------------- estado -------------------- */
@@ -1064,7 +1064,7 @@ function updateSoundLabel(){
 }
 function codeViewHTML(str, mode){
   if(mode==='colors'){
-    let h=''; for(const ch of String(str)){ const col=COLORS[+ch]||{c:'#555'}; h+=`<span class="mini" style="background:${col.c}"></span>`; }
+    let h=''; for(const ch of String(str)){ const col=COLORS[+ch]||{c:'#555',s:'?'}; h+=`<span class="mini" style="background:${col.c}" aria-hidden="true">${col.s}</span>`; }
     return `<span class="code-view">${h}</span>`;
   }
   return `<span class="n">${esc(str)}</span>`;
@@ -1078,7 +1078,7 @@ function makePad(slotsId, paletteId, getLen, getColors, onChange){
     const len=getLen(); slots.innerHTML='';
     for(let i=0;i<len;i++){
       const d=document.createElement('div'); d.className='slot';
-      if(i<value.length){ d.classList.add('filled'); d.style.background=COLORS[+value[i]].c; }
+      if(i<value.length){ const col=COLORS[+value[i]]; d.classList.add('filled'); d.style.background=col.c; d.textContent=col.s; }
       slots.appendChild(d);
     }
   }
@@ -1086,7 +1086,7 @@ function makePad(slotsId, paletteId, getLen, getColors, onChange){
     pal.innerHTML='';
     const n=Math.min(getColors(), COLORS.length);
     for(let idx=0; idx<n; idx++){
-      const b=document.createElement('button'); b.type='button'; b.className='sw'; b.style.background=COLORS[idx].c;
+      const b=document.createElement('button'); const col=COLORS[idx]; b.type='button'; b.className='sw'; b.style.background=col.c; b.textContent=col.s;
       b.onclick=()=>{ if(value.length<getLen()){ value+=idx; drawSlots(); onChange&&onChange(value); } };
       pal.appendChild(b);
     }
