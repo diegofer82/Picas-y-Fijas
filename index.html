@@ -559,7 +559,7 @@ const I18N = {
     join_to:"Unirse a", join_rules:"Reglas: {rules}. Define tu código secreto.", join_btn2:"Unirse y jugar",
     rematch_title:"Revancha 🔁", rematch_hint:"Mismas reglas, mismo rival. Define tu nuevo código secreto.",
     rematch_rules:"Reglas: {rules}. Define tu nuevo código.", lbl_newsecret:"Tu nuevo código secreto",
-    rematch_send:"Enviar revancha", back_home:"Volver al inicio",
+    rematch_send:"Enviar revancha", back_home:"Volver al inicio", result_lobby:"Volver al lobby",
     game_match:"Partida", game_yourcode:"Tu código:", opponent_code:"Código secreto de {name}:", vs:"vs {name}", waiting_short:"esperando…",
     spectator_confirm:"La partida está llena. ¿Deseas continuar como espectador?", spectator_mode:"Espectador", spectator_p1:"Intentos de {name} → código de {opp}", spectator_p2:"Intentos de {name} → código de {opp}", spectator_winner:"Ganó {name} 🏆",
     guess_btn:"Adivinar", legend_fija:"F = posición correcta", legend_pica:"P = presente, mal colocada",
@@ -626,7 +626,7 @@ const I18N = {
     join_to:"Join", join_rules:"Rules: {rules}. Choose your secret code.", join_btn2:"Join and play",
     rematch_title:"Rematch 🔁", rematch_hint:"Same rules, same opponent. Choose your new secret code.",
     rematch_rules:"Rules: {rules}. Choose your new code.", lbl_newsecret:"Your new secret code",
-    rematch_send:"Send rematch", back_home:"Back to home",
+    rematch_send:"Send rematch", back_home:"Back to home", result_lobby:"Back to lobby",
     game_match:"Game", game_yourcode:"Your code:", opponent_code:"{name}'s secret code:", vs:"vs {name}", waiting_short:"waiting…",
     spectator_confirm:"This game is full. Continue as a spectator?", spectator_mode:"Spectator", spectator_p1:"{name}'s guesses → {opp}'s code", spectator_p2:"{name}'s guesses → {opp}'s code", spectator_winner:"{name} won 🏆",
     guess_btn:"Guess", legend_fija:"F = correct position", legend_pica:"P = present, wrong spot",
@@ -693,7 +693,7 @@ const I18N = {
     join_to:"Rejoindre", join_rules:"Règles : {rules}. Choisis ton code secret.", join_btn2:"Rejoindre et jouer",
     rematch_title:"Revanche 🔁", rematch_hint:"Mêmes règles, même adversaire. Choisis ton nouveau code secret.",
     rematch_rules:"Règles : {rules}. Choisis ton nouveau code.", lbl_newsecret:"Ton nouveau code secret",
-    rematch_send:"Envoyer la revanche", back_home:"Retour à l'accueil",
+    rematch_send:"Envoyer la revanche", back_home:"Retour à l'accueil", result_lobby:"Retour au lobby",
     game_match:"Partie", game_yourcode:"Ton code :", opponent_code:"Code secret de {name} :", vs:"vs {name}", waiting_short:"en attente…",
     spectator_confirm:"Cette partie est complète. Continuer comme spectateur ?", spectator_mode:"Spectateur", spectator_p1:"Essais de {name} → code de {opp}", spectator_p2:"Essais de {name} → code de {opp}", spectator_winner:"{name} a gagné 🏆",
     guess_btn:"Deviner", legend_fija:"F = bonne position", legend_pica:"P = présent, mal placé",
@@ -1584,9 +1584,11 @@ function renderGame(st){
     if(spectator){
       rz.innerHTML='';
     }else if(st.rematchId){
-      rz.innerHTML=`<button class="btn green" onclick="goToRematch('${st.rematchId}')">${t('rematch_go')}</button><div style="height:12px"></div>`;
+      rz.innerHTML=`<button class="btn green" onclick="goToRematch('${st.rematchId}')">${t('rematch_go')}</button>
+        <div style="height:10px"></div><button class="btn ghost" onclick="leaveGame()">${t('result_lobby')}</button><div style="height:12px"></div>`;
     }else{
-      rz.innerHTML=`<button class="btn green" onclick="openRematch()">${t('rematch_btn')}</button><div style="height:12px"></div>`;
+      rz.innerHTML=`<button class="btn green" onclick="openRematch()">${t('rematch_btn')}</button>
+        <div style="height:10px"></div><button class="btn ghost" onclick="leaveGame()">${t('result_lobby')}</button><div style="height:12px"></div>`;
     }
     return;
   }
@@ -1747,7 +1749,7 @@ function updateTimer(){
   }
   const started=new Date(gState.turnStartedAt).getTime();
   const base=Number.isFinite(Number(gState.turnRemaining))?Number(gState.turnRemaining):gState.turnSeconds;
-  const remaining=Math.max(0, base - Math.floor((Date.now()-started)/1000));
+  const remaining=Math.max(0, Math.min(gState.turnSeconds, base - Math.floor((Date.now()-started)/1000)));
   const mm=Math.floor(remaining/60), ss=remaining%60;
   el.textContent='⏱ '+(mm>0?mm+':'+String(ss).padStart(2,'0'):ss+'s');
   el.className='chip'+(remaining<=5?' hot':(remaining<=10?' warn':''));
