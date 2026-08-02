@@ -580,7 +580,7 @@ const I18N = {
     toast_tie:"¡Empate! ambos acertaron 🤝", toast_solved:"✅ ¡Descifrado! esperando el último intento del rival",
     toast_score:"{f} fijas · {p} picas",
     invalid_guess:"Intento inválido", check_secret:"Revisa tu código secreto", check_code:"Revisa tu código",
-    net_error:"Error de red", not_available:"No disponible", api_not_set:"Configura la URL de Apps Script en index.html",
+    net_error:"Error de red", retrying_guess:"La conexión tardó. Reintentando el envío…", not_available:"No disponible", api_not_set:"Configura la URL de Apps Script en index.html",
     val_digits:"Solo dígitos 0-9", val_repeats:"Hay repetidos", val_valid:"¡Válido!",
     rl_colors:"{n} colores", rl_numbers:"números", rl_pos:"{n} pos", rl_norepeat:"sin repetir", rl_repeat:"repetidos ✓",
     rl_attempts:"{n} intentos", rl_turn:"{n}s/turno", rl_reveal:"revela códigos al final", rl_noreveal:"códigos ocultos al final"
@@ -647,7 +647,7 @@ const I18N = {
     toast_tie:"Draw! both guessed 🤝", toast_solved:"✅ Cracked! waiting for opponent's last try",
     toast_score:"{f} F · {p} P",
     invalid_guess:"Invalid guess", check_secret:"Check your secret code", check_code:"Check your code",
-    net_error:"Network error", not_available:"Not available", api_not_set:"Set the Apps Script URL in index.html",
+    net_error:"Network error", retrying_guess:"The connection is slow. Retrying your guess…", not_available:"Not available", api_not_set:"Set the Apps Script URL in index.html",
     val_digits:"Digits 0-9 only", val_repeats:"Repeated digits", val_valid:"Valid!",
     rl_colors:"{n} colors", rl_numbers:"numbers", rl_pos:"{n} pos", rl_norepeat:"no repeats", rl_repeat:"repeats ✓",
     rl_attempts:"{n} tries", rl_turn:"{n}s/turn", rl_reveal:"reveals codes at the end", rl_noreveal:"codes hidden at the end"
@@ -714,7 +714,7 @@ const I18N = {
     toast_tie:"Égalité ! les deux ont trouvé 🤝", toast_solved:"✅ Trouvé ! en attente du dernier essai de l'adversaire",
     toast_score:"{f} F · {p} P",
     invalid_guess:"Essai invalide", check_secret:"Vérifie ton code secret", check_code:"Vérifie ton code",
-    net_error:"Erreur réseau", not_available:"Indisponible", api_not_set:"Configure l'URL Apps Script dans index.html",
+    net_error:"Erreur réseau", retrying_guess:"La connexion est lente. Nouvel envoi de ton essai…", not_available:"Indisponible", api_not_set:"Configure l'URL Apps Script dans index.html",
     val_digits:"Chiffres 0-9 uniquement", val_repeats:"Chiffres répétés", val_valid:"Valide !",
     rl_colors:"{n} couleurs", rl_numbers:"chiffres", rl_pos:"{n} pos", rl_norepeat:"sans répétition", rl_repeat:"répétitions ✓",
     rl_attempts:"{n} essais", rl_turn:"{n}s/tour", rl_reveal:"codes révélés à la fin", rl_noreveal:"codes masqués à la fin"
@@ -906,6 +906,7 @@ let cfg = { digits:3, mode:'numbers', numColors:6, allowRepeats:false, isPublic:
 let joinMeta = null, finishedMeta = null;
 let game = { id:'', digits:3, mode:'numbers', numColors:6, allowRepeats:false, maxAttempts:0, turnSeconds:0, revealSecrets:false };
 let gState = null;
+let guessSubmitting = false;
 let gameViewEpoch = 0, routeEpoch = 0, gameRequestSeq = 0;
 let pollTimer = null, tickTimer = null, passRequested = false, lastTurnStart = '';
 let lobbyPollTimer = null;
@@ -951,13 +952,13 @@ function toast(msg, isErr){
   clearTimeout(t._h); t._h=setTimeout(()=>t.className='toast',2600);
 }
 function hideToast(){ const el=$('toast'); clearTimeout(el._h); el.className='toast'; el.textContent=''; }
-async function api(action, payload={}){
+async function api(action, payload={}, options={}){
   if(API.indexOf('PEGA_AQUI')===0){ toast(t('api_not_set'),true); throw new Error('API sin configurar'); }
   // Apps Script puede dejar ocasionalmente una conexión pendiente. Sin límite,
   // el polling secuencial se detenía para siempre hasta que el usuario hacía F5.
   const controller=new AbortController();
   // El primer arranque de Apps Script puede tardar más que las peticiones siguientes.
-  const timeout=setTimeout(()=>controller.abort(),20000);
+  const timeout=setTimeout(()=>controller.abort(),options.timeoutMs||20000);
   try{
     const res = await fetch(API,{ method:'POST', cache:'no-store', signal:controller.signal,
       headers:{'Content-Type':'text/plain;charset=utf-8'},
@@ -1488,6 +1489,7 @@ function resetGameView(){
 }
 function enterGame(meta){
   const epoch=++gameViewEpoch;
+  guessSubmitting=false;
   game={id:meta.id, digits:parseInt(meta.digits,10), mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats,
     maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0, revealSecrets:!!meta.revealSecrets, spectator:!!meta.spectator};
   const inp=$('g-guess'); inp.maxLength=game.digits; inp.value=''; inp.placeholder='•'.repeat(game.digits);
@@ -1610,7 +1612,7 @@ function renderGame(st){
   if(st.yourTurn){
     turn.className='turnbar mine'; $('g-turn-txt').textContent=t('your_turn');
     const ok=canGuessAttempts&&!st.timerPaused;
-    $('g-guess-btn').disabled=!ok; $('g-guess').disabled=!ok;
+    $('g-guess-btn').disabled=!ok||guessSubmitting; $('g-guess').disabled=!ok||guessSubmitting;
     if(!ok) $('g-turn-txt').textContent=t('no_attempts_wait');
     if(pending && pending!==user){
       turn.className='turnbar mine';
@@ -1647,22 +1649,32 @@ function renderLog(id, arr, emptyMsg){
   });
 }
 async function submitGuess(){
+  if(guessSubmitting) return;
   const guess=getSecret('g');
   const r=validateLive(guess, game.digits, game.allowRepeats);
   if(r.cls!=='ok'){ toast(t('invalid_guess'),true); return; }
-  // Limpia el campo de inmediato (ya tenemos el valor capturado en 'guess').
-  $('g-guess').value=''; padG.reset(); $('g-guess-val').textContent='';
+  const requestId=(crypto.randomUUID?crypto.randomUUID():(Date.now()+'-'+Math.random())).replace(/[^A-Za-z0-9-]/g,'');
+  guessSubmitting=true;
   $('g-guess-btn').disabled=true;
+  $('g-guess').disabled=true;
+  let res;
   try{
-    const res=await api('guess',{gameId:game.id, username:user, guess});
-    if(!res.ok){ toast(te(res.error),true); $('g-guess-btn').disabled=false; refreshGame(); return; }
+    try{
+      res=await api('guess',{gameId:game.id, username:user, guess, requestId},{timeoutMs:30000});
+    }catch(firstError){
+      toast(t('retrying_guess'));
+      res=await api('guess',{gameId:game.id, username:user, guess, requestId},{timeoutMs:30000});
+    }
+    if(!res.ok){ guessSubmitting=false; toast(te(res.error),true); refreshGame(); return; }
+    $('g-guess').value=''; padG.reset(); $('g-guess-val').textContent='';
+    guessSubmitting=false;
     if(res.tie) toast(t('toast_tie'));
     else if(res.win) toast(t('win_title'));
     else if(res.pending) toast(t('toast_solved'));
     else if(res.draw) toast(t('draw_title'));
     else toast(t('toast_score',{f:res.fijas,p:res.picas}));
     if(res.state){ gameRequestSeq++; renderGame(res.state); } else refreshGame();
-  }catch(e){ toast(t('net_error'),true); $('g-guess-btn').disabled=false; refreshGame(); }
+  }catch(e){ guessSubmitting=false; toast(t('net_error'),true); refreshGame(); }
 }
 async function leaveGame(){
   const id=game.id; localStorage.removeItem('pf_current_game'); stopPoll(); stopTick();
