@@ -12,16 +12,16 @@ La versión actual seguirá disponible hasta que la nueva versión haya superado
 
 ## Estado general
 
-**Fase actual:** 3. Creación del proyecto Cloudflare y D1.
+**Fase actual:** 6. Preparación de publicación de prueba.
 
-**Siguiente acción:** autorizar la cuenta Cloudflare, crear D1 remoto y reemplazar el identificador provisional.
+**Siguiente acción:** recibir confirmación para subir los commits a GitHub y desplegar el Worker de prueba.
 
 ## Plan de trabajo
 
 - [x] 1. Confirmar cuentas, repositorio, dominio y decisiones funcionales.
 - [x] 2. Auditar el juego actual y documentar rutas, datos y reglas.
 - [x] 3. Diseñar la arquitectura, el esquema D1 y las reglas de concurrencia.
-- [ ] 4. Crear el proyecto Cloudflare Worker, configuración y migraciones D1. _(local completado; remoto pendiente)_
+- [x] 4. Crear el proyecto Cloudflare Worker, configuración y migraciones D1.
 - [x] 5. Adaptar la interfaz y migrar la lógica de `Code.gs`.
 - [x] 6. Implementar autenticación, validación, idempotencia y control de turnos.
 - [ ] 7. Reducir el polling y optimizar presencia y actualización de partidas. _(presencia optimizada; polling pendiente de medición)_
@@ -79,6 +79,16 @@ La versión actual seguirá disponible hasta que la nueva versión haya superado
 - Añadidas documentación de arquitectura e instalación paso a paso.
 - Creado el commit local `732eee7` con el primer bloque completo; todavía no se ha subido a GitHub ni publicado en Cloudflare.
 - Verificado que la terminal Cloudflare aún requiere autorización interactiva mediante `wrangler login`.
+- Autorizados Wrangler y los cinco MCP oficiales de Cloudflare.
+- Instaladas 11 habilidades oficiales desde `cloudflare/skills`.
+- Revisado el Worker con las prácticas oficiales vigentes de Cloudflare.
+- Activados `nodejs_compat`, logs estructurados y trazas con muestreo del 5 %.
+- Añadidos límite de 32 KiB para peticiones JSON y comparación temporalmente segura del hash del PIN.
+- Generados los tipos reales de bindings en `worker-configuration.d.ts`.
+- Perfil de arranque correcto: 44,39 KiB, 10,86 KiB comprimido y 0,0 ms de CPU activa en la muestra local.
+- Creada la base remota `picas-y-fijas-db` en región OC con identificador `efd19588-399d-4c98-a8c1-3d89ed3a465e`.
+- Aplicada y verificada la migración remota `0001_initial.sql`; datos remotos todavía vacíos.
+- Repetida la prueba integral después de los cambios oficiales: correcta.
 
 ## Decisiones confirmadas
 

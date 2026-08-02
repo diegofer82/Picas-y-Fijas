@@ -11,6 +11,11 @@ export async function hashPin(pin, salt) {
   return sha256(`${salt}:${String(pin)}`);
 }
 
+export async function verifyPin(pin, salt, expectedHash) {
+  const actualHash = await hashPin(pin, salt);
+  return crypto.subtle.timingSafeEqual(encoder.encode(actualHash), encoder.encode(String(expectedHash || '').padEnd(64, '0').slice(0, 64)));
+}
+
 export function validPin(pin) {
   return /^\d{4,8}$/.test(String(pin || ''));
 }
@@ -60,7 +65,7 @@ export async function login(db, params, ttlHours) {
   const stamp = new Date().toISOString();
   if (user) {
     if (user.blocked_at) return { ok:false, error:'Este usuario está bloqueado.' };
-    if (await hashPin(pin, user.pin_salt) !== user.pin_hash) {
+    if (!await verifyPin(pin, user.pin_salt, user.pin_hash)) {
       const failures = (Number(attempt?.failures) || 0) + 1;
       const lockedUntil = failures >= 5 ? new Date(Date.now() + 15 * 60000).toISOString() : null;
       await db.prepare(`INSERT INTO login_attempts(throttle_key,failures,locked_until,updated_at) VALUES(?,?,?,?)

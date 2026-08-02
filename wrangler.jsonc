@@ -3,6 +3,12 @@
   "name": "picas-y-fijas",
   "main": "src/index.js",
   "compatibility_date": "2026-08-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+    "logs": { "head_sampling_rate": 1 },
+    "traces": { "enabled": true, "head_sampling_rate": 0.05 }
+  },
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
@@ -12,7 +18,7 @@
     {
       "binding": "DB",
       "database_name": "picas-y-fijas-db",
-      "database_id": "REPLACE_AFTER_D1_CREATION",
+      "database_id": "efd19588-399d-4c98-a8c1-3d89ed3a465e",
       "migrations_dir": "migrations"
     }
   ],

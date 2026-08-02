@@ -17,7 +17,23 @@ const now = () => new Date().toISOString();
 
 async function bodyParams(request) {
   if (request.method === 'GET') return Object.fromEntries(new URL(request.url).searchParams);
-  try { return await request.json(); } catch { return {}; }
+  if (!request.body) return {};
+  const maxBytes = 32 * 1024;
+  const declared = Number(request.headers.get('content-length') || 0);
+  if (declared > maxBytes) throw new Error('Solicitud demasiado grande.');
+  const reader = request.body.getReader(), chunks = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > maxBytes) { await reader.cancel(); throw new Error('Solicitud demasiado grande.'); }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  try { return JSON.parse(new TextDecoder().decode(bytes)); } catch { return {}; }
 }
 
 async function getGame(db, gameId) {
