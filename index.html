@@ -104,6 +104,7 @@
   .turnbar{display:flex;align-items:center;gap:10px;border-radius:12px;padding:12px 14px;margin-bottom:12px;font-weight:600;font-size:14px;}
   .turnbar.mine{background:rgba(74,222,128,.13);border:1px solid rgba(74,222,128,.4);color:var(--fija)}
   .turnbar.theirs{background:rgba(155,146,196,.12);border:1px solid var(--edge);color:var(--muted)}
+  .turnbar.sending{background:rgba(34,211,238,.13);border:1px solid rgba(34,211,238,.45);color:var(--accent)}
   .turnbar .dot{width:9px;height:9px;border-radius:50%;background:currentColor;animation:pulse 1.4s infinite}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
@@ -564,7 +565,7 @@ const I18N = {
     guess_btn:"Adivinar", legend_fija:"F = posición correcta", legend_pica:"P = presente, mal colocada",
     colhead_mine:"Tus intentos → código de {name}", colhead_theirs:"Intentos de {name} → tu código",
     rival:"rival", log_empty_mine:"Aún no has adivinado", log_empty_theirs:"Sin intentos todavía", log_nada:"nada",
-    your_turn:"Es tu turno — adivina el código rival", no_attempts_wait:"Sin intentos restantes — esperando al rival",
+    your_turn:"Es tu turno — adivina el código rival", sending_guess:"Enviando tu intento al oponente…", no_attempts_wait:"Sin intentos restantes — esperando al rival",
     tiebreak_you:"⚡ Último intento: {name} ya descifró tu código. ¡Aciértalo para empatar!",
     turn_of:"Turno de {name} …", waiting_generic:"Esperando… …", activity_now:"Activo ahora", activity_min:"Activo hace {n} min", activity_hours:"Activo hace {n} h", activity_days:"Activo hace {n} días",
     solved_wait:"✅ ¡Descifraste su código! Esperando el último intento de {name} para ver si empata…",
@@ -631,7 +632,7 @@ const I18N = {
     guess_btn:"Guess", legend_fija:"F = correct position", legend_pica:"P = present, wrong spot",
     colhead_mine:"Your guesses → {name}'s code", colhead_theirs:"{name}'s guesses → your code",
     rival:"opponent", log_empty_mine:"No guesses yet", log_empty_theirs:"No guesses yet", log_nada:"none",
-    your_turn:"Your turn — guess the opponent's code", no_attempts_wait:"No attempts left — waiting for opponent",
+    your_turn:"Your turn — guess the opponent's code", sending_guess:"Sending your guess to your opponent…", no_attempts_wait:"No attempts left — waiting for opponent",
     tiebreak_you:"⚡ Last try: {name} already cracked your code. Match it to tie!",
     turn_of:"{name}'s turn …", waiting_generic:"Waiting… …", activity_now:"Active now", activity_min:"Active {n} min ago", activity_hours:"Active {n} h ago", activity_days:"Active {n} days ago",
     solved_wait:"✅ You cracked their code! Waiting for {name}'s last try to see if it's a tie…",
@@ -698,7 +699,7 @@ const I18N = {
     guess_btn:"Deviner", legend_fija:"F = bonne position", legend_pica:"P = présent, mal placé",
     colhead_mine:"Tes essais → code de {name}", colhead_theirs:"Essais de {name} → ton code",
     rival:"adversaire", log_empty_mine:"Aucun essai pour l'instant", log_empty_theirs:"Aucun essai pour l'instant", log_nada:"rien",
-    your_turn:"À toi — devine le code de l'adversaire", no_attempts_wait:"Plus d'essais — en attente de l'adversaire",
+    your_turn:"À toi — devine le code de l'adversaire", sending_guess:"Envoi de ton essai à l'adversaire…", no_attempts_wait:"Plus d'essais — en attente de l'adversaire",
     tiebreak_you:"⚡ Dernier essai : {name} a déjà trouvé ton code. Réussis pour égaliser !",
     turn_of:"Tour de {name} …", waiting_generic:"En attente… …", activity_now:"Actif maintenant", activity_min:"Actif il y a {n} min", activity_hours:"Actif il y a {n} h", activity_days:"Actif il y a {n} jours",
     solved_wait:"✅ Tu as trouvé son code ! En attente du dernier essai de {name} pour voir si c'est une égalité…",
@@ -1618,6 +1619,10 @@ function renderGame(st){
       turn.className='turnbar mine';
       $('g-turn-txt').textContent=t('tiebreak_you',{name:oppLabel});
     }
+    if(guessSubmitting){
+      turn.className='turnbar sending';
+      $('g-turn-txt').textContent=t('sending_guess');
+    }
   }else{
     turn.className='turnbar theirs';
     $('g-turn-txt').textContent= st.whoseTurn ? t('turn_of',{name:st.whoseTurn}) : t('waiting_generic');
@@ -1655,6 +1660,8 @@ async function submitGuess(){
   if(r.cls!=='ok'){ toast(t('invalid_guess'),true); return; }
   const requestId=(crypto.randomUUID?crypto.randomUUID():(Date.now()+'-'+Math.random())).replace(/[^A-Za-z0-9-]/g,'');
   guessSubmitting=true;
+  $('g-turn').className='turnbar sending';
+  $('g-turn-txt').textContent=t('sending_guess');
   $('g-guess-btn').disabled=true;
   $('g-guess').disabled=true;
   let res;
@@ -1665,7 +1672,7 @@ async function submitGuess(){
       toast(t('retrying_guess'));
       res=await api('guess',{gameId:game.id, username:user, guess, requestId},{timeoutMs:30000});
     }
-    if(!res.ok){ guessSubmitting=false; toast(te(res.error),true); refreshGame(); return; }
+    if(!res.ok){ guessSubmitting=false; if(gState) renderGame(gState); toast(te(res.error),true); refreshGame(); return; }
     $('g-guess').value=''; padG.reset(); $('g-guess-val').textContent='';
     guessSubmitting=false;
     if(res.tie) toast(t('toast_tie'));
@@ -1674,7 +1681,7 @@ async function submitGuess(){
     else if(res.draw) toast(t('draw_title'));
     else toast(t('toast_score',{f:res.fijas,p:res.picas}));
     if(res.state){ gameRequestSeq++; renderGame(res.state); } else refreshGame();
-  }catch(e){ guessSubmitting=false; toast(t('net_error'),true); refreshGame(); }
+  }catch(e){ guessSubmitting=false; if(gState) renderGame(gState); toast(t('net_error'),true); refreshGame(); }
 }
 async function leaveGame(){
   const id=game.id; localStorage.removeItem('pf_current_game'); stopPoll(); stopTick();
