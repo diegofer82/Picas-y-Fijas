@@ -114,6 +114,7 @@ La versión actual seguirá disponible hasta que la nueva versión haya superado
 - Sustituido el `index.html` antiguo de GitHub por una página trilingüe de aviso y redirección al nuevo Worker; la versión previa continúa recuperable en el historial Git.
 - Instalada la aplicación oficial de Cloudflare en GitHub con acceso limitado únicamente a `diegofer82/Picas-y-Fijas`.
 - Activado Cloudflare Builds desde la rama `main` con despliegue automático mediante `npx wrangler deploy`.
+- La primera compilación automática detectó que `pnpm-workspace.yaml` no declaraba el paquete raíz; se corrigió antes del cierre definitivo.
 
 ## Decisiones confirmadas
 
