@@ -12,9 +12,9 @@ La versión actual seguirá disponible hasta que la nueva versión haya superado
 
 ## Estado general
 
-**Fase actual:** 11. Validación pública del Worker de prueba.
+**Fase actual:** migración completada.
 
-**Siguiente acción:** validar el juego desde dispositivos reales y preparar la importación final de Excel.
+**Siguiente acción:** mantenimiento normal y seguimiento de métricas/errores en Cloudflare.
 
 ## Plan de trabajo
 
@@ -24,12 +24,12 @@ La versión actual seguirá disponible hasta que la nueva versión haya superado
 - [x] 4. Crear el proyecto Cloudflare Worker, configuración y migraciones D1.
 - [x] 5. Adaptar la interfaz y migrar la lógica de `Code.gs`.
 - [x] 6. Implementar autenticación, validación, idempotencia y control de turnos.
-- [ ] 7. Reducir el polling y optimizar presencia y actualización de partidas. _(presencia optimizada; polling pendiente de medición)_
+- [x] 7. Reducir el polling y optimizar presencia y actualización de partidas.
 - [x] 8. Crear pruebas automáticas y simulaciones de varios jugadores.
-- [ ] 9. Configurar el repositorio y el despliegue automático en Cloudflare. _(repositorio publicado y despliegue manual funcionando; conexión automática pendiente)_
-- [ ] 10. Migrar los datos que se decida conservar.
-- [ ] 11. Publicar una versión de prueba y validarla desde varios países/dispositivos. _(Worker público funcionando; validación del propietario pendiente)_
-- [ ] 12. Publicar la versión final, documentar copias y preparar reversión.
+- [x] 9. Configurar el repositorio y el despliegue automático en Cloudflare.
+- [x] 10. Migrar los datos que se decidió conservar.
+- [x] 11. Publicar una versión de prueba y validarla desde varios países/dispositivos.
+- [x] 12. Publicar la versión final, documentar copias y preparar reversión.
 
 ## Criterios mínimos antes de publicar
 
@@ -106,6 +106,14 @@ La versión actual seguirá disponible hasta que la nueva versión haya superado
 - Añadido enrutamiento explícito de `/` hacia `index.html` y una prueba automática para las dos entradas públicas.
 - Superadas 5 de 5 pruebas y desplegada la corrección como versión Cloudflare `b29d3e1f-c3e1-44d9-8b51-d64bd01c6388`.
 - Verificado el contenido público real: `/` responde 200 con el juego completo y `/admin` responde 200 con el panel administrativo.
+- Confirmada por el propietario una partida real completa, funcionamiento correcto y eliminación de los problemas de lentitud.
+- Verificado nuevamente `Picas y Fijas.xlsx`: 9 usuarios, 27 partidas y Diego presente como administrador.
+- Guardada una copia SQL privada de D1 anterior a la importación final.
+- Importados los 9 usuarios y las 27 partidas históricas sin duplicados; conservada también la partida real de validación, para un total de 28 partidas.
+- Confirmado en D1 que Diego tiene rol `admin` y que las sesiones activas permanecieron disponibles.
+- Sustituido el `index.html` antiguo de GitHub por una página trilingüe de aviso y redirección al nuevo Worker; la versión previa continúa recuperable en el historial Git.
+- Instalada la aplicación oficial de Cloudflare en GitHub con acceso limitado únicamente a `diegofer82/Picas-y-Fijas`.
+- Activado Cloudflare Builds desde la rama `main` con despliegue automático mediante `npx wrangler deploy`.
 
 ## Decisiones confirmadas
 
@@ -124,7 +132,9 @@ La versión actual seguirá disponible hasta que la nueva versión haya superado
 - Administración: panel en ruta separada, sin enlace visible en la interfaz del juego.
 - Datos sensibles: las hojas y exportaciones quedan siempre excluidas de GitHub.
 
-## Decisiones pendientes
+## Cierre
 
-- Fecha del cambio definitivo y de la importación reciente de `Picas y Fijas.xlsx`.
-- Momento de activar la página de aviso y redirección desde la versión antigua.
+- Migración finalizada el 2026-08-03.
+- Sitio oficial: `https://picas-y-fijas.picas-y-fijas.workers.dev/`.
+- Panel administrativo: `https://picas-y-fijas.picas-y-fijas.workers.dev/admin`.
+- La versión de Google y el historial Git permanecen disponibles como reversión.

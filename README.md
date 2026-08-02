@@ -2,12 +2,16 @@
 
 Juego multijugador de Picas y Fijas para amigos y familia.
 
+- Juego: https://picas-y-fijas.picas-y-fijas.workers.dev/
+- Administración: https://picas-y-fijas.picas-y-fijas.workers.dev/admin
+
 ## Nueva arquitectura
 
 - Cloudflare Worker: API y alojamiento web.
 - Cloudflare D1: usuarios, sesiones, partidas, presencia y auditoría.
 - GitHub: código fuente e historial.
-- Google Apps Script: versión anterior, mantenida durante la migración.
+- Google Apps Script: versión anterior conservada como reversión.
+- Cloudflare Builds: despliegue automático desde la rama `main` de GitHub.
 
 ## Desarrollo local
 
