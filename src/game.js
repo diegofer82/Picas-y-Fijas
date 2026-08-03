@@ -76,6 +76,14 @@ export function freshTurnClock(game, at = Date.now()) {
   };
 }
 
+export function expiredTurnChanges(game, at = Date.now()) {
+  if (game.status !== 'active' || toInt(game.turn_seconds) <= 0 || truthy(game.timer_paused) || timerRemaining(game, at) > 0) return null;
+  if (game.pending_winner) {
+    return { status:'finished', winner:game.pending_winner, pending_winner:'', timer_paused:1 };
+  }
+  return { ...freshTurnClock(game, at), turn:game.turn === 1 ? 2 : 1 };
+}
+
 export function gameMeta(game) {
   return {
     gameId: game.game_id, p1: game.p1, p2: game.p2, digits: game.digits,
@@ -88,6 +96,7 @@ export function gameMeta(game) {
 }
 
 export function sanitizeGame(game, username) {
+  const timerAsOf = Date.now();
   const player = cleanName(username);
   const youAre = game.p1 === player ? 1 : game.p2 === player ? 2 : 0;
   const secret1 = padCode(game.secret1, game.digits);
@@ -102,13 +111,15 @@ export function sanitizeGame(game, username) {
     ok: true, gameId: game.game_id, status: game.status, digits: game.digits,
     allowRepeats: meta.allowRepeats, isPublic: meta.isPublic, mode: meta.mode,
     numColors: meta.numColors, maxAttempts: meta.maxAttempts, turnSeconds: meta.turnSeconds,
-    turnStartedAt: game.turn_started_at, turnRemaining: timerRemaining(game),
+    turnStartedAt: game.turn_started_at, turnRemaining: timerRemaining(game, timerAsOf),
+    timerAsOf: new Date(timerAsOf).toISOString(),
     timerPaused: truthy(game.timer_paused), manualPausedBy: game.manual_paused_by || '',
     manualPauseUntil: game.manual_pause_until || '',
     lobbyPausedBy: parseJsonList(game.lobby_paused_by).join(' / '),
     p1: game.p1, p2: game.p2, country1: cleanCountry(game.country1), country2: cleanCountry(game.country2),
     turn: game.turn, whoseTurn: game.turn === 1 ? game.p1 : game.turn === 2 ? game.p2 : '',
-    youAre, yourTurn: youAre !== 0 && game.turn === youAre && game.status === 'active', guesses,
+    youAre, yourTurn: youAre !== 0 && game.turn === youAre && game.status === 'active'
+      && (meta.turnSeconds <= 0 || truthy(game.timer_paused) || timerRemaining(game, timerAsOf) > 0), guesses,
     attemptsP1: guesses.filter((entry) => entry.by === game.p1).length,
     attemptsP2: guesses.filter((entry) => entry.by === game.p2).length,
     winner: game.winner, isDraw: game.status === 'finished' && !game.winner,

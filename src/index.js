@@ -1,5 +1,5 @@
 import {
-  LIMITS, cleanCountry, cleanName, evaluate, freshTurnClock, gameMeta, maxSymbolFor,
+  LIMITS, cleanCountry, cleanName, evaluate, expiredTurnChanges, freshTurnClock, gameMeta, maxSymbolFor,
   padCode, parseJsonList, sanitizeGame, timerRemaining, toInt, truthy, usernameKey, validateCode,
 } from './game.js';
 import { authenticate, hashPin, login, validPin } from './security.js';
@@ -182,6 +182,8 @@ async function state(db, params, user) {
         Object.assign(changes,{timer_ready_by:JSON.stringify(ready),timer_activated:both?1:0,timer_paused:both?0:1,turn_remaining:game.turn_seconds,turn_started_at:both?new Date(Date.now()+LIMITS.turnStartGraceMs).toISOString():''});
       }
       if(Object.keys(changes).length)game=await saveGame(db,game,{...changes,updated_at:now()});
+      const expired=expiredTurnChanges(game);
+      if(expired)game=await saveGame(db,game,{...expired,updated_at:now()});
     }
     await touchPresence(db, user, game.game_id, 'game');
     return sanitizeGame(game, user.username);
@@ -212,6 +214,8 @@ async function makeGuess(db, params, user) {
     if(game.manual_paused_by||parseJsonList(game.lobby_paused_by).length||truthy(game.timer_paused))return{ok:false,error:'La partida está en pausa.'};
     const youAre=game.p1===user.username?1:game.p2===user.username?2:0;
     if(!youAre)return{ok:false,error:'No eres jugador de esta partida.'};
+    const expired=expiredTurnChanges(game);
+    if(expired){const updated=await saveGame(db,game,{...expired,updated_at:now()});return{ok:false,error:'El tiempo del turno terminó.',state:sanitizeGame(updated,user.username)};}
     if(game.turn!==youAre)return{ok:false,error:'No es tu turno.'};
     const validation=validateCode(params.guess,game.digits,truthy(game.allow_repeats),maxSymbolFor(game.mode,game.num_colors));
     if(validation)return{ok:false,error:validation};

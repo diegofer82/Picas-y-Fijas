@@ -228,7 +228,7 @@
     <input type="password" id="upin" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" data-i18n-ph="login_pin_ph" placeholder="4–8 dígitos" autocomplete="current-password">
     <p class="fieldnote" data-i18n="login_pin_note">🔒 Es tu contraseña para entrar en la app. No es el código secreto del juego ni el código de la partida.</p>
     <div class="val" id="uname-val"></div>
-    <button class="btn" onclick="doLogin()" data-i18n="login_enter">Entrar</button>
+    <button class="btn" id="btn-login" onclick="doLogin()" data-i18n="login_enter">Entrar</button>
     <div class="foot"><span class="link" onclick="openRules()" data-i18n="rules_link">¿Cómo se juega?</span></div>
     <div class="foot credits"></div>
   </section>
@@ -242,9 +242,8 @@
       <div style="height:10px"></div>
       <div class="row">
         <input type="text" id="join-code-inp" class="codeinp" maxlength="6" autocomplete="off"
-               autocapitalize="characters" spellcheck="false" data-i18n-ph="lobby_code_ph" placeholder="Código de partida"
-               onkeydown="if(event.key==='Enter'){event.preventDefault();joinByCode();}">
-        <button class="btn ghost sm" style="flex:0 0 auto" onclick="joinByCode()" data-i18n="join_btn">Unirse</button>
+               autocapitalize="characters" spellcheck="false" data-i18n-ph="lobby_code_ph" placeholder="Código de partida">
+        <button class="btn ghost sm" id="btn-join-code" style="flex:0 0 auto" onclick="joinByCode()" data-i18n="join_btn">Unirse</button>
       </div>
       <div style="height:10px"></div>
       <div class="row">
@@ -969,7 +968,10 @@ async function api(action, payload={}, options={}){
     const res = await fetch(API,{ method:'POST', cache:'no-store', signal:controller.signal,
       headers, body: JSON.stringify(requestPayload) });
     if(!res.ok) throw new Error('HTTP '+res.status);
-    return await res.json();
+    const data=await res.json(), clientReceivedAt=Date.now();
+    data.clientReceivedAt=clientReceivedAt;
+    if(data.state) data.state.clientReceivedAt=clientReceivedAt;
+    return data;
   }finally{ clearTimeout(timeout); }
 }
 function esc(s){ return String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
@@ -1099,7 +1101,8 @@ function makePad(slotsId, paletteId, getLen, getColors, onChange){
     pal.appendChild(bs);
   }
   drawPalette(); drawSlots();
-  return { get:()=>value, reset:()=>{value='';drawSlots();}, refresh:()=>{drawSlots();drawPalette();} };
+  return { get:()=>value, reset:()=>{value='';drawSlots();}, refresh:()=>{drawSlots();drawPalette();},
+    setDisabled:disabled=>pal.querySelectorAll('button').forEach(button=>{button.disabled=disabled;}) };
 }
 const padC = makePad('slots-c','palette-c', ()=>cfg.digits, ()=>cfg.numColors, v=>setVal('secret-c-val', v, cfg.digits, cfg.allowRepeats));
 const padJ = makePad('slots-j','palette-j', ()=>joinMeta?joinMeta.digits:3, ()=>joinMeta?joinMeta.numColors:6, v=>setVal('secret-j-val', v, joinMeta.digits, joinMeta.allowRepeats));
@@ -1107,6 +1110,13 @@ const padR = makePad('slots-r','palette-r', ()=>finishedMeta?finishedMeta.digits
 const padG = makePad('slots-g','palette-g', ()=>game.digits, ()=>game.numColors||6, v=>setVal('g-guess-val', v, game.digits, game.allowRepeats));
 function setVal(elId, v, digits, allowRepeats){
   const r=validateLive(v, digits, allowRepeats); $(elId).className='val '+r.cls; $(elId).textContent=r.msg;
+}
+function bindEnterToButton(inputId, buttonId){
+  $(inputId).addEventListener('keydown', event=>{
+    if(event.key!=='Enter'||event.isComposing||event.repeat) return;
+    event.preventDefault();
+    $(buttonId).click();
+  });
 }
 function applyMode(ctx, mode, inputId, padId, pad){
   const isColors = mode==='colors';
@@ -1524,6 +1534,14 @@ async function refreshGame(expectedEpoch=gameViewEpoch, expectedGameId=game.id){
 }
 $('g-guess').addEventListener('input', e=>setVal('g-guess-val', e.target.value, game.digits, game.allowRepeats));
 
+bindEnterToButton('uname','btn-login');
+bindEnterToButton('upin','btn-login');
+bindEnterToButton('join-code-inp','btn-join-code');
+bindEnterToButton('secret-c','btn-create');
+bindEnterToButton('secret-j','btn-join');
+bindEnterToButton('secret-r','btn-rematch');
+bindEnterToButton('g-guess','g-guess-btn');
+
 function renderGame(st){
   if(!st||String(st.gameId)!==String(game.id)||$('s-game').classList.contains('hidden')) return;
   gState=st;
@@ -1622,8 +1640,8 @@ function renderGame(st){
   const pending = st.pendingWinner || '';
   if(st.yourTurn){
     turn.className='turnbar mine'; $('g-turn-txt').textContent=t('your_turn');
-    const ok=canGuessAttempts&&!st.timerPaused;
-    $('g-guess-btn').disabled=!ok||guessSubmitting; $('g-guess').disabled=!ok||guessSubmitting;
+    const ok=canGuessAttempts&&!st.timerPaused&&(!(st.turnSeconds>0)||st.turnRemaining>0);
+    $('g-guess-btn').disabled=!ok||guessSubmitting; $('g-guess').disabled=!ok||guessSubmitting; padG.setDisabled(!ok||guessSubmitting);
     if(!ok) $('g-turn-txt').textContent=t('no_attempts_wait');
     if(pending && pending!==user){
       turn.className='turnbar mine';
@@ -1636,7 +1654,7 @@ function renderGame(st){
   }else{
     turn.className='turnbar theirs';
     $('g-turn-txt').textContent= st.whoseTurn ? t('turn_of',{name:st.whoseTurn}) : t('waiting_generic');
-    $('g-guess-btn').disabled=true; $('g-guess').disabled=true;
+    $('g-guess-btn').disabled=true; $('g-guess').disabled=true; padG.setDisabled(true);
     $('g-guess').value=''; padG.reset(); $('g-guess-val').textContent='';
     if(pending && pending===user){
       $('g-turn-txt').textContent=t('solved_wait',{name:oppLabel});
@@ -1755,7 +1773,7 @@ function updateTimer(){
   if(gState.timerPaused){
     el.textContent=pausedStatusText(gState); el.className='chip warn'; passRequested=false; return;
   }
-  const started=new Date(gState.turnStartedAt).getTime();
+  const started=Number(gState.clientReceivedAt)||Date.now();
   const base=Number.isFinite(Number(gState.turnRemaining))?Number(gState.turnRemaining):gState.turnSeconds;
   const remaining=Math.max(0, Math.min(gState.turnSeconds, base - Math.floor((Date.now()-started)/1000)));
   const mm=Math.floor(remaining/60), ss=remaining%60;
@@ -1763,6 +1781,7 @@ function updateTimer(){
   el.className='chip'+(remaining<=5?' hot':(remaining<=10?' warn':''));
   if(remaining<=0 && !passRequested){
     passRequested=true;
+    $('g-guess-btn').disabled=true; $('g-guess').disabled=true; padG.setDisabled(true);
     api('passTurn',{gameId:game.id, username:user}).then(()=>refreshGame()).catch(()=>{});
   }
 }
