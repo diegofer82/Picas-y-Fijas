@@ -14,6 +14,93 @@ Picas y Fijas es un juego multijugador web en español, inglés y francés. La v
 
 Cloudflare despliega automáticamente la rama `main`. No se debe modificar producción manualmente salvo una recuperación explícita.
 
+## Cómo se juega
+
+Picas y Fijas es un juego de lógica para dos personas, conocido también como *Bulls and Cows* o, en su variante de colores, Mastermind. Cada jugador crea un código secreto y trata de descubrir el del rival antes de que el rival descubra el suyo.
+
+- **Fija (F):** símbolo correcto en la posición correcta.
+- **Pica (P):** símbolo correcto, pero situado en otra posición.
+
+Por ejemplo, si el secreto es `1234` y el intento es `1356`, el resultado es **1 fija** (el `1`) y **1 pica** (el `3`). El resultado no revela cuáles símbolos produjeron las picas o las fijas.
+
+### Entrar y proteger el usuario
+
+1. Escribe un nombre de al menos 2 caracteres y un PIN de 4 a 8 dígitos.
+2. Si el nombre no existe, se registra automáticamente con ese PIN.
+3. Si ya existe, se debe introducir el mismo PIN. El nombre identifica al jugador en partidas, historial y ranking.
+4. Después de 5 PIN incorrectos, el acceso a ese nombre se bloquea durante 15 minutos.
+
+El PIN de acceso no es el código secreto de una partida. No se debe compartir el PIN; para invitar a alguien se comparte únicamente el código de partida.
+
+### Crear una partida
+
+El creador elige su secreto y estas reglas:
+
+- **Modo:** números del 0 al 9 o colores estilo Mastermind.
+- **Colores disponibles:** 4, 6 u 8.
+- **Posiciones del secreto:** 3, 4, 5 o 6.
+- **Repeticiones:** permitidas o prohibidas. Si están prohibidas, ningún símbolo puede aparecer dos veces en el código o en un intento.
+- **Intentos por jugador:** sin límite, 6 o 10.
+- **Tiempo por turno:** sin límite, 30 segundos, 60 segundos o 2 minutos.
+- **Visibilidad:** pública, visible en el lobby, o privada, accesible solamente mediante su código.
+- **Revelar secretos al terminar:** desactivado inicialmente; si se activa, cada jugador podrá ver el código del rival cuando finalice la partida.
+
+Al crearla se obtiene un código de partida de 4 caracteres y un enlace para compartir. Cada usuario puede mantener como máximo 3 partidas abiertas o activas y debe esperar 10 segundos entre creaciones.
+
+### Unirse y comenzar
+
+El segundo jugador puede elegir una partida pública del lobby, introducir su código o abrir el enlace de invitación. Debe definir un secreto que cumpla las reglas escogidas por el creador. El primer turno se asigna siempre al azar.
+
+En partidas con cronómetro, la cuenta comienza cuando ambos jugadores han entrado y están listos. Hay una breve cortesía técnica antes del inicio del reloj para que las dos pantallas reciban el estado.
+
+### Turnos, intentos y cronómetro
+
+Durante su turno, el jugador envía un código completo. El servidor valida el intento, calcula picas y fijas y pasa el turno al rival.
+
+- Con tiempo ilimitado, la partida puede jugarse de forma asíncrona: se puede volver al lobby y continuar minutos u horas después.
+- En una partida cronometrada, al llegar a cero el turno pasa automáticamente al rival.
+- El servidor es la autoridad del reloj; alterar la hora o la interfaz del navegador no permite jugar fuera de tiempo.
+- Si un jugador vuelve al lobby durante una partida cronometrada, el reloj se detiene hasta que ambos regresen.
+- La pausa manual solo está disponible con cronómetro, dura como máximo 5 minutos y tiene un minuto de espera antes de poder solicitar otra.
+- Solo quien solicitó una pausa manual puede reanudarla antes de su vencimiento.
+
+Volver al lobby no cancela ni abandona una partida. El navegador recuerda la partida abierta e intenta recuperarla después de recargar.
+
+### Victoria, empate y último intento
+
+Una partida normal termina cuando alguien obtiene tantas fijas como posiciones tenga el código. Para que ambos jugadores tengan el mismo número de oportunidades se aplica esta regla:
+
+1. Si quien comenzó la ronda descifra el secreto, queda como ganador pendiente.
+2. El rival recibe un último intento para igualar.
+3. Si también lo descifra, la partida termina en empate.
+4. Si falla o se le acaba el tiempo, gana quien acertó primero.
+5. Si quien iba segundo en la ronda acierta sin que hubiera un ganador pendiente, gana inmediatamente porque la ronda ya estaba completa.
+
+Cuando existe límite de intentos y ambos jugadores lo agotan sin resolver el código, la partida termina en empate.
+
+### Cancelar, abandonar y caducidad
+
+- El creador puede cancelar una partida mientras todavía espera un rival; no se registra victoria ni derrota.
+- Abandonar una partida ya iniciada concede la victoria al rival y registra una derrota para quien abandona.
+- Una partida que espera rival caduca después de 2 horas y desaparece del lobby.
+- Una partida activa se cierra como inactiva después de 48 horas sin actividad; no cuenta como victoria, derrota ni empate.
+- Cerrar sesión elimina inmediatamente la presencia del usuario. Para el contador general, se considera conectado a quien tuvo actividad durante los últimos 2 minutos.
+
+### Revancha, historial y ranking
+
+Al finalizar se puede proponer una revancha con las mismas reglas y el mismo rival. Se genera un código nuevo y cada jugador vuelve a escoger su secreto. El rival verá la invitación y podrá entrar mediante **Ir a la revancha**.
+
+El historial muestra hasta las 40 partidas terminadas más recientes del jugador, con resultado, rival, fecha y reglas. El ranking global ordena primero por cantidad de victorias y, en caso de igualdad, favorece a quien necesitó menos partidas. Muestra el Top 50, el total de jugadores y la posición propia aunque quede fuera del Top 50.
+
+### Interfaz y accesibilidad
+
+- La aplicación está disponible en español, inglés y francés.
+- Se puede enviar con Enter desde los campos principales, además de usar los botones.
+- Las banderas indican el país detectado, pero no afectan las reglas.
+- Puede emitir sonido, vibración o una notificación cuando llega el turno o entra un rival, según los permisos del dispositivo.
+- Los avisos de victoria, derrota y empate tienen sonidos distintos.
+- En modo numérico, el cero se muestra con una barra para diferenciarlo mejor del ocho.
+
 ## Arquitectura y archivos
 
 - `public/index.html`: interfaz completa del juego, estilos, traducciones y cliente API.
