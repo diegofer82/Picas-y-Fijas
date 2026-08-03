@@ -873,7 +873,7 @@ function t(key, p){
 }
 function te(msg){ return (ERR[lang] && ERR[lang][msg]) || msg; }
 function creditsHTML(){
-  return `${t('credits_by')} <a href="https://www.linkedin.com/in/diego-olaya-857bb6105" target="_blank" rel="noopener">Diego OLAYA</a> · powered by Claude · 2026 · v${APP_VERSION}`;
+  return `${t('credits_by')} <a href="https://www.linkedin.com/in/diego-olaya-857bb6105" target="_blank" rel="noopener">Diego OLAYA</a> · powered by Claude/ChatGTP · 2026 · v${APP_VERSION}`;
 }
 function setCredits(){ document.querySelectorAll('.credits').forEach(el=>{ el.innerHTML=creditsHTML(); }); }
 function applyI18n(){
