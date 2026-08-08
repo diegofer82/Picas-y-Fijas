@@ -1673,7 +1673,7 @@ function beginComputerTurn(){
 function runComputerTurn(){
   practiceComputerTimer=null;if(!practice||practice.finished)return;
   const guess=practice.solver.nextGuess(),score=evaluatePractice(practice.playerSecret,guess);
-  practice.solver.record(guess,score);practice.computerGuesses.push({guess,...score});renderComputerLog();
+  practice.solver.record(guess,score);practice.computerGuesses.push({guess,...score});renderComputerLog();renderPracticeStatus();
   if(score.fijas===practiceCfg.digits){finishComputerPractice(practice.pendingWinner==='player'?'draw':'loss');return;}
   if(practice.pendingWinner==='player'){finishComputerPractice('win');return;}
   if(practiceCfg.maxAttempts&&playerPracticeAttempts()>=practiceCfg.maxAttempts&&practice.computerGuesses.length>=practiceCfg.maxAttempts){finishComputerPractice('draw');return;}

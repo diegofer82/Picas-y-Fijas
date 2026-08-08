@@ -29,6 +29,11 @@ test('computer practice exposes difficulty, both logs, turn state and local thin
   assert.match(practiceSource,/computer_both_codes/);
 });
 
+test('the computer attempt indicator refreshes after recording the final guess', () => {
+  assert.match(practiceSource,/computerGuesses\.push\(\{guess,\.\.\.score\}\);renderComputerLog\(\);renderPracticeStatus\(\);/);
+  assert.match(practiceSource,/renderPracticeStatus\(\);\s*if\(score\.fijas===practiceCfg\.digits\)/);
+});
+
 test('practice secrets and suggestions use cryptographic randomness', () => {
   assert.match(html, /function randomSecret\(meta\)/);
   assert.match(html, /crypto\.getRandomValues\(bytes\)/);
