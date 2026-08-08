@@ -1,6 +1,6 @@
 {
   "name": "picas-y-fijas",
-  "version": "2.0.0",
+  "version": "2.3.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,6 +12,7 @@
     "db:remote": "wrangler d1 migrations apply picas-y-fijas-db --remote"
   },
   "devDependencies": {
+    "miniflare": "5.20260730.0-alpha",
     "wrangler": "^4.28.1"
   }
 }

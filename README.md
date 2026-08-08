@@ -6,6 +6,8 @@ Este es el único documento de referencia del proyecto. Está pensado para perso
 
 Picas y Fijas es un juego multijugador web en español, inglés y francés. La versión vigente funciona íntegramente en Cloudflare; la implementación anterior de Google Sheets y Apps Script fue retirada del árbol actual después de completar la migración. Sigue disponible en el historial de Git si alguna vez se necesita consultar.
 
+Versión actual: **2.3.0**.
+
 - Juego: https://picas-y-fijas.picas-y-fijas.workers.dev/
 - Administración: https://picas-y-fijas.picas-y-fijas.workers.dev/admin
 - Repositorio: https://github.com/diegofer82/Picas-y-Fijas
@@ -92,6 +94,23 @@ Al finalizar se puede proponer una revancha con las mismas reglas y el mismo riv
 
 El historial muestra hasta las 40 partidas terminadas más recientes del jugador, con resultado, rival, fecha y reglas. El ranking global ordena primero por cantidad de victorias y, en caso de igualdad, favorece a quien necesitó menos partidas. Muestra el Top 50, el total de jugadores y la posición propia aunque quede fuera del Top 50.
 
+### Práctica Solo y Contra el computador
+
+Desde el lobby se puede abrir **Practicar** y escoger entre **Solo** o **Contra el computador**. Ambos modos permiten números o colores, entre 3 y 6 posiciones, repeticiones, 4, 6 u 8 colores, límite de intentos y cronómetro, o una **Partida aleatoria** que combina las reglas.
+
+- El secreto se genera con Web Crypto, permanece oculto durante la partida y siempre se revela al terminar.
+- Las partidas de práctica no se envían a la API, no crean filas en D1 y no afectan el historial ni el ranking competitivo.
+- El dispositivo conserva localmente el total de prácticas, las resueltas y la racha actual.
+- En los formularios de crear, unirse y revancha, el botón **🔄** propone un secreto válido según las reglas escogidas.
+
+En **Contra el computador**, el jugador define su propio secreto y el dispositivo genera el secreto rival. El jugador comienza cada ronda y ambos alternan intentos; si el jugador acierta primero, el computador conserva el último intento de la ronda para empatar. Al terminar se revelan los dos códigos. Las estadísticas locales de este modo son independientes de Solo e incluyen partidas, victorias, derrotas, empates y resultados por dificultad.
+
+El rival funciona íntegramente sin conexión y no utiliza ChatGPT ni ninguna API. Solo recibe las reglas y las pistas de sus propios intentos:
+
+- **Fácil:** elige al azar entre combinaciones compatibles con todas las pistas anteriores.
+- **Normal:** mantiene y elimina el conjunto completo de combinaciones posibles usando cada resultado de picas y fijas.
+- **Experto:** evalúa cómo distintos intentos dividen el conjunto compatible y escoge uno que reduzca estratégicamente el peor grupo restante.
+
 ### Interfaz y accesibilidad
 
 - La aplicación está disponible en español, inglés y francés.
@@ -104,6 +123,7 @@ El historial muestra hasta las 40 partidas terminadas más recientes del jugador
 ## Arquitectura y archivos
 
 - `public/index.html`: interfaz completa del juego, estilos, traducciones y cliente API.
+- `public/computer-ai.js`: rival local de práctica, generación de candidatos y estrategias por dificultad.
 - `public/admin.html`: panel reservado de administración.
 - `src/index.js`: Worker, rutas, API, acceso a D1 y operaciones administrativas.
 - `src/game.js`: reglas puras, validaciones, cronómetro y sanitización del estado.
@@ -123,8 +143,13 @@ No hay proceso de compilación del frontend. Wrangler sirve `public/` y ejecuta 
 - `presence`: usuario conectado y ubicación en lobby o partida.
 - `request_receipts`: respuestas de jugadas ya procesadas para evitar duplicados.
 - `audit_log`: acciones administrativas.
+- `chat_messages`: chat mundial del lobby, chat privado de partida, eventos y zumbidos.
+- `chat_reports`: reportes de moderación, únicos por mensaje y usuario.
+- `chat_mutes`: silencios temporales o permanentes impuestos por administración.
 
 Los secretos de jugadores nunca deben exponerse mientras una partida esté activa. Toda nueva respuesta API debe pasar por la sanitización correspondiente.
+
+El chat del lobby conserva 24 horas. El chat de partida es exclusivo de sus dos jugadores, se cierra 24 horas después de terminar y conserva sus filas durante 7 días. La limpieza es progresiva al usar el chat. Los zumbidos requieren que el rival esté presente en la partida y tienen 30 segundos de espera por emisor.
 
 ## Reglas técnicas que no se deben romper
 

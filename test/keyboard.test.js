@@ -35,3 +35,33 @@ test('the timer counts down from the received server snapshot only once', () => 
   assert.match(publicHtml, /const started=Number\(gState\.clientReceivedAt\)\|\|Date\.now\(\)/);
   assert.doesNotMatch(publicHtml, /new Date\(gState\.turnStartedAt\)\.getTime\(\)/);
 });
+
+test('impossible no-repeat color configurations are disabled in the creator', () => {
+  assert.match(publicHtml, /const impossible=cfg\.mode==='colors'&&cfg\.digits>cfg\.numColors/);
+  assert.match(publicHtml, /noRepeats\.disabled=impossible/);
+});
+
+test('guess idempotency identifiers always use cryptographic randomness', () => {
+  assert.match(publicHtml, /crypto\.getRandomValues\(new Uint8Array\(16\)\)/);
+  assert.doesNotMatch(publicHtml, /Math\.random\(\)/);
+});
+
+test('local chat mutes require confirmation and can be reversed by each user',()=>{
+  assert.match(publicHtml,/if\(!confirm\(t\('chat_mute_confirm'/);
+  assert.match(publicHtml,/id="chat-muted-btn"/);
+  assert.match(publicHtml,/function unmuteChatUser\(/);
+  assert.match(publicHtml,/function unmuteAllChatUsers\(/);
+  assert.match(publicHtml,/localStorage\.removeItem\('pf_chat_muted'\)/);
+});
+
+test('notification permission is requested only from the explicit experience button',()=>{
+  assert.match(publicHtml,/onclick="activateExperience\(\)"/);
+  assert.match(publicHtml,/if\(permission==='default'\)permission=await Notification\.requestPermission\(\)/);
+  assert.equal((publicHtml.match(/Notification\.requestPermission\(\)/g)||[]).length,1);
+  assert.match(publicHtml,/document\.addEventListener\('pointerdown'.*unlockAudio/);
+});
+
+test('a received nudge plays its sound even while the chat panel is open',()=>{
+  assert.match(publicHtml,/if\(nudge&&chatNudgesOn\).*playChatAudio\(wizzAudio\)/);
+  assert.doesNotMatch(publicHtml,/if\(soundOn&&\$\('chat-panel'\)\.classList\.contains\('hidden'\)\)chord/);
+});

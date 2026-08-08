@@ -67,6 +67,14 @@
   .btn.sm{width:auto;padding:9px 16px;font-size:13px;border-radius:10px}
   .row{display:flex;gap:10px}
   .row .btn{flex:1}
+  .secret-label-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px}
+  .secret-label-row label{margin:0}
+  .random-code-btn{width:38px;height:34px;border:1px solid var(--edge);border-radius:10px;background:#141126;color:var(--text);cursor:pointer;font-size:18px;line-height:1}
+  .practice-badge{display:inline-block;margin-bottom:12px;padding:5px 10px;border:1px solid rgba(251,191,36,.45);border-radius:999px;color:var(--pica);font-size:11px;font-weight:700}
+  .practice-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
+  .practice-stat{background:#141126;border:1px solid var(--edge);border-radius:11px;padding:10px 6px;text-align:center}
+  .practice-stat b{display:block;color:var(--accent);font:800 18px 'JetBrains Mono',monospace}
+  .practice-stat span{display:block;margin-top:3px;color:var(--muted);font-size:10px}
 
   .seg{display:flex;gap:8px;flex-wrap:wrap}
   .seg button{flex:1;min-width:64px;background:#141126;border:1px solid var(--edge);color:var(--muted);
@@ -74,6 +82,7 @@
     font-family:'Space Grotesk',sans-serif;transition:.15s;}
   .seg.mono button{font-family:'JetBrains Mono',monospace}
   .seg button.on{background:rgba(34,211,238,.14);border-color:var(--accent);color:var(--text)}
+  .seg button:disabled{opacity:.35;cursor:not-allowed}
 
   .val{font-size:12px;margin-top:8px;min-height:16px}
   .val.err{color:var(--pink)} .val.ok{color:var(--fija)}
@@ -184,6 +193,7 @@
   .invite-banner{background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.4);border-radius:12px;
     padding:11px 13px;margin:0 0 14px;font-size:13px;line-height:1.5;color:var(--fija)}
   .invite-banner b{font-family:'JetBrains Mono',monospace;letter-spacing:2px;font-size:15px}
+  .experience-card{border-color:rgba(34,211,238,.5);background:linear-gradient(135deg,rgba(34,211,238,.12),rgba(244,114,182,.08))}.experience-card .experience-icon{font-size:28px;margin-bottom:7px}.experience-card .experience-status{font-size:12px;color:var(--muted);margin:10px 0 0;line-height:1.45}.experience-card .btn{margin-top:12px}
   .legend{display:flex;gap:16px;justify-content:center;font-size:12px;color:var(--muted);margin-top:6px;flex-wrap:wrap}
   .legend span{display:inline-flex;align-items:center;gap:6px}
   .legend .pip{width:11px;height:11px}
@@ -201,6 +211,16 @@
   .flag{width:18px;height:auto;border-radius:2px;vertical-align:-3px;margin-right:5px;box-shadow:0 0 0 1px rgba(255,255,255,.12)}
   .pill.f{background:rgba(74,222,128,.18);color:var(--fija)}
   .pill.p{background:rgba(251,191,36,.18);color:var(--pica)}
+  .chat-launch{position:fixed;right:max(18px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));z-index:42;width:54px;height:54px;border:0;border-radius:50%;background:linear-gradient(135deg,var(--accent),#3aa0ff);color:#0c1020;font-size:24px;cursor:pointer;box-shadow:0 10px 28px rgba(0,0,0,.42);display:grid;place-items:center}
+  .chat-launch.bump{animation:chatBump .5s ease}.chat-badge{position:absolute;right:-3px;top:-5px;min-width:21px;height:21px;padding:0 5px;border-radius:11px;background:var(--pink);color:#160814;font:700 11px 'JetBrains Mono',monospace;display:grid;place-items:center}
+  .private-chat-bubbles{position:fixed;right:max(20px,env(safe-area-inset-right));bottom:82px;z-index:41;display:flex;flex-direction:column-reverse;gap:9px;align-items:center}.private-chat-bubble{position:relative;width:44px;height:44px;border:1px solid rgba(255,255,255,.22);border-radius:50%;background:linear-gradient(135deg,#a855f7,#ec4899);color:white;font-weight:800;cursor:pointer;box-shadow:0 7px 20px rgba(0,0,0,.38)}.private-chat-bubble.unread::after{content:'';position:absolute;right:0;top:0;width:10px;height:10px;border-radius:50%;background:#fbbf24;border:2px solid #17132c}.private-chat-menu{position:fixed;right:74px;bottom:82px;z-index:45;width:220px;max-height:250px;overflow:auto;background:#17132c;border:1px solid var(--edge);border-radius:14px;padding:7px;box-shadow:0 15px 40px #0008}.private-chat-menu button{display:block;width:100%;border:0;border-radius:9px;background:transparent;color:var(--text);padding:9px;text-align:left;cursor:pointer}.private-chat-menu button:hover{background:var(--panel)}
+  .chat-panel{position:fixed;right:max(18px,env(safe-area-inset-right));bottom:82px;z-index:44;width:min(360px,calc(100vw - 36px));height:min(470px,calc(100dvh - 120px));background:#17132c;border:1px solid var(--edge);border-radius:18px;box-shadow:0 18px 55px rgba(0,0,0,.55);display:flex;flex-direction:column;overflow:hidden}
+  .chat-head{display:flex;align-items:center;gap:9px;padding:12px 14px;border-bottom:1px solid var(--edge);background:var(--panel)}.chat-head strong{flex:1}.chat-icon-btn{border:1px solid var(--edge);background:#141126;color:var(--text);border-radius:9px;min-width:34px;height:32px;cursor:pointer}.chat-icon-btn:disabled{opacity:.4;cursor:not-allowed}
+  .chat-muted-panel{padding:10px 12px;border-bottom:1px solid var(--edge);background:#121025;max-height:150px;overflow:auto}.chat-muted-title{font-size:12px;color:var(--muted);margin-bottom:8px}.chat-muted-row{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px;border-bottom:1px solid rgba(61,52,104,.45)}.chat-muted-row:last-child{border-bottom:0}.chat-muted-row span{flex:1;overflow:hidden;text-overflow:ellipsis}.chat-muted-row button,.chat-unmute-all{border:1px solid var(--edge);background:var(--panel);color:var(--text);border-radius:8px;padding:6px 9px;cursor:pointer;font-size:11px}.chat-unmute-all{width:100%;margin-top:8px;color:var(--accent)}
+  .chat-messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:9px;overscroll-behavior:contain}.chat-empty{margin:auto;color:var(--muted);font-size:13px;text-align:center}.chat-msg{max-width:86%;background:var(--panel-2);border:1px solid var(--edge);border-radius:12px;padding:8px 10px;align-self:flex-start;overflow-wrap:anywhere}.chat-msg.mine{align-self:flex-end;border-color:rgba(34,211,238,.5);background:rgba(34,211,238,.10)}.chat-msg.system,.chat-msg.nudge{max-width:96%;align-self:center;text-align:center;background:transparent;border-style:dashed;color:var(--muted);font-size:12px}.chat-msg.nudge{color:var(--pica);border-color:rgba(251,191,36,.45);font-weight:700}.chat-meta{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:10px;margin-bottom:3px}.chat-meta b{color:var(--text);font-size:11px}.chat-actions{margin-left:auto;display:flex;gap:3px}.chat-actions button{background:transparent;border:0;color:var(--muted);padding:0 2px;cursor:pointer;font-size:11px}.chat-body{white-space:pre-wrap;font-size:13px;line-height:1.35}.chat-compose{border-top:1px solid var(--edge);padding:10px;display:flex;gap:7px;background:var(--panel)}.chat-compose input{min-width:0;padding:10px 11px;font-size:14px}.chat-send{width:auto;padding:0 13px}.chat-shake{animation:chatShake .55s ease}
+  @keyframes chatShake{0%,100%{transform:translateX(0)}15%{transform:translateX(-9px) rotate(-1deg)}30%{transform:translateX(8px) rotate(1deg)}45%{transform:translateX(-7px)}60%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
+  @keyframes chatBump{0%,100%{transform:scale(1)}35%{transform:scale(1.18) rotate(-8deg)}65%{transform:scale(.94) rotate(5deg)}}
+  @media(max-width:600px){.chat-panel{left:0;right:0;bottom:0;width:100%;height:55dvh;border-radius:18px 18px 0 0;padding-bottom:env(safe-area-inset-bottom)}.chat-launch{bottom:max(16px,env(safe-area-inset-bottom))}}
 </style>
 </head>
 <body>
@@ -240,6 +260,8 @@
       <p class="hint" data-i18n="lobby_hint">Crea una partida y comparte el código, o únete a una pública abierta.</p>
       <button class="btn" onclick="show('create')" data-i18n="lobby_create">Crear partida</button>
       <div style="height:10px"></div>
+      <button class="btn pink" onclick="openPractice()" data-i18n="lobby_practice">Practicar 🎯</button>
+      <div style="height:10px"></div>
       <div class="row">
         <input type="text" id="join-code-inp" class="codeinp" maxlength="6" autocomplete="off"
                autocapitalize="characters" spellcheck="false" data-i18n-ph="lobby_code_ph" placeholder="Código de partida">
@@ -252,6 +274,14 @@
       </div>
       <div style="height:10px"></div>
       <button class="btn ghost" onclick="refreshLobby()" data-i18n="lobby_refresh">Actualizar lista</button>
+    </div>
+
+    <div class="card experience-card" id="experience-card">
+      <div class="experience-icon">🔔 🔊</div>
+      <h2 data-i18n="experience_title">No te pierdas tu turno</h2>
+      <p class="hint" data-i18n="experience_hint">Activa las notificaciones y el sonido para recibir avisos de turnos, rivales y zumbidos aunque el chat esté cerrado.</p>
+      <button class="btn" id="experience-btn" type="button" onclick="activateExperience()" data-i18n="experience_activate">Activar notificaciones y sonido</button>
+      <div class="experience-status" id="experience-status"></div>
     </div>
 
     <div class="card" id="mine-card">
@@ -278,6 +308,80 @@
     </div>
 
     <div class="foot"><span class="link" id="sound-link" onclick="toggleSound()"></span> · <span class="link" onclick="openRules()" data-i18n="rules_link">¿Cómo se juega?</span> · <span class="link" onclick="logout()" data-i18n="lobby_changeuser">Cambiar de usuario</span></div>
+  </section>
+
+  <!-- PRACTICA: CONFIGURACION -->
+  <section id="s-practice" class="hidden">
+    <div class="card">
+      <span class="practice-badge" data-i18n="practice_unranked">Práctica · no afecta al ranking</span>
+      <h2 data-i18n="practice_title">Práctica 🎯</h2>
+      <p class="hint" id="practice-hint" data-i18n="practice_hint">Escoge cómo quieres practicar. Los resultados se guardan solo en este dispositivo.</p>
+      <div class="practice-stats" id="practice-stats"></div>
+
+      <label data-i18n="practice_type">Tipo de práctica</label>
+      <div class="seg" id="p-seg-type">
+        <button data-type="solo" class="on" data-i18n="practice_solo">Solo</button>
+        <button data-type="computer" data-i18n="practice_computer">Contra el computador</button>
+      </div>
+
+      <div id="p-computer-options" class="hidden">
+        <label data-i18n="practice_difficulty">Dificultad</label>
+        <div class="seg" id="p-seg-difficulty"><button data-level="easy" data-i18n="difficulty_easy">Fácil</button><button data-level="normal" class="on" data-i18n="difficulty_normal">Normal</button><button data-level="expert" data-i18n="difficulty_expert">Experto</button></div>
+      </div>
+
+      <label data-i18n="lbl_mode">Modo</label>
+      <div class="seg" id="p-seg-mode">
+        <button data-m="numbers" class="on" data-i18n="mode_numbers">Números 0-9</button>
+        <button data-m="colors" data-i18n="mode_colors">Colores</button>
+      </div>
+      <div id="p-colors-wrap" class="hidden">
+        <label data-i18n="lbl_numcolors">Número de colores</label>
+        <div class="seg mono" id="p-seg-colors"><button data-nc="4">4</button><button data-nc="6" class="on">6</button><button data-nc="8">8</button></div>
+      </div>
+      <label data-i18n="lbl_positions">Posiciones</label>
+      <div class="seg mono" id="p-seg-digits"><button data-d="3" class="on">3</button><button data-d="4">4</button><button data-d="5">5</button><button data-d="6">6</button></div>
+      <label data-i18n="lbl_repeats">Repetidos</label>
+      <div class="seg" id="p-seg-repeat"><button data-r="0" class="on" data-i18n="rep_no">No permitir</button><button data-r="1" data-i18n="rep_yes">Permitir</button></div>
+      <label data-i18n="lbl_attempts">Límite de intentos</label>
+      <div class="seg mono" id="p-seg-attempts"><button data-a="0" class="on" data-i18n="nolimit">Sin límite</button><button data-a="6">6</button><button data-a="10">10</button></div>
+      <label id="practice-time-label" data-i18n="practice_time">Tiempo total</label>
+      <div class="seg mono" id="p-seg-time"><button data-t="0" class="on" data-i18n="nolimit">Sin límite</button><button data-t="60">60s</button><button data-t="120">2min</button><button data-t="300">5min</button></div>
+      <div id="p-secret-wrap" class="hidden">
+        <div class="secret-label-row"><label data-i18n="lbl_secret">Tu código secreto</label><button type="button" class="random-code-btn" onclick="suggestPracticeSecret()" data-i18n-title="random_secret" title="Proponer un código aleatorio">🔄</button></div>
+        <input type="text" id="practice-player-secret" class="code" inputmode="numeric" autocomplete="off">
+        <div class="pad hidden" id="practice-secret-pad"><div class="slots" id="practice-secret-slots"></div><div class="palette" id="practice-secret-palette"></div></div>
+        <div class="val" id="practice-secret-val"></div>
+      </div>
+      <div style="height:18px"></div>
+      <button class="btn" onclick="startPractice(false)" data-i18n="practice_start">Comenzar práctica</button>
+      <div style="height:10px"></div>
+      <button class="btn pink" onclick="startPractice(true)" data-i18n="practice_random">Partida aleatoria 🎲</button>
+      <div style="height:10px"></div>
+      <button class="btn ghost" onclick="enterLobby()" data-i18n="back">Volver</button>
+    </div>
+  </section>
+
+  <!-- PRACTICA: PARTIDA -->
+  <section id="s-practice-game" class="hidden">
+    <div class="card">
+      <span class="practice-badge" data-i18n="practice_unranked">Práctica · no afecta al ranking</span>
+      <h2 id="practice-game-title" data-i18n="practice_title">Práctica 🎯</h2>
+      <p class="hint" id="practice-rules"></p>
+      <div class="mysecret"><span data-i18n="practice_secret">Código secreto:</span><span id="practice-secret" class="n">•••</span></div>
+      <div class="statusrow" id="practice-status"><span class="chip" id="practice-attempts"></span><span class="chip hidden" id="practice-computer-attempts"></span><span class="chip hidden" id="practice-difficulty"></span><span class="chip hidden" id="practice-timer"></span></div>
+      <div id="practice-banner"></div>
+      <div class="turnbar mine hidden" id="practice-turn"><span class="dot"></span><span id="practice-turn-txt"></span></div>
+      <div class="guessarea" id="practice-guessarea">
+        <div class="field"><input type="text" id="practice-guess" class="code" inputmode="numeric" placeholder="•••"><div class="pad hidden" id="practice-pad"><div class="slots" id="practice-slots"></div><div class="palette" id="practice-palette"></div></div></div>
+        <button class="btn" id="practice-guess-btn" onclick="submitPracticeGuess()" data-i18n="guess_btn">Adivinar</button>
+      </div>
+      <div class="val" id="practice-guess-val"></div>
+      <div class="legend"><span><i class="pip f"></i><span data-i18n="legend_fija">F = posición correcta</span></span><span><i class="pip p"></i><span data-i18n="legend_pica">P = presente, mal colocada</span></span></div>
+      <div style="height:16px"></div>
+      <div class="cols" id="practice-logs"><div class="card"><div class="colhead" data-i18n="computer_your_attempts">Tus intentos</div><div class="glog" id="practice-log"></div></div><div class="card hidden" id="practice-computer-log-card"><div class="colhead" data-i18n="computer_attempts">Intentos del computador</div><div class="glog" id="practice-computer-log"></div></div></div>
+      <div id="practice-actions" class="hidden"><div style="height:14px"></div><button class="btn green" onclick="startPractice(false)" data-i18n="practice_again">Jugar otra vez</button><div style="height:10px"></div><button class="btn ghost" onclick="openPractice()" data-i18n="practice_settings">Cambiar reglas</button></div>
+      <div style="height:10px"></div><button class="btn ghost" onclick="enterLobby()" data-i18n="result_lobby">Volver al lobby</button>
+    </div>
   </section>
 
   <!-- RANKING -->
@@ -378,7 +482,7 @@
       </div>
       <p class="hint" data-i18n="reveal_hint" style="margin:8px 0 0">Si se activa, cada jugador verá el código secreto de su rival cuando termine la partida.</p>
 
-      <label data-i18n="lbl_secret">Tu código secreto</label>
+      <div class="secret-label-row"><label data-i18n="lbl_secret">Tu código secreto</label><button type="button" class="random-code-btn" onclick="suggestSecret('c')" data-i18n-title="random_secret" title="Proponer código aleatorio">🔄</button></div>
       <input type="text" id="secret-c" class="code" inputmode="numeric" maxlength="3" placeholder="•••">
       <div class="pad hidden" id="pad-c"><div class="slots" id="slots-c"></div><div class="palette" id="palette-c"></div></div>
       <div class="val" id="secret-c-val"></div>
@@ -414,7 +518,7 @@
     <div class="card">
       <h2><span data-i18n="join_to">Unirse a</span> <span id="join-code" style="font-family:'JetBrains Mono',monospace;color:var(--accent)"></span></h2>
       <p class="hint" id="join-rules-txt">Define tu código secreto.</p>
-      <label data-i18n="lbl_secret">Tu código secreto</label>
+      <div class="secret-label-row"><label data-i18n="lbl_secret">Tu código secreto</label><button type="button" class="random-code-btn" onclick="suggestSecret('j')" data-i18n-title="random_secret" title="Proponer código aleatorio">🔄</button></div>
       <input type="text" id="secret-j" class="code" inputmode="numeric" maxlength="3" placeholder="•••">
       <div class="pad hidden" id="pad-j"><div class="slots" id="slots-j"></div><div class="palette" id="palette-j"></div></div>
       <div class="val" id="secret-j-val"></div>
@@ -429,7 +533,7 @@
     <div class="card">
       <h2 data-i18n="rematch_title">Revancha 🔁</h2>
       <p class="hint" id="rematch-rules-txt">Mismas reglas, mismo rival. Define tu nuevo código secreto.</p>
-      <label data-i18n="lbl_newsecret">Tu nuevo código secreto</label>
+      <div class="secret-label-row"><label data-i18n="lbl_newsecret">Tu nuevo código secreto</label><button type="button" class="random-code-btn" onclick="suggestSecret('r')" data-i18n-title="random_secret" title="Proponer código aleatorio">🔄</button></div>
       <input type="text" id="secret-r" class="code" inputmode="numeric" maxlength="3" placeholder="•••">
       <div class="pad hidden" id="pad-r"><div class="slots" id="slots-r"></div><div class="palette" id="palette-r"></div></div>
       <div class="val" id="secret-r-val"></div>
@@ -467,7 +571,7 @@
       </div>
       <div class="val" id="g-guess-val" style="margin-top:0;margin-bottom:8px"></div>
 
-      <div class="legend">
+      <div class="legend" id="g-legend">
         <span><span class="pip f"></span> <span data-i18n="legend_fija">F = posición correcta</span></span>
         <span><span class="pip p"></span> <span data-i18n="legend_pica">P = presente, mal colocada</span></span>
       </div>
@@ -498,14 +602,24 @@
 
 </div>
 
+<button class="chat-launch hidden" id="chat-launch" type="button" onclick="openPrimaryChat()" aria-label="Chat">💬<span class="chat-badge hidden" id="chat-badge">0</span></button>
+<div class="private-chat-bubbles hidden" id="private-chat-bubbles"></div><div class="private-chat-menu hidden" id="private-chat-menu"></div>
+<aside class="chat-panel hidden" id="chat-panel" aria-label="Chat">
+  <div class="chat-head"><strong id="chat-title">Chat</strong><button class="chat-icon-btn hidden" id="chat-nudge" type="button" onclick="sendChatNudge()">⚡</button><button class="chat-icon-btn hidden" id="chat-nudge-toggle" type="button" onclick="toggleNudges()">⚡✓</button><button class="chat-icon-btn" id="chat-muted-btn" type="button" onclick="toggleMutedPanel()">🔇</button><button class="chat-icon-btn" type="button" onclick="toggleChat()">×</button></div>
+  <div class="chat-muted-panel hidden" id="chat-muted-panel"></div>
+  <div class="chat-messages" id="chat-messages"><div class="chat-empty">Cargando…</div></div>
+  <form class="chat-compose" id="chat-form"><input type="text" id="chat-input" maxlength="300" autocomplete="off"><button class="btn chat-send" id="chat-send" type="submit">➤</button></form>
+</aside>
+
 <div class="toast" id="toast"></div>
 
+<script src="/computer-ai.js"></script>
 <script>
 /* ==========================================================================
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = '2.0';
+const APP_VERSION = '2.3';
 /* Enlace de invitación: ...?game=SZ93 */
 let pendingJoinCode = '';
 (function(){
@@ -528,7 +642,7 @@ const I18N = {
     login_enter:"Entrar", login_min:"Mínimo 2 caracteres", login_pin_invalid:"El PIN debe tener entre 4 y 8 dígitos",
     lobby_greeting:"Hola, {name} 👋",
     lobby_hint:"Crea una partida y comparte el código, o únete a una pública abierta.",
-    lobby_create:"Crear partida", lobby_ranking:"Ranking", lobby_refresh:"Actualizar lista",
+    lobby_create:"Crear partida", lobby_practice:"Practicar 🎯", lobby_ranking:"Ranking", lobby_refresh:"Actualizar lista",
     lobby_mine:"Tus partidas activas", lobby_open:"Partidas públicas abiertas", lobby_changeuser:"Cambiar de usuario",
     available_title:"Partidas disponibles", private_games_title:"Tus partidas privadas", private_games_hint:"Por privacidad, solo se muestran las partidas privadas en las que participas.",
     private_empty:"No tienes partidas privadas abiertas o en curso.", private_now:"🔒 {n} privadas abiertas o en curso", public_now:"🟢 {active} públicas en curso · {open} abiertas",
@@ -551,7 +665,8 @@ const I18N = {
     lbl_visibility:"Visibilidad", vis_public:"Pública", vis_private:"Privada", lbl_reveal:"Revelar códigos al terminar", reveal_no:"No revelar", reveal_yes:"Revelar", reveal_hint:"Si se activa, cada jugador verá el código secreto de su rival cuando termine la partida.",
     pub_hint_public:"Aparece en el lobby: cualquiera puede unirse.",
     pub_hint_private:"No aparece en el lobby: solo se entra con el código.",
-    lbl_secret:"Tu código secreto", create_btn:"Crear y esperar rival",
+    lbl_secret:"Tu código secreto", create_btn:"Crear y esperar rival", random_secret:"Proponer un código aleatorio",
+    practice_unranked:"Práctica · no afecta al ranking", practice_title:"Práctica 🎯", practice_hint:"Escoge cómo quieres practicar. Los resultados se guardan solo en este dispositivo.", practice_type:"Tipo de práctica", practice_solo:"Solo", practice_computer:"Contra el computador", practice_difficulty:"Dificultad", difficulty_easy:"Fácil", difficulty_normal:"Normal", difficulty_expert:"Experto", practice_time:"Tiempo total", practice_turn_time:"Tiempo por turno", practice_start:"Comenzar práctica", practice_random:"Partida aleatoria 🎲", practice_secret:"Código secreto:", practice_again:"Jugar otra vez", practice_settings:"Cambiar reglas", practice_won:"¡Código descubierto! 🎉", practice_lost:"Fin de la práctica", practice_reveal:"El código era:", practice_played:"Partidas", practice_wins:"Resueltas", practice_streak:"Racha", practice_attempts_used:"Lo resolviste en {n} intentos y {time}.", practice_time_up:"Se terminó el tiempo.", practice_attempts_up:"Agotaste los intentos.", computer_title:"Contra el computador 🤖", computer_hint:"Ambos intentan descubrir el código rival por turnos.", computer_thinking:"El computador está pensando…", computer_your_turn:"Tu turno — descubre el código del computador", computer_last_turn:"Último intento para empatar: el computador descubrió tu código.", computer_attempts:"Intentos del computador", computer_your_attempts:"Tus intentos", computer_difficulty:"Dificultad: {level}", computer_wins:"Victorias", computer_losses:"Derrotas", computer_draws:"Empates", computer_result_win:"¡Ganaste! 🎉", computer_result_loss:"Ganó el computador", computer_result_draw:"Empate 🤝", computer_both_codes:"Tu código: {yours} · Código del computador: {computer}", computer_timeout:"Se agotó tu tiempo; el turno pasa al computador.", computer_stats_detail:"{level}: {wins}V · {losses}D · {draws}E", computer_invalid_secret:"Revisa tu código secreto.",
     wait_title:"Partida creada", wait_hint:"Comparte este código con tu rival. Empieza en cuanto se una.",
     wait_copy:"Copiar código", wait_waiting:"Esperando a que alguien se una…", wait_cancel:"Cancelar partida", wait_back:"Volver atrás",
     copied:"Código copiado: {code}", cancel_confirm:"¿Cancelar esta partida abierta?", cancel_done:"Partida cancelada", abandon_game:"Abandonar partida", abandon_confirm:"¿Abandonar esta partida? Perderás automáticamente y la victoria será otorgada a tu rival.", abandon_done:"Partida abandonada · victoria otorgada a tu rival",
@@ -595,7 +710,7 @@ const I18N = {
     login_enter:"Enter", login_min:"At least 2 characters", login_pin_invalid:"The PIN must contain 4 to 8 digits",
     lobby_greeting:"Hi, {name} 👋",
     lobby_hint:"Create a game and share the code, or join an open public one.",
-    lobby_create:"Create game", lobby_ranking:"Ranking", lobby_refresh:"Refresh list",
+    lobby_create:"Create game", lobby_practice:"Practice 🎯", lobby_ranking:"Ranking", lobby_refresh:"Refresh list",
     lobby_mine:"Your active games", lobby_open:"Open public games", lobby_changeuser:"Change user",
     available_title:"Available games", private_games_title:"Your private games", private_games_hint:"For privacy, only private games you participate in are shown.",
     private_empty:"You have no open or active private games.", private_now:"🔒 {n} private open or in progress", public_now:"🟢 {active} public in progress · {open} open",
@@ -618,7 +733,8 @@ const I18N = {
     lbl_visibility:"Visibility", vis_public:"Public", vis_private:"Private", lbl_reveal:"Reveal codes at the end", reveal_no:"Do not reveal", reveal_yes:"Reveal", reveal_hint:"When enabled, each player will see their opponent's secret code after the game ends.",
     pub_hint_public:"Shown in the lobby: anyone can join.",
     pub_hint_private:"Not shown in the lobby: join only with the code.",
-    lbl_secret:"Your secret code", create_btn:"Create and wait for opponent",
+    lbl_secret:"Your secret code", create_btn:"Create and wait for opponent", random_secret:"Suggest a random code",
+    practice_unranked:"Practice · does not affect ranking", practice_title:"Practice 🎯", practice_hint:"Choose how you want to practice. Results are saved only on this device.", practice_type:"Practice type", practice_solo:"Solo", practice_computer:"Against the computer", practice_difficulty:"Difficulty", difficulty_easy:"Easy", difficulty_normal:"Normal", difficulty_expert:"Expert", practice_time:"Total time", practice_turn_time:"Time per turn", practice_start:"Start practice", practice_random:"Random game 🎲", practice_secret:"Secret code:", practice_again:"Play again", practice_settings:"Change rules", practice_won:"Code discovered! 🎉", practice_lost:"Practice over", practice_reveal:"The code was:", practice_played:"Games", practice_wins:"Solved", practice_streak:"Streak", practice_attempts_used:"Solved in {n} attempts and {time}.", practice_time_up:"Time is up.", practice_attempts_up:"No attempts remaining.", computer_title:"Against the computer 🤖", computer_hint:"Take turns trying to discover each other's code.", computer_thinking:"The computer is thinking…", computer_your_turn:"Your turn — discover the computer's code", computer_last_turn:"Last try to draw: the computer discovered your code.", computer_attempts:"Computer attempts", computer_your_attempts:"Your attempts", computer_difficulty:"Difficulty: {level}", computer_wins:"Wins", computer_losses:"Losses", computer_draws:"Draws", computer_result_win:"You won! 🎉", computer_result_loss:"The computer won", computer_result_draw:"Draw 🤝", computer_both_codes:"Your code: {yours} · Computer code: {computer}", computer_timeout:"Your time ran out; the turn passes to the computer.", computer_stats_detail:"{level}: {wins}W · {losses}L · {draws}D", computer_invalid_secret:"Check your secret code.",
     wait_title:"Game created", wait_hint:"Share this code with your opponent. It starts as soon as they join.",
     wait_copy:"Copy code", wait_waiting:"Waiting for someone to join…", wait_cancel:"Cancel game", wait_back:"Go back",
     copied:"Code copied: {code}", cancel_confirm:"Cancel this open game?", cancel_done:"Game cancelled", abandon_game:"Abandon game", abandon_confirm:"Abandon this game? You will automatically lose and your opponent will receive the win.", abandon_done:"Game abandoned · win awarded to your opponent",
@@ -662,7 +778,7 @@ const I18N = {
     login_enter:"Entrer", login_min:"2 caractères minimum", login_pin_invalid:"Le PIN doit contenir de 4 à 8 chiffres",
     lobby_greeting:"Salut, {name} 👋",
     lobby_hint:"Crée une partie et partage le code, ou rejoins une partie publique ouverte.",
-    lobby_create:"Créer une partie", lobby_ranking:"Classement", lobby_refresh:"Actualiser la liste",
+    lobby_create:"Créer une partie", lobby_practice:"S'entraîner 🎯", lobby_ranking:"Classement", lobby_refresh:"Actualiser la liste",
     lobby_mine:"Tes parties en cours", lobby_open:"Parties publiques ouvertes", lobby_changeuser:"Changer d'utilisateur",
     available_title:"Parties disponibles", private_games_title:"Tes parties privées", private_games_hint:"Pour préserver la confidentialité, seules les parties privées auxquelles tu participes sont affichées.",
     private_empty:"Tu n'as aucune partie privée ouverte ou en cours.", private_now:"🔒 {n} privées ouvertes ou en cours", public_now:"🟢 {active} publiques en cours · {open} ouvertes",
@@ -685,7 +801,8 @@ const I18N = {
     lbl_visibility:"Visibilité", vis_public:"Publique", vis_private:"Privée", lbl_reveal:"Révéler les codes à la fin", reveal_no:"Ne pas révéler", reveal_yes:"Révéler", reveal_hint:"Si cette option est activée, chaque joueur verra le code secret de son adversaire à la fin de la partie.",
     pub_hint_public:"Visible dans le lobby : tout le monde peut rejoindre.",
     pub_hint_private:"Absente du lobby : on rejoint uniquement avec le code.",
-    lbl_secret:"Ton code secret", create_btn:"Créer et attendre l'adversaire",
+    lbl_secret:"Ton code secret", create_btn:"Créer et attendre l'adversaire", random_secret:"Proposer un code aléatoire",
+    practice_unranked:"Entraînement · sans effet sur le classement", practice_title:"Entraînement 🎯", practice_hint:"Choisis ton type d'entraînement. Les résultats restent sur cet appareil.", practice_type:"Type d'entraînement", practice_solo:"Solo", practice_computer:"Contre l'ordinateur", practice_difficulty:"Difficulté", difficulty_easy:"Facile", difficulty_normal:"Normal", difficulty_expert:"Expert", practice_time:"Temps total", practice_turn_time:"Temps par tour", practice_start:"Commencer", practice_random:"Partie aléatoire 🎲", practice_secret:"Code secret :", practice_again:"Rejouer", practice_settings:"Changer les règles", practice_won:"Code découvert ! 🎉", practice_lost:"Fin de l'entraînement", practice_reveal:"Le code était :", practice_played:"Parties", practice_wins:"Résolues", practice_streak:"Série", practice_attempts_used:"Résolu en {n} essais et {time}.", practice_time_up:"Temps écoulé.", practice_attempts_up:"Plus aucun essai.", computer_title:"Contre l'ordinateur 🤖", computer_hint:"Chacun tente de découvrir le code adverse à tour de rôle.", computer_thinking:"L'ordinateur réfléchit…", computer_your_turn:"À toi — découvre le code de l'ordinateur", computer_last_turn:"Dernier essai pour égaliser : l'ordinateur a découvert ton code.", computer_attempts:"Essais de l'ordinateur", computer_your_attempts:"Tes essais", computer_difficulty:"Difficulté : {level}", computer_wins:"Victoires", computer_losses:"Défaites", computer_draws:"Nuls", computer_result_win:"Tu as gagné ! 🎉", computer_result_loss:"L'ordinateur a gagné", computer_result_draw:"Match nul 🤝", computer_both_codes:"Ton code : {yours} · Code de l'ordinateur : {computer}", computer_timeout:"Temps écoulé ; le tour passe à l'ordinateur.", computer_stats_detail:"{level} : {wins}V · {losses}D · {draws}N", computer_invalid_secret:"Vérifie ton code secret.",
     wait_title:"Partie créée", wait_hint:"Partage ce code avec ton adversaire. La partie démarre dès qu'il rejoint.",
     wait_copy:"Copier le code", wait_waiting:"En attente d'un joueur…", wait_cancel:"Annuler la partie", wait_back:"Retour",
     copied:"Code copié : {code}", cancel_confirm:"Annuler cette partie ouverte ?", cancel_done:"Partie annulée", abandon_game:"Abandonner la partie", abandon_confirm:"Abandonner cette partie ? Tu perdras automatiquement et la victoire sera attribuée à ton adversaire.", abandon_done:"Partie abandonnée · victoire attribuée à ton adversaire",
@@ -720,6 +837,18 @@ const I18N = {
     rl_attempts:"{n} essais", rl_turn:"{n}s/tour", rl_reveal:"codes révélés à la fin", rl_noreveal:"codes masqués à la fin"
   }
 };
+Object.assign(I18N.es,{
+  chat_lobby:"Chat del lobby",chat_game:"Chat de la partida",chat_placeholder:"Escribe un mensaje…",chat_empty:"Todavía no hay mensajes.",chat_deleted:"Mensaje eliminado",chat_mute:"Silenciar usuario",chat_mute_confirm:"¿Silenciar a {name}? Sus mensajes y zumbidos quedarán ocultos hasta que lo reactives desde el botón 🔇.",chat_manage_muted:"Gestionar usuarios silenciados",chat_muted_title:"Usuarios silenciados",chat_muted_empty:"No has silenciado a ningún usuario.",chat_unmute:"Reactivar",chat_unmute_all:"Reactivar a todos",chat_unmuted:"{name} fue reactivado.",chat_all_unmuted:"Todos los usuarios fueron reactivados.",chat_report:"Reportar mensaje",chat_muted:"Usuario silenciado en este dispositivo.",chat_reported:"Mensaje reportado.",chat_nudge:"Enviar zumbido",chat_nudges_on:"Zumbidos activados",chat_nudges_off:"Zumbidos desactivados",chat_joined:"{name} entró en la partida.",chat_paused:"{name} pausó la partida.",chat_resumed:"{name} reanudó la partida.",chat_abandoned:"{name} abandonó la partida.",chat_rematch:"{name} propuso una revancha.",chat_finished:"La partida terminó.",chat_nudged:"{name} te ha enviado un zumbido ⚡",chat_report_reason:"Motivo: 1 spam, 2 insultos/acoso, 3 contenido inapropiado"
+});
+Object.assign(I18N.es,{experience_title:"No te pierdas tu turno",experience_hint:"Activa las notificaciones y el sonido para recibir avisos de turnos, rivales y zumbidos aunque el chat esté cerrado.",experience_activate:"Activar notificaciones y sonido",experience_ready:"Notificaciones y sonido activados.",experience_sound_only:"Sonido activado. Este navegador no admite notificaciones.",experience_denied:"El sonido está activado, pero las notificaciones están bloqueadas. Permítelas desde la configuración del sitio en tu navegador.",experience_default:"Recomendado para una mejor experiencia de juego.",experience_enabled_toast:"Notificaciones y sonido activados",experience_denied_toast:"El navegador bloqueó las notificaciones. Revisa los permisos del sitio."});
+Object.assign(I18N.en,{
+  chat_lobby:"Lobby chat",chat_game:"Game chat",chat_placeholder:"Write a message…",chat_empty:"No messages yet.",chat_deleted:"Message deleted",chat_mute:"Mute user",chat_mute_confirm:"Mute {name}? Their messages and nudges will stay hidden until you restore them with the 🔇 button.",chat_manage_muted:"Manage muted users",chat_muted_title:"Muted users",chat_muted_empty:"You have not muted anyone.",chat_unmute:"Unmute",chat_unmute_all:"Unmute everyone",chat_unmuted:"{name} was unmuted.",chat_all_unmuted:"Everyone was unmuted.",chat_report:"Report message",chat_muted:"User muted on this device.",chat_reported:"Message reported.",chat_nudge:"Send a nudge",chat_nudges_on:"Nudges enabled",chat_nudges_off:"Nudges disabled",chat_joined:"{name} joined the game.",chat_paused:"{name} paused the game.",chat_resumed:"{name} resumed the game.",chat_abandoned:"{name} abandoned the game.",chat_rematch:"{name} proposed a rematch.",chat_finished:"The game ended.",chat_nudged:"{name} sent you a nudge ⚡",chat_report_reason:"Reason: 1 spam, 2 harassment, 3 inappropriate content"
+});
+Object.assign(I18N.en,{experience_title:"Don't miss your turn",experience_hint:"Enable notifications and sound for turn, opponent and nudge alerts even when chat is closed.",experience_activate:"Enable notifications and sound",experience_ready:"Notifications and sound enabled.",experience_sound_only:"Sound enabled. This browser does not support notifications.",experience_denied:"Sound is enabled, but notifications are blocked. Allow them in this site's browser settings.",experience_default:"Recommended for the best game experience.",experience_enabled_toast:"Notifications and sound enabled",experience_denied_toast:"The browser blocked notifications. Check this site's permissions."});
+Object.assign(I18N.fr,{
+  chat_lobby:"Chat du lobby",chat_game:"Chat de la partie",chat_placeholder:"Écris un message…",chat_empty:"Aucun message pour l'instant.",chat_deleted:"Message supprimé",chat_mute:"Ignorer l'utilisateur",chat_mute_confirm:"Ignorer {name} ? Ses messages et wizz resteront masqués jusqu'à sa réactivation avec le bouton 🔇.",chat_manage_muted:"Gérer les utilisateurs ignorés",chat_muted_title:"Utilisateurs ignorés",chat_muted_empty:"Tu n'as ignoré aucun utilisateur.",chat_unmute:"Réactiver",chat_unmute_all:"Tout réactiver",chat_unmuted:"{name} a été réactivé.",chat_all_unmuted:"Tous les utilisateurs ont été réactivés.",chat_report:"Signaler le message",chat_muted:"Utilisateur ignoré sur cet appareil.",chat_reported:"Message signalé.",chat_nudge:"Envoyer un wizz",chat_nudges_on:"Wizz activés",chat_nudges_off:"Wizz désactivés",chat_joined:"{name} a rejoint la partie.",chat_paused:"{name} a mis la partie en pause.",chat_resumed:"{name} a repris la partie.",chat_abandoned:"{name} a abandonné la partie.",chat_rematch:"{name} a proposé une revanche.",chat_finished:"La partie est terminée.",chat_nudged:"{name} t'a envoyé un wizz ⚡",chat_report_reason:"Motif : 1 spam, 2 harcèlement, 3 contenu inapproprié"
+});
+Object.assign(I18N.fr,{experience_title:"Ne rate pas ton tour",experience_hint:"Active les notifications et le son pour les alertes de tour, d'adversaire et de wizz, même lorsque le chat est fermé.",experience_activate:"Activer les notifications et le son",experience_ready:"Notifications et son activés.",experience_sound_only:"Son activé. Ce navigateur ne prend pas en charge les notifications.",experience_denied:"Le son est activé, mais les notifications sont bloquées. Autorise-les dans les paramètres du site du navigateur.",experience_default:"Recommandé pour une meilleure expérience de jeu.",experience_enabled_toast:"Notifications et son activés",experience_denied_toast:"Le navigateur a bloqué les notifications. Vérifie les autorisations de ce site."});
 /* Mensajes de error del backend (español) → traducción */
 const ERR = {
   en:{
@@ -880,9 +1009,14 @@ function applyI18n(){
   document.documentElement.lang = lang;
   document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ el.placeholder = t(el.dataset.i18nPh); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el=>{ el.title = t(el.dataset.i18nTitle); el.setAttribute('aria-label',t(el.dataset.i18nTitle)); });
   document.querySelectorAll('#seg-lang button').forEach(b=> b.classList.toggle('on', b.dataset.lang===lang));
   if(typeof updateSoundLabel==='function') updateSoundLabel();
   if(typeof renderLoginInvite==='function') renderLoginInvite();
+  if(typeof updateChatLabels==='function') updateChatLabels();
+  if(typeof renderMutedPanel==='function') renderMutedPanel();
+  if(typeof updateExperiencePrompt==='function') updateExperiencePrompt();
+  if(typeof renderPracticeStats==='function'&&$('practice-stats')) renderPracticeStats();
   setCredits();
 }
 /* Aviso en el registro cuando se llega por un enlace de invitación (?game=XXXX). */
@@ -904,6 +1038,8 @@ let user = localStorage.getItem('pf_user') || '';
 let userPin = '';
 let sessionToken = localStorage.getItem('pf_session') || '';
 let cfg = { digits:3, mode:'numbers', numColors:6, allowRepeats:false, isPublic:true, maxAttempts:0, turnSeconds:0, revealSecrets:false };
+let practiceCfg = { type:'solo', difficulty:'normal', digits:3, mode:'numbers', numColors:6, allowRepeats:false, maxAttempts:0, turnSeconds:0 };
+let practice = null, practiceTickTimer = null, practiceComputerTimer = null;
 let joinMeta = null, finishedMeta = null;
 let game = { id:'', digits:3, mode:'numbers', numColors:6, allowRepeats:false, maxAttempts:0, turnSeconds:0, revealSecrets:false };
 let gState = null;
@@ -916,6 +1052,13 @@ let endSoundPlayed = false;
 let soundOn = localStorage.getItem('pf_sound')!=='0';
 let audioCtx = null;
 let myCountry = localStorage.getItem('pf_country') || '';
+let chatTimer=null,chatRoom='',chatItems=[],chatLastId=0,chatUnread=0,chatEnabled=false,chatPollGeneration=0;
+let chatNudgesOn=localStorage.getItem('pf_chat_nudges')!=='0';
+let privateThreads=[],selectedPrivateThread=null;
+const privateMessageAudio=new Audio('/audio/icq-message-received.mp3'),wizzAudio=new Audio('/audio/msn-wizz.mp3');
+[privateMessageAudio,wizzAudio].forEach(a=>{a.preload='auto';a.volume=1;});
+function playChatAudio(audio){if(!soundOn)return;try{audio.currentTime=0;const p=audio.play();if(p)p.catch(()=>{});}catch(e){}}
+function primeChatAudio(){[privateMessageAudio,wizzAudio].forEach(a=>{try{const muted=a.muted;a.muted=true;const p=a.play();if(p)p.then(()=>{a.pause();a.currentTime=0;a.muted=muted;}).catch(()=>{a.muted=muted;});}catch(e){}});}
 async function detectCountry(){
   try{
     const r=await fetch('https://get.geojs.io/v1/ip/country.json');
@@ -940,12 +1083,14 @@ function vsPlayer(cc, name){ return `vs ${playerChip(cc, name)}`; }
 const $ = id => document.getElementById(id);
 function show(name){
   if(name!=='game') gameViewEpoch++;
-  ['login','lobby','rank','history','rules','create','wait','join','rematch','game'].forEach(s=>{
+  ['login','lobby','rank','history','rules','practice','practice-game','create','wait','join','rematch','game'].forEach(s=>{
     $('s-'+s).classList.toggle('hidden', s!==name);
   });
   if(name!=='game') stopTick();
+  if(name!=='practice-game') stopPracticeTick();
   if(!['game','wait'].includes(name)) stopPoll();
   if(name==='lobby') startLobbyPoll(); else stopLobbyPoll();
+  setChatContext(name);
   window.scrollTo(0,0);
 }
 function toast(msg, isErr){
@@ -975,6 +1120,78 @@ async function api(action, payload={}, options={}){
   }finally{ clearTimeout(timeout); }
 }
 function esc(s){ return String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
+
+/* -------------------- chat 2.1 -------------------- */
+function chatMutedUsers(){try{return new Set(JSON.parse(localStorage.getItem('pf_chat_muted')||'[]'));}catch(e){return new Set();}}
+function chatUserKey(value){return String(value||'').trim().toLocaleLowerCase();}
+function currentChatRoom(){if(!$('s-game').classList.contains('hidden')&&gState?.chatThreadId)return{roomType:'private',threadId:gState.chatThreadId};if(selectedPrivateThread)return{roomType:'private',threadId:selectedPrivateThread.id};return{roomType:'lobby',gameId:''};}
+function openPrivateChat(id){selectedPrivateThread=privateThreads.find(x=>x.id===Number(id))||{id:Number(id),opponent:''};chatRoom='';chatItems=[];chatLastId=0;updateChatLabels();$('chat-panel').classList.remove('hidden');pollChat();}
+function openPrimaryChat(){if($('s-game').classList.contains('hidden'))selectedPrivateThread=null;toggleChat();}
+function renderPrivateThreads(){const host=$('private-chat-bubbles'),menu=$('private-chat-menu'),inLobby=!$('s-lobby').classList.contains('hidden');host.classList.toggle('hidden',!inLobby||!privateThreads.length);if(!inLobby)return;const visible=privateThreads.slice(0,3),rest=privateThreads.slice(3);host.innerHTML=visible.map(x=>`<button class="private-chat-bubble ${Number(x.lastMessageId)>Number(localStorage.getItem('pf_chat_read_'+x.id)||0)?'unread':''}" onclick="openPrivateChat(${x.id})" title="${esc(x.opponent)}">${esc([...x.opponent][0]?.toUpperCase()||'?')}</button>`).join('')+(rest.length?`<button class="private-chat-bubble" onclick="$('private-chat-menu').classList.toggle('hidden')">+${rest.length}</button>`:'');menu.innerHTML=rest.map(x=>`<button onclick="openPrivateChat(${x.id});$('private-chat-menu').classList.add('hidden')">💬 ${esc(x.opponent)}</button>`).join('');}
+async function refreshPrivateThreads(){if(!sessionToken)return;try{const r=await api('chatList',{listThreads:true});if(r.ok){privateThreads=r.threads||[];renderPrivateThreads();}}catch(e){}}
+function setChatContext(view){
+  const allowed=!!sessionToken&&(view==='lobby'||(view==='game'&&gState&&gState.youAre>0&&gState.p2));
+  chatEnabled=allowed;$('chat-launch').classList.toggle('hidden',!allowed);
+  if(!allowed){$('chat-panel').classList.add('hidden');stopChatPoll();return;}
+  if(view==='lobby')selectedPrivateThread=null;
+  const room=view==='game'?'private:'+(gState?.chatThreadId||game.id):'lobby';
+  if(room!==chatRoom){chatRoom=room;chatItems=[];chatLastId=0;chatUnread=0;renderChat();updateChatBadge();}
+  updateChatLabels();startChatPoll();if(view==='lobby')refreshPrivateThreads();renderPrivateThreads();
+}
+function updateChatLabels(){
+  if(!$('chat-title'))return;const room=currentChatRoom();
+  $('chat-title').textContent=room.roomType==='private'?`${t('chat_game')} · ${selectedPrivateThread?.opponent||gState?.chatOpponent||''}`:t('chat_lobby');
+  $('chat-input').placeholder=t('chat_placeholder');
+  $('chat-nudge').title=t('chat_nudge');$('chat-nudge').setAttribute('aria-label',t('chat_nudge'));
+  $('chat-nudge-toggle').title=t(chatNudgesOn?'chat_nudges_on':'chat_nudges_off');
+  $('chat-nudge-toggle').textContent=chatNudgesOn?'⚡✓':'⚡×';
+  $('chat-nudge').classList.toggle('hidden',room.roomType!=='private');$('chat-nudge-toggle').classList.toggle('hidden',room.roomType!=='private');
+  const mutedCount=chatMutedUsers().size;$('chat-muted-btn').textContent=mutedCount?'🔇'+mutedCount:'🔇';$('chat-muted-btn').title=t('chat_manage_muted');$('chat-muted-btn').setAttribute('aria-label',t('chat_manage_muted'));
+}
+function toggleChat(){
+  if(!chatEnabled)return;const panel=$('chat-panel'),opening=panel.classList.contains('hidden');panel.classList.toggle('hidden',!opening);
+  if(!opening)$('chat-muted-panel').classList.add('hidden');
+  if(opening){chatUnread=0;updateChatBadge();pollChat();setTimeout(()=>$('chat-input').focus(),50);}startChatPoll();
+}
+function updateChatBadge(){const badge=$('chat-badge');badge.textContent=chatUnread>99?'99+':String(chatUnread);badge.classList.toggle('hidden',chatUnread<=0);}
+function systemChatText(body){const [event,name='']=String(body||'').split('|');const keys={joined:'chat_joined',paused:'chat_paused',resumed:'chat_resumed',abandoned:'chat_abandoned',rematch:'chat_rematch',finished:'chat_finished'};return t(keys[event]||event,{name});}
+function chatTime(iso){try{return new Intl.DateTimeFormat(lang,{hour:'2-digit',minute:'2-digit'}).format(new Date(iso));}catch(e){return'';}}
+function renderChat(){
+  const box=$('chat-messages'),muted=chatMutedUsers(),visible=chatItems.filter(m=>m.kind==='system'||!muted.has(chatUserKey(m.sender)));
+  if(!visible.length){box.innerHTML=`<div class="chat-empty">${t('chat_empty')}</div>`;return;}
+  box.innerHTML=visible.map(m=>{
+    if(m.kind==='system')return`<div class="chat-msg system">${esc(systemChatText(m.body))}</div>`;
+    if(m.kind==='nudge')return`<div class="chat-msg nudge">${esc(t('chat_nudged',{name:m.sender}))}</div>`;
+    const mine=chatUserKey(m.sender)===chatUserKey(user),body=m.deleted?t('chat_deleted'):m.body;
+    const actions=!mine&&!m.deleted?`<span class="chat-actions"><button type="button" title="${esc(t('chat_mute'))}" onclick="muteChatUser('${encodeURIComponent(m.sender)}')">🔇</button><button type="button" title="${esc(t('chat_report'))}" onclick="reportChatMessage(${m.id})">⚑</button></span>`:'';
+    return`<div class="chat-msg${mine?' mine':''}"><div class="chat-meta"><b>${esc(m.sender)}</b><span>${chatTime(m.createdAt)}</span>${actions}</div><div class="chat-body">${esc(body)}</div></div>`;
+  }).join('');box.scrollTop=box.scrollHeight;
+}
+async function pollChat(){
+  if(!chatEnabled||!sessionToken)return;const room=currentChatRoom();
+  try{const res=await api('chatList',room);if(!res.ok)return;const previous=chatLastId;chatItems=res.messages||[];chatLastId=chatItems.reduce((max,m)=>Math.max(max,Number(m.id)||0),0);
+    const incoming=chatItems.filter(m=>Number(m.id)>previous&&previous>0&&chatUserKey(m.sender)!==chatUserKey(user));
+    if(incoming.length&&$('chat-panel').classList.contains('hidden')){chatUnread+=incoming.length;updateChatBadge();const launch=$('chat-launch');launch.classList.remove('bump');void launch.offsetWidth;launch.classList.add('bump');}
+    if(room.roomType==='private'&&incoming.some(m=>m.kind==='user'&&!chatMutedUsers().has(chatUserKey(m.sender))))playChatAudio(privateMessageAudio);
+    const muted=chatMutedUsers();const nudge=incoming.find(m=>m.kind==='nudge'&&!muted.has(chatUserKey(m.sender))&&Date.now()-Date.parse(m.createdAt)<15000);
+    if(nudge&&chatNudgesOn){const target=$('chat-panel').classList.contains('hidden')?$('chat-launch'):$('chat-panel');target.classList.remove('chat-shake');void target.offsetWidth;target.classList.add('chat-shake');playChatAudio(wizzAudio);try{navigator.vibrate&&navigator.vibrate([100,50,180]);}catch(e){}}
+    if(room.roomType==='private'&&!$('chat-panel').classList.contains('hidden')){localStorage.setItem('pf_chat_read_'+room.threadId,String(chatLastId));renderPrivateThreads();}
+    if($('s-lobby')&&!$('s-lobby').classList.contains('hidden'))refreshPrivateThreads();
+    renderChat();
+  }catch(e){}
+}
+function startChatPoll(){stopChatPoll();if(!chatEnabled)return;const generation=chatPollGeneration;const run=async()=>{await pollChat();if(chatEnabled&&generation===chatPollGeneration)chatTimer=setTimeout(run,$('chat-panel').classList.contains('hidden')?(currentChatRoom().roomType==='private'?3000:10000):2500);};run();}
+function stopChatPoll(){chatPollGeneration++;if(chatTimer){clearTimeout(chatTimer);chatTimer=null;}}
+async function sendChatMessage(){const input=$('chat-input'),body=input.value.trim();if(!body)return;$('chat-send').disabled=true;try{const res=await api('chatSend',{...currentChatRoom(),body});if(!res.ok){toast(te(res.error),true);return;}input.value='';await pollChat();}catch(e){toast(t('net_error'),true);}finally{$('chat-send').disabled=false;}}
+$('chat-form').addEventListener('submit',e=>{e.preventDefault();sendChatMessage();});
+async function sendChatNudge(){try{const res=await api('chatNudge',currentChatRoom());if(!res.ok){toast(te(res.error),true);return;}playChatAudio(wizzAudio);const target=$('chat-panel');target.classList.remove('chat-shake');void target.offsetWidth;target.classList.add('chat-shake');await pollChat();}catch(e){toast(t('net_error'),true);}}
+function toggleNudges(){chatNudgesOn=!chatNudgesOn;localStorage.setItem('pf_chat_nudges',chatNudgesOn?'1':'0');updateChatLabels();toast(t(chatNudgesOn?'chat_nudges_on':'chat_nudges_off'));}
+function toggleMutedPanel(){const panel=$('chat-muted-panel'),opening=panel.classList.contains('hidden');panel.classList.toggle('hidden',!opening);if(opening)renderMutedPanel();}
+function renderMutedPanel(){const panel=$('chat-muted-panel');if(!panel)return;const users=[...chatMutedUsers()].sort((a,b)=>a.localeCompare(b));if(!users.length){panel.innerHTML=`<div class="chat-muted-title">${esc(t('chat_muted_title'))}</div><div class="chat-empty">${esc(t('chat_muted_empty'))}</div>`;return;}panel.innerHTML=`<div class="chat-muted-title">${esc(t('chat_muted_title'))}</div>`+users.map(name=>`<div class="chat-muted-row"><span>${esc(name)}</span><button type="button" onclick="unmuteChatUser('${encodeURIComponent(name)}')">${esc(t('chat_unmute'))}</button></div>`).join('')+`<button class="chat-unmute-all" type="button" onclick="unmuteAllChatUsers()">${esc(t('chat_unmute_all'))}</button>`;}
+function muteChatUser(encoded){const name=decodeURIComponent(encoded);if(!confirm(t('chat_mute_confirm',{name})))return;const set=chatMutedUsers();set.add(chatUserKey(name));localStorage.setItem('pf_chat_muted',JSON.stringify([...set]));renderChat();renderMutedPanel();updateChatLabels();toast(t('chat_muted'));}
+function unmuteChatUser(encoded){const name=decodeURIComponent(encoded),set=chatMutedUsers();set.delete(chatUserKey(name));localStorage.setItem('pf_chat_muted',JSON.stringify([...set]));renderChat();renderMutedPanel();updateChatLabels();toast(t('chat_unmuted',{name}));}
+function unmuteAllChatUsers(){localStorage.removeItem('pf_chat_muted');renderChat();renderMutedPanel();updateChatLabels();toast(t('chat_all_unmuted'));}
+async function reportChatMessage(messageId){const answer=prompt(t('chat_report_reason'),'1');if(answer===null)return;const reason=answer==='1'?'spam':answer==='2'?'harassment':'inappropriate';try{const res=await api('chatReport',{messageId,reason});if(!res.ok){toast(te(res.error),true);return;}toast(t('chat_reported'));}catch(e){toast(t('net_error'),true);}}
 function noRepeat(v){ return new Set(v.split('')).size === v.length; }
 function validateLive(v, digits, allowRepeats){
   if(v.length===0) return {cls:'',msg:''};
@@ -1006,6 +1223,7 @@ function relativeActivity(iso){
 function unlockAudio(){
   try{ audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended') audioCtx.resume(); }catch(e){}
 }
+document.addEventListener('pointerdown',()=>{if(soundOn){unlockAudio();primeChatAudio();}},{once:true});
 function chime(){
   if(!soundOn) return;
   try{
@@ -1067,6 +1285,20 @@ function toggleSound(){
 }
 function updateSoundLabel(){
   const el=$('sound-link'); if(el) el.textContent = (soundOn?'🔔 ':'🔕 ')+t('sound_label')+': '+t(soundOn?'on':'off');
+  updateExperiencePrompt();
+}
+function updateExperiencePrompt(){
+  const card=$('experience-card'),status=$('experience-status');if(!card||!status)return;
+  const supported='Notification' in window,permission=supported?Notification.permission:'unsupported';
+  const ready=soundOn&&(permission==='granted'||permission==='unsupported');card.classList.toggle('hidden',ready);
+  status.textContent=permission==='granted'&&soundOn?t('experience_ready'):permission==='unsupported'?t('experience_sound_only'):permission==='denied'?t('experience_denied'):t('experience_default');
+}
+async function activateExperience(){
+  soundOn=true;localStorage.setItem('pf_sound','1');unlockAudio();primeChatAudio();chime();
+  let permission='unsupported';
+  try{if('Notification' in window){permission=Notification.permission;if(permission==='default')permission=await Notification.requestPermission();}}catch(e){}
+  updateSoundLabel();
+  if(permission==='denied')toast(t('experience_denied_toast'),true);else toast(t('experience_enabled_toast'));
 }
 function codeViewHTML(str, mode){
   if(mode==='colors'){
@@ -1101,13 +1333,15 @@ function makePad(slotsId, paletteId, getLen, getColors, onChange){
     pal.appendChild(bs);
   }
   drawPalette(); drawSlots();
-  return { get:()=>value, reset:()=>{value='';drawSlots();}, refresh:()=>{drawSlots();drawPalette();},
+  return { get:()=>value, set:v=>{value=String(v||'').slice(0,getLen());drawSlots();onChange&&onChange(value);}, reset:()=>{value='';drawSlots();}, refresh:()=>{drawSlots();drawPalette();},
     setDisabled:disabled=>pal.querySelectorAll('button').forEach(button=>{button.disabled=disabled;}) };
 }
 const padC = makePad('slots-c','palette-c', ()=>cfg.digits, ()=>cfg.numColors, v=>setVal('secret-c-val', v, cfg.digits, cfg.allowRepeats));
 const padJ = makePad('slots-j','palette-j', ()=>joinMeta?joinMeta.digits:3, ()=>joinMeta?joinMeta.numColors:6, v=>setVal('secret-j-val', v, joinMeta.digits, joinMeta.allowRepeats));
 const padR = makePad('slots-r','palette-r', ()=>finishedMeta?finishedMeta.digits:3, ()=>finishedMeta?finishedMeta.numColors:6, v=>setVal('secret-r-val', v, finishedMeta.digits, finishedMeta.allowRepeats));
 const padG = makePad('slots-g','palette-g', ()=>game.digits, ()=>game.numColors||6, v=>setVal('g-guess-val', v, game.digits, game.allowRepeats));
+const practicePad = makePad('practice-slots','practice-palette', ()=>practiceCfg.digits, ()=>practiceCfg.numColors, v=>setVal('practice-guess-val',v,practiceCfg.digits,practiceCfg.allowRepeats));
+const practiceSecretPad = makePad('practice-secret-slots','practice-secret-palette', ()=>practiceCfg.digits, ()=>practiceCfg.numColors, v=>setVal('practice-secret-val',v,practiceCfg.digits,practiceCfg.allowRepeats));
 function setVal(elId, v, digits, allowRepeats){
   const r=validateLive(v, digits, allowRepeats); $(elId).className='val '+r.cls; $(elId).textContent=r.msg;
 }
@@ -1123,6 +1357,24 @@ function applyMode(ctx, mode, inputId, padId, pad){
   $(inputId).classList.toggle('hidden', isColors);
   $(padId).classList.toggle('hidden', !isColors);
   if(isColors) pad.refresh(); else { $(inputId).value=''; }
+}
+
+function randomInt(max){
+  const limit=Math.floor(256/max)*max, bytes=new Uint8Array(1);
+  do{ crypto.getRandomValues(bytes); }while(bytes[0]>=limit);
+  return bytes[0]%max;
+}
+function randomSecret(meta){
+  const max=meta.mode==='colors'?meta.numColors:10, out=[];
+  while(out.length<meta.digits){ const symbol=String(randomInt(max)); if(meta.allowRepeats||!out.includes(symbol)) out.push(symbol); }
+  return out.join('');
+}
+function suggestSecret(ctx){
+  const meta=ctx==='c'?cfg:ctx==='j'?joinMeta:finishedMeta;
+  if(!meta) return;
+  const value=randomSecret(meta);
+  if(ctx==='c'&&meta.mode==='colors') padC.set(value); else if(ctx==='j'&&meta.mode==='colors') padJ.set(value); else if(ctx==='r'&&meta.mode==='colors') padR.set(value);
+  else { const input=$(ctx==='c'?'secret-c':ctx==='j'?'secret-j':'secret-r'); input.value=value; setVal(ctx==='c'?'secret-c-val':ctx==='j'?'secret-j-val':'secret-r-val',value,meta.digits,meta.allowRepeats); }
 }
 
 /* -------------------- idioma -------------------- */
@@ -1144,12 +1396,12 @@ async function doLogin(){
     localStorage.setItem('pf_user',user); localStorage.setItem('pf_session',sessionToken); localStorage.removeItem('pf_pin'); userPin='';
   }catch(e){ userPin=''; $('uname-val').className='val err'; $('uname-val').textContent=t('net_error'); return; }
   unlockAudio();
-  try{ if('Notification' in window && Notification.permission==='default') Notification.requestPermission(); }catch(e){}
   enterLobby();
 }
 async function logout(){
   try{ if(user&&sessionToken) await api('leavePresence',{username:user}); }catch(e){}
   localStorage.removeItem('pf_user'); localStorage.removeItem('pf_pin'); localStorage.removeItem('pf_session'); user=''; userPin=''; sessionToken='';
+  chatEnabled=false;stopChatPoll();$('chat-panel').classList.add('hidden');$('chat-launch').classList.add('hidden');
   show('login'); $('uname').value=''; $('upin').value='';
 }
 function enterLobby(){ $('lobby-greet').textContent=t('lobby_greeting',{name:user}); updateSoundLabel(); show('lobby'); refreshLobby(); handleDeepLink(); }
@@ -1307,17 +1559,176 @@ async function openHistory(){
 
 /* -------------------- crear -------------------- */
 function segPick(container, btn){ [...container.children].forEach(x=>x.classList.toggle('on', x===btn)); }
+
+/* -------------------- practica local Solo / Contra el computador (nunca usa la API) -------------------- */
+function practiceStats(){
+  try{ return {...{played:0,wins:0,streak:0,bestAttempts:0,bestMs:0},...JSON.parse(localStorage.getItem('pf_practice_stats')||'{}')}; }
+  catch(e){ return {played:0,wins:0,streak:0,bestAttempts:0,bestMs:0}; }
+}
+function computerStats(){
+  const levels={easy:{wins:0,losses:0,draws:0},normal:{wins:0,losses:0,draws:0},expert:{wins:0,losses:0,draws:0}};
+  try{ const saved=JSON.parse(localStorage.getItem('pf_computer_stats')||'{}'); return {...{played:0,wins:0,losses:0,draws:0},...saved,byDifficulty:{...levels,...(saved.byDifficulty||{})}}; }
+  catch(e){ return {played:0,wins:0,losses:0,draws:0,byDifficulty:levels}; }
+}
+function renderPracticeStats(){
+  if(practiceCfg.type==='computer'){
+    const s=computerStats(); $('practice-stats').style.gridTemplateColumns='repeat(4,1fr)';
+    $('practice-stats').innerHTML=`<div class="practice-stat"><b>${s.played}</b><span>${t('practice_played')}</span></div><div class="practice-stat"><b>${s.wins}</b><span>${t('computer_wins')}</span></div><div class="practice-stat"><b>${s.losses}</b><span>${t('computer_losses')}</span></div><div class="practice-stat"><b>${s.draws}</b><span>${t('computer_draws')}</span></div>`+Object.entries(s.byDifficulty).map(([level,result])=>`<div class="practice-stat" style="grid-column:1/-1"><span>${t('computer_stats_detail',{level:t('difficulty_'+level),...result})}</span></div>`).join(''); return;
+  }
+  const s=practiceStats();
+  $('practice-stats').style.gridTemplateColumns='repeat(3,1fr)';
+  $('practice-stats').innerHTML=`<div class="practice-stat"><b>${s.played}</b><span>${t('practice_played')}</span></div><div class="practice-stat"><b>${s.wins}</b><span>${t('practice_wins')}</span></div><div class="practice-stat"><b>${s.streak}</b><span>${t('practice_streak')}</span></div>`;
+}
+function openPractice(){ renderPracticeStats(); syncPracticeControls(); show('practice'); }
+function syncPracticeControls(){
+  const impossible=practiceCfg.mode==='colors'&&practiceCfg.digits>practiceCfg.numColors;
+  const no=$('p-seg-repeat').querySelector('[data-r="0"]'); no.disabled=impossible;
+  if(impossible&&!practiceCfg.allowRepeats){ practiceCfg.allowRepeats=true; segPick($('p-seg-repeat'),$('p-seg-repeat').querySelector('[data-r="1"]')); }
+  $('p-colors-wrap').classList.toggle('hidden',practiceCfg.mode!=='colors');
+  const computer=practiceCfg.type==='computer';
+  $('p-computer-options').classList.toggle('hidden',!computer); $('p-secret-wrap').classList.toggle('hidden',!computer);
+  $('practice-hint').textContent=t(computer?'computer_hint':'practice_hint'); $('practice-time-label').textContent=t(computer?'practice_turn_time':'practice_time');
+  const input=$('practice-player-secret'); input.maxLength=practiceCfg.digits; input.placeholder='•'.repeat(practiceCfg.digits);
+  practiceSecretPad.refresh(); applyMode('practice-secret',practiceCfg.mode,'practice-player-secret','practice-secret-pad',practiceSecretPad); renderPracticeStats();
+}
+function selectPracticeRandomRules(){
+  practiceCfg.mode=randomInt(2)?'colors':'numbers';
+  practiceCfg.numColors=[4,6,8][randomInt(3)]; practiceCfg.digits=[3,4,5,6][randomInt(4)];
+  practiceCfg.allowRepeats=!!randomInt(2);
+  if(practiceCfg.mode==='colors'&&practiceCfg.digits>practiceCfg.numColors) practiceCfg.allowRepeats=true;
+  practiceCfg.maxAttempts=[0,6,10][randomInt(3)]; practiceCfg.turnSeconds=[0,60,120,300][randomInt(4)];
+  const pick=(id,selector)=>segPick($(id),$(id).querySelector(selector));
+  pick('p-seg-mode',`[data-m="${practiceCfg.mode}"]`); pick('p-seg-colors',`[data-nc="${practiceCfg.numColors}"]`);
+  pick('p-seg-digits',`[data-d="${practiceCfg.digits}"]`); pick('p-seg-repeat',`[data-r="${practiceCfg.allowRepeats?1:0}"]`);
+  pick('p-seg-attempts',`[data-a="${practiceCfg.maxAttempts}"]`); pick('p-seg-time',`[data-t="${practiceCfg.turnSeconds}"]`); syncPracticeControls();
+}
+function startPractice(randomRules){
+  if(randomRules) selectPracticeRandomRules();
+  stopPracticeTick();
+  let playerSecret='';
+  if(practiceCfg.type==='computer'){
+    playerSecret=practiceCfg.mode==='colors'?practiceSecretPad.get():$('practice-player-secret').value.trim();
+    if(validateLive(playerSecret,practiceCfg.digits,practiceCfg.allowRepeats).cls!=='ok'){toast(t('computer_invalid_secret'),true);return;}
+  }
+  const solver=practiceCfg.type==='computer'?ComputerAI.createSolver(practiceCfg,practiceCfg.difficulty,{random:cryptoRandom}):null;
+  practice={secret:randomSecret(practiceCfg),playerSecret,guesses:[],computerGuesses:[],missedTurns:0,solver,startedAt:Date.now(),deadline:practiceCfg.turnSeconds?Date.now()+practiceCfg.turnSeconds*1000:0,finished:false,turn:'player',pendingWinner:''};
+  const input=$('practice-guess'); input.maxLength=practiceCfg.digits; input.value=''; input.placeholder='•'.repeat(practiceCfg.digits);
+  practicePad.reset(); practicePad.refresh(); applyMode('practice',practiceCfg.mode,'practice-guess','practice-pad',practicePad);
+  $('practice-guess-val').textContent=''; $('practice-banner').innerHTML=''; $('practice-actions').classList.add('hidden'); $('practice-guessarea').classList.remove('hidden');
+  $('practice-log').innerHTML=`<div class="empty">${t('log_empty_mine')}</div>`;
+  $('practice-computer-log').innerHTML=`<div class="empty">${t('log_empty_theirs')}</div>`; $('practice-computer-log-card').classList.toggle('hidden',practiceCfg.type!=='computer'); $('practice-turn').classList.toggle('hidden',practiceCfg.type!=='computer');
+  $('practice-game-title').textContent=t(practiceCfg.type==='computer'?'computer_title':'practice_title');
+  $('practice-secret').className=practiceCfg.type==='computer'?'':'n'; $('practice-secret').innerHTML=practiceCfg.type==='computer'?codeViewHTML(playerSecret,practiceCfg.mode):'•'.repeat(practiceCfg.digits);
+  $('practice-rules').textContent=rulesLabel({...practiceCfg,revealSecrets:true});
+  show('practice-game'); renderPracticeStatus();
+  if(practice.deadline) practiceTickTimer=setInterval(renderPracticeStatus,250);
+}
+function stopPracticeTick(){ if(practiceTickTimer){clearInterval(practiceTickTimer);practiceTickTimer=null;} if(practiceComputerTimer){clearTimeout(practiceComputerTimer);practiceComputerTimer=null;} }
+function formatPracticeTime(ms){ const total=Math.max(0,Math.ceil(ms/1000)),m=Math.floor(total/60),s=total%60; return m?`${m}:${String(s).padStart(2,'0')}`:`${s}s`; }
+function playerPracticeAttempts(){return practice.guesses.length+(practice.missedTurns||0);}
+function renderPracticeStatus(){
+  if(!practice||practice.finished)return;
+  const used=playerPracticeAttempts(), left=practiceCfg.maxAttempts?Math.max(0,practiceCfg.maxAttempts-used):'∞';
+  $('practice-attempts').textContent=practiceCfg.maxAttempts?t('attempts_chip',{left,max:practiceCfg.maxAttempts}):`${used} ${t('rl_attempts',{n:''}).trim()}`;
+  const computer=practiceCfg.type==='computer'; $('practice-computer-attempts').classList.toggle('hidden',!computer); $('practice-difficulty').classList.toggle('hidden',!computer);
+  if(computer){const n=practice.computerGuesses.length,l=practiceCfg.maxAttempts?Math.max(0,practiceCfg.maxAttempts-n):'∞';$('practice-computer-attempts').textContent=`🤖 ${practiceCfg.maxAttempts?l+'/'+practiceCfg.maxAttempts:n}`;$('practice-difficulty').textContent=t('computer_difficulty',{level:t('difficulty_'+practiceCfg.difficulty)});}
+  const timer=$('practice-timer'); timer.classList.toggle('hidden',!practice.deadline);
+  if(practice.deadline){ const remaining=practice.deadline-Date.now(); timer.textContent='⏱ '+formatPracticeTime(remaining); timer.className='chip'+(remaining<=10000?' hot':''); if(remaining<=0){if(computer)expireComputerPlayerTurn();else finishPractice(false,'time');} }
+  if(computer&&practice.turn==='player'){$('practice-turn').className='turnbar mine';$('practice-turn-txt').textContent=t(practice.pendingWinner==='computer'?'computer_last_turn':'computer_your_turn');}
+}
+function evaluatePractice(secret,guess){
+  let fijas=0,picas=0; const s={},g={};
+  for(let i=0;i<secret.length;i++){ if(secret[i]===guess[i])fijas++; else{s[secret[i]]=(s[secret[i]]||0)+1;g[guess[i]]=(g[guess[i]]||0)+1;} }
+  Object.keys(g).forEach(k=>picas+=Math.min(g[k],s[k]||0)); return {fijas,picas};
+}
+function submitPracticeGuess(){
+  if(!practice||practice.finished||practice.turn!=='player')return;
+  const guess=practiceCfg.mode==='colors'?practicePad.get():$('practice-guess').value.trim();
+  const validation=validateLive(guess,practiceCfg.digits,practiceCfg.allowRepeats);
+  if(validation.cls!=='ok'){toast(t('invalid_guess'),true);return;}
+  const score=evaluatePractice(practice.secret,guess); practice.guesses.push({guess,...score}); renderPracticeLog();
+  $('practice-guess').value=''; practicePad.reset(); $('practice-guess-val').textContent='';
+  if(practiceCfg.type==='computer'){handlePlayerComputerScore(score);return;}
+  if(score.fijas===practiceCfg.digits) finishPractice(true,'solved');
+  else if(practiceCfg.maxAttempts&&practice.guesses.length>=practiceCfg.maxAttempts) finishPractice(false,'attempts');
+  else renderPracticeStatus();
+}
+function renderPracticeLog(){
+  $('practice-log').innerHTML=practice.guesses.slice().reverse().map(g=>{let p='';for(let i=0;i<g.fijas;i++)p+='<span class="pip f"></span>';for(let i=0;i<g.picas;i++)p+='<span class="pip p"></span>';if(!p)p=`<span class="scoretxt">${t('log_nada')}</span>`;return `<div class="g">${codeViewHTML(g.guess,practiceCfg.mode)}<span class="scoretxt">${g.fijas}F · ${g.picas}P</span><span class="pips">${p}</span></div>`;}).join('');
+}
+function cryptoRandom(){const bytes=new Uint32Array(1);crypto.getRandomValues(bytes);return bytes[0]/4294967296;}
+function renderComputerLog(){
+  $('practice-computer-log').innerHTML=practice.computerGuesses.slice().reverse().map(g=>{let p='';for(let i=0;i<g.fijas;i++)p+='<span class="pip f"></span>';for(let i=0;i<g.picas;i++)p+='<span class="pip p"></span>';if(!p)p=`<span class="scoretxt">${t('log_nada')}</span>`;return `<div class="g">${codeViewHTML(g.guess,practiceCfg.mode)}<span class="scoretxt">${g.fijas}F · ${g.picas}P</span><span class="pips">${p}</span></div>`;}).join('');
+}
+function handlePlayerComputerScore(score){
+  if(score.fijas===practiceCfg.digits)practice.pendingWinner='player';
+  if(practice.pendingWinner==='computer'){finishComputerPractice(score.fijas===practiceCfg.digits?'draw':'loss');return;}
+  const canTry=!practiceCfg.maxAttempts||practice.computerGuesses.length<practiceCfg.maxAttempts;
+  if(!canTry){if(practice.pendingWinner==='player')finishComputerPractice('win');else if(practiceCfg.maxAttempts&&playerPracticeAttempts()>=practiceCfg.maxAttempts)finishComputerPractice('draw');else beginPlayerTurn();return;}
+  beginComputerTurn();
+}
+function beginComputerTurn(){
+  practice.turn='computer';practice.deadline=0;$('practice-guessarea').classList.add('hidden');$('practice-turn').className='turnbar sending';$('practice-turn-txt').textContent=t('computer_thinking');renderPracticeStatus();practiceComputerTimer=setTimeout(runComputerTurn,450);
+}
+function runComputerTurn(){
+  practiceComputerTimer=null;if(!practice||practice.finished)return;
+  const guess=practice.solver.nextGuess(),score=evaluatePractice(practice.playerSecret,guess);
+  practice.solver.record(guess,score);practice.computerGuesses.push({guess,...score});renderComputerLog();
+  if(score.fijas===practiceCfg.digits){finishComputerPractice(practice.pendingWinner==='player'?'draw':'loss');return;}
+  if(practice.pendingWinner==='player'){finishComputerPractice('win');return;}
+  if(practiceCfg.maxAttempts&&playerPracticeAttempts()>=practiceCfg.maxAttempts&&practice.computerGuesses.length>=practiceCfg.maxAttempts){finishComputerPractice('draw');return;}
+  beginPlayerTurn();
+}
+function beginPlayerTurn(){practice.turn='player';practice.deadline=practiceCfg.turnSeconds?Date.now()+practiceCfg.turnSeconds*1000:0;$('practice-guessarea').classList.remove('hidden');renderPracticeStatus();}
+function expireComputerPlayerTurn(){if(!practice||practice.finished||practice.turn!=='player')return;practice.deadline=0;practice.missedTurns++;toast(t('computer_timeout'));if(practice.pendingWinner==='computer'){finishComputerPractice('loss');return;}if(practiceCfg.maxAttempts&&playerPracticeAttempts()>=practiceCfg.maxAttempts&&practice.computerGuesses.length>=practiceCfg.maxAttempts){finishComputerPractice('draw');return;}if(!practiceCfg.maxAttempts||practice.computerGuesses.length<practiceCfg.maxAttempts)beginComputerTurn();else beginPlayerTurn();}
+function finishComputerPractice(result){
+  if(!practice||practice.finished)return;practice.finished=true;stopPracticeTick();
+  const s=computerStats(),key=result==='win'?'wins':result==='loss'?'losses':'draws';s.played++;s[key]++;s.byDifficulty[practiceCfg.difficulty][key]++;localStorage.setItem('pf_computer_stats',JSON.stringify(s));
+  $('practice-secret').innerHTML=codeViewHTML(practice.playerSecret,practiceCfg.mode);$('practice-guessarea').classList.add('hidden');$('practice-turn').classList.add('hidden');$('practice-actions').classList.remove('hidden');
+  $('practice-banner').innerHTML=`<div class="banner ${result==='win'?'win':result==='loss'?'lose':'draw'}"><h2>${t('computer_result_'+result)}</h2><p>${t('computer_both_codes',{yours:practice.playerSecret,computer:practice.secret})}</p></div><div class="note"><b>${t('practice_secret')}</b> ${codeViewHTML(practice.playerSecret,practiceCfg.mode)} · <b>🤖</b> ${codeViewHTML(practice.secret,practiceCfg.mode)}</div>`;endSound(result==='draw'?'draw':result==='win'?'win':'lose');
+}
+function finishPractice(won,reason){
+  if(!practice||practice.finished)return; practice.finished=true; stopPracticeTick();
+  const elapsed=Date.now()-practice.startedAt,s=practiceStats(); s.played++; if(won){s.wins++;s.streak++;s.bestAttempts=!s.bestAttempts?practice.guesses.length:Math.min(s.bestAttempts,practice.guesses.length);s.bestMs=!s.bestMs?elapsed:Math.min(s.bestMs,elapsed);}else s.streak=0;
+  localStorage.setItem('pf_practice_stats',JSON.stringify(s));
+  $('practice-secret').className=''; $('practice-secret').innerHTML=codeViewHTML(practice.secret,practiceCfg.mode);
+  const detail=won?t('practice_attempts_used',{n:practice.guesses.length,time:formatPracticeTime(elapsed)}):t(reason==='time'?'practice_time_up':'practice_attempts_up');
+  $('practice-banner').innerHTML=`<div class="banner ${won?'win':'lose'}"><h2>${t(won?'practice_won':'practice_lost')}</h2><p>${detail}</p></div><div class="note"><b>${t('practice_reveal')}</b> ${codeViewHTML(practice.secret,practiceCfg.mode)}</div>`;
+  $('practice-guessarea').classList.add('hidden'); $('practice-actions').classList.remove('hidden'); endSound(won?'win':'lose');
+}
+$('p-seg-type').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;practiceCfg.type=b.dataset.type;segPick($('p-seg-type'),b);syncPracticeControls();});
+$('p-seg-difficulty').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;practiceCfg.difficulty=b.dataset.level;segPick($('p-seg-difficulty'),b);});
+$('p-seg-mode').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;practiceCfg.mode=b.dataset.m;segPick($('p-seg-mode'),b);syncPracticeControls();});
+$('p-seg-colors').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;practiceCfg.numColors=+b.dataset.nc;segPick($('p-seg-colors'),b);syncPracticeControls();});
+$('p-seg-digits').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;practiceCfg.digits=+b.dataset.d;segPick($('p-seg-digits'),b);syncPracticeControls();});
+$('p-seg-repeat').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;practiceCfg.allowRepeats=b.dataset.r==='1';segPick($('p-seg-repeat'),b);});
+$('p-seg-attempts').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;practiceCfg.maxAttempts=+b.dataset.a;segPick($('p-seg-attempts'),b);});
+$('p-seg-time').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;practiceCfg.turnSeconds=+b.dataset.t;segPick($('p-seg-time'),b);});
+$('practice-guess').addEventListener('input',e=>setVal('practice-guess-val',e.target.value,practiceCfg.digits,practiceCfg.allowRepeats));
+$('practice-player-secret').addEventListener('input',e=>setVal('practice-secret-val',e.target.value,practiceCfg.digits,practiceCfg.allowRepeats));
+bindEnterToButton('practice-guess','practice-guess-btn');
+function suggestPracticeSecret(){const value=randomSecret(practiceCfg);if(practiceCfg.mode==='colors')practiceSecretPad.set(value);else{$('practice-player-secret').value=value;$('practice-player-secret').dispatchEvent(new Event('input'));}}
+
+function syncRepeatAvailability(){
+  const noRepeats=$('seg-repeat').querySelector('[data-r="0"]');
+  const impossible=cfg.mode==='colors'&&cfg.digits>cfg.numColors;
+  noRepeats.disabled=impossible;
+  if(impossible&&!cfg.allowRepeats){
+    cfg.allowRepeats=true;
+    segPick($('seg-repeat'),$('seg-repeat').querySelector('[data-r="1"]'));
+  }
+}
 $('seg-mode').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
   cfg.mode=b.dataset.m; segPick($('seg-mode'),b);
   $('colors-wrap').classList.toggle('hidden', cfg.mode!=='colors');
-  padC.reset(); applyMode('c', cfg.mode, 'secret-c', 'pad-c', padC); $('secret-c-val').textContent=''; });
+  syncRepeatAvailability(); padC.reset(); applyMode('c', cfg.mode, 'secret-c', 'pad-c', padC); $('secret-c-val').textContent=''; });
 $('seg-colors').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
   cfg.numColors=parseInt(b.dataset.nc,10); segPick($('seg-colors'),b);
-  padC.reset(); padC.refresh(); $('secret-c-val').textContent=''; });
+  syncRepeatAvailability(); padC.reset(); padC.refresh(); $('secret-c-val').textContent=''; });
 $('seg-digits').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
   cfg.digits=parseInt(b.dataset.d,10); segPick($('seg-digits'),b);
   const inp=$('secret-c'); inp.maxLength=cfg.digits; inp.value=''; inp.placeholder='•'.repeat(cfg.digits);
-  padC.reset(); if(cfg.mode==='colors') padC.refresh(); $('secret-c-val').textContent=''; });
+  syncRepeatAvailability(); padC.reset(); if(cfg.mode==='colors') padC.refresh(); $('secret-c-val').textContent=''; });
 $('seg-repeat').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
   cfg.allowRepeats=b.dataset.r==='1'; segPick($('seg-repeat'),b);
   setVal('secret-c-val', getSecret('c'), cfg.digits, cfg.allowRepeats); });
@@ -1500,7 +1911,7 @@ function resetGameView(){
   $('g-turn-txt').textContent=t('waiting_generic');
   $('g-statusrow').classList.add('hidden'); $('g-timer').classList.add('hidden'); $('g-attempts').classList.add('hidden');
   $('g-guessarea').classList.toggle('hidden',!!game.spectator); $('g-guess').disabled=true; $('g-guess-btn').disabled=true;
-  $('g-abandon-wrap').classList.add('hidden'); document.querySelector('.legend').style.display='flex';
+  $('g-abandon-wrap').classList.add('hidden'); $('g-legend').style.display='flex';
   $('g-pause-cover').classList.add('hidden'); $('g-pause-btn').classList.add('hidden');
 }
 function enterGame(meta){
@@ -1545,6 +1956,7 @@ bindEnterToButton('g-guess','g-guess-btn');
 function renderGame(st){
   if(!st||String(st.gameId)!==String(game.id)||$('s-game').classList.contains('hidden')) return;
   gState=st;
+  setChatContext('game');
   if(typeof st.allowRepeats==='boolean') game.allowRepeats=st.allowRepeats;
   if(st.mode) game.mode=st.mode;
   if(st.digits) game.digits=parseInt(st.digits,10);
@@ -1582,7 +1994,7 @@ function renderGame(st){
   renderLog('g-theirlog', theirs, t('log_empty_theirs'));
 
   const banner=$('g-banner'); const rz=$('g-rematch-zone'); const turn=$('g-turn');
-  const guessarea=$('g-guessarea'); const legend=document.querySelector('.legend'); const statusrow=$('g-statusrow');
+  const guessarea=$('g-guessarea'); const legend=$('g-legend'); const statusrow=$('g-statusrow');
 
   if(st.status==='finished'){
     $('g-abandon-wrap').classList.add('hidden');
@@ -1686,7 +2098,7 @@ async function submitGuess(){
   const guess=getSecret('g');
   const r=validateLive(guess, game.digits, game.allowRepeats);
   if(r.cls!=='ok'){ toast(t('invalid_guess'),true); return; }
-  const requestId=(crypto.randomUUID?crypto.randomUUID():(Date.now()+'-'+Math.random())).replace(/[^A-Za-z0-9-]/g,'');
+  const requestId=(crypto.randomUUID?crypto.randomUUID():[...crypto.getRandomValues(new Uint8Array(16))].map(byte=>byte.toString(16).padStart(2,'0')).join('')).replace(/[^A-Za-z0-9-]/g,'');
   guessSubmitting=true;
   $('g-turn').className='turnbar sending';
   $('g-turn-txt').textContent=t('sending_guess');
@@ -1802,6 +2214,7 @@ function startPoll(fn){
 function stopPoll(){ pollGeneration++; if(pollTimer){ clearTimeout(pollTimer); pollTimer=null; } }
 
 document.addEventListener('visibilitychange',()=>{
+  updateExperiencePrompt();
   if(!document.hidden&&!$('s-game').classList.contains('hidden')&&game.id) refreshGame();
 });
 
