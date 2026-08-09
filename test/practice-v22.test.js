@@ -46,9 +46,23 @@ test('unfinished practice is saved locally and can be resumed from the lobby', (
   assert.match(practiceSource,/clearSavedPractice\(\);[\s\S]*computerStats/);
 });
 
+test('active practice can be cancelled without a result or surrendered for review', () => {
+  for(const id of ['practice-active-actions','practice-logs']) assert.match(html,new RegExp(`id="${id}"`));
+  assert.match(html,/onclick="cancelPractice\(\)"/);
+  assert.match(html,/onclick="surrenderPractice\(\)"/);
+  assert.match(practiceSource,/function cancelPractice\(\)[\s\S]*clearSavedPractice\(\);practice=null;enterLobby\(\)/);
+  const cancelSource=practiceSource.slice(practiceSource.indexOf('function cancelPractice()'),practiceSource.indexOf('function surrenderPractice()'));
+  assert.doesNotMatch(cancelSource,/practiceStats\(|computerStats\(|finishPractice|finishComputerPractice/);
+  assert.match(practiceSource,/function surrenderPractice\(\)[\s\S]*finishComputerPractice\('loss','surrender'\)[\s\S]*finishPractice\(false,'surrender'\)/);
+  assert.match(practiceSource,/reason==='surrender'/);
+  assert.match(practiceSource,/practice-active-actions'\)\.classList\.add\('hidden'\)/);
+});
+
 test('practice resume labels exist in Spanish, English, and French without changing the version', () => {
   assert.equal((html.match(/practice_resume_title:/g)||[]).length,3);
   assert.equal((html.match(/practice_save_lobby:/g)||[]).length,3);
+  assert.equal((html.match(/practice_cancel_confirm:/g)||[]).length,3);
+  assert.equal((html.match(/practice_surrender_confirm:/g)||[]).length,3);
   assert.match(html,/const APP_VERSION = '2\.3'/);
 });
 
