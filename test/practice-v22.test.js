@@ -34,6 +34,24 @@ test('the computer attempt indicator refreshes after recording the final guess',
   assert.match(practiceSource,/renderPracticeStatus\(\);\s*if\(score\.fijas===practiceCfg\.digits\)/);
 });
 
+test('unfinished practice is saved locally and can be resumed from the lobby', () => {
+  assert.match(html,/id="practice-resume-card"/);
+  assert.match(html,/onclick="resumePractice\(\)"/);
+  assert.match(html,/onclick="discardSavedPractice\(\)"/);
+  assert.match(practiceSource,/PRACTICE_SAVE_KEY/);
+  assert.match(practiceSource,/localStorage\.setItem\(PRACTICE_SAVE_KEY/);
+  assert.match(practiceSource,/state\.computerGuesses\|\|\[\]\)solver\.record/);
+  assert.match(practiceSource,/function leavePracticeToLobby\(\)[\s\S]*pauseActivePractice\(\)[\s\S]*enterLobby\(\)/);
+  assert.match(practiceSource,/visibilitychange/);
+  assert.match(practiceSource,/clearSavedPractice\(\);[\s\S]*computerStats/);
+});
+
+test('practice resume labels exist in Spanish, English, and French without changing the version', () => {
+  assert.equal((html.match(/practice_resume_title:/g)||[]).length,3);
+  assert.equal((html.match(/practice_save_lobby:/g)||[]).length,3);
+  assert.match(html,/const APP_VERSION = '2\.3'/);
+});
+
 test('practice secrets and suggestions use cryptographic randomness', () => {
   assert.match(html, /function randomSecret\(meta\)/);
   assert.match(html, /crypto\.getRandomValues\(bytes\)/);
