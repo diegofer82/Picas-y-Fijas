@@ -8,13 +8,16 @@ Picas y Fijas es un juego multijugador web en español, inglés y francés. La v
 
 Versión actual: **2.4.0**.
 
-- Juego: https://picas-y-fijas.picas-y-fijas.workers.dev/
-- Administración: https://picas-y-fijas.picas-y-fijas.workers.dev/admin
+- Juego: https://picasyfijas.fans/ (también https://www.picasyfijas.fans/)
+- Dirección anterior, sigue activa: https://picas-y-fijas.picas-y-fijas.workers.dev/
+- Administración: https://picasyfijas.fans/admin
 - Repositorio: https://github.com/diegofer82/Picas-y-Fijas
 - Rama de producción: `main`
 - Worker y base D1: `picas-y-fijas` / `picas-y-fijas-db`
 
 Cloudflare despliega automáticamente la rama `main`. No se debe modificar producción manualmente salvo una recuperación explícita.
+
+Los dominios propios se declaran en `routes` dentro de `wrangler.jsonc` con `custom_domain: true`; Cloudflare crea y mantiene los registros DNS a partir de ahí. La dirección `workers.dev` no se retira: los enlaces de partida se construyen con `location.origin`, así que cada jugador comparte el dominio por el que entró y las dos direcciones siguen funcionando.
 
 ## Cómo se juega
 
@@ -134,6 +137,7 @@ El rival funciona íntegramente sin conexión y no utiliza ChatGPT ni ninguna AP
 - `src/security.js`: PIN, autenticación, sesiones y limitación de intentos.
 - `migrations/0001_initial.sql`: esquema reproducible de D1. No es un residuo de la migración desde Google y no debe eliminarse.
 - `test/`: pruebas automáticas de reglas, rutas, teclado y regresiones.
+- `tools/make-icons.mjs`: genera los cuatro PNG de la aplicación instalada. Se ejecuta con `npm run icons`.
 - `wrangler.jsonc`: configuración de Cloudflare, recursos y variables no secretas.
 - `index.html`: aviso y redirección desde la dirección histórica de GitHub Pages.
 
@@ -161,7 +165,9 @@ Reglas que conviene respetar al tocar el diseño:
 - Tipografías: `Instrument Serif` en los títulos, `Archivo` en la interfaz y `JetBrains Mono` en códigos y cifras. El cero de JetBrains Mono lleva punto interior, que lo separa del 8 y de la O.
 - El array `COLORS` del script son las fichas de colores del modo Mastermind. No forma parte de la paleta de la interfaz y no debe repintarse con ella.
 - Una sola acción primaria por tarjeta. Lo secundario baja a `.btn.ghost` y lo terciario a `.chipbtn`.
-- La marca es una cabeza de toro, por *Bulls and Cows*. Los iconos de la PWA se regeneran con el script del repositorio de herramientas; si cambia la marca, hay que regenerar los cuatro PNG.
+- La marca es una cabeza de toro, por *Bulls and Cows*. Vive en dos sitios: los trazados del logo en `public/index.html` y los del generador en `tools/make-icons.mjs`. Si cambia, hay que cambiarla en ambos y volver a ejecutar `npm run icons`.
+- `tools/make-icons.mjs` no tiene dependencias: rasteriza y escribe el PNG por su cuenta porque la máquina de desarrollo no tenía ninguna herramienta de imagen instalada. Si algún día se añade `sharp` o `resvg`, ese archivo se puede sustituir por una llamada a esa herramienta sin tocar nada más.
+- Cada cambio de texto se debe revisar en español, inglés y francés a 375 px de ancho. El francés es el idioma más largo y es el primero que desborda los controles estrechos.
 - Los elementos con `data-i18n` reciben `textContent` al traducir, así que **no pueden contener SVG ni ningún hijo**: el renderizado del idioma los borraría.
 
 ## Modelo de datos

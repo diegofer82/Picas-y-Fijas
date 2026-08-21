@@ -8,6 +8,7 @@
     "test": "node --test",
     "check": "node --check src/index.js && node --check src/game.js && node --test",
     "deploy": "wrangler deploy",
+    "icons": "node tools/make-icons.mjs public",
     "db:local": "wrangler d1 migrations apply picas-y-fijas-db --local",
     "db:remote": "wrangler d1 migrations apply picas-y-fijas-db --remote"
   },
