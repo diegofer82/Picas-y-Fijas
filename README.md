@@ -17,7 +17,11 @@ Versión actual: **2.4.0**.
 
 Cloudflare despliega automáticamente la rama `main`. No se debe modificar producción manualmente salvo una recuperación explícita.
 
-Los dominios propios se declaran en `routes` dentro de `wrangler.jsonc` con `custom_domain: true`; Cloudflare crea y mantiene los registros DNS a partir de ahí. La dirección `workers.dev` no se retira: los enlaces de partida se construyen con `location.origin`, así que cada jugador comparte el dominio por el que entró y las dos direcciones siguen funcionando.
+Los dominios propios se declaran en `routes` dentro de `wrangler.jsonc` con `custom_domain: true`; Cloudflare crea y mantiene los registros DNS a partir de ahí.
+
+**Al declarar `routes`, Wrangler apaga la ruta `workers.dev` salvo que se ponga `"workers_dev": true`.** Es lo que dejó la dirección antigua en 404 durante unos minutos al añadir el dominio propio. La bandera debe quedarse: el Worker responde en `workers.dev` para poder redirigir 301 al dominio propio, conservando ruta y parámetros, y así los enlaces de partida antiguos siguen llevando a su partida. La constante `CANONICAL_HOST` en `src/index.js` es el destino de esa redirección.
+
+Direcciones vivas: `picasyfijas.fans` y `www.picasyfijas.fans` sirven la aplicación; `picas-y-fijas.picas-y-fijas.workers.dev` y `diegofer82.github.io/Picas-y-Fijas/` redirigen a la primera.
 
 ## Cómo se juega
 

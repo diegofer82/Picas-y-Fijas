@@ -9,6 +9,7 @@
     "logs": { "head_sampling_rate": 1 },
     "traces": { "enabled": true, "head_sampling_rate": 0.05 }
   },
+  "workers_dev": true,
   "routes": [
     { "pattern": "picasyfijas.fans", "custom_domain": true },
     { "pattern": "www.picasyfijas.fans", "custom_domain": true }

@@ -1295,9 +1295,20 @@ function noStoreHtml(response) {
   });
 }
 
+const CANONICAL_HOST = "picasyfijas.fans";
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    // La direccion historica workers.dev sigue respondiendo, pero manda al
+    // dominio propio conservando ruta y parametros, para que los enlaces de
+    // partida antiguos sigan llevando a la partida correcta.
+    if (url.hostname.endsWith(".workers.dev")) {
+      url.hostname = CANONICAL_HOST;
+      url.port = "";
+      url.protocol = "https:";
+      return Response.redirect(url.toString(), 301);
+    }
     try {
       if (url.pathname === "/api" || url.pathname.startsWith("/api/"))
         return await routeApi(request, env);
