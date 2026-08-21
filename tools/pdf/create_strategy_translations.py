@@ -6,7 +6,7 @@ from reportlab.lib.units import mm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, KeepTogether
 
 ROOT=Path(__file__).resolve().parents[2]; OUT=ROOT/'output'/'pdf'; OUT.mkdir(parents=True,exist_ok=True)
-NAVY=colors.HexColor('#17152d'); PURPLE=colors.HexColor('#5b4b8a'); CYAN=colors.HexColor('#22d3ee'); GREEN=colors.HexColor('#4ade80'); PINK=colors.HexColor('#f472b6'); GOLD=colors.HexColor('#fbbf24'); MUTED=colors.HexColor('#655f7d'); LIGHT=colors.HexColor('#f5f3ff'); WHITE=colors.white
+NAVY=colors.HexColor('#241E17'); PURPLE=colors.HexColor('#5C4A33'); CYAN=colors.HexColor('#5B8DEF'); GREEN=colors.HexColor('#3FA968'); PINK=colors.HexColor('#C7503F'); GOLD=colors.HexColor('#C98A06'); MUTED=colors.HexColor('#6E6353'); LIGHT=colors.HexColor('#FAF6EE'); WHITE=colors.white
 
 DATA={
 'en':{
@@ -68,7 +68,7 @@ def build(lang,d):
     s=getSampleStyleSheet(); s.add(ParagraphStyle(name='T',parent=s['Title'],fontName='Helvetica-Bold',fontSize=25,leading=29,textColor=NAVY,alignment=1,spaceAfter=10)); s.add(ParagraphStyle(name='Sub',parent=s['Normal'],fontSize=11,leading=16,textColor=MUTED,alignment=1,spaceAfter=12)); s.add(ParagraphStyle(name='H1x',parent=s['Heading1'],fontName='Helvetica-Bold',fontSize=18,leading=22,textColor=NAVY,spaceAfter=9)); s.add(ParagraphStyle(name='H2x',parent=s['Heading2'],fontName='Helvetica-Bold',fontSize=13,leading=17,textColor=PURPLE,spaceBefore=6,spaceAfter=4)); s.add(ParagraphStyle(name='B',parent=s['BodyText'],fontSize=9.3,leading=13.5,textColor=NAVY,spaceAfter=5)); s.add(ParagraphStyle(name='Sm',parent=s['BodyText'],fontSize=7.8,leading=10.5,textColor=NAVY)); s.add(ParagraphStyle(name='SmW',parent=s['BodyText'],fontSize=7.8,leading=10.5,textColor=WHITE)); s.add(ParagraphStyle(name='Call',parent=s['BodyText'],fontName='Helvetica-Bold',fontSize=9.7,leading=14,textColor=NAVY))
     def p(x,st='B'): return Paragraph(x,s[st])
     def tbl(rows,widths):
-        z=[[p(str(c),'SmW' if i==0 else 'Sm') for c in r] for i,r in enumerate(rows)]; t=Table(z,colWidths=widths,repeatRows=1,hAlign='LEFT'); t.setStyle(TableStyle([('GRID',(0,0),(-1,-1),.45,colors.HexColor('#cbc6df')),('VALIGN',(0,0),(-1,-1),'TOP'),('BACKGROUND',(0,0),(-1,0),NAVY),('ROWBACKGROUNDS',(0,1),(-1,-1),[WHITE,LIGHT]),('LEFTPADDING',(0,0),(-1,-1),5),('RIGHTPADDING',(0,0),(-1,-1),5),('TOPPADDING',(0,0),(-1,-1),4),('BOTTOMPADDING',(0,0),(-1,-1),4)])); return t
+        z=[[p(str(c),'SmW' if i==0 else 'Sm') for c in r] for i,r in enumerate(rows)]; t=Table(z,colWidths=widths,repeatRows=1,hAlign='LEFT'); t.setStyle(TableStyle([('GRID',(0,0),(-1,-1),.45,colors.HexColor('#DDD2C0')),('VALIGN',(0,0),(-1,-1),'TOP'),('BACKGROUND',(0,0),(-1,0),NAVY),('ROWBACKGROUNDS',(0,1),(-1,-1),[WHITE,LIGHT]),('LEFTPADDING',(0,0),(-1,-1),5),('RIGHTPADDING',(0,0),(-1,-1),5),('TOPPADDING',(0,0),(-1,-1),4),('BOTTOMPADDING',(0,0),(-1,-1),4)])); return t
     def box(x,c):
         t=Table([[p(x,'Call')]],colWidths=[174*mm]); t.setStyle(TableStyle([('BACKGROUND',(0,0),(-1,-1),colors.Color(c.red,c.green,c.blue,alpha=.1)),('BOX',(0,0),(-1,-1),1,c),('LEFTPADDING',(0,0),(-1,-1),8),('RIGHTPADDING',(0,0),(-1,-1),8),('TOPPADDING',(0,0),(-1,-1),6),('BOTTOMPADDING',(0,0),(-1,-1),6)])); return t
     def hf(canvas,doc):

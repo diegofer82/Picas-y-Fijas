@@ -10,14 +10,14 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "output" / "pdf" / "guia-estrategias-picas-y-fijas.pdf"
 OUT.parent.mkdir(parents=True, exist_ok=True)
 
-NAVY = colors.HexColor("#17152d")
-PURPLE = colors.HexColor("#5b4b8a")
-CYAN = colors.HexColor("#22d3ee")
-GREEN = colors.HexColor("#4ade80")
-PINK = colors.HexColor("#f472b6")
-GOLD = colors.HexColor("#fbbf24")
-MUTED = colors.HexColor("#655f7d")
-LIGHT = colors.HexColor("#f5f3ff")
+NAVY = colors.HexColor("#241E17")
+PURPLE = colors.HexColor("#5C4A33")
+CYAN = colors.HexColor("#5B8DEF")
+GREEN = colors.HexColor("#3FA968")
+PINK = colors.HexColor("#C7503F")
+GOLD = colors.HexColor("#C98A06")
+MUTED = colors.HexColor("#6E6353")
+LIGHT = colors.HexColor("#FAF6EE")
 WHITE = colors.white
 
 styles = getSampleStyleSheet()
@@ -48,7 +48,7 @@ def table(rows, widths, header=True):
             for row_index, row in enumerate(rows)]
     t = Table(data, colWidths=widths, repeatRows=1 if header else 0, hAlign="LEFT")
     cmds = [
-        ("GRID", (0,0), (-1,-1), .45, colors.HexColor("#cbc6df")),
+        ("GRID", (0,0), (-1,-1), .45, colors.HexColor("#DDD2C0")),
         ("VALIGN", (0,0), (-1,-1), "TOP"),
         ("LEFTPADDING", (0,0), (-1,-1), 5), ("RIGHTPADDING", (0,0), (-1,-1), 5),
         ("TOPPADDING", (0,0), (-1,-1), 5), ("BOTTOMPADDING", (0,0), (-1,-1), 5),
