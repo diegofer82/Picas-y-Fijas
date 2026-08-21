@@ -97,7 +97,10 @@
   .history-hardest .history-award{color:var(--pica)}
 
   .seg{display:flex;gap:8px;flex-wrap:wrap}
-  .seg button{flex:1;min-width:64px;background:#0D0B07;border:1px solid var(--edge);color:var(--muted);
+  /* flex:1 forzaba anchos iguales ignorando el contenido, y la etiqueta mas
+     larga se desbordaba ("Illimite" en frances). Con base automatica cada
+     boton parte de su texto y la fila envuelve si no cabe. */
+  .seg button{flex:1 1 auto;min-width:64px;background:#0D0B07;border:1px solid var(--edge);color:var(--muted);
     border-radius:12px;padding:14px 4px;font-size:13.5px;font-weight:600;cursor:pointer;letter-spacing:-.01em;
     font-family:'Archivo',system-ui,sans-serif;transition:.15s;}
   .seg.mono button{font-family:'JetBrains Mono',monospace}
@@ -209,6 +212,26 @@
   .pause-countdown{font-family:'JetBrains Mono',monospace;font-size:18px;margin:18px 0;color:var(--pica)}
 
   .foot{text-align:center;color:var(--muted);font-size:11px;margin-top:24px;letter-spacing:.05em}
+  /* ---- Capa informal: mascota, subrayados y iconos a mano ---- */
+  .toro{display:block;flex:0 0 auto}
+  .toro .t-fill{fill:#F5EFE3;stroke:#12100C;stroke-width:2.6;stroke-linejoin:round}
+  .toro .t-line{fill:none;stroke:#12100C;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+  .toro .t-dot{fill:#12100C}
+  .dl{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .greet{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px}
+  .greet-main{flex:1;min-width:0}
+  .greet h2{margin:0}
+  .greet .rule{display:block;color:var(--fija);margin:1px 0 7px}
+  .greet p.hint{margin:0}
+  .btn{display:flex;align-items:center;justify-content:center;gap:9px}
+  .chipbtn{display:flex;align-items:center;justify-content:center;gap:6px}
+  /* En la barra de turno el toro sustituye al punto, y solo cuando te toca. */
+  .turnbar .toro{display:none}
+  .turnbar.mine .toro{display:block;margin:-6px 0}
+  .turnbar.mine .dot{display:none}
+  .banner .toro{margin:0 auto 4px}
+  .banner .rule{display:block;margin:0 auto 10px;color:var(--fija)}
+  .banner.lose .rule{color:var(--muted)}
   .credits{margin-top:12px;line-height:1.7}
   .credits a{color:var(--accent);text-decoration:none}
   .credits a:hover{text-decoration:underline}
@@ -281,11 +304,17 @@
   <!-- LOBBY -->
   <section id="s-lobby" class="hidden">
     <div class="card">
-      <h2 id="lobby-greet"></h2>
-      <p class="hint" data-i18n="lobby_hint">Crea una partida y comparte el código, o únete a una pública abierta.</p>
-      <button class="btn" onclick="show('create')" data-i18n="lobby_create">Crear partida</button>
+      <div class="greet">
+        <div class="greet-main">
+          <h2 id="lobby-greet"></h2>
+          <span id="lobby-rule"></span>
+          <p class="hint" data-i18n="lobby_hint">Crea una partida y comparte el código, o únete a una pública abierta.</p>
+        </div>
+        <span id="lobby-toro"></span>
+      </div>
+      <button class="btn" onclick="show('create')"><svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" style="stroke-width:2.4" d="M12 4.4c.4 4.9.5 9.9.2 15M4.3 11.5c5.1.5 10.2.5 15.4.2"></path></svg><span data-i18n="lobby_create">Crear partida</span></button>
       <div style="height:10px"></div>
-      <button class="btn ghost" onclick="openPractice()" data-i18n="lobby_practice">Practicar 🎯</button>
+      <button class="btn ghost" onclick="openPractice()"><svg width="18" height="18" viewBox="0 0 24 24" style="color:var(--pica)" aria-hidden="true"><path class="dl" d="M12.4 3.4c4.9-.3 8.9 3.7 8.7 8.6-.2 4.7-4 8.6-8.8 8.6-4.9 0-8.9-4.1-8.5-9 .3-4.2 3.7-7.6 7.9-8"></path><path class="dl" d="M12.2 8.5c2-.2 3.6 1.4 3.5 3.4-.1 1.9-1.7 3.4-3.6 3.3-2 0-3.5-1.7-3.3-3.7"></path><circle cx="12" cy="12" r="1.5" fill="currentColor"></circle></svg><span data-i18n="lobby_practice">Practicar</span></button>
       <div style="height:10px"></div>
       <div class="row">
         <input type="text" id="join-code-inp" class="codeinp" maxlength="6" autocomplete="off"
@@ -294,9 +323,9 @@
       </div>
       <div style="height:10px"></div>
       <div class="lobby-chips">
-        <button class="chipbtn" onclick="openRank()" data-i18n="lobby_ranking">Ranking</button>
-        <button class="chipbtn" onclick="openHistory()" data-i18n="lobby_history">Historial</button>
-        <button class="chipbtn" onclick="refreshLobby()" data-i18n="lobby_refresh">Actualizar lista</button>
+        <button class="chipbtn" onclick="openRank()"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M7.5 3.9c3-.4 6-.4 9-.1.4 3.5.2 6.2-.5 8.2-.9 2.5-2.4 3.7-4.2 3.7s-3.2-1.3-4-3.8c-.6-2-.7-4.6-.3-8Z"></path><path class="dl" d="M7.5 6c-1.6-.3-2.7 0-3 .9-.2 1.2.9 2.3 3.1 2.7M16.5 6c1.6-.3 2.7 0 3 .9.2 1.2-.9 2.3-3.1 2.7"></path><path class="dl" d="M12 15.9c.1 1.3.1 2.5 0 3.4M8.7 20.1c2.2-.4 4.4-.4 6.6 0"></path></svg><span data-i18n="lobby_ranking">Ranking</span></button>
+        <button class="chipbtn" onclick="openHistory()"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M12.3 3.6c4.7-.2 8.6 3.8 8.4 8.5-.2 4.6-4 8.3-8.6 8.3-4.8 0-8.7-4-8.4-8.8.3-4.3 3.8-7.7 8-7.9"></path><path class="dl" d="M11.9 7.3c.2 1.8.2 3.4.1 4.9 1.1.8 2.2 1.4 3.3 2"></path></svg><span data-i18n="lobby_history">Historial</span></button>
+        <button class="chipbtn" onclick="refreshLobby()"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M20.1 12.4c.2 4.7-3.7 8.5-8.4 8.4-4.6-.1-8.3-4-8-8.7.3-4.2 3.8-7.4 8-7.3 2.6.1 4.8 1.3 6.3 3.2"></path><path class="dl" d="M19.9 3.7c-.2 1.6-.2 3.1-.1 4.6-1.6.2-3.1.2-4.6.1"></path></svg><span data-i18n="lobby_refresh">Actualizar lista</span></button>
       </div>
     </div>
 
@@ -405,7 +434,7 @@
       <div class="mysecret"><span data-i18n="practice_secret">Código secreto:</span><span id="practice-secret" class="n">•••</span></div>
       <div class="statusrow" id="practice-status"><span class="chip" id="practice-attempts"></span><span class="chip hidden" id="practice-computer-attempts"></span><span class="chip hidden" id="practice-difficulty"></span><span class="chip hidden" id="practice-timer"></span></div>
       <div id="practice-banner"></div>
-      <div class="turnbar mine hidden" id="practice-turn"><span class="dot"></span><span id="practice-turn-txt"></span></div>
+      <div class="turnbar mine hidden" id="practice-turn"><span class="dot"></span><svg class="toro" width="34" height="29" viewBox="-8 -16 104 90" aria-hidden="true"><path class="t-fill" d="M19 21C12.5 16.5 4.5 11 -2 5c0 9.5 4.5 18.5 12.5 25C13 27.5 16 24 19 21Z"></path><path class="t-fill" d="M69 21C75.5 16.5 83.5 11 90 5c0 9.5-4.5 18.5-12.5 25C75 27.5 72 24 69 21Z"></path><path class="t-fill" d="M15 32c0-11.6 13-20.6 29-20.6s29 9 29 20.6c0 7-1.6 12.8-4.8 17.6C64.6 57 55.4 61.6 44 61.6S23.4 57 19.8 49.6C16.6 44.8 15 39 15 32Z"></path><path class="t-line" d="M32.5 54c0-3.4 5.2-5.6 11.5-5.6s11.5 2.2 11.5 5.6-5.2 5.6-11.5 5.6-11.5-2.2-11.5-5.6Z"></path><circle class="t-dot" cx="40" cy="53.6" r="1.8"></circle><circle class="t-dot" cx="48" cy="53.6" r="1.8"></circle><circle class="t-line" cx="32" cy="33.6" r="5"></circle><circle class="t-dot" cx="32.9" cy="34.6" r="2.4"></circle><circle class="t-line" cx="56" cy="33.6" r="5"></circle><circle class="t-dot" cx="56.9" cy="34.6" r="2.4"></circle></svg><span id="practice-turn-txt"></span></div>
       <div class="guessarea" id="practice-guessarea">
         <div class="field"><input type="text" id="practice-guess" class="code" inputmode="numeric" placeholder="•••"><div class="pad hidden" id="practice-pad"><div class="slots" id="practice-slots"></div><div class="palette" id="practice-palette"></div></div></div>
         <button class="btn" id="practice-guess-btn" onclick="submitPracticeGuess()" data-i18n="guess_btn">Adivinar</button>
@@ -598,7 +627,7 @@
       <div id="g-banner"></div>
       <div id="g-rematch-zone"></div>
 
-      <div class="turnbar theirs" id="g-turn"><span class="dot"></span><span id="g-turn-txt"></span></div>
+      <div class="turnbar theirs" id="g-turn"><span class="dot"></span><svg class="toro" width="34" height="29" viewBox="-8 -16 104 90" aria-hidden="true"><path class="t-fill" d="M19 21C12.5 16.5 4.5 11 -2 5c0 9.5 4.5 18.5 12.5 25C13 27.5 16 24 19 21Z"></path><path class="t-fill" d="M69 21C75.5 16.5 83.5 11 90 5c0 9.5-4.5 18.5-12.5 25C75 27.5 72 24 69 21Z"></path><path class="t-fill" d="M15 32c0-11.6 13-20.6 29-20.6s29 9 29 20.6c0 7-1.6 12.8-4.8 17.6C64.6 57 55.4 61.6 44 61.6S23.4 57 19.8 49.6C16.6 44.8 15 39 15 32Z"></path><path class="t-line" d="M32.5 54c0-3.4 5.2-5.6 11.5-5.6s11.5 2.2 11.5 5.6-5.2 5.6-11.5 5.6-11.5-2.2-11.5-5.6Z"></path><circle class="t-dot" cx="40" cy="53.6" r="1.8"></circle><circle class="t-dot" cx="48" cy="53.6" r="1.8"></circle><circle class="t-line" cx="32" cy="33.6" r="5"></circle><circle class="t-dot" cx="32.9" cy="34.6" r="2.4"></circle><circle class="t-line" cx="56" cy="33.6" r="5"></circle><circle class="t-dot" cx="56.9" cy="34.6" r="2.4"></circle></svg><span id="g-turn-txt"></span></div>
       <div class="statusrow hidden" id="g-statusrow">
         <span class="chip hidden" id="g-timer"></span>
         <button class="pause-chip pause-inline" id="g-pause-btn" onclick="requestGamePause()" aria-label="Pausar partida" title="Pausar partida"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9.6 5.5c.3 4.4.3 8.8 0 13.2M14.5 5.5c.3 4.4.3 8.8 0 13.2"></path></svg></button>
@@ -685,7 +714,7 @@ const I18N = {
     login_enter:"Entrar", login_min:"Mínimo 2 caracteres", login_pin_invalid:"El PIN debe tener entre 4 y 8 dígitos",
     lobby_greeting:"Hola, {name} 👋",
     lobby_hint:"Crea una partida y comparte el código, o únete a una pública abierta.",
-    lobby_create:"Crear partida", lobby_practice:"Practicar 🎯", lobby_ranking:"Ranking", lobby_refresh:"Actualizar lista",
+    lobby_create:"Crear partida", lobby_practice:"Practicar", lobby_ranking:"Ranking", lobby_refresh:"Actualizar lista",
     lobby_mine:"Tus partidas activas", lobby_open:"Partidas públicas abiertas", lobby_changeuser:"Cambiar de usuario",
     available_title:"Partidas disponibles", private_games_title:"Tus partidas privadas", private_games_hint:"Por privacidad, solo se muestran las partidas privadas en las que participas.",
     private_empty:"No tienes partidas privadas abiertas o en curso.", private_now:"🔒 {n} privadas abiertas o en curso", public_now:"🟢 {active} públicas en curso · {open} abiertas",
@@ -754,7 +783,7 @@ const I18N = {
     login_enter:"Enter", login_min:"At least 2 characters", login_pin_invalid:"The PIN must contain 4 to 8 digits",
     lobby_greeting:"Hi, {name} 👋",
     lobby_hint:"Create a game and share the code, or join an open public one.",
-    lobby_create:"Create game", lobby_practice:"Practice 🎯", lobby_ranking:"Ranking", lobby_refresh:"Refresh list",
+    lobby_create:"Create game", lobby_practice:"Practice", lobby_ranking:"Ranking", lobby_refresh:"Refresh list",
     lobby_mine:"Your active games", lobby_open:"Open public games", lobby_changeuser:"Change user",
     available_title:"Available games", private_games_title:"Your private games", private_games_hint:"For privacy, only private games you participate in are shown.",
     private_empty:"You have no open or active private games.", private_now:"🔒 {n} private open or in progress", public_now:"🟢 {active} public in progress · {open} open",
@@ -823,7 +852,7 @@ const I18N = {
     login_enter:"Entrer", login_min:"2 caractères minimum", login_pin_invalid:"Le PIN doit contenir de 4 à 8 chiffres",
     lobby_greeting:"Salut, {name} 👋",
     lobby_hint:"Crée une partie et partage le code, ou rejoins une partie publique ouverte.",
-    lobby_create:"Créer une partie", lobby_practice:"S'entraîner 🎯", lobby_ranking:"Classement", lobby_refresh:"Actualiser la liste",
+    lobby_create:"Créer une partie", lobby_practice:"S'entraîner", lobby_ranking:"Classement", lobby_refresh:"Actualiser la liste",
     lobby_mine:"Tes parties en cours", lobby_open:"Parties publiques ouvertes", lobby_changeuser:"Changer d'utilisateur",
     available_title:"Parties disponibles", private_games_title:"Tes parties privées", private_games_hint:"Pour préserver la confidentialité, seules les parties privées auxquelles tu participes sont affichées.",
     private_empty:"Tu n'as aucune partie privée ouverte ou en cours.", private_now:"🔒 {n} privées ouvertes ou en cours", public_now:"🟢 {active} publiques en cours · {open} ouvertes",
@@ -1068,6 +1097,27 @@ function t(key, p){
   return s;
 }
 function te(msg){ return (ERR[lang] && ERR[lang][msg]) || msg; }
+/* -------------------- la mascota: El Toro, por "Bulls and Cows" --------------------
+   Se dibuja desde JS para poder inyectarla en los sitios que se pintan con
+   innerHTML (banner de fin de partida) y desde el marcado en los estaticos.
+   Los mismos trazados estan en el logo y en tools/make-icons.mjs. */
+const TORO_HORNS='<path class="t-fill" d="M19 21C12.5 16.5 4.5 11 -2 5c0 9.5 4.5 18.5 12.5 25C13 27.5 16 24 19 21Z"></path><path class="t-fill" d="M69 21C75.5 16.5 83.5 11 90 5c0 9.5-4.5 18.5-12.5 25C75 27.5 72 24 69 21Z"></path>';
+const TORO_HEAD='<path class="t-fill" d="M15 32c0-11.6 13-20.6 29-20.6s29 9 29 20.6c0 7-1.6 12.8-4.8 17.6C64.6 57 55.4 61.6 44 61.6S23.4 57 19.8 49.6C16.6 44.8 15 39 15 32Z"></path>';
+const TORO_MUZZLE='<path class="t-line" d="M32.5 54c0-3.4 5.2-5.6 11.5-5.6s11.5 2.2 11.5 5.6-5.2 5.6-11.5 5.6-11.5-2.2-11.5-5.6Z"></path><circle class="t-dot" cx="40" cy="53.6" r="1.8"></circle><circle class="t-dot" cx="48" cy="53.6" r="1.8"></circle>';
+const TORO_FACE={
+  calm:'<circle class="t-dot" cx="32" cy="34" r="3.4"></circle><circle class="t-dot" cx="56" cy="34" r="3.4"></circle>',
+  alert:'<circle class="t-line" cx="32" cy="33.6" r="5"></circle><circle class="t-dot" cx="32.9" cy="34.6" r="2.4"></circle><circle class="t-line" cx="56" cy="33.6" r="5"></circle><circle class="t-dot" cx="56.9" cy="34.6" r="2.4"></circle>',
+  happy:'<path class="t-line" d="M27.6 35c1.2-2.8 2.7-4.2 4.4-4.2s3.2 1.4 4.4 4.2"></path><path class="t-line" d="M51.6 35c1.2-2.8 2.7-4.2 4.4-4.2s3.2 1.4 4.4 4.2"></path><path class="t-line" d="M39 55.4c1.5 1.7 3.1 2.5 5 2.5s3.5-.8 5-2.5"></path>',
+  sad:'<path class="t-line" d="M29.5 31.5l5 5M34.5 31.5l-5 5"></path><path class="t-line" d="M53.5 31.5l5 5M58.5 31.5l-5 5"></path><path class="t-line" d="M39.4 56.4c.9-1 1.8-1 2.7 0s1.8 1 2.7 0 1.8-1 2.7 0"></path>'
+};
+const TORO_SPARKS='<g style="color:var(--pica)"><path class="dl" d="M-4 -2c1.6-1.6 3-3.4 4.2-5.4"></path><path class="dl" d="M22 -8c.4-2.4.6-4.8.6-7.2"></path><path class="dl" d="M66 -8c-.4-2.4-.6-4.8-.6-7.2"></path><path class="dl" d="M92 -2c-1.6-1.6-3-3.4-4.2-5.4"></path></g><g style="color:var(--accent)"><path class="dl" d="M-4 26c-2.2.6-4.4.8-6.6.6"></path><path class="dl" d="M92 26c2.2.6 4.4.8 6.6.6"></path></g>';
+function toroSVG(mood,width,sparks){
+  return `<svg class="toro" width="${width}" height="${Math.round(width*90/104)}" viewBox="-8 -16 104 90" aria-hidden="true">${sparks?TORO_SPARKS:''}${TORO_HORNS}${TORO_HEAD}${TORO_MUZZLE}${TORO_FACE[mood]||TORO_FACE.calm}</svg>`;
+}
+/* Subrayado a dos pasadas, como trazado a rotulador. */
+function ruleSVG(width){
+  return `<svg class="rule" width="${width}" height="${Math.round(width*13/112)}" viewBox="0 0 112 13" aria-hidden="true"><path class="dl" style="stroke-width:1.8" d="M3 5c22-3.4 58-4.2 106-2.6"></path><path class="dl" style="stroke-width:1.8" d="M7 9.6c20-2.6 50-3.4 96-2.4"></path></svg>`;
+}
 function creditsHTML(){
   return `${t('credits_by')} <a href="https://www.linkedin.com/in/diego-olaya-857bb6105" target="_blank" rel="noopener">Diego OLAYA</a> · powered by Claude/ChatGTP · 2026 · v${APP_VERSION}`;
 }
@@ -1506,7 +1556,7 @@ async function logout(){
   chatEnabled=false;stopChatPoll();$('chat-panel').classList.add('hidden');$('chat-launch').classList.add('hidden');
   show('login'); $('uname').value=''; $('upin').value='';
 }
-function enterLobby(){ $('lobby-greet').textContent=t('lobby_greeting',{name:user}); updateSoundLabel(); show('lobby'); renderPracticeResumeCard(); refreshLobby(); handleDeepLink(); }
+function enterLobby(){ $('lobby-greet').textContent=t('lobby_greeting',{name:user}); $('lobby-rule').innerHTML=ruleSVG(112); $('lobby-toro').innerHTML=toroSVG('calm',54); updateSoundLabel(); show('lobby'); renderPracticeResumeCard(); refreshLobby(); handleDeepLink(); }
 
 /* -------------------- lobby -------------------- */
 let myWaitingIds = new Set();
@@ -2244,14 +2294,14 @@ function renderGame(st){
     if(st.isDraw){
       const solvedBy = n => st.guesses.some(x=>x.by===n && x.fijas===parseInt(st.digits,10));
       const bothSolved = solvedBy(st.p1) && solvedBy(st.p2);
-      banner.innerHTML=`<div class="banner draw"><h2>${t('draw_title')}</h2><p>${bothSolved?t('draw_both'):t('draw_limit')}</p></div>`;
+      banner.innerHTML=`<div class="banner draw">${toroSVG('calm',118,false)}<h2>${t('draw_title')}</h2><p>${bothSolved?t('draw_both'):t('draw_limit')}</p></div>`;
     }else if(spectator){
       banner.innerHTML=`<div class="banner"><h2>${t('spectator_winner',{name:esc(st.winner)})}</h2></div>`;
     }else{
       const resultMsg = st.finishReason==='abandon'
         ? (won?t('win_abandon',{name:esc(oppLabel)}):t('lose_abandon',{name:esc(st.winner)}))
         : (won?t('win_msg',{name:esc(oppLabel)}):t('lose_msg',{name:esc(st.winner)}));
-      banner.innerHTML=`<div class="banner ${won?'win':'lose'}"><h2>${won?t('win_title'):t('lose_title')}</h2>
+      banner.innerHTML=`<div class="banner ${won?'win':'lose'}">${won?toroSVG('happy',150,true):toroSVG('sad',118,false)}<h2>${won?t('win_title'):t('lose_title')}</h2>${ruleSVG(won?150:118)}
         <p>${resultMsg}</p></div>`;
     }
     if(!spectator&&st.opponentSecret){
