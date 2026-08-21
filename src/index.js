@@ -38,6 +38,7 @@ const PROTECTED = new Set([
   "togglePause",
   "myGames",
   "history",
+  "historyGame",
   "rematch",
   "closeGame",
   "presence",
@@ -798,33 +799,89 @@ async function closeGame(db, params, user) {
 async function history(db, user) {
   const { results } = await db
     .prepare(
-      `SELECT * FROM games WHERE status='finished' AND (p1=? OR p2=?) ORDER BY updated_at DESC LIMIT 40`,
+      `SELECT game_id,p1,p2,country1,country2,winner,digits,mode,num_colors,allow_repeats,max_attempts,turn_seconds,guesses,finish_reason,updated_at
+       FROM games WHERE status='finished' AND (p1=? OR p2=?) ORDER BY updated_at DESC`,
     )
     .bind(user.username, user.username)
     .all();
+  const entries = results.map((g) => {
+    const mine = g.p1 === user.username;
+    const result = !g.winner
+      ? "draw"
+      : g.winner === user.username
+        ? "win"
+        : "loss";
+    const guesses = parseJsonList(g.guesses);
+    const myAttempts = guesses.filter((entry) => entry.by === user.username).length;
+    const solved = guesses.some(
+      (entry) => entry.by === user.username && toInt(entry.fijas) === toInt(g.digits),
+    );
+    return {
+      gameId: g.game_id,
+      opp: mine ? g.p2 : g.p1,
+      oppCountry: mine ? g.country2 : g.country1,
+      result,
+      myAttempts,
+      abandoned: g.finish_reason === "abandon",
+      efficiencyEligible: result === "win" && g.finish_reason !== "abandon" && solved,
+      digits: g.digits,
+      mode: g.mode,
+      numColors: g.num_colors,
+      allowRepeats: truthy(g.allow_repeats),
+      maxAttempts: g.max_attempts,
+      turnSeconds: g.turn_seconds,
+      updatedAt: g.updated_at,
+    };
+  });
+  const wins = entries.filter((entry) => entry.result === "win");
+  const eligibleWins = entries.filter((entry) => entry.efficiencyEligible);
+  const best = eligibleWins.reduce(
+    (selected, entry) => !selected || entry.myAttempts < selected.myAttempts ? entry : selected,
+    null,
+  );
+  const hardestCandidate = eligibleWins.reduce(
+    (selected, entry) => !selected || entry.myAttempts > selected.myAttempts ? entry : selected,
+    null,
+  );
+  let currentStreak = 0;
+  for (const entry of entries) {
+    if (entry.result !== "win") break;
+    currentStreak++;
+  }
+  let bestStreak = 0, runningStreak = 0;
+  for (const entry of entries) {
+    runningStreak = entry.result === "win" ? runningStreak + 1 : 0;
+    bestStreak = Math.max(bestStreak, runningStreak);
+  }
   return {
     ok: true,
-    history: results.map((g) => {
-      const mine = g.p1 === user.username;
-      return {
-        gameId: g.game_id,
-        opp: mine ? g.p2 : g.p1,
-        oppCountry: mine ? g.country2 : g.country1,
-        result: !g.winner
-          ? "draw"
-          : g.winner === user.username
-            ? "win"
-            : "loss",
-        digits: g.digits,
-        mode: g.mode,
-        numColors: g.num_colors,
-        allowRepeats: truthy(g.allow_repeats),
-        maxAttempts: g.max_attempts,
-        turnSeconds: g.turn_seconds,
-        updatedAt: g.updated_at,
-      };
-    }),
+    history: entries.slice(0, 40).map(({ efficiencyEligible, ...entry }) => entry),
+    stats: {
+      played: entries.length,
+      wins: wins.length,
+      losses: entries.filter((entry) => entry.result === "loss").length,
+      draws: entries.filter((entry) => entry.result === "draw").length,
+      winRate: entries.length ? Math.round((wins.length / entries.length) * 100) : 0,
+      averageWinningAttempts: eligibleWins.length
+        ? Math.round((eligibleWins.reduce((sum, entry) => sum + entry.myAttempts, 0) / eligibleWins.length) * 10) / 10
+        : null,
+      currentStreak,
+      bestStreak,
+      bestGameId: best?.gameId || "",
+      hardestGameId: hardestCandidate && best && hardestCandidate.myAttempts > best.myAttempts
+        ? hardestCandidate.gameId
+        : "",
+    },
   };
+}
+
+async function historyGame(db, params, user) {
+  const game = await getGame(db, params.gameId);
+  if (!game || game.status !== "finished")
+    return { ok: false, error: "Partida terminada no encontrada." };
+  if (game.p1 !== user.username && game.p2 !== user.username)
+    return { ok: false, error: "No eres jugador de esta partida." };
+  return sanitizeGame(game, user.username);
 }
 
 async function leaderboard(db, username) {
@@ -1172,6 +1229,9 @@ async function routeApi(request, env) {
       break;
     case "history":
       result = await history(env.DB, auth.user);
+      break;
+    case "historyGame":
+      result = await historyGame(env.DB, params, auth.user);
       break;
     case "rematch":
       result = await rematch(env.DB, params, auth.user);

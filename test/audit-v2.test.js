@@ -42,6 +42,53 @@ test('chat permissions keep lobby authenticated and game chat private to both pl
   assert.equal(lobby.ok,true,lobby.error);
 });
 
+test('finished-game review returns the full game only to its participants',async()=>{
+  const a=await player('Review-A'),b=await player('Review-B'),outsider=await player('Review-Outsider');
+  const gameId=await createAndJoin(a,b,{digits:3,mode:'numbers',numColors:10,allowRepeats:false,maxAttempts:0,turnSeconds:0,revealSecrets:true,isPublic:true,secret:'123',secret2:'456'});
+  await db.prepare("UPDATE games SET status='finished',winner=?,guesses=?,updated_at=? WHERE game_id=?")
+    .bind(a.username,JSON.stringify([{by:a.username,guess:'456',fijas:3,picas:0}]),new Date().toISOString(),gameId).run();
+
+  const review=await api('historyGame',{gameId},a.token);
+  assert.equal(review.ok,true,review.error);
+  assert.equal(review.status,'finished');
+  assert.equal(review.guesses.length,1);
+  assert.equal(review.opponentSecret,'456');
+
+  const denied=await api('historyGame',{gameId},outsider.token);
+  assert.equal(denied.ok,false);
+  assert.match(denied.error,/No eres jugador/);
+});
+
+test('history reports global performance, attempts and fair win highlights',async()=>{
+  const playerA=await player('History-A');
+  const rows=[
+    ['HIST01','History-A','Rival-1','History-A',2,'','2026-01-01T00:00:00.000Z'],
+    ['HIST02','Rival-2','History-A','History-A',4,'','2026-01-02T00:00:00.000Z'],
+    ['HIST03','History-A','Rival-3','Rival-3',3,'','2026-01-03T00:00:00.000Z'],
+    ['HIST04','Rival-4','History-A','',6,'','2026-01-04T00:00:00.000Z'],
+    ['HIST05','History-A','Rival-5','History-A',0,'abandon','2026-01-05T00:00:00.000Z'],
+  ];
+  for(const [gameId,p1,p2,winner,attempts,reason,updatedAt] of rows){
+    const guesses=Array.from({length:attempts},(_,index)=>({
+      by:'History-A',guess:index===attempts-1&&winner==='History-A'?'456':'012',fijas:index===attempts-1&&winner==='History-A'?3:0,picas:0,
+    }));
+    await db.prepare(`INSERT INTO games
+      (game_id,status,digits,p1,secret1,p2,secret2,turn,guesses,winner,created_at,updated_at,finish_reason)
+      VALUES (?,'finished',3,?,'123',?,'456',0,?,?,?,?,?)`)
+      .bind(gameId,p1,p2,JSON.stringify(guesses),winner,updatedAt,updatedAt,reason).run();
+  }
+
+  const result=await api('history',{},playerA.token);
+  assert.equal(result.ok,true,result.error);
+  assert.deepEqual(result.stats,{
+    played:5,wins:3,losses:1,draws:1,winRate:60,averageWinningAttempts:3,
+    currentStreak:1,bestStreak:2,bestGameId:'HIST01',hardestGameId:'HIST02',
+  });
+  assert.equal(result.history[0].gameId,'HIST05');
+  assert.equal(result.history[0].myAttempts,0);
+  assert.equal(result.history.find((game)=>game.gameId==='HIST04').myAttempts,6);
+});
+
 after(async () => { await mf?.dispose(); });
 
 async function api(action, payload = {}, token = '') {

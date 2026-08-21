@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Picas y Fijas">
+<link rel="manifest" href="/manifest.webmanifest">
 <title>Picas y Fijas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -75,6 +76,15 @@
   .practice-stat{background:#141126;border:1px solid var(--edge);border-radius:11px;padding:10px 6px;text-align:center}
   .practice-stat b{display:block;color:var(--accent);font:800 18px 'JetBrains Mono',monospace}
   .practice-stat span{display:block;margin-top:3px;color:var(--muted);font-size:10px}
+  .history-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
+  .history-stat{background:#141126;border:1px solid var(--edge);border-radius:11px;padding:10px 6px;text-align:center}
+  .history-stat b{display:block;color:var(--accent);font:800 18px 'JetBrains Mono',monospace}
+  .history-stat span{display:block;margin-top:3px;color:var(--muted);font-size:10px}
+  .history-filters{margin:0 0 14px}
+  .gitem.history-best{border-color:rgba(74,222,128,.65);background:#13201d}
+  .gitem.history-hardest{border-color:rgba(251,191,36,.55)}
+  .history-award{margin-top:4px;color:var(--fija);font-size:11px;font-weight:700}
+  .history-hardest .history-award{color:var(--pica)}
 
   .seg{display:flex;gap:8px;flex-wrap:wrap}
   .seg button{flex:1;min-width:64px;background:#141126;border:1px solid var(--edge);color:var(--muted);
@@ -108,7 +118,12 @@
   .gitem .meta .who{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .gitem .meta .det{font-size:12px;color:var(--muted)}
   .gitem.invite{border-color:rgba(74,222,128,.45);background:#131f1c}
+  .gitem.history-link{width:100%;color:inherit;text-align:left;font:inherit;cursor:pointer}
+  .gitem.history-link:hover,.gitem.history-link:focus-visible{border-color:var(--accent);outline:none;background:#191532}
   .empty{color:var(--muted);font-size:13px;text-align:center;padding:14px 0}
+  .strategy-download{margin-top:16px;text-align:center;border-color:rgba(34,211,238,.45)!important;background:rgba(34,211,238,.08)!important}
+  .strategy-download a{display:inline-block;margin-top:8px;color:var(--accent);font-weight:700;text-decoration:none}
+  .strategy-download a:hover,.strategy-download a:focus-visible{text-decoration:underline}
 
   .turnbar{display:flex;align-items:center;gap:10px;border-radius:12px;padding:12px 14px;margin-bottom:12px;font-weight:600;font-size:14px;}
   .turnbar.mine{background:rgba(74,222,128,.13);border:1px solid rgba(74,222,128,.4);color:var(--fija)}
@@ -413,6 +428,13 @@
     <div class="card">
       <h2 data-i18n="hist_title">Historial de partidas</h2>
       <p class="hint" data-i18n="hist_hint">Tus últimas partidas terminadas.</p>
+      <div class="history-stats hidden" id="hist-stats"></div>
+      <div class="seg history-filters hidden" id="hist-filters" aria-label="Filtros del historial">
+        <button class="on" data-history-filter="all" onclick="setHistoryFilter('all')" data-i18n="hist_filter_all">Todas</button>
+        <button data-history-filter="win" onclick="setHistoryFilter('win')" data-i18n="hist_filter_wins">Ganadas</button>
+        <button data-history-filter="loss" onclick="setHistoryFilter('loss')" data-i18n="hist_filter_losses">Perdidas</button>
+        <button data-history-filter="draw" onclick="setHistoryFilter('draw')" data-i18n="hist_filter_draws">Empates</button>
+      </div>
       <div class="list" id="hist-list"><div class="empty">…</div></div>
       <div style="height:16px"></div>
       <button class="btn ghost" onclick="show('lobby')" data-i18n="back">Volver</button>
@@ -666,7 +688,7 @@ const I18N = {
     rules_title:"Cómo se juega", rules_link:"¿Cómo se juega?", wait_share:"Compartir",
     share_text:"¡Únete a mi partida de Picas y Fijas! Código: {code}",
     lbl_numcolors:"Número de colores", lobby_history:"Historial",
-    hist_title:"Historial de partidas", hist_hint:"Tus últimas partidas terminadas.",
+    hist_title:"Historial de partidas", hist_hint:"Tus últimas partidas terminadas. Haz clic en un resultado para revisarla.",
     hist_empty:"Aún no tienes partidas terminadas.",
     result_win:"Ganada", result_loss:"Perdida", result_draw:"Empate",
     sound_label:"Sonido", on:"activado", off:"desactivado", notif_yourturn:"¡Es tu turno!", notif_joined:"¡Un rival se ha unido! 🎮", game_expired:"La partida abierta expiró (nadie se unió).", online_now:"🟢 {n} en curso ahora", online_players_one:"👥 1 jugador conectado ahora", online_players_many:"👥 {n} jugadores conectados ahora", credits_by:"Creado por",
@@ -735,7 +757,7 @@ const I18N = {
     rules_title:"How to play", rules_link:"How to play?", wait_share:"Share",
     share_text:"Join my Picas y Fijas game! Code: {code}",
     lbl_numcolors:"Number of colors", lobby_history:"History",
-    hist_title:"Match history", hist_hint:"Your latest finished games.",
+    hist_title:"Match history", hist_hint:"Your latest finished games. Click a result to review it.",
     hist_empty:"No finished games yet.",
     result_win:"Won", result_loss:"Lost", result_draw:"Draw",
     sound_label:"Sound", on:"on", off:"off", notif_yourturn:"It's your turn!", notif_joined:"An opponent joined! 🎮", game_expired:"The open game expired (nobody joined).", online_now:"🟢 {n} in progress now", online_players_one:"👥 1 player connected now", online_players_many:"👥 {n} players connected now", credits_by:"Created by",
@@ -804,7 +826,7 @@ const I18N = {
     rules_title:"Comment jouer", rules_link:"Comment jouer ?", wait_share:"Partager",
     share_text:"Rejoins ma partie de Picas y Fijas ! Code : {code}",
     lbl_numcolors:"Nombre de couleurs", lobby_history:"Historique",
-    hist_title:"Historique des parties", hist_hint:"Tes dernières parties terminées.",
+    hist_title:"Historique des parties", hist_hint:"Tes dernières parties terminées. Clique sur un résultat pour la revoir.",
     hist_empty:"Aucune partie terminée pour l'instant.",
     result_win:"Gagnée", result_loss:"Perdue", result_draw:"Égalité",
     sound_label:"Son", on:"activé", off:"désactivé", notif_yourturn:"À toi de jouer !", notif_joined:"Un adversaire a rejoint ! 🎮", game_expired:"La partie ouverte a expiré (personne n'a rejoint).", online_now:"🟢 {n} en cours maintenant", online_players_one:"👥 1 joueur connecté maintenant", online_players_many:"👥 {n} joueurs connectés maintenant", credits_by:"Créé par",
@@ -856,14 +878,32 @@ Object.assign(I18N.es,{
   chat_lobby:"Chat del lobby",chat_game:"Chat de la partida",chat_placeholder:"Escribe un mensaje…",chat_empty:"Todavía no hay mensajes.",chat_deleted:"Mensaje eliminado",chat_mute:"Silenciar usuario",chat_mute_confirm:"¿Silenciar a {name}? Sus mensajes y zumbidos quedarán ocultos hasta que lo reactives desde el botón 🔇.",chat_manage_muted:"Gestionar usuarios silenciados",chat_muted_title:"Usuarios silenciados",chat_muted_empty:"No has silenciado a ningún usuario.",chat_unmute:"Reactivar",chat_unmute_all:"Reactivar a todos",chat_unmuted:"{name} fue reactivado.",chat_all_unmuted:"Todos los usuarios fueron reactivados.",chat_report:"Reportar mensaje",chat_muted:"Usuario silenciado en este dispositivo.",chat_reported:"Mensaje reportado.",chat_nudge:"Enviar zumbido",chat_nudges_on:"Zumbidos activados",chat_nudges_off:"Zumbidos desactivados",chat_joined:"{name} entró en la partida.",chat_paused:"{name} pausó la partida.",chat_resumed:"{name} reanudó la partida.",chat_abandoned:"{name} abandonó la partida.",chat_rematch:"{name} propuso una revancha.",chat_finished:"La partida terminó.",chat_nudged:"{name} te ha enviado un zumbido ⚡",chat_report_reason:"Motivo: 1 spam, 2 insultos/acoso, 3 contenido inapropiado"
 });
 Object.assign(I18N.es,{experience_title:"No te pierdas tu turno",experience_hint:"Activa las notificaciones y el sonido para recibir avisos de turnos, rivales y zumbidos aunque el chat esté cerrado.",experience_activate:"Activar notificaciones y sonido",experience_ready:"Notificaciones y sonido activados.",experience_sound_only:"Sonido activado. Este navegador no admite notificaciones.",experience_denied:"El sonido está activado, pero las notificaciones están bloqueadas. Permítelas desde la configuración del sitio en tu navegador.",experience_default:"Recomendado para una mejor experiencia de juego.",experience_enabled_toast:"Notificaciones y sonido activados",experience_denied_toast:"El navegador bloqueó las notificaciones. Revisa los permisos del sitio."});
+I18N.es.session_expired="Tu sesión venció. Escribe tu PIN para volver a conectarte.";
 Object.assign(I18N.en,{
   chat_lobby:"Lobby chat",chat_game:"Game chat",chat_placeholder:"Write a message…",chat_empty:"No messages yet.",chat_deleted:"Message deleted",chat_mute:"Mute user",chat_mute_confirm:"Mute {name}? Their messages and nudges will stay hidden until you restore them with the 🔇 button.",chat_manage_muted:"Manage muted users",chat_muted_title:"Muted users",chat_muted_empty:"You have not muted anyone.",chat_unmute:"Unmute",chat_unmute_all:"Unmute everyone",chat_unmuted:"{name} was unmuted.",chat_all_unmuted:"Everyone was unmuted.",chat_report:"Report message",chat_muted:"User muted on this device.",chat_reported:"Message reported.",chat_nudge:"Send a nudge",chat_nudges_on:"Nudges enabled",chat_nudges_off:"Nudges disabled",chat_joined:"{name} joined the game.",chat_paused:"{name} paused the game.",chat_resumed:"{name} resumed the game.",chat_abandoned:"{name} abandoned the game.",chat_rematch:"{name} proposed a rematch.",chat_finished:"The game ended.",chat_nudged:"{name} sent you a nudge ⚡",chat_report_reason:"Reason: 1 spam, 2 harassment, 3 inappropriate content"
 });
 Object.assign(I18N.en,{experience_title:"Don't miss your turn",experience_hint:"Enable notifications and sound for turn, opponent and nudge alerts even when chat is closed.",experience_activate:"Enable notifications and sound",experience_ready:"Notifications and sound enabled.",experience_sound_only:"Sound enabled. This browser does not support notifications.",experience_denied:"Sound is enabled, but notifications are blocked. Allow them in this site's browser settings.",experience_default:"Recommended for the best game experience.",experience_enabled_toast:"Notifications and sound enabled",experience_denied_toast:"The browser blocked notifications. Check this site's permissions."});
+I18N.en.session_expired="Your session expired. Enter your PIN to reconnect.";
 Object.assign(I18N.fr,{
   chat_lobby:"Chat du lobby",chat_game:"Chat de la partie",chat_placeholder:"Écris un message…",chat_empty:"Aucun message pour l'instant.",chat_deleted:"Message supprimé",chat_mute:"Ignorer l'utilisateur",chat_mute_confirm:"Ignorer {name} ? Ses messages et wizz resteront masqués jusqu'à sa réactivation avec le bouton 🔇.",chat_manage_muted:"Gérer les utilisateurs ignorés",chat_muted_title:"Utilisateurs ignorés",chat_muted_empty:"Tu n'as ignoré aucun utilisateur.",chat_unmute:"Réactiver",chat_unmute_all:"Tout réactiver",chat_unmuted:"{name} a été réactivé.",chat_all_unmuted:"Tous les utilisateurs ont été réactivés.",chat_report:"Signaler le message",chat_muted:"Utilisateur ignoré sur cet appareil.",chat_reported:"Message signalé.",chat_nudge:"Envoyer un wizz",chat_nudges_on:"Wizz activés",chat_nudges_off:"Wizz désactivés",chat_joined:"{name} a rejoint la partie.",chat_paused:"{name} a mis la partie en pause.",chat_resumed:"{name} a repris la partie.",chat_abandoned:"{name} a abandonné la partie.",chat_rematch:"{name} a proposé une revanche.",chat_finished:"La partie est terminée.",chat_nudged:"{name} t'a envoyé un wizz ⚡",chat_report_reason:"Motif : 1 spam, 2 harcèlement, 3 contenu inapproprié"
 });
 Object.assign(I18N.fr,{experience_title:"Ne rate pas ton tour",experience_hint:"Active les notifications et le son pour les alertes de tour, d'adversaire et de wizz, même lorsque le chat est fermé.",experience_activate:"Activer les notifications et le son",experience_ready:"Notifications et son activés.",experience_sound_only:"Son activé. Ce navigateur ne prend pas en charge les notifications.",experience_denied:"Le son est activé, mais les notifications sont bloquées. Autorise-les dans les paramètres du site du navigateur.",experience_default:"Recommandé pour une meilleure expérience de jeu.",experience_enabled_toast:"Notifications et son activés",experience_denied_toast:"Le navigateur a bloqué les notifications. Vérifie les autorisations de ce site."});
+I18N.fr.session_expired="Ta session a expiré. Saisis ton PIN pour te reconnecter.";
+Object.assign(I18N.es,{
+  hist_played:"Jugadas",hist_wins:"Victorias",hist_win_rate:"% victorias",hist_avg_attempts:"Promedio al ganar",hist_current_streak:"Racha actual",hist_best_streak:"Mejor racha",
+  hist_filter_all:"Todas",hist_filter_wins:"Ganadas",hist_filter_losses:"Perdidas",hist_filter_draws:"Empates",hist_filter_empty:"No hay partidas con este resultado.",
+  hist_attempts:"{n} intentos",hist_best_game:"Mejor partida",hist_hardest_game:"Victoria más difícil",hist_no_data:"—"
+});
+Object.assign(I18N.en,{
+  hist_played:"Played",hist_wins:"Wins",hist_win_rate:"Win rate",hist_avg_attempts:"Avg. to win",hist_current_streak:"Current streak",hist_best_streak:"Best streak",
+  hist_filter_all:"All",hist_filter_wins:"Won",hist_filter_losses:"Lost",hist_filter_draws:"Draws",hist_filter_empty:"No games with this result.",
+  hist_attempts:"{n} attempts",hist_best_game:"Best game",hist_hardest_game:"Hardest win",hist_no_data:"—"
+});
+Object.assign(I18N.fr,{
+  hist_played:"Jouées",hist_wins:"Victoires",hist_win_rate:"% victoires",hist_avg_attempts:"Moyenne pour gagner",hist_current_streak:"Série actuelle",hist_best_streak:"Meilleure série",
+  hist_filter_all:"Toutes",hist_filter_wins:"Gagnées",hist_filter_losses:"Perdues",hist_filter_draws:"Égalités",hist_filter_empty:"Aucune partie avec ce résultat.",
+  hist_attempts:"{n} essais",hist_best_game:"Meilleure partie",hist_hardest_game:"Victoire la plus difficile",hist_no_data:"—"
+});
 /* Mensajes de error del backend (español) → traducción */
 const ERR = {
   en:{
@@ -960,7 +1000,8 @@ const RULES = {
   <div class="note"><b>Modo colores:</b> mismo cálculo de picas y fijas, solo cambian las cifras por fichas de color.</div>
   <div class="note"><b>Juego asíncrono:</b> sin tiempo por turno, puedes volver al lobby y continuar minutos u horas después; el rival también puede jugar cuando esté disponible.</div>
   <div class="note"><b>Cronómetro:</b> al llegar a 0 el turno pasa automáticamente al rival. Si alguien vuelve al lobby, el reloj se detiene hasta que ambos regresen. La pausa manual temporal solo está disponible en partidas con tiempo.</div>
-  <div class="note"><b>Salir o cancelar:</b> volver al lobby no elimina la partida. El creador puede cancelar una partida que aún espera rival. Abandonar una partida iniciada concede la victoria al rival y registra una derrota.</div>`,
+  <div class="note"><b>Salir o cancelar:</b> volver al lobby no elimina la partida. El creador puede cancelar una partida que aún espera rival. Abandonar una partida iniciada concede la victoria al rival y registra una derrota.</div>
+  <div class="note strategy-download"><b>¿Llegaste hasta el final? Ya tienes ventaja.</b><br>Descubre estrategias para cada tipo de partida.<br><a href="/guia-estrategias-picas-y-fijas-es.pdf" download>📘 Descargar guía de estrategias (PDF)</a></div>`,
   en:`<ol>
     <li>Each player registers a <b>username</b> and protects it with a <b>4-to-8-digit PIN</b>. The name is also used in the ranking.</li>
     <li>One player <b>creates the game</b> and picks the rules:
@@ -983,7 +1024,8 @@ const RULES = {
   <div class="note"><b>Colors mode:</b> same F/P scoring, colored pegs instead of digits.</div>
   <div class="note"><b>Asynchronous play:</b> without a turn timer, you can return to the lobby and continue minutes or hours later; your opponent can also play when available.</div>
   <div class="note"><b>Timer:</b> when it reaches 0, the turn automatically passes to the opponent. If someone returns to the lobby, the clock stops until both return. A temporary manual pause is only available in timed games.</div>
-  <div class="note"><b>Leaving or cancelling:</b> returning to the lobby does not delete the game. The creator can cancel a game that is still waiting for an opponent. Abandoning a game in progress awards the win to the opponent and records a loss.</div>`,
+  <div class="note"><b>Leaving or cancelling:</b> returning to the lobby does not delete the game. The creator can cancel a game that is still waiting for an opponent. Abandoning a game in progress awards the win to the opponent and records a loss.</div>
+  <div class="note strategy-download"><b>Made it to the end? You already have an advantage.</b><br>Discover strategies for every game type.<br><a href="/picas-y-fijas-strategy-guide-en.pdf" download>📘 Download the strategy guide (PDF)</a></div>`,
   fr:`<ol>
     <li>Chaque joueur enregistre un <b>nom d'utilisateur</b> et le protège avec un <b>PIN de 4 à 8 chiffres</b>. Le nom sert aussi au classement.</li>
     <li>Un joueur <b>crée la partie</b> et choisit les règles :
@@ -1006,7 +1048,8 @@ const RULES = {
   <div class="note"><b>Mode couleurs :</b> même calcul F/P, des pions colorés à la place des chiffres.</div>
   <div class="note"><b>Jeu asynchrone :</b> sans temps par tour, tu peux retourner au lobby et continuer quelques minutes ou heures plus tard ; ton adversaire peut aussi jouer lorsqu'il est disponible.</div>
   <div class="note"><b>Chrono :</b> à 0, le tour passe automatiquement à l'adversaire. Si quelqu'un retourne au lobby, le chrono s'arrête jusqu'au retour des deux joueurs. La pause manuelle temporaire n'est disponible que dans les parties chronométrées.</div>
-  <div class="note"><b>Quitter ou annuler :</b> retourner au lobby ne supprime pas la partie. Le créateur peut annuler une partie qui attend encore un adversaire. Abandonner une partie commencée attribue la victoire à l'adversaire et enregistre une défaite.</div>`
+  <div class="note"><b>Quitter ou annuler :</b> retourner au lobby ne supprime pas la partie. Le créateur peut annuler une partie qui attend encore un adversaire. Abandonner une partie commencée attribue la victoire à l'adversaire et enregistre une défaite.</div>
+  <div class="note strategy-download"><b>Tu es arrivé jusqu'à la fin ? Tu as déjà un avantage.</b><br>Découvre des stratégies pour chaque type de partie.<br><a href="/guide-strategies-picas-y-fijas-fr.pdf" download>📘 Télécharger le guide stratégique (PDF)</a></div>`
 };
 
 let lang = localStorage.getItem('pf_lang') || 'es';
@@ -1061,13 +1104,13 @@ let joinMeta = null, finishedMeta = null;
 let game = { id:'', digits:3, mode:'numbers', numColors:6, allowRepeats:false, maxAttempts:0, turnSeconds:0, revealSecrets:false };
 let gState = null;
 let guessSubmitting = false;
-let gameViewEpoch = 0, routeEpoch = 0, gameRequestSeq = 0;
+let gameViewEpoch = 0, routeEpoch = 0, gameRequestSeq = 0, reviewingHistory = false;
 let pollTimer = null, tickTimer = null, passRequested = false, lastTurnStart = '';
 let lobbyPollTimer = null;
 let lastYourTurn = null;
 let endSoundPlayed = false;
 let soundOn = localStorage.getItem('pf_sound')!=='0';
-let audioCtx = null;
+let audioCtx = null, serviceWorkerRegistration = null, sessionExpiryHandled = false;
 let myCountry = localStorage.getItem('pf_country') || '';
 let chatTimer=null,chatRoom='',chatItems=[],chatLastId=0,chatUnread=0,chatEnabled=false,chatPollGeneration=0;
 let chatNudgesOn=localStorage.getItem('pf_chat_nudges')!=='0';
@@ -1075,7 +1118,11 @@ let privateThreads=[],selectedPrivateThread=null;
 const privateMessageAudio=new Audio('/audio/icq-message-received.mp3'),wizzAudio=new Audio('/audio/msn-wizz.mp3');
 [privateMessageAudio,wizzAudio].forEach(a=>{a.preload='auto';a.volume=1;});
 function playChatAudio(audio){if(!soundOn)return;try{audio.currentTime=0;const p=audio.play();if(p)p.catch(()=>{});}catch(e){}}
-function primeChatAudio(){[privateMessageAudio,wizzAudio].forEach(a=>{try{const muted=a.muted;a.muted=true;const p=a.play();if(p)p.then(()=>{a.pause();a.currentTime=0;a.muted=muted;}).catch(()=>{a.muted=muted;});}catch(e){}});}
+function primeChatAudio(){
+  // iOS no considera desbloqueado un elemento que se inició con `muted=true`.
+  // Volumen cero conserva el gesto del usuario y permite reproducirlo después.
+  [privateMessageAudio,wizzAudio].forEach(a=>{try{const volume=a.volume;a.volume=0;const p=a.play();if(p)p.then(()=>{a.pause();a.currentTime=0;a.volume=volume;}).catch(()=>{a.volume=volume;});}catch(e){}});
+}
 async function detectCountry(){
   try{
     const r=await fetch('https://get.geojs.io/v1/ip/country.json');
@@ -1129,6 +1176,10 @@ async function api(action, payload={}, options={}){
     if(action==='loginUser') requestPayload.pin=userPin;
     const res = await fetch(API,{ method:'POST', cache:'no-store', signal:controller.signal,
       headers, body: JSON.stringify(requestPayload) });
+    if(res.status===401&&action!=='loginUser'){
+      handleSessionExpired();
+      throw new Error('SESSION_EXPIRED');
+    }
     if(!res.ok) throw new Error('HTTP '+res.status);
     const data=await res.json(), clientReceivedAt=Date.now();
     data.clientReceivedAt=clientReceivedAt;
@@ -1238,9 +1289,22 @@ function relativeActivity(iso){
 
 /* -------------------- aviso de turno (sonido / vibración / notificación) -------------------- */
 function unlockAudio(){
-  try{ audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended') audioCtx.resume(); }catch(e){}
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==='suspended') audioCtx.resume().catch(()=>{});
+    // Un buffer silencioso iniciado dentro del gesto desbloquea Web Audio en iOS.
+    const source=audioCtx.createBufferSource();source.buffer=audioCtx.createBuffer(1,1,22050);source.connect(audioCtx.destination);source.start(0);
+  }catch(e){}
 }
 document.addEventListener('pointerdown',()=>{if(soundOn){unlockAudio();primeChatAudio();}},{once:true});
+async function showAppNotification(body,tag){
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  try{
+    const registration=serviceWorkerRegistration||await navigator.serviceWorker?.ready;
+    if(registration){await registration.showNotification('Picas y Fijas',{body,tag});return;}
+    new Notification('Picas y Fijas',{body,tag});
+  }catch(e){try{new Notification('Picas y Fijas',{body,tag});}catch(ignore){}}
+}
 function chime(){
   if(!soundOn) return;
   try{
@@ -1261,7 +1325,7 @@ function notifyTurn(){
   try{ navigator.vibrate && navigator.vibrate([120,60,120]); }catch(e){}
   try{
     if(document.hidden && 'Notification' in window && Notification.permission==='granted'){
-      new Notification('Picas y Fijas', { body: t('notif_yourturn'), tag:'pf-turn' });
+      showAppNotification(t('notif_yourturn'),'pf-turn');
     }
   }catch(e){}
 }
@@ -1270,7 +1334,7 @@ function notifyJoin(){
   try{ navigator.vibrate && navigator.vibrate([120,60,120,60,200]); }catch(e){}
   try{
     if('Notification' in window && Notification.permission==='granted'){
-      new Notification('Picas y Fijas', { body: t('notif_joined'), tag:'pf-join' });
+      showAppNotification(t('notif_joined'),'pf-join');
     }
   }catch(e){}
   toast(t('notif_joined'));
@@ -1409,15 +1473,27 @@ async function doLogin(){
     userPin=pin;
     const res=await api('loginUser',{username:v});
     if(!res.ok){ userPin=''; $('uname-val').className='val err'; $('uname-val').textContent=te(res.error); return; }
-    user=res.username; sessionToken=res.sessionToken||'';
+    const previousUser=localStorage.getItem('pf_user')||'';
+    user=res.username; sessionToken=res.sessionToken||'';sessionExpiryHandled=false;
+    if(previousUser&&previousUser.toLocaleLowerCase()!==user.toLocaleLowerCase())localStorage.removeItem('pf_current_game');
     localStorage.setItem('pf_user',user); localStorage.setItem('pf_session',sessionToken); localStorage.removeItem('pf_pin'); userPin='';
   }catch(e){ userPin=''; $('uname-val').className='val err'; $('uname-val').textContent=t('net_error'); return; }
   unlockAudio();
+  const deepLinkPending=!!pendingJoinCode;
   enterLobby();
+  if(!deepLinkPending)resumeStoredGame();
+}
+function handleSessionExpired(){
+  if(sessionExpiryHandled)return;sessionExpiryHandled=true;
+  localStorage.removeItem('pf_session');sessionToken='';
+  stopPoll();stopLobbyPoll();stopChatPoll();stopTick();
+  chatEnabled=false;$('chat-panel').classList.add('hidden');$('chat-launch').classList.add('hidden');
+  show('login');$('uname').value=user||localStorage.getItem('pf_user')||'';$('upin').value='';
+  $('uname-val').className='val err';$('uname-val').textContent=t('session_expired');
 }
 async function logout(){
   try{ if(user&&sessionToken) await api('leavePresence',{username:user}); }catch(e){}
-  localStorage.removeItem('pf_user'); localStorage.removeItem('pf_pin'); localStorage.removeItem('pf_session'); user=''; userPin=''; sessionToken='';
+  localStorage.removeItem('pf_user'); localStorage.removeItem('pf_pin'); localStorage.removeItem('pf_session'); localStorage.removeItem('pf_current_game'); user=''; userPin=''; sessionToken='';sessionExpiryHandled=false;
   chatEnabled=false;stopChatPoll();$('chat-panel').classList.add('hidden');$('chat-launch').classList.add('hidden');
   show('login'); $('uname').value=''; $('upin').value='';
 }
@@ -1554,28 +1630,72 @@ async function openRank(){
 
 /* -------------------- historial -------------------- */
 const LOCALE={es:'es',en:'en',fr:'fr'};
+let historyEntries=[],historyStats=null,historyFilter='all';
+
+function renderHistoryStats(){
+  if(!historyStats)return;
+  const s=historyStats, avg=s.averageWinningAttempts==null?t('hist_no_data'):String(s.averageWinningAttempts).replace('.',lang==='en'?'.':',');
+  const cards=[
+    [s.played,t('hist_played')],[s.wins,t('hist_wins')],[`${s.winRate}%`,t('hist_win_rate')],
+    [avg,t('hist_avg_attempts')],[s.currentStreak,t('hist_current_streak')],[s.bestStreak,t('hist_best_streak')]
+  ];
+  $('hist-stats').innerHTML=cards.map(([value,label])=>`<div class="history-stat"><b>${value}</b><span>${label}</span></div>`).join('');
+  $('hist-stats').classList.remove('hidden');
+}
+
+function setHistoryFilter(filter){
+  historyFilter=filter;
+  [...$('hist-filters').querySelectorAll('button')].forEach(btn=>{
+    const active=btn.dataset.historyFilter===filter;
+    btn.classList.toggle('on',active); btn.setAttribute('aria-pressed',String(active));
+  });
+  renderHistoryList();
+}
+
+function renderHistoryList(){
+  const list=historyFilter==='all'?historyEntries:historyEntries.filter(h=>h.result===historyFilter);
+  if(!list.length){ $('hist-list').innerHTML=`<div class="empty">${t(historyEntries.length?'hist_filter_empty':'hist_empty')}</div>`; return; }
+  $('hist-list').innerHTML='';
+  list.forEach(h=>{
+    const badge = h.result==='win'?t('result_win'):(h.result==='draw'?t('result_draw'):t('result_loss'));
+    const badgeCls = h.result==='win'?'pill f':(h.result==='draw'?'pill':'pill p');
+    let date=''; try{ date=new Date(h.updatedAt).toLocaleDateString(LOCALE[lang]||'es',{day:'2-digit',month:'short'}); }catch(e){}
+    const isBest=h.gameId===historyStats?.bestGameId, isHardest=h.gameId===historyStats?.hardestGameId;
+    const award=isBest?`<div class="history-award">⭐ ${t('hist_best_game')}</div>`:(isHardest?`<div class="history-award">◆ ${t('hist_hardest_game')}</div>`:'');
+    const el=document.createElement('button'); el.type='button'; el.className=`gitem history-link${isBest?' history-best':isHardest?' history-hardest':''}`;
+    el.setAttribute('aria-label',`${badge}: ${h.opp||'—'} · ${t('hist_attempts',{n:h.myAttempts})}`);
+    el.innerHTML=`<div class="meta"><div class="who">${vsPlayer(h.oppCountry, h.opp||'—')}</div>
+      <div class="det">${t('hist_attempts',{n:h.myAttempts})} · ${rulesLabel(h)} · ${date}</div>${award}</div>
+      <span class="${badgeCls}">${badge}</span>`;
+    el.addEventListener('click',()=>openHistoryGame(h.gameId));
+    $('hist-list').appendChild(el);
+  });
+}
+
 async function openHistory(){
   show('history'); $('hist-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
+  $('hist-stats').classList.add('hidden'); $('hist-filters').classList.add('hidden');
   try{
-    const res=await api('history',{username:user}); const list=res.history||[];
-    if(!list.length){ $('hist-list').innerHTML=`<div class="empty">${t('hist_empty')}</div>`; return; }
-    $('hist-list').innerHTML='';
-    list.forEach(h=>{
-      const cls = h.result==='win'?'f':(h.result==='draw'?'':'p');
-      const badge = h.result==='win'?t('result_win'):(h.result==='draw'?t('result_draw'):t('result_loss'));
-      const badgeCls = h.result==='win'?'pill f':(h.result==='draw'?'pill':'pill p');
-      let date=''; try{ date=new Date(h.updatedAt).toLocaleDateString(LOCALE[lang]||'es',{day:'2-digit',month:'short'}); }catch(e){}
-      const el=document.createElement('div'); el.className='gitem';
-      el.innerHTML=`<div class="meta"><div class="who">${vsPlayer(h.oppCountry, h.opp||'—')}</div>
-        <div class="det">${rulesLabel(h)} · ${date}</div></div>
-        <span class="${badgeCls}">${badge}</span>`;
-      $('hist-list').appendChild(el);
-    });
+    const res=await api('history',{username:user}); historyEntries=res.history||[]; historyStats=res.stats||null; historyFilter='all';
+    if(historyStats)renderHistoryStats();
+    if(historyEntries.length)$('hist-filters').classList.remove('hidden');
+    setHistoryFilter('all');
   }catch(e){ $('hist-list').innerHTML=`<div class="empty">${t('load_error')}</div>`; }
 }
 
 /* -------------------- crear -------------------- */
 function segPick(container, btn){ [...container.children].forEach(x=>x.classList.toggle('on', x===btn)); }
+
+async function openHistoryGame(gameId){
+  const epoch=++gameViewEpoch;
+  stopPoll(); stopTick(); hideToast();
+  try{
+    const st=await api('historyGame',{gameId,username:user});
+    if(epoch!==gameViewEpoch) return;
+    if(!st.ok){toast(te(st.error)||t('not_available'),true);return;}
+    enterGame({...metaFromState(st),review:true},st);
+  }catch(e){if(epoch===gameViewEpoch)toast(t('net_error'),true);}
+}
 
 /* -------------------- practica local Solo / Contra el computador (nunca usa la API) -------------------- */
 function readSavedPractice(){
@@ -1985,6 +2105,20 @@ async function goToRematch(rematchId){
     else { toast(t('game_expired'),true); enterLobby(); }
   }catch(e){ if(route===routeEpoch) toast(t('net_error'),true); }
 }
+async function resumeStoredGame(){
+  const resumeId=localStorage.getItem('pf_current_game');
+  if(!resumeId||!sessionToken)return;
+  const route=++routeEpoch;
+  try{
+    const st=await api('state',{gameId:resumeId,username:user});
+    if(route!==routeEpoch||!sessionToken)return;
+    if(!st.ok){if(terminalGameError(st.error))localStorage.removeItem('pf_current_game');return;}
+    const meta=metaFromState(st);
+    if(st.status==='active'&&st.youAre&&st.p1&&st.p2)enterGame(meta,st);
+    else if(st.status==='waiting'&&st.youAre===1)enterWait(meta);
+    else localStorage.removeItem('pf_current_game');
+  }catch(e){/* Conserva el identificador solamente ante un fallo transitorio. */}
+}
 
 /* -------------------- juego -------------------- */
 function metaFromState(st){
@@ -2005,9 +2139,10 @@ function resetGameView(){
   $('g-abandon-wrap').classList.add('hidden'); $('g-legend').style.display='flex';
   $('g-pause-cover').classList.add('hidden'); $('g-pause-btn').classList.add('hidden');
 }
-function enterGame(meta){
+function enterGame(meta,initialState=null){
   const epoch=++gameViewEpoch;
   guessSubmitting=false;
+  reviewingHistory=!!meta.review;
   game={id:meta.id, digits:parseInt(meta.digits,10), mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats,
     maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0, revealSecrets:!!meta.revealSecrets, spectator:!!meta.spectator};
   const inp=$('g-guess'); inp.maxLength=game.digits; inp.value=''; inp.placeholder='•'.repeat(game.digits);
@@ -2015,8 +2150,10 @@ function enterGame(meta){
   $('g-code').textContent=meta.id; $('g-guess-val').textContent='';
   gState=null; passRequested=false; lastTurnStart=''; lastYourTurn=null; endSoundPlayed=false;
   resetGameView();
-  localStorage.setItem('pf_current_game',game.id);
-  show('game'); refreshGame(epoch,game.id); startPoll(()=>refreshGame(epoch,game.id)); startTick();
+  if(!reviewingHistory)localStorage.setItem('pf_current_game',game.id);
+  show('game');
+  if(initialState)renderGame(initialState);
+  else{refreshGame(epoch,game.id);startPoll(()=>refreshGame(epoch,game.id));startTick();}
 }
 function terminalGameError(msg){
   return ['Partida no encontrada.','La partida ha expirado.','La partida se cerró tras 48 horas sin actividad.',
@@ -2088,6 +2225,7 @@ function renderGame(st){
   const guessarea=$('g-guessarea'); const legend=$('g-legend'); const statusrow=$('g-statusrow');
 
   if(st.status==='finished'){
+    if(!reviewingHistory)localStorage.removeItem('pf_current_game');
     $('g-abandon-wrap').classList.add('hidden');
     $('g-pause-cover').classList.add('hidden'); $('g-pause-btn').classList.add('hidden');
     turn.classList.add('hidden'); guessarea.classList.add('hidden'); statusrow.classList.add('hidden'); legend.style.display='none';
@@ -2110,7 +2248,9 @@ function renderGame(st){
     if(!spectator&&st.opponentSecret){
       banner.insertAdjacentHTML('beforeend',`<div class="note"><b>${t('opponent_code',{name:esc(oppLabel)})}</b> ${codeViewHTML(st.opponentSecret,game.mode)}</div>`);
     }
-    if(spectator){
+    if(reviewingHistory){
+      rz.innerHTML=`<button class="btn ghost" onclick="leaveHistoryGame()">${t('back')}</button><div style="height:12px"></div>`;
+    }else if(spectator){
       rz.innerHTML='';
     }else if(st.rematchId){
       rz.innerHTML=`<button class="btn green" onclick="goToRematch('${st.rematchId}')">${t('rematch_go')}</button>
@@ -2219,6 +2359,9 @@ async function leaveGame(){
   try{ if(id) await api('gamePresence',{gameId:id,username:user,connected:false,reason:'lobby'}); }catch(e){}
   enterLobby();
 }
+function leaveHistoryGame(){
+  reviewingHistory=false; stopPoll(); stopTick(); openHistory();
+}
 async function abandonGame(){
   if(!gState||gState.status!=='active'||!confirm(t('abandon_confirm'))) return;
   try{
@@ -2306,17 +2449,20 @@ function stopPoll(){ pollGeneration++; if(pollTimer){ clearTimeout(pollTimer); p
 
 document.addEventListener('visibilitychange',()=>{
   updateExperiencePrompt();
-  if(!document.hidden&&!$('s-game').classList.contains('hidden')&&game.id) refreshGame();
+  if(!document.hidden){
+    if(!$('s-game').classList.contains('hidden')&&game.id)refreshGame();
+    else if(!$('s-lobby').classList.contains('hidden'))lobbyRefresh(true);
+  }
 });
 
 /* -------------------- arranque -------------------- */
 applyI18n();
 detectCountry();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').then(reg=>{serviceWorkerRegistration=reg;}).catch(()=>{});
 if(user&&sessionToken){
   const deepLinkPending=!!pendingJoinCode;
   enterLobby();
-  const resumeId=localStorage.getItem('pf_current_game');
-  if(resumeId&&!deepLinkPending) goToRematch(resumeId);
+  if(!deepLinkPending)resumeStoredGame();
 } else { if(user) $('uname').value=user; show('login'); }
 </script>
 </body>

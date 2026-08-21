@@ -1,0 +1,10 @@
+{
+  "name": "Picas y Fijas",
+  "short_name": "Picas y Fijas",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#1a1730",
+  "theme_color": "#1a1730",
+  "description": "Duelo de deducción online"
+}

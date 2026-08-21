@@ -59,9 +59,31 @@ test('notification permission is requested only from the explicit experience but
   assert.match(publicHtml,/if\(permission==='default'\)permission=await Notification\.requestPermission\(\)/);
   assert.equal((publicHtml.match(/Notification\.requestPermission\(\)/g)||[]).length,1);
   assert.match(publicHtml,/document\.addEventListener\('pointerdown'.*unlockAudio/);
+  assert.match(publicHtml,/navigator\.serviceWorker\.register\('\/sw\.js'\)/);
+  assert.match(publicHtml,/registration\.showNotification/);
+});
+
+test('iOS audio is primed without the muted flag',()=>{
+  assert.match(publicHtml,/a\.volume=0;const p=a\.play\(\)/);
+  assert.doesNotMatch(publicHtml,/a\.muted=true/);
+  assert.match(publicHtml,/audioCtx\.createBuffer\(1,1,22050\)/);
+});
+
+test('expired sessions and stale finished games recover without a hard refresh',()=>{
+  assert.match(publicHtml,/if\(res\.status===401&&action!=='loginUser'\)/);
+  assert.match(publicHtml,/function handleSessionExpired\(\)/);
+  assert.match(publicHtml,/async function resumeStoredGame\(\)/);
+  assert.match(publicHtml,/if\(!reviewingHistory\)localStorage\.removeItem\('pf_current_game'\)/);
+  assert.doesNotMatch(publicHtml,/if\(resumeId&&!deepLinkPending\) goToRematch\(resumeId\)/);
 });
 
 test('a received nudge plays its sound even while the chat panel is open',()=>{
   assert.match(publicHtml,/if\(nudge&&chatNudgesOn\).*playChatAudio\(wizzAudio\)/);
   assert.doesNotMatch(publicHtml,/if\(soundOn&&\$\('chat-panel'\)\.classList\.contains\('hidden'\)\)chord/);
+});
+
+test('each rules language links to its matching strategy PDF',()=>{
+  assert.match(publicHtml,/href="\/guia-estrategias-picas-y-fijas-es\.pdf" download/);
+  assert.match(publicHtml,/href="\/picas-y-fijas-strategy-guide-en\.pdf" download/);
+  assert.match(publicHtml,/href="\/guide-strategies-picas-y-fijas-fr\.pdf" download/);
 });
