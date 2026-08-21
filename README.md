@@ -6,7 +6,7 @@ Este es el único documento de referencia del proyecto. Está pensado para perso
 
 Picas y Fijas es un juego multijugador web en español, inglés y francés. La versión vigente funciona íntegramente en Cloudflare; la implementación anterior de Google Sheets y Apps Script fue retirada del árbol actual después de completar la migración. Sigue disponible en el historial de Git si alguna vez se necesita consultar.
 
-Versión actual: **2.3.0**.
+Versión actual: **2.4.0**.
 
 - Juego: https://picas-y-fijas.picas-y-fijas.workers.dev/
 - Administración: https://picas-y-fijas.picas-y-fijas.workers.dev/admin
@@ -125,6 +125,8 @@ El rival funciona íntegramente sin conexión y no utiliza ChatGPT ni ninguna AP
 ## Arquitectura y archivos
 
 - `public/index.html`: interfaz completa del juego, estilos, traducciones y cliente API.
+- `public/manifest.webmanifest`, `public/sw.js`: instalación como PWA y service worker de notificaciones.
+- `public/icon-192.png`, `public/icon-512.png`, `public/icon-maskable-512.png`, `public/apple-touch-icon.png`: iconos de la aplicación instalada.
 - `public/computer-ai.js`: rival local de práctica, generación de candidatos y estrategias por dificultad.
 - `public/admin.html`: panel reservado de administración.
 - `src/index.js`: Worker, rutas, API, acceso a D1 y operaciones administrativas.
@@ -136,6 +138,31 @@ El rival funciona íntegramente sin conexión y no utiliza ChatGPT ni ninguna AP
 - `index.html`: aviso y redirección desde la dirección histórica de GitHub Pages.
 
 No hay proceso de compilación del frontend. Wrangler sirve `public/` y ejecuta el Worker primero para `/api`, `/admin` y sus subrutas.
+
+## Identidad visual
+
+Desde 2.4.0 la aplicación usa la identidad **Mesa**: tablero de madera oscura en lugar del morado anterior. Los colores viven en `:root`, dentro del bloque `<style>` de `public/index.html`.
+
+| Variable | Valor | Uso |
+| --- | --- | --- |
+| `--ink` | `#12100C` | Fondo de página |
+| `--panel` / `--panel-2` | `#231D16` / `#1A150F` | Degradado de las tarjetas |
+| `--edge` | `#3B3229` | Bordes |
+| `--text` / `--muted` | `#F5EFE3` / `#A3947E` | Texto principal y secundario |
+| `--fija` | `#4FC97C` | Fijas |
+| `--pica` | `#F0B429` | Picas |
+| `--accent` | `#5B8DEF` | Acciones e interactividad |
+| `--pink` | `#E0685A` | Errores y avisos |
+
+Reglas que conviene respetar al tocar el diseño:
+
+- El verde y el ámbar son **información del juego**. No se deben usar para decorar; si el fondo compite con ellos, las pistas dejan de leerse.
+- Las fichas se distinguen **también por forma**: la fija es un círculo relleno y la pica es un anillo (`.pip.f` y `.pip.p`). Es lo que permite jugar con daltonismo rojo-verde; no se debe reducir a una diferencia de color.
+- Tipografías: `Instrument Serif` en los títulos, `Archivo` en la interfaz y `JetBrains Mono` en códigos y cifras. El cero de JetBrains Mono lleva punto interior, que lo separa del 8 y de la O.
+- El array `COLORS` del script son las fichas de colores del modo Mastermind. No forma parte de la paleta de la interfaz y no debe repintarse con ella.
+- Una sola acción primaria por tarjeta. Lo secundario baja a `.btn.ghost` y lo terciario a `.chipbtn`.
+- La marca es una cabeza de toro, por *Bulls and Cows*. Los iconos de la PWA se regeneran con el script del repositorio de herramientas; si cambia la marca, hay que regenerar los cuatro PNG.
+- Los elementos con `data-i18n` reciben `textContent` al traducir, así que **no pueden contener SVG ni ningún hijo**: el renderizado del idioma los borraría.
 
 ## Modelo de datos
 
