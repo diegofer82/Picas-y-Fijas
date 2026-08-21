@@ -38,6 +38,12 @@
     background:linear-gradient(150deg,#2C241A,#171208);border:1px solid #4A3E30;
     display:grid;place-items:center;
     box-shadow:0 8px 22px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,236,206,.09);}
+  button.logo{padding:0;font:inherit;-webkit-appearance:none;appearance:none;transition:border-color .15s,transform .06s}
+  button.logo:disabled{cursor:default;opacity:1}
+  button.logo:not(:disabled){cursor:pointer}
+  button.logo:not(:disabled):hover{border-color:var(--accent)}
+  button.logo:not(:disabled):active{transform:translateY(1px)}
+  button.logo:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .lobby-chips{display:flex;gap:8px;margin-top:16px;padding-top:15px;border-top:1px solid #2C251D}
   .chipbtn{flex:1;min-height:42px;padding:9px 6px;border-radius:999px;background:#0D0B07;
     border:1px solid #2E271F;color:var(--muted);cursor:pointer;
@@ -275,7 +281,7 @@
 <div class="wrap">
 
   <div class="brand">
-    <div class="logo"><svg width="30" height="19" viewBox="-4 3 100 62" aria-hidden="true"><path d="M19 21C12.5 16.5 4.5 11 -2 5c0 9.5 4.5 18.5 12.5 25C13 27.5 16 24 19 21Z" fill="#F5EFE3" stroke="#12100C" stroke-width="2.6" stroke-linejoin="round"></path><path d="M69 21C75.5 16.5 83.5 11 90 5c0 9.5-4.5 18.5-12.5 25C75 27.5 72 24 69 21Z" fill="#F5EFE3" stroke="#12100C" stroke-width="2.6" stroke-linejoin="round"></path><path d="M15 32c0-11.6 13-20.6 29-20.6s29 9 29 20.6c0 7-1.6 12.8-4.8 17.6C64.6 57 55.4 61.6 44 61.6S23.4 57 19.8 49.6C16.6 44.8 15 39 15 32Z" fill="#F5EFE3" stroke="#12100C" stroke-width="2.6" stroke-linejoin="round"></path><path d="M32.5 54c0-3.4 5.2-5.6 11.5-5.6s11.5 2.2 11.5 5.6-5.2 5.6-11.5 5.6-11.5-2.2-11.5-5.6Z" fill="none" stroke="#12100C" stroke-width="2.4"></path><circle cx="32" cy="34" r="3.4" fill="#12100C"></circle><circle cx="56" cy="34" r="3.4" fill="#12100C"></circle><circle cx="40" cy="53.6" r="1.8" fill="#12100C"></circle><circle cx="48" cy="53.6" r="1.8" fill="#12100C"></circle></svg></div>
+    <button type="button" class="logo" id="brand-home" onclick="brandHome()"><svg width="30" height="19" viewBox="-4 3 100 62" aria-hidden="true"><path d="M19 21C12.5 16.5 4.5 11 -2 5c0 9.5 4.5 18.5 12.5 25C13 27.5 16 24 19 21Z" fill="#F5EFE3" stroke="#12100C" stroke-width="2.6" stroke-linejoin="round"></path><path d="M69 21C75.5 16.5 83.5 11 90 5c0 9.5-4.5 18.5-12.5 25C75 27.5 72 24 69 21Z" fill="#F5EFE3" stroke="#12100C" stroke-width="2.6" stroke-linejoin="round"></path><path d="M15 32c0-11.6 13-20.6 29-20.6s29 9 29 20.6c0 7-1.6 12.8-4.8 17.6C64.6 57 55.4 61.6 44 61.6S23.4 57 19.8 49.6C16.6 44.8 15 39 15 32Z" fill="#F5EFE3" stroke="#12100C" stroke-width="2.6" stroke-linejoin="round"></path><path d="M32.5 54c0-3.4 5.2-5.6 11.5-5.6s11.5 2.2 11.5 5.6-5.2 5.6-11.5 5.6-11.5-2.2-11.5-5.6Z" fill="none" stroke="#12100C" stroke-width="2.4"></path><circle cx="32" cy="34" r="3.4" fill="#12100C"></circle><circle cx="56" cy="34" r="3.4" fill="#12100C"></circle><circle cx="40" cy="53.6" r="1.8" fill="#12100C"></circle><circle cx="48" cy="53.6" r="1.8" fill="#12100C"></circle></svg></button>
     <div><h1>Picas y Fijas</h1><div class="sub" data-i18n="brand_sub">Duelo de deducción online</div><div class="aka" data-i18n="brand_alias">También conocido como “Bulls and Cows” · inspirado en “Mastermind”</div></div>
   </div>
 
@@ -1129,6 +1135,7 @@ function applyI18n(){
   document.querySelectorAll('[data-i18n-title]').forEach(el=>{ el.title = t(el.dataset.i18nTitle); el.setAttribute('aria-label',t(el.dataset.i18nTitle)); });
   document.querySelectorAll('#seg-lang button').forEach(b=> b.classList.toggle('on', b.dataset.lang===lang));
   if(typeof updateSoundLabel==='function') updateSoundLabel();
+  syncBrandHome();
   if(typeof renderLoginInvite==='function') renderLoginInvite();
   if(typeof updateChatLabels==='function') updateChatLabels();
   if(typeof renderMutedPanel==='function') renderMutedPanel();
@@ -1204,13 +1211,28 @@ function vsPlayer(cc, name){ return `vs ${playerChip(cc, name)}`; }
 
 /* -------------------- utilidades -------------------- */
 const $ = id => document.getElementById(id);
+/* El logo lleva al lobby, pero solo desde las pantallas de consulta: desde una
+   partida o una practica en curso saltarse su propio flujo de salida podria
+   costarle el progreso al jugador. */
+const BRAND_HOME_FROM = new Set(['rank','history','rules','create','join','practice']);
+let currentView = 'login';
+function syncBrandHome(){
+  const b = $('brand-home'); if(!b) return;
+  const on = BRAND_HOME_FROM.has(currentView);
+  b.disabled = !on;
+  b.title = on ? t('result_lobby') : '';
+  if(on) b.setAttribute('aria-label', t('result_lobby')); else b.removeAttribute('aria-label');
+}
+function brandHome(){ if(BRAND_HOME_FROM.has(currentView)) enterLobby(); }
 function show(name){
+  currentView = name;
   if(name!=='game') gameViewEpoch++;
   ['login','lobby','rank','history','rules','practice','practice-game','create','wait','join','rematch','game'].forEach(s=>{
     $('s-'+s).classList.toggle('hidden', s!==name);
   });
   if(name!=='game') stopTick();
   if(name!=='practice-game') stopPracticeTick();
+  syncBrandHome();
   if(!['game','wait'].includes(name)) stopPoll();
   if(name==='lobby') startLobbyPoll(); else stopLobbyPoll();
   setChatContext(name);

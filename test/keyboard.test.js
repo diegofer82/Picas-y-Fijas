@@ -87,3 +87,24 @@ test('each rules language links to its matching strategy PDF',()=>{
   assert.match(publicHtml,/href="\/picas-y-fijas-strategy-guide-en\.pdf" download/);
   assert.match(publicHtml,/href="\/guide-strategies-picas-y-fijas-fr\.pdf" download/);
 });
+
+test('the brand returns to the lobby only from screens with nothing to lose', async () => {
+  const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
+
+  // El logo tiene que ser un boton de verdad, no un div con onclick, para que
+  // responda al teclado y lo anuncien los lectores de pantalla.
+  assert.match(html, /<button type="button" class="logo" id="brand-home" onclick="brandHome\(\)"/);
+
+  const safe = html.match(/const BRAND_HOME_FROM = new Set\(\[([^\]]*)\]\)/);
+  assert.ok(safe, 'no se encontro BRAND_HOME_FROM');
+  const screens = safe[1].split(',').map(x => x.trim().replace(/^'|'$/g, '')).filter(Boolean);
+
+  for (const s of ['history', 'rank', 'rules']) {
+    assert.ok(screens.includes(s), `${s} deberia poder volver al lobby desde el logo`);
+  }
+  // Saltarse el flujo de salida de una partida o una practica en curso le
+  // costaria el progreso al jugador.
+  for (const s of ['game', 'practice-game', 'wait', 'rematch', 'lobby', 'login']) {
+    assert.ok(!screens.includes(s), `${s} no debe volver al lobby desde el logo`);
+  }
+});
