@@ -21,7 +21,16 @@ Los dominios propios se declaran en `routes` dentro de `wrangler.jsonc` con `cus
 
 **Al declarar `routes`, Wrangler apaga la ruta `workers.dev` salvo que se ponga `"workers_dev": true`.** Es lo que dejó la dirección antigua en 404 durante unos minutos al añadir el dominio propio. La bandera debe quedarse: el Worker responde en `workers.dev` para poder redirigir 301 al dominio propio, conservando ruta y parámetros, y así los enlaces de partida antiguos siguen llevando a su partida. La constante `CANONICAL_HOST` en `src/index.js` es el destino de esa redirección.
 
-Direcciones vivas: `picasyfijas.fans` y `www.picasyfijas.fans` sirven la aplicación; `picas-y-fijas.picas-y-fijas.workers.dev` y `diegofer82.github.io/Picas-y-Fijas/` redirigen a la primera.
+Solo hay una dirección canónica: **`picasyfijas.fans`**. Todo lo demás redirige a ella con un 301 y conserva ruta y parámetros:
+
+| Dirección | Qué hace |
+| --- | --- |
+| `picasyfijas.fans` | Sirve la aplicación |
+| `www.picasyfijas.fans` | 301 al apex |
+| `picas-y-fijas.picas-y-fijas.workers.dev` | 301 al apex |
+| `diegofer82.github.io/Picas-y-Fijas/` | Página estática que redirige al apex |
+
+Los alias se enumeran uno a uno en `canonicalRedirect` (`src/index.js`) en lugar de redirigir todo lo que no sea el apex, para no dejar fuera de juego a `wrangler dev`, que sirve en `localhost`. Al añadir un dominio nuevo hay que añadirlo también ahí, y `test/routing.test.js` fija ese comportamiento.
 
 ## Cómo se juega
 

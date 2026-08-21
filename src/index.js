@@ -1297,18 +1297,28 @@ function noStoreHtml(response) {
 
 const CANONICAL_HOST = "picasyfijas.fans";
 
+// Direcciones que responden pero no son la canonica. Se enumeran una a una en
+// vez de redirigir "todo lo que no sea CANONICAL_HOST" para no dejar fuera de
+// juego a `wrangler dev`, que sirve en localhost, ni arriesgar un bucle si
+// algun dia se anade otro dominio.
+export function canonicalRedirect(url) {
+  const host = url.hostname;
+  const alias = host === `www.${CANONICAL_HOST}` || host.endsWith(".workers.dev");
+  if (!alias) return null;
+  // Se conservan ruta y parametros: los enlaces de partida antiguos deben
+  // seguir abriendo su partida.
+  const target = new URL(url);
+  target.hostname = CANONICAL_HOST;
+  target.port = "";
+  target.protocol = "https:";
+  return Response.redirect(target.toString(), 301);
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    // La direccion historica workers.dev sigue respondiendo, pero manda al
-    // dominio propio conservando ruta y parametros, para que los enlaces de
-    // partida antiguos sigan llevando a la partida correcta.
-    if (url.hostname.endsWith(".workers.dev")) {
-      url.hostname = CANONICAL_HOST;
-      url.port = "";
-      url.protocol = "https:";
-      return Response.redirect(url.toString(), 301);
-    }
+    const redirect = canonicalRedirect(url);
+    if (redirect) return redirect;
     try {
       if (url.pathname === "/api" || url.pathname.startsWith("/api/"))
         return await routeApi(request, env);
