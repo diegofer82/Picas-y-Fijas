@@ -29,3 +29,12 @@ coverage/
 Thumbs.db
 .vscode/
 .idea/
+
+# Guias de estrategia: lo que se sirve vive en public/. Estas son copias y
+# subproductos del generador de tools/pdf/.
+/*.pdf
+/output/
+/tmp/
+
+# Configuracion local de Claude Code
+.claude/

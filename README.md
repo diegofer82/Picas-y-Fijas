@@ -151,6 +151,7 @@ El rival funciona íntegramente sin conexión y no utiliza ChatGPT ni ninguna AP
 - `migrations/0001_initial.sql`: esquema reproducible de D1. No es un residuo de la migración desde Google y no debe eliminarse.
 - `test/`: pruebas automáticas de reglas, rutas, teclado y regresiones.
 - `tools/make-icons.mjs`: genera los cuatro PNG de la aplicación instalada. Se ejecuta con `npm run icons`.
+- `tools/pdf/`: los dos scripts de `reportlab` que generan las guías de estrategia en los tres idiomas. Escriben en `output/pdf/`, que está ignorado; lo que sirve la aplicación son las copias de `public/`, y hay que moverlas ahí a mano.
 - `wrangler.jsonc`: configuración de Cloudflare, recursos y variables no secretas.
 - `index.html`: aviso y redirección desde la dirección histórica de GitHub Pages.
 
@@ -181,6 +182,7 @@ Reglas que conviene respetar al tocar el diseño:
 - La marca es una cabeza de toro, por *Bulls and Cows*. Los mismos trazados viven en **tres** sitios: el logo de la cabecera y la constante `TORO_HEAD` del script, ambos en `public/index.html`, y el generador `tools/make-icons.mjs`. Si cambia la marca hay que cambiarla en los tres y volver a ejecutar `npm run icons`.
 - `tools/make-icons.mjs` no tiene dependencias: rasteriza y escribe el PNG por su cuenta porque la máquina de desarrollo no tenía ninguna herramienta de imagen instalada. Si algún día se añade `sharp` o `resvg`, ese archivo se puede sustituir por una llamada a esa herramienta sin tocar nada más.
 - Cada cambio de texto se debe revisar en español, inglés y francés a 375 px de ancho. El francés es el idioma más largo y es el primero que desborda los controles estrechos.
+- **Las guías de estrategia en PDF siguen con la paleta morada anterior.** Sus colores están escritos a mano en los scripts de `tools/pdf/` y no se repintaron con el resto de la aplicación en 2.4.0, así que un jugador que se descargue la guía se encuentra la identidad vieja. Está pendiente.
 - Los elementos con `data-i18n` reciben `textContent` al traducir, así que un SVG dentro de ellos se borraría al cambiar de idioma. **No es un impedimento para poner iconos**: se envuelve la etiqueta en su propio `<span data-i18n>` y el icono queda como hermano, fuera del alcance del traductor.
 
   ```html
