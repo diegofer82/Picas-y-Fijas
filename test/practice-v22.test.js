@@ -58,12 +58,22 @@ test('active practice can be cancelled without a result or surrendered for revie
   assert.match(practiceSource,/practice-active-actions'\)\.classList\.add\('hidden'\)/);
 });
 
-test('practice resume labels exist in Spanish, English, and French without changing the version', () => {
+test('practice resume labels exist in the three languages and the shown version follows package.json', async () => {
   assert.equal((html.match(/practice_resume_title:/g)||[]).length,3);
   assert.equal((html.match(/practice_save_lobby:/g)||[]).length,3);
   assert.equal((html.match(/practice_cancel_confirm:/g)||[]).length,3);
   assert.equal((html.match(/practice_surrender_confirm:/g)||[]).length,3);
-  assert.match(html,/const APP_VERSION = '2\.3'/);
+  // La version que se muestra en la app debe seguir a la de package.json.
+  // Antes esto fijaba '2.3' literal, asi que fallaba en cada version nueva en
+  // vez de detectar lo que de verdad importa: que las dos se desincronicen.
+  const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
+  const shown = html.match(/const APP_VERSION = '([^']+)'/);
+  assert.ok(shown, 'no se encontro APP_VERSION en public/index.html');
+  assert.equal(
+    shown[1],
+    pkg.version.split('.').slice(0, 2).join('.'),
+    `la app muestra v${shown[1]} pero package.json dice ${pkg.version}`,
+  );
 });
 
 test('practice secrets and suggestions use cryptographic randomness', () => {
