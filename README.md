@@ -178,10 +178,40 @@ Reglas que conviene respetar al tocar el diseño:
 - Tipografías: `Instrument Serif` en los títulos, `Archivo` en la interfaz y `JetBrains Mono` en códigos y cifras. El cero de JetBrains Mono lleva punto interior, que lo separa del 8 y de la O.
 - El array `COLORS` del script son las fichas de colores del modo Mastermind. No forma parte de la paleta de la interfaz y no debe repintarse con ella.
 - Una sola acción primaria por tarjeta. Lo secundario baja a `.btn.ghost` y lo terciario a `.chipbtn`.
-- La marca es una cabeza de toro, por *Bulls and Cows*. Vive en dos sitios: los trazados del logo en `public/index.html` y los del generador en `tools/make-icons.mjs`. Si cambia, hay que cambiarla en ambos y volver a ejecutar `npm run icons`.
+- La marca es una cabeza de toro, por *Bulls and Cows*. Los mismos trazados viven en **tres** sitios: el logo de la cabecera y la constante `TORO_HEAD` del script, ambos en `public/index.html`, y el generador `tools/make-icons.mjs`. Si cambia la marca hay que cambiarla en los tres y volver a ejecutar `npm run icons`.
 - `tools/make-icons.mjs` no tiene dependencias: rasteriza y escribe el PNG por su cuenta porque la máquina de desarrollo no tenía ninguna herramienta de imagen instalada. Si algún día se añade `sharp` o `resvg`, ese archivo se puede sustituir por una llamada a esa herramienta sin tocar nada más.
 - Cada cambio de texto se debe revisar en español, inglés y francés a 375 px de ancho. El francés es el idioma más largo y es el primero que desborda los controles estrechos.
-- Los elementos con `data-i18n` reciben `textContent` al traducir, así que **no pueden contener SVG ni ningún hijo**: el renderizado del idioma los borraría.
+- Los elementos con `data-i18n` reciben `textContent` al traducir, así que un SVG dentro de ellos se borraría al cambiar de idioma. **No es un impedimento para poner iconos**: se envuelve la etiqueta en su propio `<span data-i18n>` y el icono queda como hermano, fuera del alcance del traductor.
+
+  ```html
+  <button class="btn" onclick="show('create')">
+    <svg …></svg><span data-i18n="lobby_create">Crear partida</span>
+  </button>
+  ```
+
+- **Nada de `flex:1` en filas de botones con texto traducido.** Fuerza anchos iguales ignorando el contenido, y la etiqueta más larga se desborda; fue lo que sacaba «Illimité» del control segmentado en francés. Con `flex:1 1 auto` cada botón parte de su propio texto y la fila envuelve si no cabe.
+
+### La mascota
+
+El toro no es solo el logo: también es la mascota que reacciona al estado de la partida. Se dibuja desde JavaScript con `toroSVG(cara, ancho, chispas)` porque tiene que poder entrar en sitios que se pintan con `innerHTML`, como el banner de fin de partida.
+
+| Cara | Dónde aparece |
+| --- | --- |
+| `calm` | Saludo del lobby, banner de empate |
+| `alert` | Barra de turno, solo cuando te toca a ti |
+| `happy` | Banner de victoria, con chispas alrededor |
+| `sad` | Banner de derrota, sin chispas |
+
+Dos detalles que conviene no deshacer:
+
+- En la barra de turno el toro lo muestra y lo esconde **el CSS**, no el JavaScript: aparece con `.turnbar.mine` y desaparece en cuanto la clase cambia. No hace falta tocarlo al renderizar el turno.
+- Las clases internas del SVG se llaman `t-fill`, `t-line` y `t-dot`, y no `dot` a secas, porque dentro de la barra de turno `.turnbar .dot` es el punto que parpadea y le habría aplicado la animación a los ojos del toro.
+
+`ruleSVG(ancho)` dibuja el subrayado a dos pasadas que va bajo el saludo y bajo el resultado.
+
+### Volver al lobby desde la marca
+
+El logo es un `<button>` (`#brand-home`) que lleva al lobby, pero solo desde las pantallas de consulta que enumera `BRAND_HOME_FROM`: historial, ranking, reglas, crear, unirse y configuración de práctica. Desde una partida o una práctica en curso queda inerte a propósito, porque saltar al lobby se saltaría el flujo que guarda o abandona y le costaría el progreso al jugador. `test/keyboard.test.js` fija las dos mitades de esa regla.
 
 ## Modelo de datos
 
