@@ -1300,6 +1300,20 @@ export function assetPathFor(pathname) {
   return "";
 }
 
+// La administracion no debe aparecer nunca en un buscador. Su `noindex` va en
+// el HTML, pero un rastreador solo lo lee si llega a la pagina; por eso
+// robots.txt ya no le prohibe el paso. Esta cabecera dice lo mismo sin
+// depender de que alguien parsee el documento.
+function noIndex(response) {
+  const headers = new Headers(response.headers);
+  headers.set("x-robots-tag", "noindex, nofollow");
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 function noStoreHtml(response) {
   const headers = new Headers(response.headers);
   headers.set("cache-control", "no-store, max-age=0");
@@ -1423,6 +1437,7 @@ export default {
         const asset = noStoreHtml(
           await env.ASSETS.fetch(new Request(new URL(assetPath, url), request)),
         );
+        if (assetPath === "/admin.html") return noIndex(asset);
         const seo = seoFor(url.pathname);
         return seo ? localizeHtml(asset, seo) : asset;
       }

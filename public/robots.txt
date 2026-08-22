@@ -1,9 +1,15 @@
 # Picas y Fijas — https://picasyfijas.fans/
-# El juego es publico y se quiere indexar. La administracion y la API no.
+# El juego es publico y se quiere indexar.
+#
+# /admin no se prohibe aqui a proposito. Un buscador solo respeta el `noindex`
+# de una pagina si puede leerla: prohibirle el rastreo le impide verlo, y la
+# direccion puede acabar listada igual si la encuentra enlazada desde fuera.
+# Se le deja entrar para que lea el `noindex` y la descarte de verdad.
+#
+# /api si se prohibe: no devuelve HTML donde poner un `noindex`.
 
 User-agent: *
 Allow: /
-Disallow: /admin
 Disallow: /api
 
 Sitemap: https://picasyfijas.fans/sitemap.xml

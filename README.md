@@ -183,7 +183,9 @@ La aplicación adopta el idioma de la dirección: `URL_LANG` en `public/index.ht
 
 En la cabecera de `public/index.html` están además los `hreflang` de los tres idiomas más `x-default`, las tarjetas Open Graph y Twitter, y un bloque `application/ld+json` de tipo `VideoGame` con los nombres alternativos del juego. La imagen que se ve al compartir el enlace también cambia de idioma: `/en` anuncia `og-en.png` y `/fr`, `og-fr.png`. El `<noscript>` describe el juego en los tres idiomas y enlaza las guías de estrategia: es lo que lee un rastreador que no ejecuta JavaScript.
 
-`public/admin.html` lleva `noindex,nofollow,noarchive` y `robots.txt` también lo excluye: la administración nunca debe aparecer en un buscador.
+**La administración no debe aparecer nunca en un buscador, y por eso `robots.txt` no la prohíbe.** Suena al revés de lo que parece lógico. Un buscador solo respeta el `noindex` de una página si puede leerla: prohibirle el rastreo le impide verlo, y la dirección puede acabar listada igual —como URL desnuda, sin título— si la encuentra enlazada desde fuera. Y sí está enlazada desde fuera: el README de este repositorio es público y la nombra. Así que se le deja entrar para que lea el `noindex` y la descarte de verdad. `public/admin.html` lo lleva en el HTML y el Worker añade `X-Robots-Tag: noindex, nofollow` en la respuesta, para quien no parsee el documento. `Disallow: /api` sí se mantiene: la API no devuelve HTML donde poner un `noindex`.
+
+El repositorio es público y no contiene secretos: `.dev.vars` y todo lo sensible está en `.gitignore`. La seguridad no depende de esconder el código ni la dirección del panel, sino de la autenticación y del rol `admin`.
 
 ### Las reglas como página pública
 
@@ -198,6 +200,8 @@ El enlace «Cómo se juega» del juego es un `<a href>` de verdad, para que los 
 `test/seo.test.js` fija todo esto. Al añadir un idioma hay que tocar `SEO_PAGES`, `SEO_TEXT`, `RULES_PAGES`, `I18N`, `URL_LANG`, `RULES_PAGE_PATH`, los `hreflang` de la cabecera, `PAGES` en `tools/make-rules-pages.py`, `CARDS` en `tools/make-og-images.py`, `sitemap.xml` y `run_worker_first` en `wrangler.jsonc`.
 
 El sitio está dado de alta en Google Search Console como propiedad de dominio y el sitemap fue enviado el 22 de agosto de 2026.
+
+Los enlaces entrantes son la debilidad que queda. El campo *Website* del repositorio y el perfil de LinkedIn apuntan al juego desde el 22 de agosto de 2026, pero **ambos sitios marcan sus enlaces salientes como `nofollow`**, así que no transmiten señal de posicionamiento: sirven para que alguien llegue, no para subir puestos.
 
 **El `robots.txt` de Cloudflare solo es un suplente.** Mientras el proyecto no tuvo el suyo, `https://picasyfijas.fans/robots.txt` devolvía 24 líneas de comentarios de la política de señales de contenido de Cloudflare, sin una sola directiva; fue lo que hizo fallar el primer envío del sitemap. Desde que `public/robots.txt` existe, Cloudflare sirve el nuestro tal cual, sin añadir ni sustituir nada. No hay que desactivar nada en el panel, pero si algún día vuelven a aparecer esos comentarios en vez de nuestras directivas, el culpable es el `robots.txt` gestionado.
 

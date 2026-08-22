@@ -43,13 +43,22 @@ test('el Worker localiza la cabecera de las paginas de idioma', async () => {
   assert.match(source, /seo \? localizeHtml\(asset, seo\) : asset/);
 });
 
-test('robots.txt abre el juego, cierra administracion y anuncia el sitemap', async () => {
+test('robots.txt abre el juego, cierra la API y anuncia el sitemap', async () => {
   const robots = await read('public/robots.txt');
   assert.match(robots, /User-agent: \*/);
   assert.match(robots, /^Allow: \/$/m);
-  assert.match(robots, /^Disallow: \/admin$/m);
   assert.match(robots, /^Disallow: \/api$/m);
   assert.match(robots, /^Sitemap: https:\/\/picasyfijas\.fans\/sitemap\.xml$/m);
+
+  // /admin NO se prohibe, y no es un descuido: un buscador solo respeta el
+  // `noindex` de una pagina si puede leerla. Prohibir el rastreo le impide
+  // verlo y la direccion puede acabar listada igual si la encuentra enlazada
+  // desde fuera, como en el README publico del repositorio.
+  assert.equal(
+    /^Disallow: \/admin\s*$/m.test(robots),
+    false,
+    'prohibir /admin impediria que el buscador lea su noindex',
+  );
 });
 
 test('el sitemap lista las tres direcciones con sus alternativas', async () => {
@@ -92,9 +101,14 @@ test('quien llega a /en o /fr ve la aplicacion en ese idioma', async () => {
   assert.match(html, /let lang = URL_LANG \|\| localStorage\.getItem\('pf_lang'\) \|\| 'es';/);
 });
 
-test('la administracion no se indexa', async () => {
+test('la administracion no se indexa, por dos caminos', async () => {
   const admin = await read('public/admin.html');
   assert.match(admin, /<meta name="robots" content="noindex,nofollow,noarchive">/);
+
+  // El HTML lo dice, pero la cabecera lo repite para quien no lo parsee.
+  const source = await read('src/index.js');
+  assert.match(source, /headers\.set\("x-robots-tag", "noindex, nofollow"\)/);
+  assert.match(source, /if \(assetPath === "\/admin\.html"\) return noIndex\(asset\);/);
 });
 
 test('cada idioma comparte su propia tarjeta social de 1200x630', async () => {
