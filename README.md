@@ -28,6 +28,7 @@ Solo hay una dirección canónica: **`picasyfijas.fans`**. Todo lo demás rediri
 | `picasyfijas.fans` | Sirve la aplicación (español) |
 | `picasyfijas.fans/en`, `/fr`, `/es` | La misma aplicación con la cabecera traducida, para los buscadores |
 | `picasyfijas.fans/como-se-juega`, `/en/how-to-play`, `/fr/comment-jouer` | Las reglas como página pública, una por idioma |
+| `picasyfijas.fans/instalar`, `/en/install`, `/fr/installer` | La guía para añadir el juego a la pantalla de inicio, una por idioma |
 | `www.picasyfijas.fans` | 301 al apex |
 | `picas-y-fijas.picas-y-fijas.workers.dev` | 301 al apex |
 | `diegofer82.github.io/Picas-y-Fijas/` | Página estática que redirige al apex |
@@ -143,12 +144,14 @@ El rival funciona íntegramente sin conexión y no utiliza ChatGPT ni ninguna AP
 ## Arquitectura y archivos
 
 - `public/index.html`: interfaz completa del juego, estilos, traducciones y cliente API.
-- `public/manifest.webmanifest`, `public/sw.js`: instalación como PWA y service worker de notificaciones.
+- `public/manifest.webmanifest`, `public/sw.js`: instalación como PWA y service worker de notificaciones. La lista `screenshots` del manifest **es generada**: la escribe `tools/make-screenshots.mjs`.
+- `public/screenshots/`: las capturas que Chrome enseña al ofrecer la instalación. **Son generadas: no se editan a mano.**
 - `public/icon-192.png`, `public/icon-512.png`, `public/icon-maskable-512.png`, `public/apple-touch-icon.png`: iconos de la aplicación instalada.
 - `public/computer-ai.js`: rival local de práctica, generación de candidatos y estrategias por dificultad.
 - `public/admin.html`: panel reservado de administración.
 - `public/robots.txt`, `public/sitemap.xml`: indexación. Abren el juego a los buscadores, cierran `/admin` y `/api` y declaran las tres direcciones de idioma.
 - `public/rules-es.html`, `public/rules-en.html`, `public/rules-fr.html`: las reglas como página pública. **Son generadas: no se editan a mano.** Salen de `RULES`, en `public/index.html`, con `python tools/make-rules-pages.py`.
+- `public/install-es.html`, `public/install-en.html`, `public/install-fr.html`: la guía de instalación como página pública. **Son generadas: no se editan a mano.** Salen de las claves `install_*` y de `INSTALL_ART`, en `public/index.html`, con `python tools/make-install-pages.py`.
 - `public/og-es.png`, `public/og-en.png`, `public/og-fr.png`: la tarjeta social de 1200×630 que se ve al compartir el enlace, una por idioma. Se generan con `python tools/make-og-images.py` y necesitan `python -m pip install pillow`.
 - `src/index.js`: Worker, rutas, API, acceso a D1 y operaciones administrativas.
 - `src/game.js`: reglas puras, validaciones, cronómetro y sanitización del estado.
@@ -157,6 +160,9 @@ El rival funciona íntegramente sin conexión y no utiliza ChatGPT ni ninguna AP
 - `test/`: pruebas automáticas de reglas, rutas, teclado y regresiones.
 - `tools/make-icons.mjs`: genera los cuatro PNG de la aplicación instalada. Se ejecuta con `npm run icons`.
 - `tools/make-rules-pages.py`: convierte `RULES` en las tres páginas públicas de reglas. El texto no se duplica: la única fuente sigue siendo el juego.
+- `tools/make-install-pages.py`: convierte los pasos de instalación del juego en las tres páginas públicas de la guía. Tampoco duplica nada: lee `I18N` e `INSTALL_ART`.
+- `tools/site_style.py`: la piel común de las páginas públicas —colores, tipografías y tarjetas del juego—. La usan los dos generadores anteriores para que no se separen con el tiempo.
+- `tools/make-screenshots.mjs`: toma con Chrome sin ventana las capturas del juego real que Chrome enseña al ofrecer instalarlo, y reescribe con ellas la lista `screenshots` del manifest. Necesita el servidor local en marcha. Se ejecuta con `npm run screenshots`.
 - `tools/make-og-images.py`: genera las tres tarjetas sociales. Dibuja la marca con las tipografías de reserva que ya declara el CSS del juego —Georgia por 'Instrument Serif', Segoe UI por 'Archivo', Consolas por 'JetBrains Mono'—, así que no descarga ninguna fuente. Solo hay que volver a ejecutarlo si cambia la marca o el lema.
 - `tools/pdf/`: los scripts de `reportlab` que generan las guías de estrategia en los tres idiomas. `python tools/pdf/build.py` las genera y las copia a `public/` con los nombres que enlaza la pantalla de reglas. Necesita `python -m pip install reportlab`.
 - `wrangler.jsonc`: configuración de Cloudflare, recursos y variables no secretas.
@@ -197,13 +203,49 @@ Ahora tienen dirección propia: `/como-se-juega`, `/en/how-to-play` y `/fr/comme
 
 El enlace «Cómo se juega» del juego es un `<a href>` de verdad, para que los buscadores lo sigan, pero conserva su `onclick` y abre el panel de siempre sin navegar. `applyI18n` le cambia el destino con el idioma.
 
-`test/seo.test.js` fija todo esto. Al añadir un idioma hay que tocar `SEO_PAGES`, `SEO_TEXT`, `RULES_PAGES`, `I18N`, `URL_LANG`, `RULES_PAGE_PATH`, los `hreflang` de la cabecera, `PAGES` en `tools/make-rules-pages.py`, `CARDS` en `tools/make-og-images.py`, `sitemap.xml` y `run_worker_first` en `wrangler.jsonc`.
+`test/seo.test.js` fija todo esto. Al añadir un idioma hay que tocar `SEO_PAGES`, `SEO_TEXT`, `RULES_PAGES`, `I18N`, `URL_LANG`, `RULES_PAGE_PATH`, los `hreflang` de la cabecera, `PAGES` en `tools/make-rules-pages.py`, `INSTALL_PAGES`, `INSTALL_PAGE_PATH`, las claves `install_*`, `PAGES` en `tools/make-install-pages.py`, `CARDS` en `tools/make-og-images.py`, `sitemap.xml` y `run_worker_first` en `wrangler.jsonc`.
 
 El sitio está dado de alta en Google Search Console como propiedad de dominio y el sitemap fue enviado el 22 de agosto de 2026.
 
 Los enlaces entrantes son la debilidad que queda. El campo *Website* del repositorio y el perfil de LinkedIn apuntan al juego desde el 22 de agosto de 2026, pero **ambos sitios marcan sus enlaces salientes como `nofollow`**, así que no transmiten señal de posicionamiento: sirven para que alguien llegue, no para subir puestos.
 
 **El `robots.txt` de Cloudflare solo es un suplente.** Mientras el proyecto no tuvo el suyo, `https://picasyfijas.fans/robots.txt` devolvía 24 líneas de comentarios de la política de señales de contenido de Cloudflare, sin una sola directiva; fue lo que hizo fallar el primer envío del sitemap. Desde que `public/robots.txt` existe, Cloudflare sirve el nuestro tal cual, sin añadir ni sustituir nada. No hay que desactivar nada en el panel, pero si algún día vuelven a aparecer esos comentarios en vez de nuestras directivas, el culpable es el `robots.txt` gestionado.
+
+## Instalarlo como app
+
+El juego siempre fue instalable —manifest, service worker e iconos están desde el principio—, pero casi nadie lo instalaba: Android esconde «Instalar aplicación» dentro del menú del navegador y el iPhone no lo ofrece nunca. Era la duda más repetida de quien juega desde el móvil.
+
+Las dos plataformas se resuelven de forma distinta, y por eso el código las separa. La tarjeta del lobby (`install-card`) se adapta:
+
+| Situación | Qué ofrece |
+| --- | --- |
+| Android o escritorio, con Chrome o Edge | Botón **Instalar la app**: abre el diálogo nativo del navegador. Un toque, sin explicaciones |
+| iPhone o iPad, con Safari | Botón **Ver cómo se hace**: despliega los tres pasos dibujados (Compartir → Añadir a pantalla de inicio → Añadir) |
+| Android sin el evento del navegador (Firefox) | Los mismos tres pasos, con el menú ⋮ |
+| Navegador incrustado (Instagram, Facebook, TikTok) o Chrome y Firefox en iOS | Ahí no se puede instalar: botón **Copiar el enlace** y aviso de abrirlo en Safari o en Chrome |
+| Ya instalado (`display-mode: standalone`) | Nada. La tarjeta no aparece |
+
+**Android solo instala de un toque si guardamos el evento.** Chrome dispara `beforeinstallprompt` una vez; si nadie lo captura se queda con su aviso mínimo, que casi nadie ve. El juego lo intercepta, lo guarda en `deferredInstall` y lo dispara desde su propio botón. Si el jugador cancela el diálogo, el evento se conserva para poder reintentarlo; `appinstalled` retira la tarjeta.
+
+**En el iPhone no hay ninguna API, y esa carencia es justo el mejor argumento para instalar.** Safari no permite notificaciones a una pestaña normal: los avisos de turno solo existen dentro del juego añadido a la pantalla de inicio. Antes, la tarjeta de notificaciones decía «este navegador no admite notificaciones» y dejaba al jugador en un callejón sin salida; ahora, cuando detecta un iPhone sin instalar, señala la pantalla de inicio (`experience_ios_install`). Es la misma información, convertida en una salida.
+
+La tarjeta se puede descartar con «Ahora no»: guarda la fecha en `pf_install_hide` y no vuelve en 14 días. El enlace discreto del pie de la pantalla de entrada no se descarta nunca —es la puerta para quien todavía no se ha registrado— y solo aparece en un aparato que pueda instalar.
+
+Los dibujos de los pasos son SVG en `INSTALL_ART`, dentro de `public/index.html`: la barra de Safari, la hoja de compartir, el menú ⋮ y el diálogo de confirmación. No son capturas de iOS ni de Android a propósito, porque envejecerían con cada versión del sistema; son formas reconocibles con la paleta del juego.
+
+### La guía de instalación como página pública
+
+Igual que las reglas, los pasos tienen dirección propia: `/instalar`, `/en/install` y `/fr/installer`. Sirven para enlazarlas desde la tarjeta, para pasárselas a quien pregunte y para que un buscador encuentre la pregunta que la gente escribe de verdad («cómo instalar el juego en el iPhone»).
+
+**No se editan a mano.** Las genera `python tools/make-install-pages.py`, que lee del juego las claves `install_*` de `I18N` y los dibujos de `INSTALL_ART`. `test/install.test.js` compara el texto de cada página con esas claves y falla si alguien cambia los pasos y no vuelve a generarlas.
+
+### Las capturas del diálogo de instalación
+
+Con `screenshots` en el manifest, Chrome en Android abandona la barrita mínima y abre el diálogo grande, con imágenes y descripción. Las de `public/screenshots/` son del juego de verdad, no montajes: `node tools/make-screenshots.mjs` levanta Chrome sin ventana, conduce la aplicación por su protocolo de depuración —entra, monta una práctica con tres intentos— y guarda cuatro capturas; después reescribe la lista `screenshots` del manifest con lo que acaba de tomar, para que el manifest nunca hable de una imagen que no existe.
+
+**Necesita el servidor local en marcha.** El script apunta por defecto a `http://127.0.0.1:8788`; `PF_URL` lo cambia y `CHROME_PATH` señala otro navegador.
+
+Chrome descarta las capturas que se salen de sus límites —entre 320 y 3840 px, proporción máxima de 2,3 y la misma forma dentro de cada `form_factor`—, así que `test/install.test.js` los comprueba leyendo la cabecera de los propios PNG.
 
 ## Identidad visual
 
@@ -309,6 +351,8 @@ Comandos disponibles:
 pnpm test       # todas las pruebas
 pnpm run check  # sintaxis y pruebas
 pnpm run deploy # despliegue manual excepcional
+pnpm run pages       # regenera las paginas de reglas y de instalacion
+pnpm run screenshots # rehace las capturas del manifest (con el servidor en marcha)
 pnpm run db:local
 pnpm run db:remote
 ```
