@@ -1279,9 +1279,21 @@ async function routeApi(request, env) {
   return json(result);
 }
 
+// Las reglas ya estaban escritas y traducidas dentro del juego, pero solo se
+// veian al pulsar "Como se juega", donde ningun buscador las lee. Estas tres
+// paginas las publican con direccion propia. Las genera
+// `tools/make-rules-pages.py` a partir de `RULES`, que sigue siendo la unica
+// fuente del texto.
+const RULES_PAGES = {
+  "/como-se-juega": "/rules-es.html",
+  "/en/how-to-play": "/rules-en.html",
+  "/fr/comment-jouer": "/rules-fr.html",
+};
+
 export function assetPathFor(pathname) {
   if (pathname === "/") return "/index.html";
   if (pathname === "/admin") return "/admin.html";
+  if (RULES_PAGES[pathname]) return RULES_PAGES[pathname];
   // Las direcciones por idioma sirven el mismo documento; lo unico que cambia
   // es la cabecera que reescribe `localizeHtml`.
   if (SEO_PAGES[pathname]) return "/index.html";

@@ -27,6 +27,7 @@ Solo hay una dirección canónica: **`picasyfijas.fans`**. Todo lo demás rediri
 | --- | --- |
 | `picasyfijas.fans` | Sirve la aplicación (español) |
 | `picasyfijas.fans/en`, `/fr`, `/es` | La misma aplicación con la cabecera traducida, para los buscadores |
+| `picasyfijas.fans/como-se-juega`, `/en/how-to-play`, `/fr/comment-jouer` | Las reglas como página pública, una por idioma |
 | `www.picasyfijas.fans` | 301 al apex |
 | `picas-y-fijas.picas-y-fijas.workers.dev` | 301 al apex |
 | `diegofer82.github.io/Picas-y-Fijas/` | Página estática que redirige al apex |
@@ -147,6 +148,7 @@ El rival funciona íntegramente sin conexión y no utiliza ChatGPT ni ninguna AP
 - `public/computer-ai.js`: rival local de práctica, generación de candidatos y estrategias por dificultad.
 - `public/admin.html`: panel reservado de administración.
 - `public/robots.txt`, `public/sitemap.xml`: indexación. Abren el juego a los buscadores, cierran `/admin` y `/api` y declaran las tres direcciones de idioma.
+- `public/rules-es.html`, `public/rules-en.html`, `public/rules-fr.html`: las reglas como página pública. **Son generadas: no se editan a mano.** Salen de `RULES`, en `public/index.html`, con `python tools/make-rules-pages.py`.
 - `public/og-es.png`, `public/og-en.png`, `public/og-fr.png`: la tarjeta social de 1200×630 que se ve al compartir el enlace, una por idioma. Se generan con `python tools/make-og-images.py` y necesitan `python -m pip install pillow`.
 - `src/index.js`: Worker, rutas, API, acceso a D1 y operaciones administrativas.
 - `src/game.js`: reglas puras, validaciones, cronómetro y sanitización del estado.
@@ -154,6 +156,7 @@ El rival funciona íntegramente sin conexión y no utiliza ChatGPT ni ninguna AP
 - `migrations/0001_initial.sql`: esquema reproducible de D1. No es un residuo de la migración desde Google y no debe eliminarse.
 - `test/`: pruebas automáticas de reglas, rutas, teclado y regresiones.
 - `tools/make-icons.mjs`: genera los cuatro PNG de la aplicación instalada. Se ejecuta con `npm run icons`.
+- `tools/make-rules-pages.py`: convierte `RULES` en las tres páginas públicas de reglas. El texto no se duplica: la única fuente sigue siendo el juego.
 - `tools/make-og-images.py`: genera las tres tarjetas sociales. Dibuja la marca con las tipografías de reserva que ya declara el CSS del juego —Georgia por 'Instrument Serif', Segoe UI por 'Archivo', Consolas por 'JetBrains Mono'—, así que no descarga ninguna fuente. Solo hay que volver a ejecutarlo si cambia la marca o el lema.
 - `tools/pdf/`: los scripts de `reportlab` que generan las guías de estrategia en los tres idiomas. `python tools/pdf/build.py` las genera y las copia a `public/` con los nombres que enlaza la pantalla de reglas. Necesita `python -m pip install reportlab`.
 - `wrangler.jsonc`: configuración de Cloudflare, recursos y variables no secretas.
@@ -182,7 +185,17 @@ En la cabecera de `public/index.html` están además los `hreflang` de los tres 
 
 `public/admin.html` lleva `noindex,nofollow,noarchive` y `robots.txt` también lo excluye: la administración nunca debe aparecer en un buscador.
 
-`test/seo.test.js` fija todo esto. Al añadir un idioma hay que tocar `SEO_PAGES`, `SEO_TEXT`, `I18N`, `URL_LANG`, los `hreflang` de la cabecera, `sitemap.xml` y `run_worker_first` en `wrangler.jsonc`.
+### Las reglas como página pública
+
+El punto débil que quedaba no era técnico sino de contenido: un rastreador que ejecuta el JavaScript solo veía la pantalla de acceso, unas sesenta palabras. Las reglas —unas 360 palabras por idioma, ya escritas y traducidas— vivían dentro de `RULES`, en `public/index.html`, y solo aparecían al pulsar «Cómo se juega», donde ningún buscador las lee.
+
+Ahora tienen dirección propia: `/como-se-juega`, `/en/how-to-play` y `/fr/comment-jouer`. Son páginas estáticas, sin una línea de JavaScript, con la marca del juego y un enlace de vuelta a jugar.
+
+**No se editan a mano.** Las genera `python tools/make-rules-pages.py` leyendo `RULES`, que sigue siendo la única fuente del texto. Si alguien cambia las reglas del juego y no vuelve a generarlas, `test/seo.test.js` falla comparando el texto visible de cada página con su bloque de `RULES`. Al tocar las reglas hay que regenerar y confirmar las tres páginas.
+
+El enlace «Cómo se juega» del juego es un `<a href>` de verdad, para que los buscadores lo sigan, pero conserva su `onclick` y abre el panel de siempre sin navegar. `applyI18n` le cambia el destino con el idioma.
+
+`test/seo.test.js` fija todo esto. Al añadir un idioma hay que tocar `SEO_PAGES`, `SEO_TEXT`, `RULES_PAGES`, `I18N`, `URL_LANG`, `RULES_PAGE_PATH`, los `hreflang` de la cabecera, `PAGES` en `tools/make-rules-pages.py`, `CARDS` en `tools/make-og-images.py`, `sitemap.xml` y `run_worker_first` en `wrangler.jsonc`.
 
 El sitio está dado de alta en Google Search Console como propiedad de dominio y el sitemap fue enviado el 22 de agosto de 2026.
 

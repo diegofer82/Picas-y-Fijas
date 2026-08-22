@@ -116,3 +116,55 @@ test('el Worker cambia tambien la tarjeta social por idioma', async () => {
   assert.match(source, /meta\[property="og:image"\]', set\("content", seo\.image\)/);
   assert.match(source, /meta\[name="twitter:image"\]', set\("content", seo\.image\)/);
 });
+
+test('las reglas tienen pagina propia y rastreable en cada idioma', async () => {
+  const routes = {
+    '/como-se-juega': 'rules-es.html',
+    '/en/how-to-play': 'rules-en.html',
+    '/fr/comment-jouer': 'rules-fr.html',
+  };
+  for (const [route, file] of Object.entries(routes))
+    assert.equal(assetPathFor(route), `/${file}`, `${route} deberia servir ${file}`);
+
+  const sitemap = await read('public/sitemap.xml');
+  for (const route of Object.keys(routes))
+    assert.ok(sitemap.includes(`<loc>https://picasyfijas.fans${route}</loc>`), `falta ${route}`);
+});
+
+test('cada pagina de reglas lleva el texto del juego, sin JavaScript', async () => {
+  // La unica fuente del texto es RULES, dentro del juego. Si alguien edita las
+  // reglas y no vuelve a generar las paginas, esta prueba lo detiene.
+  const game = await read('public/index.html');
+  const block = game.slice(game.indexOf('const RULES = {'));
+  const words = (html) => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+
+  for (const [lang, route] of [
+    ['es', '/como-se-juega'],
+    ['en', '/en/how-to-play'],
+    ['fr', '/fr/comment-jouer'],
+  ]) {
+    const page = await read(`public/rules-${lang}.html`);
+    const opening = `\n  ${lang}:` + '`';
+    const from = block.indexOf(opening);
+    assert.notEqual(from, -1, `no encuentro RULES.${lang}`);
+    const source = block.slice(from + opening.length, block.indexOf('`', from + opening.length));
+    assert.ok(
+      words(page).includes(words(source)),
+      `rules-${lang}.html no coincide con RULES.${lang}: vuelve a ejecutar tools/make-rules-pages.py`,
+    );
+
+    assert.ok(page.includes(`<html lang="${lang}">`));
+    assert.ok(page.includes(`<link rel="canonical" href="https://picasyfijas.fans${route}">`));
+    assert.match(page, /<h1>/);
+    // Sin <script> ejecutable: la pagina debe leerse aunque no haya JavaScript.
+    assert.equal(page.match(/<script(?![^>]*application\/ld\+json)/), null);
+  }
+});
+
+test('el juego enlaza sus reglas con un enlace de verdad', async () => {
+  const game = await read('public/index.html');
+  const links = game.match(/<a class="link" data-rules-link href="\/como-se-juega"/g);
+  assert.equal(links.length, 2, 'las dos entradas a las reglas deben ser enlaces');
+  assert.match(game, /RULES_PAGE_PATH = \{es:'\/como-se-juega', en:'\/en\/how-to-play', fr:'\/fr\/comment-jouer'\}/);
+  assert.match(game, /document\.querySelectorAll\('\[data-rules-link\]'\)\.forEach\(a=>\{ a\.href = rulesHref; \}\)/);
+});

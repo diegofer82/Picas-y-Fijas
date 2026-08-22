@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12100C">
+<title>How to play Bulls and Cows · Picas y Fijas rules</title>
+<meta name="description" content="The full rules of Picas y Fijas, the classic Bulls and Cows deduction game: what the Fixed and Present clues mean, how to set up a match and how to win. Free strategy guide in PDF.">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<link rel="canonical" href="https://picasyfijas.fans/en/how-to-play">
+<link rel="alternate" hreflang="es" href="https://picasyfijas.fans/como-se-juega">
+<link rel="alternate" hreflang="en" href="https://picasyfijas.fans/en/how-to-play">
+<link rel="alternate" hreflang="fr" href="https://picasyfijas.fans/fr/comment-jouer">
+<link rel="alternate" hreflang="x-default" href="https://picasyfijas.fans/como-se-juega">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Picas y Fijas">
+<meta property="og:title" content="How to play Bulls and Cows · Picas y Fijas rules">
+<meta property="og:description" content="The full rules of Picas y Fijas, the classic Bulls and Cows deduction game: what the Fixed and Present clues mean, how to set up a match and how to win. Free strategy guide in PDF.">
+<meta property="og:url" content="https://picasyfijas.fans/en/how-to-play">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://picasyfijas.fans/og-en.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="How to play Bulls and Cows · Picas y Fijas rules">
+<meta name="twitter:description" content="The full rules of Picas y Fijas, the classic Bulls and Cows deduction game: what the Fixed and Present clues mean, how to set up a match and how to win. Free strategy guide in PDF.">
+<meta name="twitter:image" content="https://picasyfijas.fans/og-en.png">
+<link rel="icon" href="/icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#12100C;--panel:#231D16;--panel-2:#1A150F;--edge:#3B3229;
+    --text:#F5EFE3;--muted:#A3947E;--accent:#5B8DEF;--r:14px}
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:'Archivo',system-ui,-apple-system,sans-serif;
+    background:radial-gradient(1200px 600px at 80% -10%,rgba(91,141,239,.10),transparent 60%),
+      radial-gradient(900px 500px at -10% 110%,rgba(224,104,90,.10),transparent 55%),var(--ink);
+    color:var(--text);min-height:100dvh}
+  .wrap{max-width:640px;margin:0 auto;padding:20px 18px 40px}
+  .brand{display:flex;align-items:center;gap:12px;margin:6px 0 22px}
+  .logo{width:46px;height:46px;border-radius:13px;flex:0 0 auto;overflow:hidden;
+    background:linear-gradient(150deg,#2C241A,#171208);border:1px solid #4A3E30;display:block;
+    box-shadow:0 8px 22px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,236,206,.09)}
+  .logo img{width:100%;height:100%;display:block}
+  .brand a.home{font-family:'Instrument Serif',Georgia,serif;font-size:25px;color:var(--text);
+    text-decoration:none;line-height:1.05}
+  .brand .sub{font-size:12px;color:var(--muted);margin-top:2px;letter-spacing:.14em;text-transform:uppercase}
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--edge);border-radius:var(--r);padding:22px;margin-bottom:16px;
+    box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  h1{font-family:'Instrument Serif',Georgia,serif;margin:0 0 10px;font-size:27px;font-weight:400;line-height:1.15}
+  .intro{color:var(--muted);font-size:14px;line-height:1.6;margin:0 0 18px}
+  .intro b{color:var(--text);font-weight:600}
+  .rules{color:var(--text);font-size:14px;line-height:1.6}
+  .rules ol{padding-left:20px;margin:0 0 6px}
+  .rules li{margin-bottom:11px}
+  .rules ul{padding-left:18px;margin:6px 0;color:var(--muted);font-size:13px}
+  .rules ul li{margin-bottom:4px}
+  .rules b{color:var(--text)}
+  .note{background:#0D0B07;border:1px solid var(--edge);border-left:3px solid var(--accent);
+    border-radius:10px;padding:12px 14px;margin:12px 0;font-size:13px;color:var(--muted)}
+  .note b{color:var(--text)}
+  .strategy-download{margin-top:16px;text-align:center;border-color:rgba(91,141,239,.45)!important;
+    background:rgba(91,141,239,.08)!important}
+  .strategy-download a{display:inline-block;margin-top:8px;color:var(--accent);font-weight:700;text-decoration:none}
+  .strategy-download a:hover,.strategy-download a:focus-visible{text-decoration:underline}
+  .btn{display:block;width:100%;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:600;
+    background:var(--accent);color:#0A1020;text-align:center;text-decoration:none;margin-top:20px}
+  .langs{display:flex;gap:14px;justify-content:center;margin:0 0 14px;font-size:13px}
+  .langs a{color:var(--accent);text-decoration:none}
+  .langs a:hover{text-decoration:underline}
+  .langs span{color:var(--muted)}
+  .foot{text-align:center;color:var(--muted);font-size:11px;letter-spacing:.05em}
+  .foot a{color:var(--muted)}
+</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://picasyfijas.fans/en"},{"@type":"ListItem","position":2,"name":"How to play","item":"https://picasyfijas.fans/en/how-to-play"}]}</script>
+</head>
+<body>
+<div class="wrap">
+  <header class="brand">
+    <a class="logo" href="/en"><img src="/icon-192.png" alt="Picas y Fijas" width="46" height="46"></a>
+    <div>
+      <a class="home" href="/en">Picas y Fijas</a>
+      <div class="sub">Online deduction duel</div>
+    </div>
+  </header>
+  <main class="card">
+    <h1>How to play Picas y Fijas</h1>
+    <p class="intro">Picas y Fijas is a two-player deduction game, known in English as <b>Bulls and Cows</b> and closely related to <b>Mastermind</b>. Each player hides a secret code and the first to crack their opponent's code wins. It is free and runs in the browser, with nothing to install.</p>
+    <div class="rules"><ol>
+    <li>Each player registers a <b>username</b> and protects it with a <b>4-to-8-digit PIN</b>. The name is also used in the ranking.</li>
+    <li>One player <b>creates the game</b> and picks the rules:
+      <ul>
+        <li><b>Mode</b>: numbers 0-9 or <b>colors</b> (4, 6 or 8 colors, Mastermind style).</li>
+        <li><b>Positions</b>: 3, 4, 5 or 6.</li>
+        <li><b>Repeats</b>: allowed or not.</li>
+        <li><b>Attempt limit</b>: none, 6 or 10 per player.</li>
+        <li><b>Time per turn</b>: none, 30 s, 60 s or 2 min.</li>
+        <li><b>Visibility</b>: public (lobby) or private (code only).</li>
+        <li><b>Reveal codes at the end</b>: off by default; when enabled, each player sees their opponent's secret after the game.</li>
+      </ul>
+      They set their secret code and get a <b>4-character game code</b> to share.</li>
+    <li>The other player <b>joins</b> from the lobby or with the code, and sets their own secret with the same rules.</li>
+    <li>Players take turns guessing. Each guess is answered with <span class="pill f">Fixed</span> and <span class="pill p">Present</span>.</li>
+    <li>Whoever <b>cracks the opponent's code first</b> wins. If the player who started cracks it, the other gets one <b>last try to tie</b>. With an attempt limit, if nobody cracks it → <b>draw</b>.</li>
+    <li>When it ends: a <b>Rematch</b> button (same settings, same opponent). When one proposes it, the other sees <b>“Go to rematch”</b>.</li>
+  </ol>
+  <div class="note"><b>Fixed (F)</b> = correct digit in the <b>correct position</b>. &nbsp; <b>Present (P)</b> = correct digit in a <b>different position</b>.</div>
+  <div class="note"><b>Colors mode:</b> same F/P scoring, colored pegs instead of digits.</div>
+  <div class="note"><b>Asynchronous play:</b> without a turn timer, you can return to the lobby and continue minutes or hours later; your opponent can also play when available.</div>
+  <div class="note"><b>Timer:</b> when it reaches 0, the turn automatically passes to the opponent. If someone returns to the lobby, the clock stops until both return. A temporary manual pause is only available in timed games.</div>
+  <div class="note"><b>Leaving or cancelling:</b> returning to the lobby does not delete the game. The creator can cancel a game that is still waiting for an opponent. Abandoning a game in progress awards the win to the opponent and records a loss.</div>
+  <div class="note strategy-download"><b>Made it to the end? You already have an advantage.</b><br>Discover strategies for every game type.<br><a href="/picas-y-fijas-strategy-guide-en.pdf" download>📘 Download the strategy guide (PDF)</a></div></div>
+    <a class="btn" href="/en">Play now</a>
+  </main>
+  <nav class="langs"><a href="/como-se-juega" hreflang="es">Español</a><span>English</span><a href="/fr/comment-jouer" hreflang="fr">Français</a></nav>
+  <footer class="foot"><a href="/en">Back to the game</a> · picasyfijas.fans</footer>
+</div>
+</body>
+</html>

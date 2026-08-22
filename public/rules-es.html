@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12100C">
+<title>Cómo se juega a Picas y Fijas · reglas de Bulls and Cows</title>
+<meta name="description" content="Las reglas completas de Picas y Fijas, el clásico Bulls and Cows: qué es una fija, qué es una pica, cómo se crea una partida y cómo se gana. Con guía de estrategias en PDF.">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<link rel="canonical" href="https://picasyfijas.fans/como-se-juega">
+<link rel="alternate" hreflang="es" href="https://picasyfijas.fans/como-se-juega">
+<link rel="alternate" hreflang="en" href="https://picasyfijas.fans/en/how-to-play">
+<link rel="alternate" hreflang="fr" href="https://picasyfijas.fans/fr/comment-jouer">
+<link rel="alternate" hreflang="x-default" href="https://picasyfijas.fans/como-se-juega">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Picas y Fijas">
+<meta property="og:title" content="Cómo se juega a Picas y Fijas · reglas de Bulls and Cows">
+<meta property="og:description" content="Las reglas completas de Picas y Fijas, el clásico Bulls and Cows: qué es una fija, qué es una pica, cómo se crea una partida y cómo se gana. Con guía de estrategias en PDF.">
+<meta property="og:url" content="https://picasyfijas.fans/como-se-juega">
+<meta property="og:locale" content="es_ES">
+<meta property="og:image" content="https://picasyfijas.fans/og-es.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Cómo se juega a Picas y Fijas · reglas de Bulls and Cows">
+<meta name="twitter:description" content="Las reglas completas de Picas y Fijas, el clásico Bulls and Cows: qué es una fija, qué es una pica, cómo se crea una partida y cómo se gana. Con guía de estrategias en PDF.">
+<meta name="twitter:image" content="https://picasyfijas.fans/og-es.png">
+<link rel="icon" href="/icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#12100C;--panel:#231D16;--panel-2:#1A150F;--edge:#3B3229;
+    --text:#F5EFE3;--muted:#A3947E;--accent:#5B8DEF;--r:14px}
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:'Archivo',system-ui,-apple-system,sans-serif;
+    background:radial-gradient(1200px 600px at 80% -10%,rgba(91,141,239,.10),transparent 60%),
+      radial-gradient(900px 500px at -10% 110%,rgba(224,104,90,.10),transparent 55%),var(--ink);
+    color:var(--text);min-height:100dvh}
+  .wrap{max-width:640px;margin:0 auto;padding:20px 18px 40px}
+  .brand{display:flex;align-items:center;gap:12px;margin:6px 0 22px}
+  .logo{width:46px;height:46px;border-radius:13px;flex:0 0 auto;overflow:hidden;
+    background:linear-gradient(150deg,#2C241A,#171208);border:1px solid #4A3E30;display:block;
+    box-shadow:0 8px 22px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,236,206,.09)}
+  .logo img{width:100%;height:100%;display:block}
+  .brand a.home{font-family:'Instrument Serif',Georgia,serif;font-size:25px;color:var(--text);
+    text-decoration:none;line-height:1.05}
+  .brand .sub{font-size:12px;color:var(--muted);margin-top:2px;letter-spacing:.14em;text-transform:uppercase}
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--edge);border-radius:var(--r);padding:22px;margin-bottom:16px;
+    box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  h1{font-family:'Instrument Serif',Georgia,serif;margin:0 0 10px;font-size:27px;font-weight:400;line-height:1.15}
+  .intro{color:var(--muted);font-size:14px;line-height:1.6;margin:0 0 18px}
+  .intro b{color:var(--text);font-weight:600}
+  .rules{color:var(--text);font-size:14px;line-height:1.6}
+  .rules ol{padding-left:20px;margin:0 0 6px}
+  .rules li{margin-bottom:11px}
+  .rules ul{padding-left:18px;margin:6px 0;color:var(--muted);font-size:13px}
+  .rules ul li{margin-bottom:4px}
+  .rules b{color:var(--text)}
+  .note{background:#0D0B07;border:1px solid var(--edge);border-left:3px solid var(--accent);
+    border-radius:10px;padding:12px 14px;margin:12px 0;font-size:13px;color:var(--muted)}
+  .note b{color:var(--text)}
+  .strategy-download{margin-top:16px;text-align:center;border-color:rgba(91,141,239,.45)!important;
+    background:rgba(91,141,239,.08)!important}
+  .strategy-download a{display:inline-block;margin-top:8px;color:var(--accent);font-weight:700;text-decoration:none}
+  .strategy-download a:hover,.strategy-download a:focus-visible{text-decoration:underline}
+  .btn{display:block;width:100%;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:600;
+    background:var(--accent);color:#0A1020;text-align:center;text-decoration:none;margin-top:20px}
+  .langs{display:flex;gap:14px;justify-content:center;margin:0 0 14px;font-size:13px}
+  .langs a{color:var(--accent);text-decoration:none}
+  .langs a:hover{text-decoration:underline}
+  .langs span{color:var(--muted)}
+  .foot{text-align:center;color:var(--muted);font-size:11px;letter-spacing:.05em}
+  .foot a{color:var(--muted)}
+</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Inicio","item":"https://picasyfijas.fans/"},{"@type":"ListItem","position":2,"name":"Cómo se juega","item":"https://picasyfijas.fans/como-se-juega"}]}</script>
+</head>
+<body>
+<div class="wrap">
+  <header class="brand">
+    <a class="logo" href="/"><img src="/icon-192.png" alt="Picas y Fijas" width="46" height="46"></a>
+    <div>
+      <a class="home" href="/">Picas y Fijas</a>
+      <div class="sub">Duelo de deducción online</div>
+    </div>
+  </header>
+  <main class="card">
+    <h1>Cómo se juega a Picas y Fijas</h1>
+    <p class="intro">Picas y Fijas es un juego de deducción para dos jugadores, conocido en inglés como <b>Bulls and Cows</b>, en español también como <b>Toros y Vacas</b>, y emparentado con <b>Mastermind</b>. Cada jugador esconde un código secreto y gana quien descifre antes el del rival. Se juega gratis en el navegador, sin instalar nada.</p>
+    <div class="rules"><ol>
+    <li>Cada jugador registra un <b>nombre de usuario</b> y lo protege con un <b>PIN de 4 a 8 dígitos</b>. El nombre se usa también en el ranking.</li>
+    <li>Uno <b>crea la partida</b> y elige las reglas:
+      <ul>
+        <li><b>Modo</b>: números 0-9 o <b>colores</b> (4, 6 u 8 colores, estilo Mastermind).</li>
+        <li><b>Posiciones</b>: 3, 4, 5 o 6.</li>
+        <li><b>Repetidos</b>: permitir o no.</li>
+        <li><b>Límite de intentos</b>: sin límite, 6 o 10 por jugador.</li>
+        <li><b>Tiempo por turno</b>: sin límite, 30 s, 60 s o 2 min.</li>
+        <li><b>Visibilidad</b>: pública (lobby) o privada (solo por código).</li>
+        <li><b>Revelar códigos al terminar</b>: desactivado por defecto; si se activa, cada jugador verá el secreto de su rival al finalizar.</li>
+      </ul>
+      Define su código secreto y obtiene un <b>código de partida de 4 caracteres</b> para compartir.</li>
+    <li>El otro se <b>une</b> desde el lobby o con el código, y define su propio secreto con las mismas reglas.</li>
+    <li>Se turnan para adivinar. Tras cada intento se responde con <span class="pill f">Fijas</span> y <span class="pill p">Picas</span>.</li>
+    <li>Gana quien <b>descifra primero</b> el código del rival. Si quien empezó acierta, el otro tiene un <b>último intento para igualar</b>. Con límite de intentos, si nadie acierta → <b>empate</b>.</li>
+    <li>Al terminar: botón <b>Revancha</b> (misma configuración, mismo rival). Cuando uno la propone, el otro ve <b>“Ir a la revancha”</b>.</li>
+  </ol>
+  <div class="note"><b>Fija</b> = dígito correcto en la <b>posición correcta</b>. &nbsp; <b>Pica</b> = dígito correcto pero en <b>otra posición</b>.</div>
+  <div class="note"><b>Modo colores:</b> mismo cálculo de picas y fijas, solo cambian las cifras por fichas de color.</div>
+  <div class="note"><b>Juego asíncrono:</b> sin tiempo por turno, puedes volver al lobby y continuar minutos u horas después; el rival también puede jugar cuando esté disponible.</div>
+  <div class="note"><b>Cronómetro:</b> al llegar a 0 el turno pasa automáticamente al rival. Si alguien vuelve al lobby, el reloj se detiene hasta que ambos regresen. La pausa manual temporal solo está disponible en partidas con tiempo.</div>
+  <div class="note"><b>Salir o cancelar:</b> volver al lobby no elimina la partida. El creador puede cancelar una partida que aún espera rival. Abandonar una partida iniciada concede la victoria al rival y registra una derrota.</div>
+  <div class="note strategy-download"><b>¿Llegaste hasta el final? Ya tienes ventaja.</b><br>Descubre estrategias para cada tipo de partida.<br><a href="/guia-estrategias-picas-y-fijas-es.pdf" download>📘 Descargar guía de estrategias (PDF)</a></div></div>
+    <a class="btn" href="/">Jugar ahora</a>
+  </main>
+  <nav class="langs"><span>Español</span><a href="/en/how-to-play" hreflang="en">English</a><a href="/fr/comment-jouer" hreflang="fr">Français</a></nav>
+  <footer class="foot"><a href="/">Volver al juego</a> · picasyfijas.fans</footer>
+</div>
+</body>
+</html>

@@ -327,9 +327,9 @@
 <noscript>
   <section style="max-width:640px;margin:0 auto;padding:24px;line-height:1.6">
     <h1>Picas y Fijas</h1>
-    <p lang="es"><strong>Español:</strong> Picas y Fijas es un juego de deducción online, también conocido como <em>Bulls and Cows</em> o <em>Toros y Vacas</em> e inspirado en <em>Mastermind</em>. Cada jugador elige un código secreto y gana quien adivine primero el del rival: una <em>fija</em> es un símbolo correcto en su posición y una <em>pica</em> es un símbolo correcto en otra posición. Hay partidas multijugador, práctica contra el computador y ranking. <a href="/guia-estrategias-picas-y-fijas-es.pdf">Guía de estrategias (PDF)</a>.</p>
-    <p lang="en"><strong>English:</strong> Picas y Fijas is an online deduction game, also known as <em>Bulls and Cows</em> and inspired by <em>Mastermind</em>. Each player picks a secret code and the first to crack the opponent's code wins: a <em>fija</em> (bull) is a correct symbol in the right position, a <em>pica</em> (cow) is a correct symbol in the wrong position. Multiplayer matches, solo practice against the computer and rankings. <a href="/picas-y-fijas-strategy-guide-en.pdf">Strategy guide (PDF)</a> · <a href="/en">English version</a>.</p>
-    <p lang="fr"><strong>Français :</strong> Picas y Fijas est un jeu de déduction en ligne, aussi appelé <em>Bulls and Cows</em> ou <em>jeu du taureau</em> et inspiré de <em>Mastermind</em>. Chaque joueur choisit un code secret et le premier à deviner celui de l'adversaire gagne : une <em>fija</em> est un symbole correct bien placé, une <em>pica</em> un symbole correct mal placé. Duels multijoueur, entraînement contre l'ordinateur et classement. <a href="/guide-strategies-picas-y-fijas-fr.pdf">Guide stratégique (PDF)</a> · <a href="/fr">Version française</a>.</p>
+    <p lang="es"><strong>Español:</strong> Picas y Fijas es un juego de deducción online, también conocido como <em>Bulls and Cows</em> o <em>Toros y Vacas</em> e inspirado en <em>Mastermind</em>. Cada jugador elige un código secreto y gana quien adivine primero el del rival: una <em>fija</em> es un símbolo correcto en su posición y una <em>pica</em> es un símbolo correcto en otra posición. Hay partidas multijugador, práctica contra el computador y ranking. <a href="/como-se-juega">Cómo se juega</a> · <a href="/guia-estrategias-picas-y-fijas-es.pdf">Guía de estrategias (PDF)</a>.</p>
+    <p lang="en"><strong>English:</strong> Picas y Fijas is an online deduction game, also known as <em>Bulls and Cows</em> and inspired by <em>Mastermind</em>. Each player picks a secret code and the first to crack the opponent's code wins: a <em>fija</em> (bull) is a correct symbol in the right position, a <em>pica</em> (cow) is a correct symbol in the wrong position. Multiplayer matches, solo practice against the computer and rankings. <a href="/en/how-to-play">How to play</a> · <a href="/picas-y-fijas-strategy-guide-en.pdf">Strategy guide (PDF)</a> · <a href="/en">English version</a>.</p>
+    <p lang="fr"><strong>Français :</strong> Picas y Fijas est un jeu de déduction en ligne, aussi appelé <em>Bulls and Cows</em> ou <em>jeu du taureau</em> et inspiré de <em>Mastermind</em>. Chaque joueur choisit un code secret et le premier à deviner celui de l'adversaire gagne : une <em>fija</em> est un symbole correct bien placé, une <em>pica</em> un symbole correct mal placé. Duels multijoueur, entraînement contre l'ordinateur et classement. <a href="/fr/comment-jouer">Comment jouer</a> · <a href="/guide-strategies-picas-y-fijas-fr.pdf">Guide stratégique (PDF)</a> · <a href="/fr">Version française</a>.</p>
     <p>Para jugar hay que activar JavaScript · JavaScript is required to play · JavaScript est nécessaire pour jouer.</p>
   </section>
 </noscript>
@@ -358,7 +358,7 @@
     <p class="fieldnote" data-i18n="login_pin_note">🔒 Es tu contraseña para entrar en la app. No es el código secreto del juego ni el código de la partida.</p>
     <div class="val" id="uname-val"></div>
     <button class="btn" id="btn-login" onclick="doLogin()" data-i18n="login_enter">Entrar</button>
-    <div class="foot"><span class="link" onclick="openRules()" data-i18n="rules_link">¿Cómo se juega?</span></div>
+    <div class="foot"><a class="link" data-rules-link href="/como-se-juega" onclick="openRules();return false" data-i18n="rules_link">¿Cómo se juega?</a></div>
     <div class="foot credits"></div>
   </section>
 
@@ -432,7 +432,7 @@
       </div>
     </div>
 
-    <div class="foot"><span class="link" id="sound-link" onclick="toggleSound()"></span> · <span class="link" onclick="openRules()" data-i18n="rules_link">¿Cómo se juega?</span> · <span class="link" onclick="logout()" data-i18n="lobby_changeuser">Cambiar de usuario</span></div>
+    <div class="foot"><span class="link" id="sound-link" onclick="toggleSound()"></span> · <a class="link" data-rules-link href="/como-se-juega" onclick="openRules();return false" data-i18n="rules_link">¿Cómo se juega?</a> · <span class="link" onclick="logout()" data-i18n="lobby_changeuser">Cambiar de usuario</span></div>
   </section>
 
   <!-- PRACTICA: CONFIGURACION -->
@@ -1152,6 +1152,7 @@ const RULES = {
 };
 
 const URL_LANG = {'/es':'es','/en':'en','/fr':'fr'}[location.pathname] || null;
+const RULES_PAGE_PATH = {es:'/como-se-juega', en:'/en/how-to-play', fr:'/fr/comment-jouer'};
 let lang = URL_LANG || localStorage.getItem('pf_lang') || 'es';
 if(URL_LANG) localStorage.setItem('pf_lang', URL_LANG);
 function t(key, p){
@@ -1191,6 +1192,10 @@ function applyI18n(){
   document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ el.placeholder = t(el.dataset.i18nPh); });
   document.querySelectorAll('[data-i18n-title]').forEach(el=>{ el.title = t(el.dataset.i18nTitle); el.setAttribute('aria-label',t(el.dataset.i18nTitle)); });
   document.querySelectorAll('#seg-lang button').forEach(b=> b.classList.toggle('on', b.dataset.lang===lang));
+  // El enlace a las reglas apunta a su pagina publica en el idioma actual: es
+  // un enlace de verdad para los buscadores y sigue abriendo el panel al pulsarlo.
+  const rulesHref = RULES_PAGE_PATH[lang] || RULES_PAGE_PATH.es;
+  document.querySelectorAll('[data-rules-link]').forEach(a=>{ a.href = rulesHref; });
   if(typeof updateSoundLabel==='function') updateSoundLabel();
   syncBrandHome();
   if(typeof renderLoginInvite==='function') renderLoginInvite();
