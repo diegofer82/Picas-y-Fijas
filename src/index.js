@@ -1290,10 +1290,22 @@ const RULES_PAGES = {
   "/fr/comment-jouer": "/rules-fr.html",
 };
 
+// Anadir el juego a la pantalla de inicio es justo lo que mas gente pregunta y
+// lo que ningun navegador explica igual: Android lo esconde en su menu y el
+// iPhone no lo ofrece nunca. Estas paginas ensenan los pasos con dibujos, en
+// los tres idiomas, y las genera `tools/make-install-pages.py` a partir de los
+// mismos textos y dibujos que el juego usa dentro del lobby.
+const INSTALL_PAGES = {
+  "/instalar": "/install-es.html",
+  "/en/install": "/install-en.html",
+  "/fr/installer": "/install-fr.html",
+};
+
 export function assetPathFor(pathname) {
   if (pathname === "/") return "/index.html";
   if (pathname === "/admin") return "/admin.html";
   if (RULES_PAGES[pathname]) return RULES_PAGES[pathname];
+  if (INSTALL_PAGES[pathname]) return INSTALL_PAGES[pathname];
   // Las direcciones por idioma sirven el mismo documento; lo unico que cambia
   // es la cabecera que reescribe `localizeHtml`.
   if (SEO_PAGES[pathname]) return "/index.html";

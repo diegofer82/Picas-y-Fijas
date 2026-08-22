@@ -56,6 +56,33 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://picasyfijas.fans/instalar</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://picasyfijas.fans/instalar"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://picasyfijas.fans/en/install"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://picasyfijas.fans/fr/installer"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://picasyfijas.fans/instalar"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://picasyfijas.fans/en/install</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://picasyfijas.fans/instalar"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://picasyfijas.fans/en/install"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://picasyfijas.fans/fr/installer"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://picasyfijas.fans/instalar"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://picasyfijas.fans/fr/installer</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://picasyfijas.fans/instalar"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://picasyfijas.fans/en/install"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://picasyfijas.fans/fr/installer"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://picasyfijas.fans/instalar"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://picasyfijas.fans/guia-estrategias-picas-y-fijas-es.pdf</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
