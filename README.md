@@ -408,6 +408,15 @@ pnpm run deploy
 
 Una modificación futura del esquema debe añadirse como una migración numerada nueva; nunca se debe reescribir `0001_initial.sql` después de que una base dependa de ella.
 
+**El orden importa cuando un cambio trae migración.** Cloudflare despliega solo al recibir `main`, así que la migración debe aplicarse antes de empujar:
+
+```text
+pnpm run db:remote
+git push origin main
+```
+
+Al revés, el Worker nuevo llegaría a una base sin las columnas que espera y cualquier entrada fallaría hasta que la migración se aplicara. Al derecho no hay ventana rota: las columnas nuevas siempre se añaden con valor por omisión, así que el Worker anterior las ignora sin enterarse.
+
 El plan gratuito de D1 incluye por cuenta 5 millones de filas leídas al día, 100.000 filas escritas al día y 5 GB de almacenamiento. Las cuotas diarias se reinician a las 00:00 UTC. Los índices reducen lecturas, pero actualizar una columna indexada puede sumar escrituras adicionales. Antes de aumentar el tráfico se deben revisar las métricas de D1, la frecuencia de consultas y el polling.
 
 ## Seguridad y archivos locales
