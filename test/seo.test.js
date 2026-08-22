@@ -182,3 +182,17 @@ test('el juego enlaza sus reglas con un enlace de verdad', async () => {
   assert.match(game, /RULES_PAGE_PATH = \{es:'\/como-se-juega', en:'\/en\/how-to-play', fr:'\/fr\/comment-jouer'\}/);
   assert.match(game, /document\.querySelectorAll\('\[data-rules-link\]'\)\.forEach\(a=>\{ a\.href = rulesHref; \}\)/);
 });
+
+test('la barra de direcciones sigue al idioma que elige el jugador', async () => {
+  const game = await read('public/index.html');
+  // Al cargar manda la direccion: quien llega a /en ve el juego en ingles.
+  assert.match(game, /const URL_LANG = \{'\/es':'es','\/en':'en','\/fr':'fr'\}/);
+  // Por eso, al cambiar de idioma hay que mover la direccion con el; si no,
+  // la pagina se contradice y al recargar se pierde la eleccion.
+  assert.match(game, /const LANG_PATH = \{es:'\/', en:'\/en', fr:'\/fr'\}/);
+  assert.match(game, /localStorage\.setItem\('pf_lang', lang\); syncLangUrl\(\); applyI18n\(\)/);
+  assert.match(game, /history\.replaceState\(history\.state, '', path \+ location\.search \+ location\.hash\)/);
+  // Solo la direccion del juego, y sin perder la invitacion que viaja en ella.
+  assert.match(game, /const LANG_HOMES = new Set\(\['\/', '\/es', '\/en', '\/fr', '\/index\.html'\]\)/);
+  assert.match(game, /if\(!LANG_HOMES\.has\(location\.pathname\)\) return;/);
+});

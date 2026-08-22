@@ -1719,8 +1719,26 @@ function suggestSecret(ctx){
 }
 
 /* -------------------- idioma -------------------- */
+/* Cada idioma tiene su propia direccion, y al cargar manda ella: es lo que hace
+   que quien llega a /en desde un buscador vea el juego en ingles. Por eso, si
+   el jugador cambia de idioma y la barra se queda en el anterior, la pagina se
+   contradice: el juego en espanol y la direccion en /en. Al recargar volvia a
+   mandar la direccion y la eleccion se perdia. La barra se mueve con el, sin
+   recargar; la cabecera reescrita por el Worker es cosa de los buscadores, no
+   de esta sesion. */
+const LANG_PATH = {es:'/', en:'/en', fr:'/fr'};
+/* Solo se toca la direccion del juego. Cualquier otra ruta (una pagina publica,
+   por ejemplo) se deja como esta. */
+const LANG_HOMES = new Set(['/', '/es', '/en', '/fr', '/index.html']);
+function syncLangUrl(){
+  if(!LANG_HOMES.has(location.pathname)) return;
+  const path = LANG_PATH[lang] || LANG_PATH.es;
+  if(path === location.pathname) return;
+  // La invitacion viaja en la busqueda (?game=XXXX): no se puede perder.
+  try{ history.replaceState(history.state, '', path + location.search + location.hash); }catch(e){}
+}
 $('seg-lang').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
-  lang=b.dataset.lang; localStorage.setItem('pf_lang', lang); applyI18n(); });
+  lang=b.dataset.lang; localStorage.setItem('pf_lang', lang); syncLangUrl(); applyI18n(); });
 
 /* -------------------- login -------------------- */
 async function doLogin(){
