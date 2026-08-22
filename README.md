@@ -186,7 +186,7 @@ En la cabecera de `public/index.html` están además los `hreflang` de los tres 
 
 El sitio está dado de alta en Google Search Console como propiedad de dominio y el sitemap fue enviado el 22 de agosto de 2026.
 
-**Cloudflare sirve su propio `robots.txt` gestionado.** Antes de este cambio, `https://picasyfijas.fans/robots.txt` devolvía 24 líneas de comentarios de la política de señales de contenido de Cloudflare, sin una sola directiva. Después de desplegar hay que volver a pedir esa dirección y comprobar que aparecen `Allow`, los `Disallow` y la línea `Sitemap`. Si Cloudflare sustituye el archivo en vez de añadir sus comentarios al nuestro, hay que desactivar el `robots.txt` gestionado en el panel de Cloudflare.
+**El `robots.txt` de Cloudflare solo es un suplente.** Mientras el proyecto no tuvo el suyo, `https://picasyfijas.fans/robots.txt` devolvía 24 líneas de comentarios de la política de señales de contenido de Cloudflare, sin una sola directiva; fue lo que hizo fallar el primer envío del sitemap. Desde que `public/robots.txt` existe, Cloudflare sirve el nuestro tal cual, sin añadir ni sustituir nada. No hay que desactivar nada en el panel, pero si algún día vuelven a aparecer esos comentarios en vez de nuestras directivas, el culpable es el `robots.txt` gestionado.
 
 ## Identidad visual
 
