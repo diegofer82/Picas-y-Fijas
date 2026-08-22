@@ -431,6 +431,97 @@ export async function adminChat(db, action, p, user) {
       })),
     };
   }
+  // La administracion no necesita leer el chat como un rio de mensajes sueltos:
+  // necesita saber que conversaciones existen, entre quienes y cual merece una
+  // mirada. Los mensajes se piden despues, uno a uno, con `adminChatThread`.
+  if (action === "adminChatThreads") {
+    const [threads, lobby] = await Promise.all([
+      db
+        .prepare(
+          `SELECT t.id,t.user1,t.user2,t.last_message_at,t.last_game_at,t.latest_game_id,
+            (SELECT COUNT(*) FROM chat_messages m WHERE m.thread_id=t.id) messages,
+            (SELECT COUNT(*) FROM chat_messages m WHERE m.thread_id=t.id AND m.kind='user') written,
+            (SELECT COUNT(*) FROM chat_messages m WHERE m.thread_id=t.id AND m.kind='nudge') nudges,
+            (SELECT COUNT(*) FROM chat_messages m WHERE m.thread_id=t.id AND m.deleted_at IS NOT NULL) deleted,
+            (SELECT COUNT(*) FROM chat_reports r JOIN chat_messages m ON m.id=r.message_id
+              WHERE m.thread_id=t.id AND r.status='open') reports,
+            (SELECT MAX(created_at) FROM chat_messages m WHERE m.thread_id=t.id) last_at
+           FROM chat_threads t
+           ORDER BY COALESCE(t.last_message_at,t.last_game_at) DESC LIMIT 300`,
+        )
+        .all(),
+      db
+        .prepare(
+          `SELECT COUNT(*) messages,MAX(created_at) last_at,COUNT(DISTINCT sender_key) people,
+            SUM(CASE WHEN deleted_at IS NOT NULL THEN 1 ELSE 0 END) deleted
+           FROM chat_messages WHERE room_type='lobby' AND thread_id IS NULL`,
+        )
+        .first(),
+    ]);
+    return {
+      ok: true,
+      lobby: {
+        id: 0,
+        roomType: "lobby",
+        messages: Number(lobby?.messages) || 0,
+        people: Number(lobby?.people) || 0,
+        deleted: Number(lobby?.deleted) || 0,
+        lastActivity: lobby?.last_at || "",
+      },
+      threads: threads.results.map((t) => ({
+        id: Number(t.id),
+        roomType: "private",
+        user1: t.user1,
+        user2: t.user2,
+        gameId: t.latest_game_id || "",
+        messages: Number(t.messages) || 0,
+        written: Number(t.written) || 0,
+        nudges: Number(t.nudges) || 0,
+        deleted: Number(t.deleted) || 0,
+        reports: Number(t.reports) || 0,
+        lastActivity:
+          t.last_at ||
+          (t.last_message_at && t.last_message_at > t.last_game_at
+            ? t.last_message_at
+            : t.last_game_at),
+      })),
+    };
+  }
+  if (action === "adminChatThread") {
+    const threadId = Number(p.threadId) || 0;
+    const rows = threadId
+      ? await db
+          .prepare(
+            `SELECT m.*,(SELECT COUNT(*) FROM chat_reports r WHERE r.message_id=m.id) report_count
+             FROM chat_messages m WHERE m.thread_id=? ORDER BY m.id DESC LIMIT 400`,
+          )
+          .bind(threadId)
+          .all()
+      : await db
+          .prepare(
+            `SELECT m.*,(SELECT COUNT(*) FROM chat_reports r WHERE r.message_id=m.id) report_count
+             FROM chat_messages m WHERE m.room_type='lobby' AND m.thread_id IS NULL
+             ORDER BY m.id DESC LIMIT 400`,
+          )
+          .all();
+    const thread = threadId
+      ? await db.prepare("SELECT * FROM chat_threads WHERE id=?").bind(threadId).first()
+      : null;
+    if (threadId && !thread)
+      return { ok: false, error: "Conversación no encontrada." };
+    return {
+      ok: true,
+      threadId,
+      title: thread ? `${thread.user1} · ${thread.user2}` : "Chat del lobby",
+      gameId: thread?.latest_game_id || "",
+      messages: rows.results.reverse().map((m) => ({
+        ...publicMessage(m),
+        body: m.deleted_at ? "" : m.body,
+        deletedBy: m.deleted_by || "",
+        reportCount: Number(m.report_count) || 0,
+      })),
+    };
+  }
   if (action === "adminChatReports") {
     const { results } = await db
       .prepare(

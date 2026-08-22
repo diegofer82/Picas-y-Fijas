@@ -1,4 +1,16 @@
-import { cleanName, usernameKey } from './game.js';
+import { cleanCountry, cleanName, usernameKey } from './game.js';
+
+// El pais y la IP no los declara el navegador: los pone Cloudflare delante del
+// Worker. Se guardan solo al entrar —una escritura por sesion, no por
+// peticion— porque su unico uso es administrativo: reconocer a la persona que
+// vuelve con otro nombre porque olvido su PIN.
+export function requestOrigin(request) {
+  const forwarded = request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for') || '';
+  return {
+    ip: forwarded.split(',')[0].trim().slice(0, 45),
+    country: cleanCountry(request.cf?.country || request.headers.get('cf-ipcountry') || ''),
+  };
+}
 
 const encoder = new TextEncoder();
 const hex = (bytes) => [...new Uint8Array(bytes)].map((value) => value.toString(16).padStart(2, '0')).join('');
@@ -26,13 +38,13 @@ export function randomToken(bytes = 32) {
   return [...data].map((value) => value.toString(16).padStart(2, '0')).join('');
 }
 
-export async function createSession(db, user, ttlHours = 168) {
+export async function createSession(db, user, ttlHours = 168, origin = {}) {
   const token = randomToken();
   const tokenHash = await sha256(token);
   const createdAt = new Date().toISOString();
   const expiresAt = new Date(Date.now() + Math.max(1, Number(ttlHours) || 168) * 3600000).toISOString();
-  await db.prepare(`INSERT INTO sessions(token_hash,user_id,created_at,expires_at,last_seen_at)
-    VALUES(?,?,?,?,?)`).bind(tokenHash, user.id, createdAt, expiresAt, createdAt).run();
+  await db.prepare(`INSERT INTO sessions(token_hash,user_id,created_at,expires_at,last_seen_at,ip,country)
+    VALUES(?,?,?,?,?,?,?)`).bind(tokenHash, user.id, createdAt, expiresAt, createdAt, origin.ip || '', origin.country || '').run();
   return { token, expiresAt };
 }
 
@@ -50,7 +62,7 @@ export async function authenticate(db, request, params) {
   return { user, tokenHash };
 }
 
-export async function login(db, params, ttlHours) {
+export async function login(db, params, ttlHours, origin = {}) {
   const username = cleanName(params.username);
   const key = usernameKey(username);
   const pin = String(params.pin || '');
@@ -75,16 +87,22 @@ export async function login(db, params, ttlHours) {
     }
     await db.batch([
       db.prepare('DELETE FROM login_attempts WHERE throttle_key=?').bind(key),
-      db.prepare('UPDATE users SET last_login_at=? WHERE id=?').bind(stamp, user.id),
+      db.prepare(`UPDATE users SET last_login_at=?,login_count=login_count+1,
+        last_ip=CASE WHEN ?<>'' THEN ? ELSE last_ip END,
+        last_country=CASE WHEN ?<>'' THEN ? ELSE last_country END WHERE id=?`)
+        .bind(stamp, origin.ip || '', origin.ip || '', origin.country || '', origin.country || '', user.id),
     ]);
   } else {
     const salt = crypto.randomUUID();
     const pinHash = await hashPin(pin, salt);
-    await db.prepare(`INSERT INTO users(username,username_key,pin_salt,pin_hash,role,created_at,last_login_at)
-      VALUES(?,?,?,?,?,?,?)`).bind(username, key, salt, pinHash, key === 'diego' ? 'admin' : 'player', stamp, stamp).run();
+    await db.prepare(`INSERT INTO users(username,username_key,pin_salt,pin_hash,role,created_at,last_login_at,
+      login_count,signup_ip,signup_country,last_ip,last_country)
+      VALUES(?,?,?,?,?,?,?,1,?,?,?,?)`)
+      .bind(username, key, salt, pinHash, key === 'diego' ? 'admin' : 'player', stamp, stamp,
+        origin.ip || '', origin.country || '', origin.ip || '', origin.country || '').run();
     user = await db.prepare('SELECT * FROM users WHERE username_key=?').bind(key).first();
     registered = true;
   }
-  const session = await createSession(db, user, ttlHours);
+  const session = await createSession(db, user, ttlHours, origin);
   return { ok:true, username:user.username, registered, role:user.role, sessionToken:session.token, sessionExpiresAt:session.expiresAt };
 }

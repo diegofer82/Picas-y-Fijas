@@ -16,7 +16,16 @@ import {
   usernameKey,
   validateCode,
 } from "./game.js";
-import { authenticate, hashPin, login, validPin } from "./security.js";
+import { authenticate, hashPin, login, requestOrigin, validPin } from "./security.js";
+import {
+  adminDeleteUser,
+  adminMergeUsers,
+  adminPurgeGames,
+  adminSql,
+  adminSummary,
+  adminUserDetail,
+  adminUsers,
+} from "./admin.js";
 import {
   activateThreadForGame,
   adminChat,
@@ -62,10 +71,18 @@ const ADMIN_ACTIONS = new Set([
   "adminSetGameResult",
   "adminExport",
   "adminChatMessages",
+  "adminChatThreads",
+  "adminChatThread",
   "adminChatReports",
   "adminDeleteChatMessage",
   "adminMuteChatUser",
   "adminUnmuteChatUser",
+  "adminUserDetail",
+  "adminMergeUsers",
+  "adminDeleteUser",
+  "adminPurgeGames",
+  "adminCloseSessions",
+  "adminSql",
 ]);
 const GAME_COLUMNS = new Set([
   "status",
@@ -1052,29 +1069,9 @@ async function adminAction(db, action, params, user) {
     action === "adminUnmuteChatUser"
   )
     return adminChat(db, action, params, user);
-  if (action === "adminSummary") {
-    const [users, games, online] = await Promise.all([
-      db.prepare("SELECT COUNT(*) count FROM users").first(),
-      db
-        .prepare(`SELECT status,COUNT(*) count FROM games GROUP BY status`)
-        .all(),
-      onlineCount(db),
-    ]);
-    return {
-      ok: true,
-      users: Number(users.count),
-      games: games.results,
-      online,
-    };
-  }
-  if (action === "adminUsers") {
-    const { results } = await db
-      .prepare(
-        "SELECT id,username,role,blocked_at,created_at,last_login_at FROM users ORDER BY username_key LIMIT 500",
-      )
-      .all();
-    return { ok: true, users: results };
-  }
+  if (action === "adminSummary") return adminSummary(db, onlineCount);
+  if (action === "adminUsers") return adminUsers(db);
+  if (action === "adminUserDetail") return adminUserDetail(db, params.target);
   if (action === "adminGames") {
     const { results } = await db
       .prepare(
@@ -1094,7 +1091,8 @@ async function adminAction(db, action, params, user) {
       await Promise.all([
         db
           .prepare(
-            "SELECT username,username_key,pin_salt,pin_hash,role,blocked_at,created_at,last_login_at FROM users",
+            `SELECT username,username_key,pin_salt,pin_hash,role,blocked_at,created_at,last_login_at,
+              last_ip,last_country,signup_ip,signup_country,login_count FROM users`,
           )
           .all(),
         db.prepare("SELECT * FROM games").all(),
@@ -1115,8 +1113,45 @@ async function adminAction(db, action, params, user) {
       chatMutes: chatMutes.results,
     };
   }
+  // Las herramientas de mantenimiento devuelven su propio detalle, asi que
+  // registran su linea de auditoria aqui mismo en vez de compartir la del
+  // final de la funcion.
+  if (
+    action === "adminMergeUsers" ||
+    action === "adminDeleteUser" ||
+    action === "adminPurgeGames" ||
+    action === "adminSql"
+  ) {
+    const result =
+      action === "adminMergeUsers"
+        ? await adminMergeUsers(db, params)
+        : action === "adminDeleteUser"
+          ? await adminDeleteUser(db, params, user)
+          : action === "adminPurgeGames"
+            ? await adminPurgeGames(db, params)
+            : await adminSql(db, params);
+    const rehearsal = result.preview === true || result.pending === true;
+    if (result.ok && !rehearsal)
+      await logAudit(
+        db,
+        user,
+        action,
+        String(params.target || params.from || params.status || ""),
+        action === "adminSql"
+          ? { sql: String(params.sql || "").slice(0, 900), kind: result.kind, changes: result.changes ?? null }
+          : { ...params },
+      );
+    return result;
+  }
   const target = String(params.target || "");
-  if (action === "adminSetBlocked") {
+  if (action === "adminCloseSessions") {
+    const targetUser = await db
+      .prepare("SELECT id FROM users WHERE username_key=?")
+      .bind(usernameKey(target))
+      .first();
+    if (!targetUser) return { ok: false, error: "Usuario no encontrado." };
+    await db.prepare("DELETE FROM sessions WHERE user_id=?").bind(targetUser.id).run();
+  } else if (action === "adminSetBlocked") {
     await db
       .prepare("UPDATE users SET blocked_at=? WHERE username_key=?")
       .bind(truthy(params.blocked) ? now() : null, usernameKey(target))
@@ -1174,22 +1209,30 @@ async function adminAction(db, action, params, user) {
       updated_at: now(),
     });
   } else return { ok: false, error: "Acción administrativa desconocida." };
-  const safeDetails = { ...params };
+  await logAudit(db, user, action, target, params);
+  return { ok: true };
+}
+
+async function logAudit(db, user, action, target, details) {
+  const safeDetails = { ...details };
   delete safeDetails.newPin;
+  delete safeDetails.sessionToken;
+  delete safeDetails.action;
   await db
     .prepare(
       "INSERT INTO audit_log(admin_user_id,action,target,details_json,created_at) VALUES(?,?,?,?,?)",
     )
-    .bind(user.id, action, target, JSON.stringify(safeDetails), now())
+    .bind(user.id, action, String(target || ""), JSON.stringify(safeDetails), now())
     .run();
-  return { ok: true };
 }
 
 async function routeApi(request, env) {
   const params = await bodyParams(request);
   const action = String(params.action || "");
   if (action === "loginUser")
-    return json(await login(env.DB, params, env.SESSION_TTL_HOURS));
+    return json(
+      await login(env.DB, params, env.SESSION_TTL_HOURS, requestOrigin(request)),
+    );
   let auth = null;
   if (PROTECTED.has(action) || ADMIN_ACTIONS.has(action)) {
     auth = await authenticate(env.DB, request, params);

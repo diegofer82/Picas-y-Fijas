@@ -5,29 +5,463 @@
   <meta name="robots" content="noindex,nofollow,noarchive">
   <title>Administración · Picas y Fijas</title>
   <style>
-    :root{color-scheme:dark;--bg:#09111f;--panel:#111c2e;--line:#263652;--text:#eef4ff;--muted:#9fb0ca;--accent:#22d3ee;--danger:#fb7185}
-    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,sans-serif}main{max-width:1100px;margin:auto;padding:28px 18px}h1{margin:0 0 6px}.muted{color:var(--muted)}.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;margin:18px 0}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}input,button,select{border-radius:10px;border:1px solid var(--line);padding:10px 12px;background:#0c1627;color:var(--text)}button{cursor:pointer;background:#17314a}button.primary{background:#0e7490}button.danger{color:#fecdd3;border-color:#7f1d1d}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{text-align:left;padding:9px;border-bottom:1px solid var(--line)}th{color:var(--muted)}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}.card{background:#0c1627;border-radius:12px;padding:15px}.card b{display:block;font-size:24px;color:var(--accent)}.hidden{display:none}.error{color:var(--danger)}
+    :root{color-scheme:dark;--bg:#09111f;--panel:#111c2e;--line:#263652;--text:#eef4ff;--muted:#9fb0ca;--accent:#22d3ee;--blue:#38bdf8;--danger:#fb7185;--warn:#fbbf24;--ok:#34d399}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,sans-serif}
+    main{max-width:1180px;margin:auto;padding:22px 18px 60px}
+    h1{margin:0;font-size:22px}h2{margin:0 0 10px;font-size:17px}h3{margin:16px 0 6px;font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+    .muted{color:var(--muted)}.small{font-size:13px}
+    .topbar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--line)}
+    .brand{display:flex;gap:10px;align-items:center;min-width:0}
+    .grow{flex:1 1 auto}
+    .toro .t-fill{fill:var(--blue);stroke:#08203a;stroke-width:2.6;stroke-linejoin:round}
+    .toro .t-line{fill:none;stroke:#08203a;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+    .toro .t-dot{fill:#08203a}
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;margin:16px 0}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    input,button,select,textarea{border-radius:10px;border:1px solid var(--line);padding:9px 12px;background:#0c1627;color:var(--text);font:inherit}
+    textarea{width:100%;min-height:120px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;resize:vertical}
+    button{cursor:pointer;background:#17314a}button:hover{border-color:var(--blue)}
+    button.primary{background:#0e7490}button.danger{color:#fecdd3;border-color:#7f1d1d;background:#2a1119}
+    button.ghost{background:transparent}button.tiny{padding:5px 9px;font-size:12px}
+    .back{display:flex;gap:8px;align-items:center;background:#123a52;border-color:#1d5f80;padding:6px 14px 6px 8px;border-radius:999px}
+    .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 0}
+    .tabs button{background:transparent;border-color:transparent;color:var(--muted);border-bottom:2px solid transparent;border-radius:8px 8px 0 0}
+    .tabs button.on{color:var(--text);border-bottom-color:var(--blue);background:#0e1a2c}
+    table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+    th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{color:var(--muted);font-weight:600;white-space:nowrap}
+    td.nowrap,th.nowrap{white-space:nowrap}
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+    .card{background:#0c1627;border-radius:12px;padding:14px}.card b{display:block;font-size:23px;color:var(--accent)}
+    .card.warn b{color:var(--warn)}
+    .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;background:#0c1627;border:1px solid var(--line)}
+    .tag.admin{color:var(--accent);border-color:#0e7490}.tag.blocked{color:var(--danger);border-color:#7f1d1d}
+    .tag.dup{color:var(--warn);border-color:#78350f}
+    a.user{color:var(--blue);text-decoration:none;border-bottom:1px dotted currentColor;cursor:pointer}
+    .scroll{overflow:auto;max-width:100%}
+    .hidden{display:none}
+    .error{color:var(--danger);min-height:18px}
+    .ok{color:var(--ok)}
+    dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:16px;padding:0;max-width:900px;width:calc(100% - 32px)}
+    dialog::backdrop{background:#02060cd0}
+    .dlg-head{display:flex;gap:12px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel)}
+    .dlg-body{padding:16px 18px;max-height:70vh;overflow:auto}
+    .msg{padding:7px 0;border-bottom:1px solid #1b2942}
+    .msg .who{color:var(--blue);font-weight:600}
+    .msg.system .who{color:var(--muted)}
+    .msg.gone{opacity:.5;font-style:italic}
+    .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
+    .kv div:nth-child(odd){color:var(--muted)}
+    code{background:#0c1627;padding:1px 5px;border-radius:6px;font-size:13px}
   </style>
 </head>
 <body><main>
-  <h1>Administración</h1><div class="muted">Picas y Fijas · acceso separado y reservado</div>
-  <section id="login" class="panel"><h2>Acceso</h2><div class="row"><input id="username" placeholder="Usuario" autocomplete="username"><input id="pin" type="password" inputmode="numeric" placeholder="PIN" autocomplete="current-password"><button class="primary" id="loginButton">Entrar</button></div><p id="loginError" class="error"></p></section>
-  <section id="dashboard" class="hidden">
-    <div class="row"><button id="refresh">Actualizar</button><button id="export">Exportar copia</button><button id="logout">Salir</button></div>
-    <div class="cards" id="summary"></div>
-    <div class="panel"><h2>Usuarios</h2><div style="overflow:auto"><table><thead><tr><th>Usuario</th><th>Rol</th><th>Último acceso</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="users"></tbody></table></div></div>
-    <div class="panel"><h2>Partidas recientes</h2><div style="overflow:auto"><table><thead><tr><th>Código</th><th>Estado</th><th>Jugadores</th><th>Actualizada</th><th>Acción</th></tr></thead><tbody id="games"></tbody></table></div></div>
-    <div class="panel"><h2>Reportes del chat</h2><div style="overflow:auto"><table><thead><tr><th>Mensaje</th><th>Autor</th><th>Reportado por</th><th>Motivo</th><th>Acciones</th></tr></thead><tbody id="reports"></tbody></table></div></div>
-    <div class="panel"><h2>Mensajes recientes</h2><div style="overflow:auto"><table><thead><tr><th>Canal</th><th>Autor</th><th>Mensaje</th><th>Fecha</th><th>Acciones</th></tr></thead><tbody id="messages"></tbody></table></div></div>
+  <div class="topbar">
+    <div class="brand">
+      <svg class="toro" width="42" height="36" viewBox="-8 -16 104 90" aria-hidden="true"><path class="t-fill" d="M19 21C12.5 16.5 4.5 11 -2 5c0 9.5 4.5 18.5 12.5 25C13 27.5 16 24 19 21Z"></path><path class="t-fill" d="M69 21C75.5 16.5 83.5 11 90 5c0 9.5-4.5 18.5-12.5 25C75 27.5 72 24 69 21Z"></path><path class="t-fill" d="M15 32c0-11.6 13-20.6 29-20.6s29 9 29 20.6c0 7-1.6 12.8-4.8 17.6C64.6 57 55.4 61.6 44 61.6S23.4 57 19.8 49.6C16.6 44.8 15 39 15 32Z"></path><path class="t-line" d="M32.5 54c0-3.4 5.2-5.6 11.5-5.6s11.5 2.2 11.5 5.6-5.2 5.6-11.5 5.6-11.5-2.2-11.5-5.6Z"></path><circle class="t-dot" cx="40" cy="53.6" r="1.8"></circle><circle class="t-dot" cx="48" cy="53.6" r="1.8"></circle><circle class="t-dot" cx="32" cy="34" r="3.4"></circle><circle class="t-dot" cx="56" cy="34" r="3.4"></circle></svg>
+      <div><h1>Administración</h1><div class="muted small">Picas y Fijas · acceso separado y reservado</div></div>
+    </div>
+    <div class="grow"></div>
+    <button class="back" id="backToGame" title="Cierra el panel y vuelve al juego">
+      <svg class="toro" width="30" height="26" viewBox="-8 -16 104 90" aria-hidden="true"><path class="t-fill" d="M19 21C12.5 16.5 4.5 11 -2 5c0 9.5 4.5 18.5 12.5 25C13 27.5 16 24 19 21Z"></path><path class="t-fill" d="M69 21C75.5 16.5 83.5 11 90 5c0 9.5-4.5 18.5-12.5 25C75 27.5 72 24 69 21Z"></path><path class="t-fill" d="M15 32c0-11.6 13-20.6 29-20.6s29 9 29 20.6c0 7-1.6 12.8-4.8 17.6C64.6 57 55.4 61.6 44 61.6S23.4 57 19.8 49.6C16.6 44.8 15 39 15 32Z"></path><path class="t-line" d="M32.5 54c0-3.4 5.2-5.6 11.5-5.6s11.5 2.2 11.5 5.6-5.2 5.6-11.5 5.6-11.5-2.2-11.5-5.6Z"></path><circle class="t-dot" cx="40" cy="53.6" r="1.8"></circle><circle class="t-dot" cx="48" cy="53.6" r="1.8"></circle><path class="t-line" d="M27.6 35c1.2-2.8 2.7-4.2 4.4-4.2s3.2 1.4 4.4 4.2"></path><path class="t-line" d="M51.6 35c1.2-2.8 2.7-4.2 4.4-4.2s3.2 1.4 4.4 4.2"></path><path class="t-line" d="M39 55.4c1.5 1.7 3.1 2.5 5 2.5s3.5-.8 5-2.5"></path></svg>
+      Volver al juego
+    </button>
+  </div>
+
+  <section id="login" class="panel">
+    <h2>Acceso</h2>
+    <div class="row"><input id="username" placeholder="Usuario" autocomplete="username"><input id="pin" type="password" inputmode="numeric" placeholder="PIN" autocomplete="current-password"><button class="primary" id="loginButton">Entrar</button></div>
+    <p id="loginError" class="error"></p>
   </section>
+
+  <section id="dashboard" class="hidden">
+    <nav class="tabs" id="tabs">
+      <button data-tab="resumen" class="on">Resumen</button>
+      <button data-tab="usuarios">Usuarios</button>
+      <button data-tab="partidas">Partidas</button>
+      <button data-tab="chat">Conversaciones</button>
+      <button data-tab="moderacion">Moderación</button>
+      <button data-tab="mantenimiento">Mantenimiento</button>
+      <button data-tab="auditoria">Auditoría</button>
+    </nav>
+
+    <div id="tab-resumen">
+      <div class="panel">
+        <div class="row"><h2 class="grow">Estado</h2><button id="refresh">Actualizar</button><button id="export">Exportar copia</button><button id="logout" class="ghost">Cerrar sesión</button></div>
+        <div class="cards" id="summary"></div>
+        <h3>Países de los jugadores</h3>
+        <div class="cards" id="countries"></div>
+      </div>
+    </div>
+
+    <div id="tab-usuarios" class="hidden">
+      <div class="panel" id="dupPanel">
+        <h2>Posibles cuentas repetidas</h2>
+        <p class="muted small">Se agrupan por la última IP y por la raíz del nombre. Es una pista, no una prueba: revisa la ficha antes de fusionar.</p>
+        <div id="duplicates"></div>
+      </div>
+      <div class="panel">
+        <div class="row"><h2 class="grow">Usuarios</h2><input id="userFilter" placeholder="Filtrar por nombre, país o IP"><button id="mergeOpen">Fusionar cuentas…</button></div>
+        <div class="scroll"><table><thead><tr>
+          <th>Usuario</th><th>País</th><th>Última IP</th><th class="nowrap">Partidas</th><th class="nowrap">Msj</th><th>Rol</th><th>Último acceso</th><th>Estado</th><th>Acciones</th>
+        </tr></thead><tbody id="users"></tbody></table></div>
+      </div>
+    </div>
+
+    <div id="tab-partidas" class="hidden">
+      <div class="panel">
+        <div class="row"><h2 class="grow">Partidas recientes</h2><input id="gameFilter" placeholder="Filtrar por código o jugador"></div>
+        <div class="scroll"><table><thead><tr><th>Código</th><th>Estado</th><th>Jugadores</th><th>Ganador</th><th>Actualizada</th><th>Acción</th></tr></thead><tbody id="games"></tbody></table></div>
+      </div>
+    </div>
+
+    <div id="tab-chat" class="hidden">
+      <div class="panel">
+        <div class="row"><h2 class="grow">Conversaciones</h2><input id="threadFilter" placeholder="Filtrar por participante"></div>
+        <p class="muted small">Cada fila es un chat completo. Los mensajes se abren aparte, en su propia ventana.</p>
+        <div class="scroll"><table><thead><tr><th>Conversación</th><th class="nowrap">Mensajes</th><th class="nowrap">Zumbidos</th><th class="nowrap">Borrados</th><th class="nowrap">Reportes</th><th>Última actividad</th><th></th></tr></thead><tbody id="threads"></tbody></table></div>
+      </div>
+    </div>
+
+    <div id="tab-moderacion" class="hidden">
+      <div class="panel">
+        <h2>Reportes del chat</h2>
+        <div class="scroll"><table><thead><tr><th>Mensaje</th><th>Autor</th><th>Reportado por</th><th>Motivo</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="reports"></tbody></table></div>
+      </div>
+    </div>
+
+    <div id="tab-mantenimiento" class="hidden">
+      <div class="panel">
+        <h2>Limpiar partidas</h2>
+        <p class="muted small">Primero se cuenta, después se borra. El borrado arrastra también el chat de esas partidas.</p>
+        <div class="row">
+          <select id="purgeStatus"><option value="">Cualquier estado</option><option value="waiting">waiting</option><option value="active">active</option><option value="finished">finished</option><option value="cancelled">cancelled</option></select>
+          <input id="purgeDays" type="number" min="0" step="1" placeholder="Días sin actividad" style="width:190px">
+          <button id="purgeCount">Contar</button>
+          <span id="purgeInfo" class="muted"></span>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Consola SQL</h2>
+        <p class="muted small">Una instrucción por ejecución. Las lecturas salen directas; los cambios piden confirmación y quedan en la auditoría. El esquema solo se toca con una migración.</p>
+        <div class="row" id="recipes"></div>
+        <textarea id="sql" spellcheck="false" placeholder="SELECT username,last_country,last_ip FROM users ORDER BY last_login_at DESC LIMIT 20"></textarea>
+        <div class="row"><button class="primary" id="sqlRun">Ejecutar</button><span id="sqlInfo" class="muted small"></span></div>
+        <div class="scroll" id="sqlOut"></div>
+      </div>
+    </div>
+
+    <div id="tab-auditoria" class="hidden">
+      <div class="panel">
+        <h2>Auditoría</h2>
+        <div class="scroll"><table><thead><tr><th>Fecha</th><th>Acción</th><th>Objetivo</th><th>Detalle</th></tr></thead><tbody id="audit"></tbody></table></div>
+      </div>
+    </div>
+  </section>
+
+  <dialog id="modal"><div class="dlg-head"><h2 class="grow" id="modalTitle"></h2><button id="modalClose">Cerrar</button></div><div class="dlg-body" id="modalBody"></div></dialog>
+</main>
 <script>
 let token=localStorage.getItem('pf_admin_session')||'';
-const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
-async function api(action,payload={}){const r=await fetch('/api',{method:'POST',headers:{'content-type':'application/json',...(token?{authorization:'Bearer '+token}:{})},body:JSON.stringify({action,...payload})});const j=await r.json();if(!j.ok)throw Error(j.error||'Error');return j;}
-async function login(){try{const r=await api('loginUser',{username:$('username').value.trim(),pin:$('pin').value.trim()});if(r.role!=='admin')throw Error('Este usuario no es administrador.');token=r.sessionToken;localStorage.setItem('pf_admin_session',token);await load();}catch(e){$('loginError').textContent=e.message}}
-async function load(){try{const [s,u,g,m,r]=await Promise.all([api('adminSummary'),api('adminUsers'),api('adminGames'),api('adminChatMessages'),api('adminChatReports')]);$('login').classList.add('hidden');$('dashboard').classList.remove('hidden');$('summary').innerHTML=`<div class="card">Usuarios<b>${s.users}</b></div><div class="card">En línea<b>${s.online}</b></div>`+s.games.map(x=>`<div class="card">${esc(x.status)}<b>${x.count}</b></div>`).join('');$('users').innerHTML=u.users.map(x=>`<tr><td>${esc(x.username)}</td><td>${esc(x.role)}</td><td>${esc(x.last_login_at||'—')}</td><td>${x.blocked_at?'Bloqueado':'Activo'}</td><td><button data-user="${esc(x.username)}" data-block="${x.blocked_at?'0':'1'}">${x.blocked_at?'Desbloquear':'Bloquear'}</button> <button data-pin="${esc(x.username)}">PIN</button> <button data-unmute-chat="${esc(x.username)}">Reactivar chat</button></td></tr>`).join('');$('games').innerHTML=g.games.map(x=>`<tr><td>${esc(x.game_id)}</td><td>${esc(x.status)}</td><td>${esc(x.p1)} / ${esc(x.p2||'—')}</td><td>${esc(x.updated_at)}</td><td>${['waiting','active'].includes(x.status)?`<button class="danger" data-game="${esc(x.game_id)}">Cerrar</button>`:''}</td></tr>`).join('');$('messages').innerHTML=m.messages.map(x=>`<tr><td>${esc(x.roomType+(x.gameId?' '+x.gameId:''))}</td><td>${esc(x.sender||'sistema')}</td><td>${esc(x.deleted?'[eliminado]':x.body)}</td><td>${esc(x.createdAt)}</td><td>${!x.deleted&&x.kind==='user'?`<button class="danger" data-delete-message="${x.id}">Borrar</button> <button data-mute-user="${esc(x.sender)}">Silenciar</button>`:''}</td></tr>`).join('');$('reports').innerHTML=r.reports.map(x=>`<tr><td>${esc(x.deleted_at?'[eliminado]':x.body)}</td><td>${esc(x.sender)}</td><td>${esc(x.reporter)}</td><td>${esc(x.reason)}</td><td>${!x.deleted_at?`<button class="danger" data-delete-message="${x.message_id}">Borrar</button> <button data-mute-user="${esc(x.sender)}">Silenciar</button>`:''}</td></tr>`).join('');}catch(e){token='';localStorage.removeItem('pf_admin_session');$('login').classList.remove('hidden');$('dashboard').classList.add('hidden');$('loginError').textContent=e.message}}
-$('username').addEventListener('keydown',submitLoginOnEnter);$('pin').addEventListener('keydown',submitLoginOnEnter);function submitLoginOnEnter(e){if(e.key!=='Enter'||e.isComposing||e.repeat)return;e.preventDefault();$('loginButton').click()}
-$('loginButton').onclick=login;$('refresh').onclick=load;$('export').onclick=async()=>{const data=await api('adminExport');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.download='picas-y-fijas-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href)};$('logout').onclick=()=>{token='';localStorage.removeItem('pf_admin_session');location.reload()};$('users').onclick=async e=>{const b=e.target.closest('[data-user]');if(b&&confirm('¿Confirmar cambio para '+b.dataset.user+'?')){await api('adminSetBlocked',{target:b.dataset.user,blocked:b.dataset.block});load();return}const p=e.target.closest('[data-pin]');if(p){const newPin=prompt('Nuevo PIN de 4 a 8 dígitos para '+p.dataset.pin);if(newPin!==null){await api('adminResetPin',{target:p.dataset.pin,newPin});alert('PIN actualizado; las sesiones anteriores se cerraron.')}return}const u=e.target.closest('[data-unmute-chat]');if(u&&confirm('¿Reactivar el chat de '+u.dataset.unmuteChat+'?')){await api('adminUnmuteChatUser',{target:u.dataset.unmuteChat});load();}};$('games').onclick=async e=>{const b=e.target.closest('[data-game]');if(b&&confirm('¿Cerrar la partida '+b.dataset.game+'?')){await api('adminCloseGame',{target:b.dataset.game});load()}};if(token)load();
-async function chatAdminClick(e){const d=e.target.closest('[data-delete-message]');if(d&&confirm('¿Borrar este mensaje?')){await api('adminDeleteChatMessage',{messageId:d.dataset.deleteMessage});await load();return;}const m=e.target.closest('[data-mute-user]');if(m){const choice=prompt('Duración: 15, 60, 1440 minutos o 0 para permanente','60');if(choice!==null){await api('adminMuteChatUser',{target:m.dataset.muteUser,minutes:choice});await load();}}}
-$('messages').onclick=chatAdminClick;$('reports').onclick=chatAdminClick;
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+const when=v=>v?String(v).replace('T',' ').slice(0,16):'—';
+const flag=cc=>/^[a-z]{2}$/i.test(String(cc||''))?String(cc).toUpperCase().replace(/./g,c=>String.fromCodePoint(0x1F1E6+c.charCodeAt(0)-65)):'';
+const loaded=new Set();
+const state={users:[],games:[],threads:[],lobby:null};
+
+async function api(action,payload={}){
+  const r=await fetch('/api',{method:'POST',headers:{'content-type':'application/json',...(token?{authorization:'Bearer '+token}:{})},body:JSON.stringify({action,...payload})});
+  const j=await r.json();if(!j.ok)throw Error(j.error||'Error');return j;
+}
+function signOut(){token='';localStorage.removeItem('pf_admin_session');}
+function showLogin(message){signOut();$('login').classList.remove('hidden');$('dashboard').classList.add('hidden');$('loginError').textContent=message||'';}
+async function login(){
+  try{
+    const r=await api('loginUser',{username:$('username').value.trim(),pin:$('pin').value.trim()});
+    if(r.role!=='admin')throw Error('Este usuario no es administrador.');
+    token=r.sessionToken;localStorage.setItem('pf_admin_session',token);
+    $('login').classList.add('hidden');$('dashboard').classList.remove('hidden');$('loginError').textContent='';
+    loaded.clear();await openTab('resumen');
+  }catch(e){$('loginError').textContent=e.message}
+}
+
+/* ---- pestañas: cada una pide sus datos la primera vez que se abre ---- */
+const loaders={resumen:loadSummary,usuarios:loadUsers,partidas:loadGames,chat:loadThreads,moderacion:loadReports,mantenimiento:loadRecipes,auditoria:loadAudit};
+async function openTab(name){
+  for(const button of $('tabs').children)button.classList.toggle('on',button.dataset.tab===name);
+  for(const key of Object.keys(loaders))$('tab-'+key).classList.toggle('hidden',key!==name);
+  if(loaded.has(name))return;
+  try{await loaders[name]();loaded.add(name);}catch(e){reportFailure(e)}
+}
+function reportFailure(e){
+  if(/sesión|Sesión|administrador requerido/.test(e.message))showLogin(e.message);else alert(e.message);
+}
+async function reload(){const current=[...$('tabs').children].find(b=>b.classList.contains('on'))?.dataset.tab||'resumen';loaded.delete(current);await openTab(current);}
+
+/* ---- resumen ---- */
+async function loadSummary(){
+  const s=await api('adminSummary'),a=s.activity||{};
+  const card=(label,value,warn)=>`<div class="card${warn&&value?' warn':''}">${label}<b>${value??0}</b></div>`;
+  $('summary').innerHTML=card('Usuarios',s.users)+card('En línea',s.online)+card('Nuevos (7 d)',a.newUsersWeek)+card('Activos (7 d)',a.activeUsersWeek)
+    +card('Bloqueados',a.blocked,true)+card('Partidas (24 h)',a.gamesDay)+card('Mensajes (24 h)',a.messagesDay)
+    +card('Reportes abiertos',a.openReports,true)+card('Silenciados',a.mutes,true)+card('Conversaciones',a.threads)+card('Sesiones vivas',a.sessions)
+    +s.games.map(x=>card(x.status,x.count)).join('');
+  $('countries').innerHTML=(s.countries||[]).map(c=>`<div class="card">${flag(c.country)} ${esc(String(c.country).toUpperCase())}<b>${c.count}</b></div>`).join('')||'<div class="muted">Todavía no hay países registrados.</div>';
+}
+
+/* ---- usuarios ---- */
+async function loadUsers(){
+  const u=await api('adminUsers');
+  state.users=u.users;
+  $('duplicates').innerHTML=(u.duplicates||[]).length?u.duplicates.map(g=>`<div class="row" style="margin:8px 0">
+    <span class="tag dup">${g.reason==='ip'?'misma IP':'mismo nombre'}</span><code>${esc(g.value)}</code>
+    ${g.members.map(m=>`<a class="user" data-detail="${esc(m.username)}">${flag(m.country)} ${esc(m.username)}</a> <span class="muted small">(${m.games} partidas, ${when(m.lastLoginAt)})</span>`).join(' · ')}
+    <button class="tiny" data-merge-group="${esc(g.members.map(m=>m.username).join('|'))}">Fusionar…</button></div>`).join(''):'<div class="muted">Ninguna coincidencia por ahora.</div>';
+  renderUsers();
+}
+function renderUsers(){
+  const needle=$('userFilter').value.trim().toLowerCase();
+  const rows=state.users.filter(x=>!needle||[x.username,x.last_country,x.last_ip].join(' ').toLowerCase().includes(needle));
+  $('users').innerHTML=rows.map(x=>`<tr>
+    <td><a class="user" data-detail="${esc(x.username)}">${esc(x.username)}</a>${x.muted?' <span class="tag dup">chat</span>':''}</td>
+    <td class="nowrap">${flag(x.last_country)} ${esc(String(x.last_country||'').toUpperCase()||'—')}</td>
+    <td class="nowrap"><code>${esc(x.last_ip||'—')}</code></td>
+    <td>${x.games||0}${x.wins?` <span class="muted small">(${x.wins} G)</span>`:''}</td>
+    <td>${x.messages||0}</td>
+    <td><span class="tag${x.role==='admin'?' admin':''}">${esc(x.role)}</span></td>
+    <td class="nowrap">${when(x.last_login_at)}</td>
+    <td>${x.blocked_at?'<span class="tag blocked">Bloqueado</span>':'Activo'}</td>
+    <td class="nowrap">
+      <button class="tiny" data-user="${esc(x.username)}" data-block="${x.blocked_at?'0':'1'}">${x.blocked_at?'Desbloquear':'Bloquear'}</button>
+      <button class="tiny" data-pin="${esc(x.username)}">PIN</button>
+      <button class="tiny" data-role="${esc(x.username)}" data-next="${x.role==='admin'?'player':'admin'}">${x.role==='admin'?'Quitar admin':'Hacer admin'}</button>
+      <button class="tiny" data-unmute-chat="${esc(x.username)}">Reactivar chat</button>
+      <button class="tiny danger" data-delete-user="${esc(x.username)}">Borrar</button>
+    </td></tr>`).join('')||'<tr><td colspan="9" class="muted">Sin resultados.</td></tr>';
+}
+
+/* ---- partidas ---- */
+async function loadGames(){state.games=(await api('adminGames')).games;renderGames();}
+function renderGames(){
+  const needle=$('gameFilter').value.trim().toLowerCase();
+  const rows=state.games.filter(x=>!needle||[x.game_id,x.p1,x.p2].join(' ').toLowerCase().includes(needle));
+  $('games').innerHTML=rows.map(x=>`<tr><td class="nowrap"><code>${esc(x.game_id)}</code></td><td>${esc(x.status)}</td>
+    <td>${esc(x.p1)} / ${esc(x.p2||'—')}</td><td>${esc(x.winner||'—')}</td><td class="nowrap">${when(x.updated_at)}</td>
+    <td class="nowrap">${['waiting','active'].includes(x.status)?`<button class="tiny danger" data-game="${esc(x.game_id)}">Cerrar</button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="muted">Sin resultados.</td></tr>';
+}
+
+/* ---- conversaciones ---- */
+async function loadThreads(){const r=await api('adminChatThreads');state.threads=r.threads;state.lobby=r.lobby;renderThreads();}
+function renderThreads(){
+  const needle=$('threadFilter').value.trim().toLowerCase();
+  const lobby=state.lobby;
+  const head=lobby&&!needle?`<tr><td><b>Chat del lobby</b> <span class="muted small">· ${lobby.people} personas</span></td>
+    <td>${lobby.messages}</td><td>—</td><td>${lobby.deleted}</td><td>—</td><td class="nowrap">${when(lobby.lastActivity)}</td>
+    <td><button class="tiny" data-thread="0">Ver</button></td></tr>`:'';
+  const rows=state.threads.filter(t=>!needle||`${t.user1} ${t.user2}`.toLowerCase().includes(needle));
+  $('threads').innerHTML=head+rows.map(t=>`<tr>
+    <td><a class="user" data-detail="${esc(t.user1)}">${esc(t.user1)}</a> · <a class="user" data-detail="${esc(t.user2)}">${esc(t.user2)}</a>${t.gameId?` <span class="muted small">${esc(t.gameId)}</span>`:''}</td>
+    <td>${t.written}</td><td>${t.nudges}</td><td>${t.deleted}</td><td>${t.reports?`<span class="tag dup">${t.reports}</span>`:'0'}</td>
+    <td class="nowrap">${when(t.lastActivity)}</td><td><button class="tiny" data-thread="${t.id}">Ver</button></td></tr>`).join('');
+  if(!$('threads').innerHTML)$('threads').innerHTML='<tr><td colspan="7" class="muted">Sin conversaciones.</td></tr>';
+}
+async function openThread(id){
+  const r=await api('adminChatThread',{threadId:id});
+  openModal(r.title+(r.gameId?' · '+r.gameId:''),r.messages.map(m=>`<div class="msg ${m.kind==='system'?'system':''} ${m.deleted?'gone':''}">
+    <div class="row"><span class="who">${esc(m.sender||'sistema')}</span><span class="muted small">${when(m.createdAt)}</span>
+    ${m.reportCount?`<span class="tag dup">${m.reportCount} reporte(s)</span>`:''}<span class="grow"></span>
+    ${!m.deleted&&m.kind==='user'?`<button class="tiny danger" data-delete-message="${m.id}">Borrar</button> <button class="tiny" data-mute-user="${esc(m.sender)}">Silenciar</button>`:''}</div>
+    <div>${m.deleted?'[mensaje eliminado'+(m.deletedBy?' por '+esc(m.deletedBy):'')+']':m.kind==='nudge'?'<i>zumbido</i>':esc(m.body)}</div></div>`).join('')||'<div class="muted">Esta conversación no tiene mensajes.</div>');
+}
+
+/* ---- moderación ---- */
+async function loadReports(){
+  const r=await api('adminChatReports');
+  $('reports').innerHTML=r.reports.map(x=>`<tr><td>${esc(x.deleted_at?'[eliminado]':x.body)}</td><td>${esc(x.sender)}</td><td>${esc(x.reporter)}</td>
+    <td>${esc(x.reason)}</td><td>${esc(x.status)}</td>
+    <td class="nowrap">${!x.deleted_at?`<button class="tiny danger" data-delete-message="${x.message_id}">Borrar</button> <button class="tiny" data-mute-user="${esc(x.sender)}">Silenciar</button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="muted">Sin reportes.</td></tr>';
+}
+
+/* ---- auditoría ---- */
+async function loadAudit(){
+  const r=await api('adminAudit');
+  $('audit').innerHTML=r.audit.map(x=>`<tr><td class="nowrap">${when(x.created_at)}</td><td>${esc(x.action)}</td><td>${esc(x.target||'—')}</td>
+    <td class="small muted">${esc(String(x.details_json||'').slice(0,220))}</td></tr>`).join('')||'<tr><td colspan="4" class="muted">Sin registros.</td></tr>';
+}
+
+/* ---- ficha de usuario ---- */
+async function openUser(name){
+  const d=await api('adminUserDetail',{target:name});
+  const u=d.user,s=d.stats||{};
+  const line=(k,v)=>`<div>${k}</div><div>${v}</div>`;
+  openModal(u.username,`
+    <div class="kv">
+      ${line('Rol',`<span class="tag${u.role==='admin'?' admin':''}">${esc(u.role)}</span>`)}
+      ${line('Estado',u.blocked_at?'<span class="tag blocked">Bloqueado</span>':'Activo')}
+      ${line('País',`${flag(u.last_country)} ${esc(String(u.last_country||'—').toUpperCase())}${u.signup_country&&u.signup_country!==u.last_country?` <span class="muted small">(alta: ${esc(u.signup_country.toUpperCase())})</span>`:''}`)}
+      ${line('Última IP',`<code>${esc(u.last_ip||'—')}</code>`)}
+      ${line('IP del alta',`<code>${esc(u.signup_ip||'—')}</code>`)}
+      ${line('Alta',when(u.created_at))}
+      ${line('Último acceso',`${when(u.last_login_at)} <span class="muted small">· ${u.login_count||0} entradas</span>`)}
+      ${line('Presencia',d.presence?`${esc(d.presence.location)}${d.presence.game_id?' · '+esc(d.presence.game_id):''} <span class="muted small">${when(d.presence.last_seen_at)}</span>`:'—')}
+      ${line('Chat',d.mute?`silenciado ${d.mute.muted_until?'hasta '+when(d.mute.muted_until):'de forma permanente'} por ${esc(d.mute.created_by)}`:'sin restricciones')}
+      ${line('Juego',`${s.played||0} partidas · ${s.wins||0} ganadas · ${s.draws||0} empates`)}
+      ${line('Mensajes',`${s.messages||0} enviados · ${s.reportsGot||0} reportados · ${s.reportsMade||0} reportes hechos`)}
+    </div>
+    <div class="row" style="margin-top:14px">
+      <button class="tiny" data-user="${esc(u.username)}" data-block="${u.blocked_at?'0':'1'}">${u.blocked_at?'Desbloquear':'Bloquear'}</button>
+      <button class="tiny" data-pin="${esc(u.username)}">Nuevo PIN</button>
+      <button class="tiny" data-role="${esc(u.username)}" data-next="${u.role==='admin'?'player':'admin'}">${u.role==='admin'?'Quitar admin':'Hacer admin'}</button>
+      <button class="tiny" data-sessions="${esc(u.username)}">Cerrar sus sesiones</button>
+      <button class="tiny danger" data-delete-user="${esc(u.username)}">Borrar cuenta</button>
+    </div>
+    ${d.related.length?`<h3>Cuentas parecidas</h3>${d.related.map(r=>`<div class="row"><span class="tag dup">${r.reason==='ip'?'misma IP':'mismo nombre'}</span>
+      <a class="user" data-detail="${esc(r.username)}">${flag(r.last_country)} ${esc(r.username)}</a>
+      <code>${esc(r.last_ip||'—')}</code><span class="muted small">${when(r.last_login_at)}</span>
+      <button class="tiny" data-merge-into="${esc(u.username)}" data-merge-from="${esc(r.username)}">Fusionar en ${esc(u.username)}</button></div>`).join('')}`:''}
+    <h3>Sesiones (${d.sessions.length})</h3>
+    ${d.sessions.length?`<div class="scroll"><table><thead><tr><th>Creada</th><th>Vista</th><th>Caduca</th><th>IP</th><th>País</th></tr></thead><tbody>
+      ${d.sessions.map(x=>`<tr><td class="nowrap">${when(x.created_at)}</td><td class="nowrap">${when(x.last_seen_at)}</td><td class="nowrap">${when(x.expires_at)}</td><td><code>${esc(x.ip||'—')}</code></td><td>${flag(x.country)} ${esc(String(x.country||'').toUpperCase())}</td></tr>`).join('')}
+    </tbody></table></div>`:'<div class="muted">Sin sesiones.</div>'}
+    <h3>Conversaciones (${d.threads.length})</h3>
+    ${d.threads.length?d.threads.map(t=>`<div class="row"><a class="user" data-detail="${esc(t.opponent)}">${esc(t.opponent)}</a>
+      <span class="muted small">${t.messages} mensajes · ${when(t.lastActivity)}</span><button class="tiny" data-thread="${t.id}">Ver</button></div>`).join(''):'<div class="muted">Ninguna.</div>'}
+    <h3>Últimas partidas</h3>
+    ${d.games.length?`<div class="scroll"><table><thead><tr><th>Código</th><th>Estado</th><th>Rivales</th><th>Ganador</th><th>Actualizada</th></tr></thead><tbody>
+      ${d.games.map(g=>`<tr><td class="nowrap"><code>${esc(g.game_id)}</code></td><td>${esc(g.status)}</td><td>${esc(g.p1)} / ${esc(g.p2||'—')}</td><td>${esc(g.winner||'—')}</td><td class="nowrap">${when(g.updated_at)}</td></tr>`).join('')}
+    </tbody></table></div>`:'<div class="muted">Ninguna.</div>'}`);
+}
+
+/* ---- fusión de cuentas ---- */
+function openMerge(from,into){
+  const options=sel=>state.users.map(u=>`<option value="${esc(u.username)}"${u.username===sel?' selected':''}>${esc(u.username)}</option>`).join('');
+  openModal('Fusionar cuentas',`<p class="muted small">Todo lo de la cuenta de origen —partidas, mensajes, conversaciones— pasa a la de destino, y la de origen desaparece. El PIN que sobrevive es el de la cuenta de destino. No tiene vuelta atrás: exporta antes una copia.</p>
+    <div class="row"><label>Origen (desaparece)</label><select id="mergeFrom">${options(from)}</select></div>
+    <div class="row" style="margin-top:8px"><label>Destino (se conserva)</label><select id="mergeInto">${options(into)}</select></div>
+    <div class="row" style="margin-top:14px"><button class="danger" id="mergeRun">Fusionar</button><span id="mergeInfo" class="muted small"></span></div>`);
+  $('mergeRun').onclick=async()=>{
+    const f=$('mergeFrom').value,i=$('mergeInto').value;
+    if(!confirm(`Se absorberá "${f}" dentro de "${i}". ¿Continuar?`))return;
+    try{const r=await api('adminMergeUsers',{from:f,into:i});
+      $('mergeInfo').innerHTML=`<span class="ok">Hecho: ${r.merged.movedThreads} conversación(es) trasladada(s), ${r.merged.mergedThreads} unificada(s).</span>`;
+      loaded.delete('usuarios');loaded.delete('chat');await loadUsers();loaded.add('usuarios');
+    }catch(e){$('mergeInfo').innerHTML=`<span class="error">${esc(e.message)}</span>`}
+  };
+}
+
+/* ---- consola SQL ---- */
+const RECIPES=[
+  ['Cuentas con la misma IP',"SELECT last_ip,COUNT(*) cuentas,GROUP_CONCAT(username,', ') usuarios FROM users WHERE last_ip<>'' GROUP BY last_ip HAVING cuentas>1 ORDER BY cuentas DESC"],
+  ['Usuarios sin jugar nunca',"SELECT username,last_country,created_at FROM users u WHERE NOT EXISTS(SELECT 1 FROM games g WHERE g.p1=u.username OR g.p2=u.username) ORDER BY created_at DESC"],
+  ['Partidas abandonadas',"SELECT game_id,status,p1,p2,updated_at FROM games WHERE status IN ('waiting','active') AND updated_at<datetime('now','-7 days') ORDER BY updated_at"],
+  ['Ranking real',"SELECT username,(SELECT COUNT(*) FROM games WHERE winner=u.username) ganadas,(SELECT COUNT(*) FROM games WHERE p1=u.username OR p2=u.username) jugadas FROM users u ORDER BY ganadas DESC LIMIT 25"],
+  ['Tablas de la base',"SELECT name,type FROM sqlite_master WHERE type IN ('table','index') ORDER BY type,name"],
+  ['Columnas de users',"SELECT sql FROM sqlite_master WHERE name='users'"],
+];
+function loadRecipes(){
+  $('recipes').innerHTML=RECIPES.map((r,i)=>`<button class="tiny" data-recipe="${i}">${esc(r[0])}</button>`).join('');
+}
+async function runSql(confirmed){
+  $('sqlInfo').textContent='Ejecutando…';$('sqlOut').innerHTML='';
+  try{
+    const r=await api('adminSql',{sql:$('sql').value,confirm:confirmed?1:0});
+    if(r.pending){
+      $('sqlInfo').textContent='';
+      if(confirm('Esta instrucción MODIFICA datos:\n\n'+r.sql+'\n\n¿Ejecutar?'))return runSql(true);
+      return;
+    }
+    if(r.kind==='write'){$('sqlInfo').innerHTML=`<span class="ok">${r.changes} fila(s) modificada(s) en ${r.ms} ms.</span>`;loaded.clear();return;}
+    $('sqlInfo').textContent=`${r.total} fila(s) en ${r.ms} ms${r.truncated?' · se muestran las 200 primeras':''}.`;
+    $('sqlOut').innerHTML=r.rows.length?`<table><thead><tr>${r.columns.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>
+      ${r.rows.map(row=>`<tr>${row.map(v=>`<td>${v===null?'<span class="muted">NULL</span>':esc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table>`:'<div class="muted">Sin filas.</div>';
+  }catch(e){$('sqlInfo').innerHTML=`<span class="error">${esc(e.message)}</span>`}
+}
+
+/* ---- ventana emergente ---- */
+function openModal(title,html){$('modalTitle').textContent=title;$('modalBody').innerHTML=html;if(!$('modal').open)$('modal').showModal();}
+$('modalClose').onclick=()=>$('modal').close();
+
+/* ---- acciones compartidas: la misma delegación sirve en las tablas y en la ficha ---- */
+async function handleAction(e){
+  const hit=sel=>e.target.closest('['+sel+']');
+  const detail=hit('data-detail');
+  if(detail)return openUser(detail.dataset.detail).catch(reportFailure);
+  const thread=hit('data-thread');
+  if(thread)return openThread(Number(thread.dataset.thread)).catch(reportFailure);
+  try{
+    const block=hit('data-user');
+    if(block){if(!confirm('¿Confirmar cambio para '+block.dataset.user+'?'))return;
+      await api('adminSetBlocked',{target:block.dataset.user,blocked:block.dataset.block});return afterChange();}
+    const pin=hit('data-pin');
+    if(pin){const newPin=prompt('Nuevo PIN de 4 a 8 dígitos para '+pin.dataset.pin);
+      if(newPin===null)return;await api('adminResetPin',{target:pin.dataset.pin,newPin});
+      alert('PIN actualizado; las sesiones anteriores se cerraron.');return afterChange();}
+    const role=hit('data-role');
+    if(role){if(!confirm(`¿Cambiar el rol de ${role.dataset.role} a "${role.dataset.next}"?`))return;
+      await api('adminSetRole',{target:role.dataset.role,role:role.dataset.next});return afterChange();}
+    const sessions=hit('data-sessions');
+    if(sessions){if(!confirm('¿Cerrar todas las sesiones de '+sessions.dataset.sessions+'?'))return;
+      await api('adminCloseSessions',{target:sessions.dataset.sessions});return afterChange();}
+    const unmute=hit('data-unmute-chat');
+    if(unmute){if(!confirm('¿Reactivar el chat de '+unmute.dataset.unmuteChat+'?'))return;
+      await api('adminUnmuteChatUser',{target:unmute.dataset.unmuteChat});return afterChange();}
+    const mute=hit('data-mute-user');
+    if(mute){const choice=prompt('Duración: 15, 60, 1440 minutos o 0 para permanente','60');
+      if(choice===null)return;await api('adminMuteChatUser',{target:mute.dataset.muteUser,minutes:choice});return afterChange();}
+    const del=hit('data-delete-message');
+    if(del){if(!confirm('¿Borrar este mensaje?'))return;
+      await api('adminDeleteChatMessage',{messageId:del.dataset.deleteMessage});return afterChange();}
+    const game=hit('data-game');
+    if(game){if(!confirm('¿Cerrar la partida '+game.dataset.game+'?'))return;
+      await api('adminCloseGame',{target:game.dataset.game});return afterChange();}
+    const drop=hit('data-delete-user');
+    if(drop){const name=drop.dataset.deleteUser;
+      if(!confirm(`Se borrará la cuenta "${name}". Escribe después si quieres arrastrar también sus partidas y mensajes.`))return;
+      const purge=confirm('¿Borrar también sus partidas y sus mensajes?\n\nAceptar = borrarlo todo · Cancelar = conservar el historial');
+      if(prompt('Escribe el nombre exacto para confirmar:')!==name)return alert('Nombre distinto: no se ha borrado nada.');
+      await api('adminDeleteUser',{target:name,purge:purge?'1':'0'});$('modal').close();return afterChange();}
+    const mergeGroup=hit('data-merge-group');
+    if(mergeGroup){const list=mergeGroup.dataset.mergeGroup.split('|');return openMerge(list[0],list[1]);}
+    const mergePair=hit('data-merge-into');
+    if(mergePair)return openMerge(mergePair.dataset.mergeFrom,mergePair.dataset.mergeInto);
+    const recipe=hit('data-recipe');
+    if(recipe){$('sql').value=RECIPES[Number(recipe.dataset.recipe)][1];return runSql(false);}
+  }catch(err){reportFailure(err)}
+}
+async function afterChange(){$('modal').close();loaded.clear();await reload();}
+document.addEventListener('click',handleAction);
+
+/* ---- enganches sueltos ---- */
+$('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b)openTab(b.dataset.tab)});
+$('userFilter').oninput=renderUsers;$('gameFilter').oninput=renderGames;$('threadFilter').oninput=renderThreads;
+$('mergeOpen').onclick=()=>openMerge('','');
+$('sqlRun').onclick=()=>runSql(false);
+$('refresh').onclick=reload;
+$('purgeCount').onclick=async()=>{
+  try{
+    const filters={status:$('purgeStatus').value,olderThanDays:$('purgeDays').value};
+    const r=await api('adminPurgeGames',filters);
+    if(!r.matched){$('purgeInfo').textContent='Ninguna partida coincide.';return}
+    $('purgeInfo').innerHTML=`Coinciden <b>${r.matched}</b> partidas.`;
+    if(!confirm(`Se borrarán ${r.matched} partidas y su chat. ¿Continuar?`))return;
+    const done=await api('adminPurgeGames',{...filters,confirm:1});
+    $('purgeInfo').innerHTML=`<span class="ok">${done.deleted} partidas borradas.</span>`;loaded.clear();
+  }catch(e){$('purgeInfo').innerHTML=`<span class="error">${esc(e.message)}</span>`}
+};
+$('export').onclick=async()=>{
+  const data=await api('adminExport');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+  a.download='picas-y-fijas-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href);
+};
+$('logout').onclick=()=>{signOut();location.reload()};
+// El toro azul hace las dos cosas de una vez: cierra el panel en este navegador
+// y devuelve a la persona al juego, que tiene su propia sesión aparte.
+$('backToGame').onclick=()=>{signOut();location.href='/'};
+$('username').addEventListener('keydown',submitLoginOnEnter);$('pin').addEventListener('keydown',submitLoginOnEnter);
+function submitLoginOnEnter(e){if(e.key!=='Enter'||e.isComposing||e.repeat)return;e.preventDefault();$('loginButton').click()}
+$('loginButton').onclick=login;
+if(token){$('login').classList.add('hidden');$('dashboard').classList.remove('hidden');openTab('resumen');}
 </script></main></body></html>

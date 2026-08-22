@@ -148,15 +148,16 @@ El rival funciona íntegramente sin conexión y no utiliza ChatGPT ni ninguna AP
 - `public/screenshots/`: las capturas que Chrome enseña al ofrecer la instalación. **Son generadas: no se editan a mano.**
 - `public/icon-192.png`, `public/icon-512.png`, `public/icon-maskable-512.png`, `public/apple-touch-icon.png`: iconos de la aplicación instalada.
 - `public/computer-ai.js`: rival local de práctica, generación de candidatos y estrategias por dificultad.
-- `public/admin.html`: panel reservado de administración.
+- `public/admin.html`: panel reservado de administración, en pestañas.
 - `public/robots.txt`, `public/sitemap.xml`: indexación. Abren el juego a los buscadores, cierran `/admin` y `/api` y declaran las tres direcciones de idioma.
 - `public/rules-es.html`, `public/rules-en.html`, `public/rules-fr.html`: las reglas como página pública. **Son generadas: no se editan a mano.** Salen de `RULES`, en `public/index.html`, con `python tools/make-rules-pages.py`.
 - `public/install-es.html`, `public/install-en.html`, `public/install-fr.html`: la guía de instalación como página pública. **Son generadas: no se editan a mano.** Salen de las claves `install_*` y de `INSTALL_ART`, en `public/index.html`, con `python tools/make-install-pages.py`.
 - `public/og-es.png`, `public/og-en.png`, `public/og-fr.png`: la tarjeta social de 1200×630 que se ve al compartir el enlace, una por idioma. Se generan con `python tools/make-og-images.py` y necesitan `python -m pip install pillow`.
 - `src/index.js`: Worker, rutas, API, acceso a D1 y operaciones administrativas.
 - `src/game.js`: reglas puras, validaciones, cronómetro y sanitización del estado.
-- `src/security.js`: PIN, autenticación, sesiones y limitación de intentos.
-- `migrations/0001_initial.sql`: esquema reproducible de D1. No es un residuo de la migración desde Google y no debe eliminarse.
+- `src/security.js`: PIN, autenticación, sesiones, limitación de intentos y lectura del país y la IP que pone Cloudflare.
+- `src/admin.js`: herramientas de mantenimiento del panel: ficha de usuario, detección de cuentas repetidas, fusión, borrado, limpieza de partidas y consola SQL.
+- `migrations/0001_initial.sql`: esquema reproducible de D1. No es un residuo de la migración desde Google y no debe eliminarse. Las migraciones siguientes solo añaden: `0002` el chat, `0003` los hilos privados y `0004` el origen de cada cuenta.
 - `test/`: pruebas automáticas de reglas, rutas, teclado y regresiones.
 - `tools/make-icons.mjs`: genera los cuatro PNG de la aplicación instalada. Se ejecuta con `npm run icons`.
 - `tools/make-rules-pages.py`: convierte `RULES` en las tres páginas públicas de reglas. El texto no se duplica: la única fuente sigue siendo el juego.
@@ -311,8 +312,8 @@ El logo es un `<button>` (`#brand-home`) que lleva al lobby, pero solo desde las
 
 ## Modelo de datos
 
-- `users`: identidad, hash y sal del PIN, rol y bloqueo.
-- `sessions`: sesiones temporales; el PIN no viaja durante las consultas periódicas.
+- `users`: identidad, hash y sal del PIN, rol, bloqueo y el origen de la cuenta: país e IP del alta, país e IP de la última entrada y número de entradas.
+- `sessions`: sesiones temporales; el PIN no viaja durante las consultas periódicas. Cada sesión guarda la IP y el país desde los que se abrió.
 - `games`: estado completo, opciones, cronómetro y versión de concurrencia.
 - `presence`: usuario conectado y ubicación en lobby o partida.
 - `request_receipts`: respuestas de jugadas ya procesadas para evitar duplicados.
@@ -321,9 +322,43 @@ El logo es un `<button>` (`#brand-home`) que lleva al lobby, pero solo desde las
 - `chat_reports`: reportes de moderación, únicos por mensaje y usuario.
 - `chat_mutes`: silencios temporales o permanentes impuestos por administración.
 
+El país y la IP no los declara el navegador: los pone Cloudflare delante del Worker (`request.cf.country` y `CF-Connecting-IP`, en `requestOrigin`). Se escriben solo al entrar —una escritura por sesión, no por petición— y su único uso es administrativo. El país que enseña la bandera de una partida sigue siendo el que averigua el navegador; son dos datos distintos y no se mezclan.
+
 Los secretos de jugadores nunca deben exponerse mientras una partida esté activa. Toda nueva respuesta API debe pasar por la sanitización correspondiente.
 
 El chat del lobby conserva 24 horas. El chat de partida es exclusivo de sus dos jugadores, se cierra 24 horas después de terminar y conserva sus filas durante 7 días. La limpieza es progresiva al usar el chat. Los zumbidos requieren que el rival esté presente en la partida y tienen 30 segundos de espera por emisor.
+
+## La administración
+
+El panel vive en `/admin`, no está enlazado desde el juego, no se indexa y necesita una cuenta con rol `admin`. Se organiza en pestañas y cada una pide sus datos la primera vez que se abre, para no gastar lecturas de D1 en lo que nadie mira.
+
+El toro azul de la esquina superior cierra el panel en ese navegador y devuelve al juego. Son dos sesiones distintas —`pf_admin_session` y `pf_session`—, así que salir de la administración no expulsa a nadie de su partida.
+
+| Pestaña | Qué resuelve |
+| --- | --- |
+| Resumen | Usuarios, gente en línea, altas y activos de la semana, partidas y mensajes del día, moderación pendiente y los países de donde entra la gente. |
+| Usuarios | La lista completa con país, última IP, partidas y mensajes. Bloquear, cambiar el PIN, dar o quitar el rol `admin`, cerrar sesiones, reactivar el chat, borrar y fusionar. Arriba, las cuentas que parecen repetidas. |
+| Partidas | Las últimas 200, con filtro, y el cierre de las que siguen abiertas. |
+| Conversaciones | Una fila por chat, no un río de mensajes: quiénes hablan, cuántos mensajes, cuántos zumbidos y cuántos reportes. El histórico se abre aparte, en su propia ventana. |
+| Moderación | Los reportes del chat, con borrar y silenciar a mano. |
+| Mantenimiento | Limpieza de partidas por estado y antigüedad, y la consola SQL. |
+| Auditoría | Todo lo que la administración ha cambiado, con fecha, objetivo y detalle. |
+
+### Cuentas repetidas y fusión
+
+Quien olvida su PIN no escribe a nadie: vuelve a entrar con el mismo nombre y un número detrás. Por eso el panel agrupa las cuentas por dos pistas independientes —la misma última IP y la misma raíz del nombre, que ignora acentos, dígitos y signos— y las enseña con su motivo. Ninguna de las dos es una prueba: una IP compartida puede ser una casa o un móvil, y dos nombres parecidos pueden ser dos personas.
+
+Fusionar arrastra a la cuenta de destino las partidas, los mensajes, los reportes y las conversaciones de la de origen, y borra la de origen. El PIN que sobrevive es el del destino. La parte delicada son los hilos: `chat_threads` solo admite un hilo por pareja, así que cuando la fusión crea una pareja que ya existe los mensajes se mudan al hilo superviviente y el vacío se retira; un hilo de la cuenta consigo misma desaparece. No se puede absorber al administrador principal ni a una cuenta con rol `admin`, y no hay vuelta atrás: conviene exportar una copia antes.
+
+### La consola SQL
+
+Existe para las reparaciones que ninguna pantalla previó. Tiene tres barandillas, que no protegen de un administrador decidido —para eso está la confirmación— sino de los tres accidentes reales:
+
+- una sola instrucción por ejecución, para que un `;` de más no arrastre un segundo comando;
+- ni `CREATE`, ni `ALTER`, ni `DROP`, ni `PRAGMA`: el esquema solo se cambia con una migración numerada;
+- ni `UPDATE` ni `DELETE` sin `WHERE`.
+
+Las lecturas salen directas y se cortan a 200 filas. Los cambios se ejecutan en dos pasos —el servidor devuelve la instrucción sin tocarla y espera la confirmación— y quedan siempre en `audit_log`. La limpieza de partidas funciona igual: primero cuenta, después borra.
 
 ## Reglas técnicas que no se deben romper
 
@@ -333,7 +368,7 @@ Las jugadas incluyen `requestId`. Si el navegador repite una petición por pérd
 
 El servidor es la autoridad sobre turnos y temporizadores. El navegador muestra una cuenta regresiva basada en el estado recibido, pero no decide por sí solo el resultado. Una petición recibida tras expirar el turno debe ser rechazada y provocar la transición válida del servidor.
 
-La administración no está enlazada desde el juego. Requiere una cuenta con rol `admin` y permite consultar, bloquear, restablecer PIN, cerrar partidas y exportar datos. Las acciones sensibles deben permanecer autenticadas y auditadas.
+La administración no está enlazada desde el juego. Requiere una cuenta con rol `admin`, y toda acción que cambie algo queda en `audit_log`. Un jugador sin ese rol recibe siempre un error, tenga o no sesión válida.
 
 ## Desarrollo local
 
@@ -385,6 +420,8 @@ Nunca se deben subir a GitHub:
 - `.private/`, `.wrangler/`, `dist/`, cachés o perfiles de rendimiento.
 
 Estas exclusiones están definidas en `.gitignore`. Los PIN se almacenan con hash SHA-256 y una sal individual. No se deben registrar PIN, tokens de sesión, secretos de partida ni contenido privado en logs o documentación.
+
+La IP y el país de cada cuenta son datos personales. Se guardan porque sin ellos no hay forma de reconocer a quien vuelve con otro nombre tras olvidar su PIN, y por eso solo se ven dentro de `/admin`: no aparecen en ninguna respuesta del juego, no viajan al navegador de ningún jugador y no se escriben en logs. Sí van en la exportación, que por lo tanto es un archivo con datos personales y nunca debe subirse al repositorio.
 
 ## Procedimiento para futuras modificaciones
 
