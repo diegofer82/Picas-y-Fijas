@@ -294,6 +294,8 @@
     padding:11px 13px;margin:0 0 14px;font-size:13px;line-height:1.5;color:var(--fija)}
   .invite-banner b{font-family:'JetBrains Mono',monospace;letter-spacing:2px;font-size:15px}
   .experience-card{border-color:rgba(91,141,239,.5);background:linear-gradient(135deg,rgba(91,141,239,.12),rgba(224,104,90,.08))}.experience-card .experience-icon{font-size:28px;margin-bottom:7px}.experience-card .experience-status{font-size:12px;color:var(--muted);margin:10px 0 0;line-height:1.45}.experience-card .btn{margin-top:12px}
+  .install-card{border-color:rgba(240,180,41,.5);background:linear-gradient(135deg,rgba(240,180,41,.12),rgba(91,141,239,.08))}.install-card .install-icon{margin-bottom:7px}.install-card .btn{margin-top:12px}.install-note{font-size:12px;color:var(--muted);margin:10px 0 0;line-height:1.45}.install-foot{margin-top:11px;font-size:12px;color:var(--muted);display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.install-foot .link{cursor:pointer}
+  .install-steps{margin-top:14px;display:flex;flex-direction:column;gap:9px}.install-step{display:flex;gap:11px;align-items:center;background:#0D0B07;border:1px solid var(--edge);border-radius:12px;padding:9px 11px;text-align:left}.install-step .num{flex:0 0 22px;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#0A1020;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}.install-step .txt{flex:1;font-size:13px;line-height:1.45;color:var(--muted)}.install-step .txt b{color:var(--text)}.install-step .shot{flex:0 0 auto;display:block}.install-step .shot svg{display:block}
   .legend{display:flex;gap:16px;justify-content:center;font-size:12px;color:var(--muted);margin-top:6px;flex-wrap:wrap}
   .legend span{display:inline-flex;align-items:center;gap:6px}
   .legend .pip{width:11px;height:11px}
@@ -358,7 +360,7 @@
     <p class="fieldnote" data-i18n="login_pin_note">🔒 Es tu contraseña para entrar en la app. No es el código secreto del juego ni el código de la partida.</p>
     <div class="val" id="uname-val"></div>
     <button class="btn" id="btn-login" onclick="doLogin()" data-i18n="login_enter">Entrar</button>
-    <div class="foot"><a class="link" data-rules-link href="/como-se-juega" onclick="openRules();return false" data-i18n="rules_link">¿Cómo se juega?</a></div>
+    <div class="foot"><a class="link" data-rules-link href="/como-se-juega" onclick="openRules();return false" data-i18n="rules_link">¿Cómo se juega?</a><span id="login-install" class="hidden"> · <a class="link" data-install-link id="login-install-link" href="/instalar"></a></span></div>
     <div class="foot credits"></div>
   </section>
 
@@ -407,6 +409,16 @@
       <p class="hint" data-i18n="experience_hint">Activa las notificaciones y el sonido para recibir avisos de turnos, rivales y zumbidos aunque el chat esté cerrado.</p>
       <button class="btn" id="experience-btn" type="button" onclick="activateExperience()" data-i18n="experience_activate">Activar notificaciones y sonido</button>
       <div class="experience-status" id="experience-status"></div>
+    </div>
+
+    <div class="card install-card hidden" id="install-card">
+      <div class="install-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--pica)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2.6"></rect><path d="M12 7v6.5"></path><path d="M9.6 11.1 12 13.5l2.4-2.4"></path><path d="M10.6 18.6h2.8"></path></svg></div>
+      <h2 id="install-title">Juégalo desde tu pantalla de inicio</h2>
+      <p class="hint" id="install-hint"></p>
+      <button class="btn" id="install-btn" type="button" onclick="installAction()"></button>
+      <div class="install-steps hidden" id="install-steps"></div>
+      <div class="install-note hidden" id="install-note"></div>
+      <div class="install-foot"><a class="link" id="install-guide-link" data-install-link href="/instalar" target="_blank" rel="noopener"></a> · <span class="link" id="install-later" onclick="dismissInstall()"></span></div>
     </div>
 
     <div class="card" id="mine-card">
@@ -977,16 +989,21 @@ Object.assign(I18N.es,{
   chat_lobby:"Chat del lobby",chat_game:"Chat de la partida",chat_placeholder:"Escribe un mensaje…",chat_empty:"Todavía no hay mensajes.",chat_deleted:"Mensaje eliminado",chat_mute:"Silenciar usuario",chat_mute_confirm:"¿Silenciar a {name}? Sus mensajes y zumbidos quedarán ocultos hasta que lo reactives desde el botón 🔇.",chat_manage_muted:"Gestionar usuarios silenciados",chat_muted_title:"Usuarios silenciados",chat_muted_empty:"No has silenciado a ningún usuario.",chat_unmute:"Reactivar",chat_unmute_all:"Reactivar a todos",chat_unmuted:"{name} fue reactivado.",chat_all_unmuted:"Todos los usuarios fueron reactivados.",chat_report:"Reportar mensaje",chat_muted:"Usuario silenciado en este dispositivo.",chat_reported:"Mensaje reportado.",chat_nudge:"Enviar zumbido",chat_nudges_on:"Zumbidos activados",chat_nudges_off:"Zumbidos desactivados",chat_joined:"{name} entró en la partida.",chat_paused:"{name} pausó la partida.",chat_resumed:"{name} reanudó la partida.",chat_abandoned:"{name} abandonó la partida.",chat_rematch:"{name} propuso una revancha.",chat_finished:"La partida terminó.",chat_nudged:"{name} te ha enviado un zumbido ⚡",chat_report_reason:"Motivo: 1 spam, 2 insultos/acoso, 3 contenido inapropiado"
 });
 Object.assign(I18N.es,{experience_title:"No te pierdas tu turno",experience_hint:"Activa las notificaciones y el sonido para recibir avisos de turnos, rivales y zumbidos aunque el chat esté cerrado.",experience_activate:"Activar notificaciones y sonido",experience_ready:"Notificaciones y sonido activados.",experience_sound_only:"Sonido activado. Este navegador no admite notificaciones.",experience_denied:"El sonido está activado, pero las notificaciones están bloqueadas. Permítelas desde la configuración del sitio en tu navegador.",experience_default:"Recomendado para una mejor experiencia de juego.",experience_enabled_toast:"Notificaciones y sonido activados",experience_denied_toast:"El navegador bloqueó las notificaciones. Revisa los permisos del sitio."});
+/* Instalar el juego como app. Estas claves son tambien la unica fuente de las
+   paginas /instalar, que genera tools/make-install-pages.py leyendolas de aqui. */
+Object.assign(I18N.es,{install_title:"Juégalo desde tu pantalla de inicio",install_hint_android:"Añádelo como app: se abre a pantalla completa, sin la barra del navegador, y vuelves a la partida de un solo toque.",install_hint_ios:"Añádelo a tu pantalla de inicio: se abre a pantalla completa y es la única forma de que el iPhone te avise cuando sea tu turno.",install_btn:"Instalar la app",install_btn_steps:"Ver cómo se hace",install_btn_hide:"Ocultar los pasos",install_btn_copy:"Copiar el enlace",install_later:"Ahora no",install_guide:"Guía con imágenes",install_done:"Listo: el juego ya está en tu pantalla de inicio 🎉",install_copied:"Enlace copiado",install_note_browser:"Desde este navegador integrado no se puede instalar. Copia el enlace y ábrelo en Safari (iPhone) o en Chrome (Android).",install_ios_1:"Toca el botón <b>Compartir</b> en la barra de Safari.",install_ios_2:"Desliza hacia abajo y elige <b>Añadir a pantalla de inicio</b>.",install_ios_3:"Pulsa <b>Añadir</b>, arriba a la derecha.",install_and_1:"Abre el menú <b>⋮</b> del navegador, arriba a la derecha.",install_and_2:"Elige <b>Instalar aplicación</b> o <b>Añadir a pantalla de inicio</b>.",install_and_3:"Confirma con <b>Instalar</b>.",experience_ios_install:"En iPhone los avisos de turno solo llegan si añades el juego a tu pantalla de inicio."});
 I18N.es.session_expired="Tu sesión venció. Escribe tu PIN para volver a conectarte.";
 Object.assign(I18N.en,{
   chat_lobby:"Lobby chat",chat_game:"Game chat",chat_placeholder:"Write a message…",chat_empty:"No messages yet.",chat_deleted:"Message deleted",chat_mute:"Mute user",chat_mute_confirm:"Mute {name}? Their messages and nudges will stay hidden until you restore them with the 🔇 button.",chat_manage_muted:"Manage muted users",chat_muted_title:"Muted users",chat_muted_empty:"You have not muted anyone.",chat_unmute:"Unmute",chat_unmute_all:"Unmute everyone",chat_unmuted:"{name} was unmuted.",chat_all_unmuted:"Everyone was unmuted.",chat_report:"Report message",chat_muted:"User muted on this device.",chat_reported:"Message reported.",chat_nudge:"Send a nudge",chat_nudges_on:"Nudges enabled",chat_nudges_off:"Nudges disabled",chat_joined:"{name} joined the game.",chat_paused:"{name} paused the game.",chat_resumed:"{name} resumed the game.",chat_abandoned:"{name} abandoned the game.",chat_rematch:"{name} proposed a rematch.",chat_finished:"The game ended.",chat_nudged:"{name} sent you a nudge ⚡",chat_report_reason:"Reason: 1 spam, 2 harassment, 3 inappropriate content"
 });
 Object.assign(I18N.en,{experience_title:"Don't miss your turn",experience_hint:"Enable notifications and sound for turn, opponent and nudge alerts even when chat is closed.",experience_activate:"Enable notifications and sound",experience_ready:"Notifications and sound enabled.",experience_sound_only:"Sound enabled. This browser does not support notifications.",experience_denied:"Sound is enabled, but notifications are blocked. Allow them in this site's browser settings.",experience_default:"Recommended for the best game experience.",experience_enabled_toast:"Notifications and sound enabled",experience_denied_toast:"The browser blocked notifications. Check this site's permissions."});
+Object.assign(I18N.en,{install_title:"Play it from your home screen",install_hint_android:"Add it as an app: it opens full screen, without the browser bar, and you are back in the game in a single tap.",install_hint_ios:"Add it to your home screen: it opens full screen and it is the only way your iPhone can alert you when it is your turn.",install_btn:"Install the app",install_btn_steps:"Show me how",install_btn_hide:"Hide the steps",install_btn_copy:"Copy the link",install_later:"Not now",install_guide:"Illustrated guide",install_done:"Done: the game is on your home screen 🎉",install_copied:"Link copied",install_note_browser:"This in-app browser cannot install it. Copy the link and open it in Safari (iPhone) or Chrome (Android).",install_ios_1:"Tap the <b>Share</b> button in the Safari bar.",install_ios_2:"Scroll down and pick <b>Add to Home Screen</b>.",install_ios_3:"Tap <b>Add</b>, at the top right.",install_and_1:"Open the browser <b>⋮</b> menu, at the top right.",install_and_2:"Pick <b>Install app</b> or <b>Add to Home screen</b>.",install_and_3:"Confirm with <b>Install</b>.",experience_ios_install:"On iPhone, turn alerts only arrive if you add the game to your home screen."});
 I18N.en.session_expired="Your session expired. Enter your PIN to reconnect.";
 Object.assign(I18N.fr,{
   chat_lobby:"Chat du lobby",chat_game:"Chat de la partie",chat_placeholder:"Écris un message…",chat_empty:"Aucun message pour l'instant.",chat_deleted:"Message supprimé",chat_mute:"Ignorer l'utilisateur",chat_mute_confirm:"Ignorer {name} ? Ses messages et wizz resteront masqués jusqu'à sa réactivation avec le bouton 🔇.",chat_manage_muted:"Gérer les utilisateurs ignorés",chat_muted_title:"Utilisateurs ignorés",chat_muted_empty:"Tu n'as ignoré aucun utilisateur.",chat_unmute:"Réactiver",chat_unmute_all:"Tout réactiver",chat_unmuted:"{name} a été réactivé.",chat_all_unmuted:"Tous les utilisateurs ont été réactivés.",chat_report:"Signaler le message",chat_muted:"Utilisateur ignoré sur cet appareil.",chat_reported:"Message signalé.",chat_nudge:"Envoyer un wizz",chat_nudges_on:"Wizz activés",chat_nudges_off:"Wizz désactivés",chat_joined:"{name} a rejoint la partie.",chat_paused:"{name} a mis la partie en pause.",chat_resumed:"{name} a repris la partie.",chat_abandoned:"{name} a abandonné la partie.",chat_rematch:"{name} a proposé une revanche.",chat_finished:"La partie est terminée.",chat_nudged:"{name} t'a envoyé un wizz ⚡",chat_report_reason:"Motif : 1 spam, 2 harcèlement, 3 contenu inapproprié"
 });
 Object.assign(I18N.fr,{experience_title:"Ne rate pas ton tour",experience_hint:"Active les notifications et le son pour les alertes de tour, d'adversaire et de wizz, même lorsque le chat est fermé.",experience_activate:"Activer les notifications et le son",experience_ready:"Notifications et son activés.",experience_sound_only:"Son activé. Ce navigateur ne prend pas en charge les notifications.",experience_denied:"Le son est activé, mais les notifications sont bloquées. Autorise-les dans les paramètres du site du navigateur.",experience_default:"Recommandé pour une meilleure expérience de jeu.",experience_enabled_toast:"Notifications et son activés",experience_denied_toast:"Le navigateur a bloqué les notifications. Vérifie les autorisations de ce site."});
+Object.assign(I18N.fr,{install_title:"Joue depuis ton écran d'accueil",install_hint_android:"Ajoute-le comme appli : il s'ouvre en plein écran, sans la barre du navigateur, et tu reprends la partie d'un seul geste.",install_hint_ios:"Ajoute-le à ton écran d'accueil : il s'ouvre en plein écran et c'est le seul moyen que l'iPhone te prévienne quand c'est ton tour.",install_btn:"Installer l'appli",install_btn_steps:"Voir comment faire",install_btn_hide:"Masquer les étapes",install_btn_copy:"Copier le lien",install_later:"Pas maintenant",install_guide:"Guide en images",install_done:"C'est fait : le jeu est sur ton écran d'accueil 🎉",install_copied:"Lien copié",install_note_browser:"Ce navigateur intégré ne peut pas l'installer. Copie le lien et ouvre-le dans Safari (iPhone) ou Chrome (Android).",install_ios_1:"Touche le bouton <b>Partager</b> dans la barre de Safari.",install_ios_2:"Fais défiler et choisis <b>Sur l'écran d'accueil</b>.",install_ios_3:"Appuie sur <b>Ajouter</b>, en haut à droite.",install_and_1:"Ouvre le menu <b>⋮</b> du navigateur, en haut à droite.",install_and_2:"Choisis <b>Installer l'application</b> ou <b>Ajouter à l'écran d'accueil</b>.",install_and_3:"Confirme avec <b>Installer</b>.",experience_ios_install:"Sur iPhone, les alertes de tour n'arrivent que si tu ajoutes le jeu à ton écran d'accueil."});
 I18N.fr.session_expired="Ta session a expiré. Saisis ton PIN pour te reconnecter.";
 Object.assign(I18N.es,{
   hist_played:"Jugadas",hist_wins:"Victorias",hist_win_rate:"% victorias",hist_avg_attempts:"Promedio al ganar",hist_current_streak:"Racha actual",hist_best_streak:"Mejor racha",
@@ -1196,12 +1213,16 @@ function applyI18n(){
   // un enlace de verdad para los buscadores y sigue abriendo el panel al pulsarlo.
   const rulesHref = RULES_PAGE_PATH[lang] || RULES_PAGE_PATH.es;
   document.querySelectorAll('[data-rules-link]').forEach(a=>{ a.href = rulesHref; });
+  // La guia de instalacion sigue al idioma, igual que el enlace a las reglas.
+  const installHref = INSTALL_PAGE_PATH[lang] || INSTALL_PAGE_PATH.es;
+  document.querySelectorAll('[data-install-link]').forEach(a=>{ a.href = installHref; });
   if(typeof updateSoundLabel==='function') updateSoundLabel();
   syncBrandHome();
   if(typeof renderLoginInvite==='function') renderLoginInvite();
   if(typeof updateChatLabels==='function') updateChatLabels();
   if(typeof renderMutedPanel==='function') renderMutedPanel();
   if(typeof updateExperiencePrompt==='function') updateExperiencePrompt();
+  if(typeof updateInstallCard==='function') updateInstallCard();
   if(typeof renderPracticeStats==='function'&&$('practice-stats')) renderPracticeStats();
   if(typeof renderPracticeResumeCard==='function'&&$('practice-resume-card')) renderPracticeResumeCard();
   setCredits();
@@ -1296,7 +1317,7 @@ function show(name){
   if(name!=='practice-game') stopPracticeTick();
   syncBrandHome();
   if(!['game','wait'].includes(name)) stopPoll();
-  if(name==='lobby') startLobbyPoll(); else stopLobbyPoll();
+  if(name==='lobby'){ startLobbyPoll(); if(typeof updateInstallCard==='function') updateInstallCard(); } else stopLobbyPoll();
   setChatContext(name);
   window.scrollTo(0,0);
 }
@@ -1515,7 +1536,10 @@ function updateExperiencePrompt(){
   const card=$('experience-card'),status=$('experience-status');if(!card||!status)return;
   const supported='Notification' in window,permission=supported?Notification.permission:'unsupported';
   const ready=soundOn&&(permission==='granted'||permission==='unsupported');card.classList.toggle('hidden',ready);
-  status.textContent=permission==='granted'&&soundOn?t('experience_ready'):permission==='unsupported'?t('experience_sound_only'):permission==='denied'?t('experience_denied'):t('experience_default');
+  // En el iPhone las notificaciones solo existen dentro de la app instalada:
+  // sin ella no hay nada que activar, asi que apuntamos a la pantalla de inicio.
+  const iosNeedsInstall=!supported&&IS_IOS&&!isStandalone();
+  status.textContent=permission==='granted'&&soundOn?t('experience_ready'):permission==='unsupported'?(iosNeedsInstall?t('experience_ios_install'):t('experience_sound_only')):permission==='denied'?t('experience_denied'):t('experience_default');
 }
 async function activateExperience(){
   soundOn=true;localStorage.setItem('pf_sound','1');unlockAudio();primeChatAudio();chime();
@@ -1524,6 +1548,99 @@ async function activateExperience(){
   updateSoundLabel();
   if(permission==='denied')toast(t('experience_denied_toast'),true);else toast(t('experience_enabled_toast'));
 }
+/* -------------------- instalar el juego como app (PWA) --------------------
+   Android y el escritorio dejan instalar de un toque: guardamos el evento
+   `beforeinstallprompt` que el navegador nos ofrece y lo disparamos desde
+   nuestro propio boton. El iPhone no tiene ninguna API equivalente y solo
+   se puede a mano desde Safari, asi que ahi dibujamos los pasos. Estos
+   mismos dibujos alimentan las paginas /instalar (make-install-pages.py). */
+const INSTALL_ART = {
+  share:`<svg width="56" height="40" viewBox="0 0 56 40" fill="none" aria-hidden="true"><rect x="1" y="1" width="54" height="38" rx="6" fill="#1A150F" stroke="#3B3229"></rect><rect x="7" y="6" width="42" height="16" rx="3" fill="#0D0B07"></rect><path d="M13 31h5M22 31h5M43 31h5" stroke="#6D6153" stroke-width="2" stroke-linecap="round"></path><circle cx="34.5" cy="30" r="7" fill="rgba(91,141,239,.16)" stroke="#5B8DEF"></circle><path d="M34.5 33.4V26.4M32 29l2.5-2.6L37 29" stroke="#5B8DEF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M30.8 31.2v3.4h7.4v-3.4" stroke="#5B8DEF" stroke-width="1.5" stroke-linecap="round"></path></svg>`,
+  sheet:`<svg width="56" height="40" viewBox="0 0 56 40" fill="none" aria-hidden="true"><rect x="1" y="1" width="54" height="38" rx="6" fill="#1A150F" stroke="#3B3229"></rect><rect x="6" y="5" width="44" height="8" rx="3" fill="#0D0B07"></rect><rect x="6" y="16" width="44" height="11" rx="3" fill="rgba(91,141,239,.16)" stroke="#5B8DEF"></rect><rect x="9.5" y="18.5" width="6" height="6" rx="1.5" stroke="#5B8DEF" stroke-width="1.2"></rect><path d="M12.5 20v3M11 21.5h3" stroke="#5B8DEF" stroke-width="1.1" stroke-linecap="round"></path><path d="M19 21.5h24" stroke="#5B8DEF" stroke-width="2" stroke-linecap="round" opacity=".8"></path><rect x="6" y="30" width="44" height="5" rx="2.5" fill="#0D0B07"></rect></svg>`,
+  add:`<svg width="56" height="40" viewBox="0 0 56 40" fill="none" aria-hidden="true"><rect x="1" y="1" width="54" height="38" rx="6" fill="#1A150F" stroke="#3B3229"></rect><rect x="6" y="5" width="15" height="6" rx="3" fill="#0D0B07"></rect><rect x="33" y="4" width="17" height="8" rx="4" fill="#5B8DEF"></rect><rect x="8" y="18" width="14" height="14" rx="4" fill="#2C241A" stroke="#4A3E30"></rect><circle cx="12.5" cy="24" r="1.2" fill="#F0B429"></circle><circle cx="17.5" cy="24" r="1.2" fill="#F0B429"></circle><path d="M27 22h21M27 27.5h13" stroke="#6D6153" stroke-width="2" stroke-linecap="round"></path></svg>`,
+  menu:`<svg width="56" height="40" viewBox="0 0 56 40" fill="none" aria-hidden="true"><rect x="1" y="1" width="54" height="38" rx="6" fill="#1A150F" stroke="#3B3229"></rect><rect x="6" y="5" width="33" height="8" rx="4" fill="#0D0B07"></rect><circle cx="46" cy="9" r="7" fill="rgba(91,141,239,.16)" stroke="#5B8DEF"></circle><circle cx="46" cy="6.2" r="1.15" fill="#5B8DEF"></circle><circle cx="46" cy="9" r="1.15" fill="#5B8DEF"></circle><circle cx="46" cy="11.8" r="1.15" fill="#5B8DEF"></circle><rect x="6" y="18" width="44" height="16" rx="3" fill="#0D0B07"></rect></svg>`,
+  list:`<svg width="56" height="40" viewBox="0 0 56 40" fill="none" aria-hidden="true"><rect x="1" y="1" width="54" height="38" rx="6" fill="#1A150F" stroke="#3B3229"></rect><rect x="22" y="5" width="28" height="30" rx="4" fill="#0D0B07" stroke="#3B3229"></rect><path d="M26 11h20M26 16h14" stroke="#6D6153" stroke-width="1.8" stroke-linecap="round"></path><rect x="24" y="20" width="24" height="9" rx="2.5" fill="rgba(91,141,239,.16)" stroke="#5B8DEF"></rect><path d="M28 22.2v3.4M26.6 24.4 28 25.8l1.4-1.4" stroke="#5B8DEF" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"></path><path d="M26 27.2h4" stroke="#5B8DEF" stroke-width="1.1" stroke-linecap="round"></path><path d="M33 24.5h12" stroke="#5B8DEF" stroke-width="1.8" stroke-linecap="round" opacity=".8"></path><path d="M26 32.5h18" stroke="#6D6153" stroke-width="1.8" stroke-linecap="round"></path></svg>`,
+  confirm:`<svg width="56" height="40" viewBox="0 0 56 40" fill="none" aria-hidden="true"><rect x="1" y="1" width="54" height="38" rx="6" fill="#1A150F" stroke="#3B3229"></rect><rect x="7" y="8" width="42" height="24" rx="4" fill="#0D0B07" stroke="#3B3229"></rect><rect x="11" y="12" width="11" height="11" rx="3" fill="#2C241A" stroke="#4A3E30"></rect><circle cx="14.6" cy="17.5" r="1" fill="#F0B429"></circle><circle cx="18.4" cy="17.5" r="1" fill="#F0B429"></circle><path d="M26 15.5h17M26 20h11" stroke="#6D6153" stroke-width="1.8" stroke-linecap="round"></path><rect x="30" y="25" width="15" height="5.5" rx="2.75" fill="#5B8DEF"></rect></svg>`
+};
+const INSTALL_PAGE_PATH = {es:'/instalar', en:'/en/install', fr:'/fr/installer'};
+const UA = navigator.userAgent;
+const IS_IOS = /iPad|iPhone|iPod/.test(UA) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+const IS_ANDROID = /Android/.test(UA);
+/* Los navegadores incrustados (Instagram, Facebook, TikTok...) no pueden
+   instalar nada: ahi lo unico util es llevarse el enlace a Safari o Chrome. */
+const IN_APP_BROWSER = /FBAN|FBAV|FB_IAB|Instagram|Line\/|MicroMessenger|TikTok|Snapchat|LinkedInApp|Twitter/i.test(UA);
+const IOS_SAFARI = IS_IOS && !IN_APP_BROWSER && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(UA);
+const INSTALL_HIDE_DAYS = 14;
+let deferredInstall = null, installStepsOpen = false;
+
+function isStandalone(){
+  try{ return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone===true; }catch(e){ return false; }
+}
+function installDismissed(){
+  const at = +localStorage.getItem('pf_install_hide') || 0;
+  return at>0 && Date.now()-at < INSTALL_HIDE_DAYS*864e5;
+}
+function installBlocked(){ return IN_APP_BROWSER || (IS_IOS && !IOS_SAFARI); }
+function dismissInstall(){
+  localStorage.setItem('pf_install_hide', String(Date.now()));
+  installStepsOpen=false; updateInstallCard();
+}
+function renderInstallSteps(){
+  const box=$('install-steps'); if(!box) return;
+  const kind = IS_IOS?'ios':'and', art = IS_IOS?['share','sheet','add']:['menu','list','confirm'];
+  box.innerHTML=[1,2,3].map((n,i)=>`<div class="install-step"><span class="num">${n}</span><span class="txt">${t('install_'+kind+'_'+n)}</span><span class="shot">${INSTALL_ART[art[i]]}</span></div>`).join('');
+}
+function updateInstallCard(){
+  const card=$('install-card'); if(!card) return;
+  // Solo se ofrece donde sirve de algo: aun no instalado, no descartado hace
+  // poco y en un aparato que pueda hacerlo (o con el evento ya en la mano).
+  const offer = !isStandalone() && !installDismissed() && !!(deferredInstall||IS_IOS||IS_ANDROID);
+  card.classList.toggle('hidden', !offer);
+  // El mismo criterio en la pantalla de entrada, donde todavia no hay tarjeta.
+  const entry=$('login-install');
+  if(entry){
+    entry.classList.toggle('hidden', isStandalone() || !(deferredInstall||IS_IOS||IS_ANDROID));
+    $('login-install-link').textContent=t('install_btn');
+  }
+  if(!offer) return;
+  const blocked=installBlocked();
+  $('install-title').textContent=t('install_title');
+  $('install-hint').textContent=t(IS_IOS?'install_hint_ios':'install_hint_android');
+  $('install-btn').textContent=deferredInstall?t('install_btn'):blocked?t('install_btn_copy'):installStepsOpen?t('install_btn_hide'):t('install_btn_steps');
+  const note=$('install-note');
+  note.textContent=blocked?t('install_note_browser'):''; note.classList.toggle('hidden',!blocked);
+  const steps=$('install-steps'), showSteps=installStepsOpen&&!deferredInstall&&!blocked;
+  if(showSteps) renderInstallSteps();
+  steps.classList.toggle('hidden',!showSteps);
+  $('install-later').textContent=t('install_later');
+  $('install-guide-link').textContent=t('install_guide');
+}
+async function installAction(){
+  if(deferredInstall){
+    const evt=deferredInstall; deferredInstall=null;
+    try{
+      evt.prompt();
+      const choice=await evt.userChoice;
+      if(!choice||choice.outcome!=='accepted') deferredInstall=evt;  // se puede reintentar
+    }catch(e){ deferredInstall=evt; }
+    updateInstallCard(); return;
+  }
+  if(installBlocked()){ copyInstallLink(); return; }
+  installStepsOpen=!installStepsOpen; updateInstallCard();
+}
+async function copyInstallLink(){
+  const url=location.origin+(lang==='es'?'/':'/'+lang);
+  try{ await navigator.clipboard.writeText(url); toast(t('install_copied')); return; }catch(e){}
+  try{
+    const box=document.createElement('input');
+    box.value=url; box.setAttribute('readonly',''); box.style.position='fixed'; box.style.opacity='0';
+    document.body.appendChild(box); box.select(); box.setSelectionRange(0,url.length);
+    document.execCommand('copy'); box.remove(); toast(t('install_copied'));
+  }catch(e){ toast(url); }
+}
+window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); deferredInstall=e; updateInstallCard(); });
+window.addEventListener('appinstalled', ()=>{ deferredInstall=null; installStepsOpen=false; toast(t('install_done')); updateInstallCard(); });
+
 function codeViewHTML(str, mode){
   if(mode==='colors'){
     let h=''; for(const ch of String(str)){ const col=COLORS[+ch]||{c:'#555',s:'?'}; h+=`<span class="mini" style="background:${col.c}" aria-hidden="true">${col.s}</span>`; }
