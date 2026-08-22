@@ -1282,6 +1282,9 @@ async function routeApi(request, env) {
 export function assetPathFor(pathname) {
   if (pathname === "/") return "/index.html";
   if (pathname === "/admin") return "/admin.html";
+  // Las direcciones por idioma sirven el mismo documento; lo unico que cambia
+  // es la cabecera que reescribe `localizeHtml`.
+  if (SEO_PAGES[pathname]) return "/index.html";
   return "";
 }
 
@@ -1296,6 +1299,87 @@ function noStoreHtml(response) {
 }
 
 const CANONICAL_HOST = "picasyfijas.fans";
+
+// Un buscador solo puede ofrecer la version correcta de una pagina si cada
+// idioma tiene su propia direccion. Las tres sirven la misma aplicacion: `/`
+// y `/es` son la version espanola —`/es` existe porque alguien puede
+// escribirla, y su canonica apunta a la raiz para no duplicar contenido— y
+// `/en` y `/fr` son las otras dos. Los textos se reescriben al vuelo con
+// HTMLRewriter, sin duplicar el HTML.
+const SEO_ORIGIN = `https://${CANONICAL_HOST}`;
+
+export const SEO_PAGES = {
+  "/": { lang: "es", canonical: `${SEO_ORIGIN}/` },
+  "/es": { lang: "es", canonical: `${SEO_ORIGIN}/` },
+  "/en": { lang: "en", canonical: `${SEO_ORIGIN}/en` },
+  "/fr": { lang: "fr", canonical: `${SEO_ORIGIN}/fr` },
+};
+
+const SEO_TEXT = {
+  es: {
+    locale: "es_ES",
+    image: `${SEO_ORIGIN}/og-es.png`,
+    imageAlt: "Picas y Fijas · duelo de deducción online",
+    title: "Picas y Fijas · Juego de deducción online (Bulls and Cows)",
+    description:
+      "Adivina el código secreto antes que tu rival. Picas y Fijas es el clásico Bulls and Cows / Mastermind: duelos online, práctica contra el computador y ranking. Gratis y sin instalar.",
+    social:
+      "Adivina el código secreto antes que tu rival. Duelos online, práctica contra el computador y ranking. Gratis y sin instalar.",
+  },
+  en: {
+    locale: "en_US",
+    image: `${SEO_ORIGIN}/og-en.png`,
+    imageAlt: "Picas y Fijas · online deduction duel, also known as Bulls and Cows",
+    title: "Bulls and Cows online · Picas y Fijas deduction game",
+    description:
+      "Crack your rival's secret code first. Picas y Fijas is the classic Bulls and Cows / Mastermind duel: online multiplayer matches, practice against the computer and rankings. Free, no install.",
+    social:
+      "Crack your rival's secret code first. Online matches, practice against the computer and rankings. Free, no install.",
+  },
+  fr: {
+    locale: "fr_FR",
+    image: `${SEO_ORIGIN}/og-fr.png`,
+    imageAlt: "Picas y Fijas · duel de déduction en ligne, aussi appelé Bulls and Cows",
+    title: "Bulls and Cows en ligne · Picas y Fijas, jeu de déduction",
+    description:
+      "Devine le code secret avant ton adversaire. Picas y Fijas, c'est le classique Bulls and Cows / Mastermind : duels en ligne, entraînement contre l'ordinateur et classement. Gratuit.",
+    social:
+      "Devine le code secret avant ton adversaire. Duels en ligne, entraînement contre l'ordinateur et classement. Gratuit.",
+  },
+};
+
+export function seoFor(pathname) {
+  const page = SEO_PAGES[pathname];
+  if (!page) return null;
+  return { ...page, ...SEO_TEXT[page.lang] };
+}
+
+function localizeHtml(response, seo) {
+  const set = (attribute, value) => ({
+    element(element) {
+      element.setAttribute(attribute, value);
+    },
+  });
+  return new HTMLRewriter()
+    .on("html", set("lang", seo.lang))
+    .on("title", {
+      element(element) {
+        element.setInnerContent(seo.title);
+      },
+    })
+    .on('meta[name="description"]', set("content", seo.description))
+    .on('link[rel="canonical"]', set("href", seo.canonical))
+    .on('meta[property="og:title"]', set("content", seo.title))
+    .on('meta[property="og:description"]', set("content", seo.social))
+    .on('meta[property="og:url"]', set("content", seo.canonical))
+    .on('meta[property="og:locale"]', set("content", seo.locale))
+    .on('meta[property="og:image"]', set("content", seo.image))
+    .on('meta[property="og:image:alt"]', set("content", seo.imageAlt))
+    .on('meta[name="twitter:image"]', set("content", seo.image))
+    .on('meta[name="twitter:title"]', set("content", seo.title))
+    .on('meta[name="twitter:description"]', set("content", seo.social))
+    .transform(response);
+}
 
 // Direcciones que responden pero no son la canonica. Se enumeran una a una en
 // vez de redirigir "todo lo que no sea CANONICAL_HOST" para no dejar fuera de
@@ -1323,10 +1407,13 @@ export default {
       if (url.pathname === "/api" || url.pathname.startsWith("/api/"))
         return await routeApi(request, env);
       const assetPath = assetPathFor(url.pathname);
-      if (assetPath)
-        return noStoreHtml(
+      if (assetPath) {
+        const asset = noStoreHtml(
           await env.ASSETS.fetch(new Request(new URL(assetPath, url), request)),
         );
+        const seo = seoFor(url.pathname);
+        return seo ? localizeHtml(asset, seo) : asset;
+      }
       if (url.pathname === "/index.html")
         return noStoreHtml(await env.ASSETS.fetch(request));
       return env.ASSETS.fetch(request);

@@ -25,7 +25,8 @@ Solo hay una dirección canónica: **`picasyfijas.fans`**. Todo lo demás rediri
 
 | Dirección | Qué hace |
 | --- | --- |
-| `picasyfijas.fans` | Sirve la aplicación |
+| `picasyfijas.fans` | Sirve la aplicación (español) |
+| `picasyfijas.fans/en`, `/fr`, `/es` | La misma aplicación con la cabecera traducida, para los buscadores |
 | `www.picasyfijas.fans` | 301 al apex |
 | `picas-y-fijas.picas-y-fijas.workers.dev` | 301 al apex |
 | `diegofer82.github.io/Picas-y-Fijas/` | Página estática que redirige al apex |
@@ -145,17 +146,47 @@ El rival funciona íntegramente sin conexión y no utiliza ChatGPT ni ninguna AP
 - `public/icon-192.png`, `public/icon-512.png`, `public/icon-maskable-512.png`, `public/apple-touch-icon.png`: iconos de la aplicación instalada.
 - `public/computer-ai.js`: rival local de práctica, generación de candidatos y estrategias por dificultad.
 - `public/admin.html`: panel reservado de administración.
+- `public/robots.txt`, `public/sitemap.xml`: indexación. Abren el juego a los buscadores, cierran `/admin` y `/api` y declaran las tres direcciones de idioma.
+- `public/og-es.png`, `public/og-en.png`, `public/og-fr.png`: la tarjeta social de 1200×630 que se ve al compartir el enlace, una por idioma. Se generan con `python tools/make-og-images.py` y necesitan `python -m pip install pillow`.
 - `src/index.js`: Worker, rutas, API, acceso a D1 y operaciones administrativas.
 - `src/game.js`: reglas puras, validaciones, cronómetro y sanitización del estado.
 - `src/security.js`: PIN, autenticación, sesiones y limitación de intentos.
 - `migrations/0001_initial.sql`: esquema reproducible de D1. No es un residuo de la migración desde Google y no debe eliminarse.
 - `test/`: pruebas automáticas de reglas, rutas, teclado y regresiones.
 - `tools/make-icons.mjs`: genera los cuatro PNG de la aplicación instalada. Se ejecuta con `npm run icons`.
+- `tools/make-og-images.py`: genera las tres tarjetas sociales. Dibuja la marca con las tipografías de reserva que ya declara el CSS del juego —Georgia por 'Instrument Serif', Segoe UI por 'Archivo', Consolas por 'JetBrains Mono'—, así que no descarga ninguna fuente. Solo hay que volver a ejecutarlo si cambia la marca o el lema.
 - `tools/pdf/`: los scripts de `reportlab` que generan las guías de estrategia en los tres idiomas. `python tools/pdf/build.py` las genera y las copia a `public/` con los nombres que enlaza la pantalla de reglas. Necesita `python -m pip install reportlab`.
 - `wrangler.jsonc`: configuración de Cloudflare, recursos y variables no secretas.
 - `index.html`: aviso y redirección desde la dirección histórica de GitHub Pages.
 
 No hay proceso de compilación del frontend. Wrangler sirve `public/` y ejecuta el Worker primero para `/api`, `/admin` y sus subrutas.
+
+## Buscadores e indexación
+
+El juego debe encontrarse buscando su nombre y los nombres con los que se conoce en cada idioma: *Picas y Fijas*, *Bulls and Cows*, *Toros y Vacas*, *Mastermind*, *jeu du taureau*, *jeu de déduction*.
+
+Un buscador solo puede ofrecer la versión correcta de una página si cada idioma tiene su propia dirección. Por eso hay tres:
+
+| Dirección | Idioma | Canónica |
+| --- | --- | --- |
+| `/` | Español | `/` |
+| `/es` | Español | `/` |
+| `/en` | Inglés | `/en` |
+| `/fr` | Francés | `/fr` |
+
+Las cuatro sirven el mismo `public/index.html`; no hay copias del documento. La tabla `SEO_PAGES` y los textos `SEO_TEXT` viven en `src/index.js`, y `localizeHtml` reescribe al vuelo con `HTMLRewriter` el atributo `lang`, el título, la descripción, la canónica y las etiquetas Open Graph. `/es` existe porque alguien puede escribirla, y su canónica apunta a la raíz para que no cuente como contenido duplicado.
+
+La aplicación adopta el idioma de la dirección: `URL_LANG` en `public/index.html` manda sobre el idioma guardado en `pf_lang`, de modo que quien llega desde un buscador a `/en` ve el juego en inglés. En la raíz sigue mandando la preferencia guardada.
+
+En la cabecera de `public/index.html` están además los `hreflang` de los tres idiomas más `x-default`, las tarjetas Open Graph y Twitter, y un bloque `application/ld+json` de tipo `VideoGame` con los nombres alternativos del juego. La imagen que se ve al compartir el enlace también cambia de idioma: `/en` anuncia `og-en.png` y `/fr`, `og-fr.png`. El `<noscript>` describe el juego en los tres idiomas y enlaza las guías de estrategia: es lo que lee un rastreador que no ejecuta JavaScript.
+
+`public/admin.html` lleva `noindex,nofollow,noarchive` y `robots.txt` también lo excluye: la administración nunca debe aparecer en un buscador.
+
+`test/seo.test.js` fija todo esto. Al añadir un idioma hay que tocar `SEO_PAGES`, `SEO_TEXT`, `I18N`, `URL_LANG`, los `hreflang` de la cabecera, `sitemap.xml` y `run_worker_first` en `wrangler.jsonc`.
+
+El sitio está dado de alta en Google Search Console como propiedad de dominio y el sitemap fue enviado el 22 de agosto de 2026.
+
+**Cloudflare sirve su propio `robots.txt` gestionado.** Antes de este cambio, `https://picasyfijas.fans/robots.txt` devolvía 24 líneas de comentarios de la política de señales de contenido de Cloudflare, sin una sola directiva. Después de desplegar hay que volver a pedir esa dirección y comprobar que aparecen `Allow`, los `Disallow` y la línea `Sitemap`. Si Cloudflare sustituye el archivo en vez de añadir sus comentarios al nuestro, hay que desactivar el `robots.txt` gestionado en el panel de Cloudflare.
 
 ## Identidad visual
 

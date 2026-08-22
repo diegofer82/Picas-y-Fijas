@@ -1,0 +1,9 @@
+# Picas y Fijas — https://picasyfijas.fans/
+# El juego es publico y se quiere indexar. La administracion y la API no.
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api
+
+Sitemap: https://picasyfijas.fans/sitemap.xml
