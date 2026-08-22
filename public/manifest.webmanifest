@@ -26,5 +26,35 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/practice-narrow.png",
+      "sizes": "824x1784",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Una partida en curso con fichas de color"
+    },
+    {
+      "src": "/screenshots/lobby-narrow.png",
+      "sizes": "824x1784",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "El lobby: partidas abiertas y ranking"
+    },
+    {
+      "src": "/screenshots/home-narrow.png",
+      "sizes": "824x1784",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "La entrada del juego"
+    },
+    {
+      "src": "/screenshots/practice-wide.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Picas y Fijas en el escritorio"
+    }
   ]
 }

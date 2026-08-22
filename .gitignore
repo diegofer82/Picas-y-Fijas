@@ -17,6 +17,7 @@ backups/
 
 # Herramientas y archivos temporales
 node_modules/
+__pycache__/
 .wrangler/
 .codex-tmp/
 dist/

@@ -9,6 +9,8 @@
     "check": "node --check src/index.js && node --check src/game.js && node --test",
     "deploy": "wrangler deploy",
     "icons": "node tools/make-icons.mjs public",
+    "pages": "python tools/make-rules-pages.py && python tools/make-install-pages.py",
+    "screenshots": "node tools/make-screenshots.mjs",
     "db:local": "wrangler d1 migrations apply picas-y-fijas-db --local",
     "db:remote": "wrangler d1 migrations apply picas-y-fijas-db --remote"
   },
