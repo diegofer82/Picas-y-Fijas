@@ -65,126 +65,126 @@ def header_footer(canvas, doc):
     canvas.rect(0, A4[1]-12*mm, A4[0], 12*mm, fill=1, stroke=0)
     canvas.setFillColor(WHITE)
     canvas.setFont("Helvetica-Bold", 8)
-    canvas.drawString(18*mm, A4[1]-8*mm, "PICAS Y FIJAS - GUIA ESTRATEGICA")
+    canvas.drawString(18*mm, A4[1]-8*mm, "PICAS Y FIJAS - GUÍA ESTRATÉGICA")
     canvas.setFillColor(MUTED)
     canvas.setFont("Helvetica", 8)
-    canvas.drawRightString(A4[0]-8*mm, 9*mm, f"Pagina {doc.page}")
+    canvas.drawRightString(A4[0]-8*mm, 9*mm, f"Página {doc.page}")
     canvas.restoreState()
 
-story = [Spacer(1, 18*mm), p("Picas y Fijas", "TitlePF"), p("Guia practica de estrategias para codigos de 3 a 6 posiciones", "SubPF")]
-story += [box("Idea central: una buena jugada no es la que parece cercana al codigo; es la que elimina la mayor cantidad de posibilidades despues de cualquier respuesta.", GREEN), Spacer(1, 7*mm)]
-story += [p("Que contiene esta guia", "H1PF"), p("Estrategias para numeros y colores, con y sin repeticion, aperturas recomendadas, lectura de pistas y un metodo sistematico para no contradecir resultados anteriores. Las recomendaciones son heuristicas practicas: no garantizan el minimo absoluto de turnos en todas las variantes, pero son mucho mejores que adivinar al azar.")]
-story += [p("Regla de oro", "H2PF"), p("Despues de cada intento, conserva solamente los codigos que producirian exactamente la misma cantidad de F y P si fueran el secreto. La siguiente jugada debe dividir ese conjunto restante en grupos pequenos.")]
+story = [Spacer(1, 18*mm), p("Picas y Fijas", "TitlePF"), p("Guía práctica de estrategias para códigos de 3 a 6 posiciones", "SubPF")]
+story += [box("Idea central: una buena jugada no es la que parece cercana al código; es la que elimina la mayor cantidad de posibilidades después de cualquier respuesta.", GREEN), Spacer(1, 7*mm)]
+story += [p("Qué contiene esta guía", "H1PF"), p("Estrategias para números y colores, con y sin repetición, aperturas recomendadas, lectura de pistas y un método sistemático para no contradecir resultados anteriores. Las recomendaciones son heurísticas prácticas: no garantizan el mínimo absoluto de turnos en todas las variantes, pero son mucho mejores que adivinar al azar.")]
+story += [p("Regla de oro", "H2PF"), p("Después de cada intento, conserva solamente los códigos que producirían exactamente la misma cantidad de F y P si fueran el secreto. La siguiente jugada debe dividir ese conjunto restante en grupos pequeños.")]
 story += [Spacer(1, 4*mm), table([
-    ["Concepto", "Significado estrategico"],
-    ["Fija (F)", "Simbolo correcto en la posicion correcta."],
-    ["Pica (P)", "Simbolo correcto en una posicion diferente."],
-    ["0F 0P", "Descarta todos los simbolos del intento: es una respuesta muy informativa."],
-    ["F + P", "Cantidad total de simbolos del intento que pertenecen al secreto."],
+    ["Concepto", "Significado estratégico"],
+    ["Fija (F)", "Símbolo correcto en la posición correcta."],
+    ["Pica (P)", "Símbolo correcto en una posición diferente."],
+    ["0F 0P", "Descarta todos los símbolos del intento: es una respuesta muy informativa."],
+    ["F + P", "Cantidad total de símbolos del intento que pertenecen al secreto."],
 ], [38*mm, 136*mm])]
 story.append(PageBreak())
 
-story += [p("1. Metodo universal de eliminacion", "H1PF")]
+story += [p("1. Método universal de eliminación", "H1PF")]
 steps = [
-    ("1. Explorar", "Usa una apertura con simbolos distintos. Sin repeticion, cubre tantos simbolos nuevos como permita el codigo. Con repeticion, incluye pronto un simbolo duplicado para detectar multiplicidad."),
-    ("2. Registrar", "Anota el resultado exacto de cada intento. Nunca interpretes solo F+P cuando necesitas separar posicion y presencia."),
+    ("1. Explorar", "Usa una apertura con símbolos distintos. Sin repetición, cubre tantos símbolos nuevos como permita el código. Con repetición, incluye pronto un símbolo duplicado para detectar multiplicidad."),
+    ("2. Registrar", "Anota el resultado exacto de cada intento. Nunca interpretes solo F+P cuando necesitas separar posición y presencia."),
     ("3. Filtrar", "Elimina cualquier candidato que no reproduzca todas las pistas anteriores."),
-    ("4. Dividir", "Si quedan muchos candidatos, juega una prueba que compare posiciones o introduzca simbolos nuevos. Una jugada de prueba no tiene que poder ganar."),
-    ("5. Resolver", "Cuando queden uno o muy pocos candidatos, prueba el candidato mas probable o el que mejor separe los restantes."),
+    ("4. Dividir", "Si quedan muchos candidatos, juega una prueba que compare posiciones o introduzca símbolos nuevos. Una jugada de prueba no tiene que poder ganar."),
+    ("5. Resolver", "Cuando queden uno o muy pocos candidatos, prueba el candidato más probable o el que mejor separe los restantes."),
 ]
 for title, body in steps:
     story.append(KeepTogether([p(title, "H2PF"), p(body)]))
 
-story += [p("Como leer la respuesta", "H2PF"), table([
-    ["Respuesta", "Accion"],
-    ["0F 0P", "Elimina todos esos simbolos y completa con simbolos nuevos."],
-    ["0F y varias P", "Los simbolos estan, pero ninguno ocupa esa posicion. Reordena de forma controlada."],
+story += [p("Cómo leer la respuesta", "H2PF"), table([
+    ["Respuesta", "Acción"],
+    ["0F 0P", "Elimina todos esos símbolos y completa con símbolos nuevos."],
+    ["0F y varias P", "Los símbolos están, pero ninguno ocupa esa posición. Reordena de forma controlada."],
     ["Varias F", "Conserva provisionalmente esas posiciones; cambia las otras para confirmarlas."],
-    ["F+P menor que posiciones", "Faltan simbolos; introduce nuevos sin perder toda la informacion posicional."],
+    ["F+P menor que posiciones", "Faltan símbolos; introduce nuevos sin perder toda la información posicional."],
 ], [40*mm, 134*mm])]
-story += [box("No cambies todos los simbolos y todas las posiciones a la vez cuando ya tienes coincidencias. Cambia una cosa por turno para saber que produjo la nueva pista.", GOLD)]
+story += [box("No cambies todos los símbolos y todas las posiciones a la vez cuando ya tienes coincidencias. Cambia una cosa por turno para saber que produjo la nueva pista.", GOLD)]
 
-story += [p("Sobre 123 - 456 - 789", "H2PF"), p("Es una estrategia valida de <b>cobertura</b> para 3 cifras sin repeticion: F+P indica cuantos digitos de cada bloque pertenecen al secreto. Sin embargo, consume hasta tres turnos antes de estudiar posiciones, omite inicialmente el 0 y puede ser ineficiente si el limite de intentos es 6. Una mejora es detener la cobertura tan pronto como ya hayas localizado tres digitos y comenzar a permutarlos. Si 123 produce 2 coincidencias y 456 produce 1, ya tienes los tres digitos: no necesitas jugar 789.")]
+story += [p("Sobre 123 - 456 - 789", "H2PF"), p("Es una estrategia válida de <b>cobertura</b> para 3 cifras sin repetición: F+P indica cuántos dígitos de cada bloque pertenecen al secreto. Sin embargo, consume hasta tres turnos antes de estudiar posiciones, omite inicialmente el 0 y puede ser ineficiente si el límite de intentos es 6. Una mejora es detener la cobertura tan pronto como ya hayas localizado tres dígitos y comenzar a permutarlos. Si 123 produce 2 coincidencias y 456 produce 1, ya tienes los tres dígitos: no necesitas jugar 789.")]
 story.append(PageBreak())
 
-story += [p("2. Estrategias sin repeticion", "H1PF"), p("En estas variantes cada simbolo aparece como maximo una vez. Primero identifica el conjunto de simbolos; luego sus posiciones.")]
-rows = [["Posiciones", "Apertura sugerida", "Plan practico"]]
+story += [p("2. Estrategias sin repetición", "H1PF"), p("En estas variantes cada símbolo aparece como máximo una vez. Primero identifica el conjunto de símbolos; luego sus posiciones.")]
+rows = [["Posiciones", "Apertura sugerida", "Plan práctico"]]
 rows += [
-    ["3", "123; luego 456 si faltan simbolos", "Usa F+P para contar pertenencias. Detente al reunir 3. Despues permuta dos posiciones cada vez. Recuerda probar el 0 si los bloques no completan el codigo."],
-    ["4", "0123", "Si F+P=4, solo falta ordenar. Si es menor, sustituye primero dos simbolos por 45; luego completa con 67/89 segun sea necesario."],
-    ["5", "01234", "Con F+P alto, conserva el bloque y prueba permutaciones controladas. Con F+P bajo, cambia 2 o 3 simbolos por 567 y mide cuantos entran."],
-    ["6", "012345", "La apertura cubre 60% del alfabeto numerico. Reemplaza grupos de 2 por 67, luego 89. Cuando los 6 simbolos esten identificados, ordena con intercambios."],
+    ["3", "123; luego 456 si faltan símbolos", "Usa F+P para contar pertenencias. Detente al reunir 3. Después permuta dos posiciones cada vez. Recuerda probar el 0 si los bloques no completan el código."],
+    ["4", "0123", "Si F+P=4, solo falta ordenar. Si es menor, sustituye primero dos símbolos por 45; luego completa con 67/89 según sea necesario."],
+    ["5", "01234", "Con F+P alto, conserva el bloque y prueba permutaciones controladas. Con F+P bajo, cambia 2 o 3 símbolos por 567 y mide cuántos entran."],
+    ["6", "012345", "La apertura cubre 60% del alfabeto numérico. Reemplaza grupos de 2 por 67, luego 89. Cuando los 6 símbolos estén identificados, ordena con intercambios."],
 ]
 story += [table(rows, [22*mm, 42*mm, 110*mm])]
-story += [p("Tecnica de intercambio", "H2PF"), p("Si conoces los simbolos pero no el orden, parte de una disposicion y cambia solo dos posiciones. Si las F aumentan en 2, ambas quedan corregidas; si bajan en 2, ambas estaban correctas antes; si no cambian, la informacion debe combinarse con otro intercambio. Mantener las demas posiciones fijas hace que el resultado sea interpretable.")]
-story += [p("Ejemplo de 3 cifras sin repeticion", "H2PF"), table([
-    ["Turno", "Jugada", "Ejemplo de pista", "Deduccion"],
-    ["1", "123", "0F 2P", "Dos de {1,2,3} estan, ambos mal ubicados."],
-    ["2", "456", "0F 1P", "Uno de {4,5,6} esta. Ya estan los 3 simbolos; no jugar 789."],
+story += [p("Técnica de intercambio", "H2PF"), p("Si conoces los símbolos pero no el orden, parte de una disposición y cambia solo dos posiciones. Si las F aumentan en 2, ambas quedan corregidas; si bajan en 2, ambas estaban correctas antes; si no cambian, la información debe combinarse con otro intercambio. Mantener las demás posiciones fijas hace que el resultado sea interpretable.")]
+story += [p("Ejemplo de 3 cifras sin repetición", "H2PF"), table([
+    ["Turno", "Jugada", "Ejemplo de pista", "Deducción"],
+    ["1", "123", "0F 2P", "Dos de {1,2,3} están, ambos mal ubicados."],
+    ["2", "456", "0F 1P", "Uno de {4,5,6} está. Ya están los 3 símbolos; no jugar 789."],
     ["3", "214", "1F 1P", "Compara posiciones de 1 y 2 e identifica si 4 es el tercero."],
-    ["4+", "Candidato compatible", "-", "Solo prueba codigos que satisfagan las tres pistas."],
+    ["4+", "Candidato compatible", "-", "Solo prueba códigos que satisfagan las tres pistas."],
 ], [15*mm, 25*mm, 33*mm, 101*mm])]
-story += [box("Con pocos intentos, la mejor apertura es informativa y la segunda jugada depende de la primera. Una lista rigida de jugadas desperdicia pistas.", PINK)]
+story += [box("Con pocos intentos, la mejor apertura es informativa y la segunda jugada depende de la primera. Una lista rígida de jugadas desperdicia pistas.", PINK)]
 story.append(PageBreak())
 
-story += [p("3. Estrategias con repeticion", "H1PF"), p("Aqui debes descubrir dos cosas: cuales simbolos aparecen y cuantas veces. Las aperturas con todos los simbolos diferentes no detectan bien la multiplicidad.")]
+story += [p("3. Estrategias con repetición", "H1PF"), p("Aquí debes descubrir dos cosas: cuáles símbolos aparecen y cuántas veces. Las aperturas con todos los símbolos diferentes no detectan bien la multiplicidad.")]
 story += [table([
     ["Posiciones", "Apertura sugerida", "Objetivo"],
-    ["3", "112", "Detectar rapidamente si el 1 se repite y obtener informacion posicional."],
-    ["4", "1122", "Divide el codigo entre dos simbolos y mide multiplicidades."],
-    ["5", "11223", "Prueba dos pares y un simbolo adicional."],
-    ["6", "112233", "Prueba tres pares; despues cambia los pares ausentes por 44/55/66."],
+    ["3", "112", "Detectar rápidamente si el 1 se repite y obtener información posicional."],
+    ["4", "1122", "Divide el código entre dos símbolos y mide multiplicidades."],
+    ["5", "11223", "Prueba dos pares y un símbolo adicional."],
+    ["6", "112233", "Prueba tres pares; después cambia los pares ausentes por 44/55/66."],
 ], [25*mm, 40*mm, 109*mm])]
-story += [p("Prueba de multiplicidad", "H2PF"), p("Para conocer cuantas veces aparece un simbolo, puedes jugarlo repetido en todas las posiciones (por ejemplo, 1111). El valor F+P sera exactamente su cantidad en el secreto. Es una prueba muy clara, pero suele ser cara: usala cuando las pistas sugieran una repeticion fuerte o cuando queden candidatos que solo difieran en cantidades.")]
+story += [p("Prueba de multiplicidad", "H2PF"), p("Para conocer cuántas veces aparece un símbolo, puedes jugarlo repetido en todas las posiciones (por ejemplo, 1111). El valor F+P será exactamente su cantidad en el secreto. Es una prueba muy clara, pero suele ser cara: usala cuando las pistas sugieran una repetición fuerte o cuando queden candidatos que solo difieran en cantidades.")]
 story += [p("Plan adaptativo", "H2PF")]
 for txt in [
     "Si 1122 devuelve F+P=0, elimina 1 y 2 por completo.",
-    "Si devuelve F+P=4 en un codigo de 4, el secreto solo contiene 1 y 2; concentra todo en cantidades y posiciones.",
+    "Si devuelve F+P=4 en un código de 4, el secreto solo contiene 1 y 2; concentra todo en cantidades y posiciones.",
     "Si devuelve F+P=1 o 2, introduce 3344 para medir la otra mitad del alfabeto.",
-    "Cuando conozcas las cantidades, ordena cambiando posiciones de dos simbolos, no rehaciendo todo el codigo.",
+    "Cuando conozcas las cantidades, ordena cambiando posiciones de dos símbolos, no rehaciendo todo el código.",
 ]: story.append(p("• " + txt))
-story += [box("En variantes con repeticion, no asumas que F+P=2 significa dos simbolos distintos: puede ser el mismo simbolo repetido dos veces.", GOLD)]
+story += [box("En variantes con repetición, no asumas que F+P=2 significa dos símbolos distintos: puede ser el mismo símbolo repetido dos veces.", GOLD)]
 
-story += [p("4. Juego con colores", "H1PF"), p("La logica es identica. Sustituye los numeros por indices de color y considera el tamaño real de la paleta (4, 6 u 8 colores). Una paleta pequena hace que probar repeticiones sea mas importante.")]
+story += [p("4. Juego con colores", "H1PF"), p("La lógica es idéntica. Sustituye los números por índices de color y considera el tamaño real de la paleta (4, 6 u 8 colores). Una paleta pequeña hace que probar repeticiones sea más importante.")]
 story += [table([
-    ["Paleta", "Sin repeticion", "Con repeticion"],
-    ["4 colores", "Si el codigo usa 3 o 4 posiciones, una apertura con colores distintos cubre casi todo el universo.", "Para 4 posiciones usa AABB; luego CCDD. F+P revela cuantas copias aporta cada pareja."],
-    ["6 colores", "Cubre primero tantos colores distintos como posiciones. Introduce los restantes solo si F+P no completa el codigo.", "Usa parejas (AABB, CCDD) o una mezcla AABC segun la longitud."],
-    ["8 colores", "Se parece al modo numerico: explora por bloques y detente cuando el total de coincidencias complete la longitud.", "Distribuye las pruebas entre simbolos nuevos y duplicados; no explores los ocho si ya conoces suficientes."],
+    ["Paleta", "Sin repetición", "Con repetición"],
+    ["4 colores", "Si el código usa 3 o 4 posiciones, una apertura con colores distintos cubre casi todo el universo.", "Para 4 posiciones usa AABB; luego CCDD. F+P revela cuántas copias aporta cada pareja."],
+    ["6 colores", "Cubre primero tantos colores distintos como posiciones. Introduce los restantes solo si F+P no completa el código.", "Usa parejas (AABB, CCDD) o una mezcla AABC según la longitud."],
+    ["8 colores", "Se parece al modo numérico: explora por bloques y detente cuando el total de coincidencias complete la longitud.", "Distribuye las pruebas entre símbolos nuevos y duplicados; no explores los ocho si ya conoces suficientes."],
 ], [25*mm, 74*mm, 75*mm])]
 story.append(PageBreak())
 
-story += [p("5. Estrategia segun el limite de intentos", "H1PF")]
+story += [p("5. Estrategia según el límite de intentos", "H1PF")]
 story += [table([
-    ["Configuracion", "Prioridad"],
-    ["Sin limite", "Maximiza certeza. Puedes usar pruebas puras de presencia o multiplicidad antes de intentar ganar."],
-    ["10 intentos", "Equilibrio: 1-3 turnos de exploracion y luego candidatos compatibles."],
-    ["6 intentos", "Cada jugada debe explorar y poder acercarse a la solucion. Evita cubrir todo el alfabeto por rutina."],
-    ["Cronometro", "Prepara una tabla escrita de intentos, F y P. Filtra de manera simple; una estrategia perfecta que tarda demasiado pierde valor."],
+    ["Configuración", "Prioridad"],
+    ["Sin límite", "Maximiza certeza. Puedes usar pruebas puras de presencia o multiplicidad antes de intentar ganar."],
+    ["10 intentos", "Equilibrio: 1-3 turnos de exploración y luego candidatos compatibles."],
+    ["6 intentos", "Cada jugada debe explorar y poder acercarse a la solución. Evita cubrir todo el alfabeto por rutina."],
+    ["Cronómetro", "Prepara una tabla escrita de intentos, F y P. Filtra de manera simple; una estrategia perfecta que tarda demasiado pierde valor."],
 ], [40*mm, 134*mm])]
-story += [p("Arbol de decision rapido", "H2PF"), table([
-    ["Despues de una jugada", "Siguiente decision"],
-    ["F+P = longitud", "No introduzcas simbolos nuevos; trabaja solo el orden y, si aplica, las cantidades."],
-    ["F+P = 0", "Reemplaza todos por simbolos nuevos."],
-    ["0 < F+P < longitud", "Conserva parte de la prueba e introduce suficientes simbolos nuevos para completar el codigo."],
+story += [p("Arbol de decisión rápido", "H2PF"), table([
+    ["Después de una jugada", "Siguiente decisión"],
+    ["F+P = longitud", "No introduzcas símbolos nuevos; trabaja solo el orden y, si aplica, las cantidades."],
+    ["F+P = 0", "Reemplaza todos por símbolos nuevos."],
+    ["0 < F+P < longitud", "Conserva parte de la prueba e introduce suficientes símbolos nuevos para completar el código."],
     ["Quedan 2-5 candidatos", "Elige una jugada que produzca respuestas distintas entre ellos; no necesariamente uno de los candidatos."],
     ["Queda 1 candidato", "Juegalo."],
 ], [54*mm, 120*mm])]
 story += [p("Errores frecuentes", "H2PF")]
 for txt in [
     "Repetir una jugada que ya no puede distinguir candidatos.",
-    "Ignorar el 0 en el modo numerico.",
-    "Cambiar demasiadas posiciones despues de obtener varias F.",
-    "Probar un codigo que contradice una pista anterior.",
-    "Confundir F+P con la cantidad de simbolos distintos cuando se permiten repeticiones.",
-    "Seguir una secuencia fija aunque una pista ya haya localizado todos los simbolos.",
+    "Ignorar el 0 en el modo numérico.",
+    "Cambiar demasiadas posiciones después de obtener varias F.",
+    "Probar un código que contradice una pista anterior.",
+    "Confundir F+P con la cantidad de símbolos distintos cuando se permiten repeticiones.",
+    "Seguir una secuencia fija aunque una pista ya haya localizado todos los símbolos.",
 ]: story.append(p("• " + txt))
 
-log_rows = [["Turno", "Intento", "F", "P", "F+P", "Deduccion / candidatos restantes"]]
+log_rows = [["Turno", "Intento", "F", "P", "F+P", "Deducción / candidatos restantes"]]
 log_rows += [[str(i), "", "", "", "", ""] for i in range(1, 6)]
 story += [p("Hoja de registro", "H2PF"), table(log_rows, [14*mm, 28*mm, 12*mm, 12*mm, 16*mm, 92*mm])]
-story += [Spacer(1, 5*mm), box("Conclusion: si, existen estrategias. La mas fuerte es tratar cada pista como una restriccion matematica, eliminar candidatos incompatibles y escoger la siguiente jugada por la informacion que puede producir.", GREEN)]
+story += [Spacer(1, 5*mm), box("Conclusión: sí, existen estrategias. La más fuerte es tratar cada pista como una restricción matemática, eliminar candidatos incompatibles y escoger la siguiente jugada por la información que puede producir.", GREEN)]
 
-doc = SimpleDocTemplate(str(OUT), pagesize=A4, rightMargin=18*mm, leftMargin=18*mm, topMargin=20*mm, bottomMargin=20*mm, title="Guia de estrategias - Picas y Fijas", author="Picas y Fijas")
+doc = SimpleDocTemplate(str(OUT), pagesize=A4, rightMargin=18*mm, leftMargin=18*mm, topMargin=20*mm, bottomMargin=20*mm, title="Guía de estrategias - Picas y Fijas", author="Picas y Fijas")
 doc.build(story, onFirstPage=header_footer, onLaterPages=header_footer)
 print(OUT)
