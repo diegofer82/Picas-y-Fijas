@@ -64,7 +64,46 @@ export function timerRemaining(game, at = Date.now()) {
   return Math.max(0, Math.min(total, base - Math.floor((at - started) / 1000)));
 }
 
+/* -------------------- la bolsa de tiempo --------------------
+   Como el reloj de ajedrez: cada jugador tiene su propia bolsa, solo corre la
+   de quien tiene el turno y quien la agota pierde la partida. La aritmetica es
+   la misma de `timerRemaining`, con dos diferencias: la reserva es por jugador
+   y `turn_started_at` significa "cuando arranco el reloj de quien juega".
+
+   En este modo no hay pausas —ni la manual ni la del lobby—. No es un olvido:
+   con una bolsa, detener el reloj al volver al lobby permitiria esquivar la
+   caida de bandera para siempre. Y no hace falta, porque solo corre el reloj
+   de quien tiene el turno: irte mientras no te toca no cuesta nada, e irte
+   cuando te toca te cuesta tu propio tiempo. Las pausas ya estaban
+   condicionadas a `turn_seconds > 0`, que aqui vale 0, asi que quedan fuera
+   solas. */
+export const isBankGame = (game) => String(game?.time_mode || 'turn') === 'bank' && toInt(game?.bank_seconds) > 0;
+export const hasClock = (game) => toInt(game?.turn_seconds) > 0 || isBankGame(game);
+const bankColumn = (side) => (side === 1 ? 'bank1_remaining' : 'bank2_remaining');
+
+export function bankRemaining(game, side, at = Date.now()) {
+  if (side !== 1 && side !== 2) return 0;
+  const total = Math.max(0, toInt(game.bank_seconds));
+  const stored = Math.max(0, toInt(game[bankColumn(side)], total));
+  const started = Date.parse(game.turn_started_at || '');
+  if (toInt(game.turn) !== side || truthy(game.timer_paused) || !Number.isFinite(started))
+    return Math.min(total, stored);
+  return Math.max(0, Math.min(total, stored - Math.floor((at - started) / 1000)));
+}
+
 export function freshTurnClock(game, at = Date.now()) {
+  if (isBankGame(game)) {
+    const side = toInt(game.turn);
+    const changes = { timer_paused: 0, turn_started_at: new Date(at).toISOString() };
+    if (side !== 1 && side !== 2) return changes;
+    // El incremento estilo Fischer se abona al terminar la jugada, nunca por
+    // encima de la bolsa inicial, y nunca a quien ya se quedo en cero.
+    const left = bankRemaining(game, side, at);
+    changes[bankColumn(side)] = left > 0
+      ? Math.min(toInt(game.bank_seconds), left + Math.max(0, toInt(game.bank_increment)))
+      : 0;
+    return changes;
+  }
   const seconds = Math.max(0, toInt(game.turn_seconds));
   if (!seconds) return { turn_started_at: new Date(at).toISOString(), turn_remaining: 0, timer_paused: 0 };
   const lobbyPaused = parseJsonList(game.lobby_paused_by).length > 0;
@@ -77,7 +116,23 @@ export function freshTurnClock(game, at = Date.now()) {
 }
 
 export function expiredTurnChanges(game, at = Date.now()) {
-  if (game.status !== 'active' || toInt(game.turn_seconds) <= 0 || truthy(game.timer_paused) || timerRemaining(game, at) > 0) return null;
+  if (game.status !== 'active' || truthy(game.timer_paused)) return null;
+  if (isBankGame(game)) {
+    const side = toInt(game.turn);
+    if ((side !== 1 && side !== 2) || bankRemaining(game, side, at) > 0) return null;
+    // Cae la bandera: pierde quien la agoto. Si habia un ganador pendiente era
+    // el rival, asi que el resultado es el mismo por los dos caminos.
+    return {
+      status: 'finished',
+      winner: side === 1 ? game.p2 : game.p1,
+      pending_winner: '',
+      timer_paused: 1,
+      finish_reason: 'timeout',
+      turn_started_at: '',
+      [bankColumn(side)]: 0,
+    };
+  }
+  if (toInt(game.turn_seconds) <= 0 || timerRemaining(game, at) > 0) return null;
   if (game.pending_winner) {
     return { status:'finished', winner:game.pending_winner, pending_winner:'', timer_paused:1 };
   }
@@ -90,6 +145,9 @@ export function gameMeta(game) {
     allowRepeats: truthy(game.allow_repeats), isPublic: truthy(game.is_public),
     mode: game.mode === 'colors' ? 'colors' : 'numbers', numColors: toInt(game.num_colors, 10),
     maxAttempts: toInt(game.max_attempts), turnSeconds: toInt(game.turn_seconds),
+    timeMode: isBankGame(game) ? 'bank' : 'turn',
+    bankSeconds: isBankGame(game) ? toInt(game.bank_seconds) : 0,
+    bankIncrement: isBankGame(game) ? Math.max(0, toInt(game.bank_increment)) : 0,
     revealSecrets: truthy(game.reveal_secrets), country1: cleanCountry(game.country1),
     country2: cleanCountry(game.country2), updatedAt: game.updated_at,
   };
@@ -97,6 +155,7 @@ export function gameMeta(game) {
 
 export function sanitizeGame(game, username) {
   const timerAsOf = Date.now();
+  const bank = isBankGame(game);
   const player = cleanName(username);
   const youAre = game.p1 === player ? 1 : game.p2 === player ? 2 : 0;
   const secret1 = padCode(game.secret1, game.digits);
@@ -111,6 +170,9 @@ export function sanitizeGame(game, username) {
     ok: true, gameId: game.game_id, status: game.status, digits: game.digits,
     allowRepeats: meta.allowRepeats, isPublic: meta.isPublic, mode: meta.mode,
     numColors: meta.numColors, maxAttempts: meta.maxAttempts, turnSeconds: meta.turnSeconds,
+    timeMode: meta.timeMode, bankSeconds: meta.bankSeconds, bankIncrement: meta.bankIncrement,
+    bank1Remaining: bank ? bankRemaining(game, 1, timerAsOf) : 0,
+    bank2Remaining: bank ? bankRemaining(game, 2, timerAsOf) : 0,
     turnStartedAt: game.turn_started_at, turnRemaining: timerRemaining(game, timerAsOf),
     timerAsOf: new Date(timerAsOf).toISOString(),
     timerPaused: truthy(game.timer_paused), manualPausedBy: game.manual_paused_by || '',
@@ -119,7 +181,9 @@ export function sanitizeGame(game, username) {
     p1: game.p1, p2: game.p2, country1: cleanCountry(game.country1), country2: cleanCountry(game.country2),
     turn: game.turn, whoseTurn: game.turn === 1 ? game.p1 : game.turn === 2 ? game.p2 : '',
     youAre, yourTurn: youAre !== 0 && game.turn === youAre && game.status === 'active'
-      && (meta.turnSeconds <= 0 || truthy(game.timer_paused) || timerRemaining(game, timerAsOf) > 0), guesses,
+      && (bank
+        ? bankRemaining(game, youAre, timerAsOf) > 0
+        : meta.turnSeconds <= 0 || truthy(game.timer_paused) || timerRemaining(game, timerAsOf) > 0), guesses,
     attemptsP1: guesses.filter((entry) => entry.by === game.p1).length,
     attemptsP2: guesses.filter((entry) => entry.by === game.p2).length,
     winner: game.winner, isDraw: game.status === 'finished' && !game.winner,

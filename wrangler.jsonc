@@ -25,6 +25,7 @@
       "/api/*", "/admin", "/admin/*"
     ]
   },
+  "send_email": [{ "name": "FEEDBACK_MAIL" }],
   "d1_databases": [
     {
       "binding": "DB",

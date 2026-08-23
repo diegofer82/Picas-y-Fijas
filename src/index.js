@@ -6,6 +6,8 @@ import {
   expiredTurnChanges,
   freshTurnClock,
   gameMeta,
+  hasClock,
+  isBankGame,
   maxSymbolFor,
   padCode,
   parseJsonList,
@@ -26,6 +28,13 @@ import {
   adminUserDetail,
   adminUsers,
 } from "./admin.js";
+import {
+  adminDeleteFeedback,
+  adminFeedback,
+  adminUpdateFeedback,
+  notifyFeedback,
+  submitFeedback,
+} from "./feedback.js";
 import {
   activateThreadForGame,
   adminChat,
@@ -83,6 +92,9 @@ const ADMIN_ACTIONS = new Set([
   "adminPurgeGames",
   "adminCloseSessions",
   "adminSql",
+  "adminFeedback",
+  "adminUpdateFeedback",
+  "adminDeleteFeedback",
 ]);
 const GAME_COLUMNS = new Set([
   "status",
@@ -105,6 +117,8 @@ const GAME_COLUMNS = new Set([
   "timer_ready_by",
   "timer_activated",
   "finish_reason",
+  "bank1_remaining",
+  "bank2_remaining",
 ]);
 class ConflictError extends Error {}
 
@@ -240,9 +254,29 @@ function gameInsertValues(params, username, gameId, source = null) {
   const maxAttempts = source
     ? toInt(source.max_attempts)
     : Math.max(0, toInt(params.maxAttempts));
+  // El reloj tiene tres formas: sin limite, cronometro por turno (lo de
+  // siempre) y bolsa de tiempo. Son excluyentes, asi que elegir bolsa deja
+  // `turnSeconds` en cero y al reves.
+  const timeMode = source
+    ? (String(source.time_mode || "turn") === "bank" ? "bank" : "turn")
+    : params.timeMode === "bank"
+      ? "bank"
+      : "turn";
+  const bankSeconds = source
+    ? toInt(source.bank_seconds)
+    : timeMode === "bank"
+      ? Math.max(0, toInt(params.bankSeconds))
+      : 0;
+  const bankIncrement = source
+    ? toInt(source.bank_increment)
+    : timeMode === "bank"
+      ? Math.max(0, toInt(params.bankIncrement))
+      : 0;
   const turnSeconds = source
     ? toInt(source.turn_seconds)
-    : Math.max(0, toInt(params.turnSeconds));
+    : timeMode === "bank"
+      ? 0
+      : Math.max(0, toInt(params.turnSeconds));
   return {
     gameId,
     digits,
@@ -253,6 +287,9 @@ function gameInsertValues(params, username, gameId, source = null) {
     revealSecrets,
     maxAttempts,
     turnSeconds,
+    timeMode,
+    bankSeconds,
+    bankIncrement,
     username,
     secret: String(params.secret || "").trim(),
     country: cleanCountry(params.country),
@@ -274,6 +311,14 @@ function validateGameOptions(options) {
     return "El límite de intentos debe ser ilimitado, 6 o 10.";
   if (![0, 30, 60, 120].includes(options.turnSeconds))
     return "El tiempo por turno debe ser ilimitado, 30, 60 o 120 segundos.";
+  // Los dos relojes son excluyentes por construccion: `gameInsertValues` deja
+  // en cero el que no se eligio. Aqui solo se validan los valores de la bolsa.
+  if (options.timeMode === "bank") {
+    if (![180, 300, 600].includes(options.bankSeconds))
+      return "La bolsa de tiempo debe ser de 3, 5 o 10 minutos.";
+    if (![0, 3, 5, 10].includes(options.bankIncrement))
+      return "El incremento debe ser 0, 3, 5 o 10 segundos.";
+  }
   return validateCode(
     options.secret,
     options.digits,
@@ -344,7 +389,7 @@ async function createGame(db, params, user, source = null) {
     options.country,
     "",
     options.turnSeconds,
-    options.turnSeconds > 0 ? 1 : 0,
+    options.turnSeconds > 0 || options.bankSeconds > 0 ? 1 : 0,
     "",
     "",
     "",
@@ -353,12 +398,18 @@ async function createGame(db, params, user, source = null) {
     "",
     0,
     "",
+    options.timeMode,
+    options.bankSeconds,
+    options.bankIncrement,
+    options.bankSeconds,
+    options.bankSeconds,
   ];
   await db
     .prepare(
       `INSERT INTO games(game_id,status,digits,p1,secret1,p2,secret2,turn,guesses,winner,created_at,updated_at,
     allow_repeats,is_public,mode,num_colors,max_attempts,turn_seconds,turn_started_at,rematch_id,pending_winner,country1,country2,
-    turn_remaining,timer_paused,manual_paused_by,manual_pause_until,last_manual_pause_at,lobby_paused_by,reveal_secrets,timer_ready_by,timer_activated,finish_reason)
+    turn_remaining,timer_paused,manual_paused_by,manual_pause_until,last_manual_pause_at,lobby_paused_by,reveal_secrets,timer_ready_by,timer_activated,finish_reason,
+    time_mode,bank_seconds,bank_increment,bank1_remaining,bank2_remaining)
     VALUES(${values.map(() => "?").join(",")})`,
     )
     .bind(...values)
@@ -476,7 +527,7 @@ async function state(db, params, user) {
     };
     if (closed[game.status]) return { ok: false, error: closed[game.status] };
     const participant = game.p1 === user.username || game.p2 === user.username;
-    if (game.status === "active" && participant && game.turn_seconds > 0) {
+    if (game.status === "active" && participant && hasClock(game)) {
       const autoResumeFrom =
         game.manual_paused_by &&
         Date.parse(game.manual_pause_until) <= Date.now()
@@ -612,9 +663,18 @@ async function makeGuess(db, params, user) {
         ...expired,
         updated_at: now(),
       });
+      if (updated.status === "finished")
+        await systemChat(
+          db,
+          game.game_id,
+          `finished:${updated.version}`,
+          "finished|",
+        );
       return {
         ok: false,
-        error: "El tiempo del turno terminó.",
+        error: isBankGame(game)
+          ? "Se te acabó la bolsa de tiempo."
+          : "El tiempo del turno terminó.",
         state: sanitizeGame(updated, user.username),
       };
     }
@@ -723,10 +783,25 @@ async function passTurn(db, params, user) {
       return { ok: false, error: "La partida no está activa." };
     if (game.p1 !== user.username && game.p2 !== user.username)
       return { ok: false, error: "No eres jugador de esta partida." };
-    if (game.turn_seconds <= 0)
+    if (!hasClock(game))
       return { ok: false, error: "Esta partida no tiene cronómetro." };
     if (truthy(game.timer_paused))
       return { ok: false, error: "El cronómetro está en pausa." };
+    // Con bolsa de tiempo no se pasa el turno: agotar la bolsa pierde la
+    // partida. El navegador avisa igual que con el cronometro, pero quien
+    // decide es el servidor, que vuelve a hacer la cuenta antes de cerrar.
+    if (isBankGame(game)) {
+      const flag = expiredTurnChanges(game);
+      if (!flag) return { ok: false, error: "Aún queda tiempo." };
+      const closed = await saveGame(db, game, { ...flag, updated_at: now() });
+      await systemChat(
+        db,
+        game.game_id,
+        `finished:${closed.version}`,
+        "finished|",
+      );
+      return { ok: true, resolved: true, timeout: true };
+    }
     if (timerRemaining(game) > 0)
       return { ok: false, error: "Aún queda tiempo." };
     const changes = game.pending_winner
@@ -816,7 +891,8 @@ async function closeGame(db, params, user) {
 async function history(db, user) {
   const { results } = await db
     .prepare(
-      `SELECT game_id,p1,p2,country1,country2,winner,digits,mode,num_colors,allow_repeats,max_attempts,turn_seconds,guesses,finish_reason,updated_at
+      `SELECT game_id,p1,p2,country1,country2,winner,digits,mode,num_colors,allow_repeats,max_attempts,turn_seconds,
+              time_mode,bank_seconds,bank_increment,guesses,finish_reason,updated_at
        FROM games WHERE status='finished' AND (p1=? OR p2=?) ORDER BY updated_at DESC`,
     )
     .bind(user.username, user.username)
@@ -840,13 +916,21 @@ async function history(db, user) {
       result,
       myAttempts,
       abandoned: g.finish_reason === "abandon",
-      efficiencyEligible: result === "win" && g.finish_reason !== "abandon" && solved,
+      timedOut: g.finish_reason === "timeout",
+      efficiencyEligible:
+        result === "win" &&
+        g.finish_reason !== "abandon" &&
+        g.finish_reason !== "timeout" &&
+        solved,
       digits: g.digits,
       mode: g.mode,
       numColors: g.num_colors,
       allowRepeats: truthy(g.allow_repeats),
       maxAttempts: g.max_attempts,
       turnSeconds: g.turn_seconds,
+      timeMode: String(g.time_mode || "turn") === "bank" ? "bank" : "turn",
+      bankSeconds: toInt(g.bank_seconds),
+      bankIncrement: toInt(g.bank_increment),
       updatedAt: g.updated_at,
     };
   });
@@ -1072,6 +1156,7 @@ async function adminAction(db, action, params, user) {
   if (action === "adminSummary") return adminSummary(db, onlineCount);
   if (action === "adminUsers") return adminUsers(db);
   if (action === "adminUserDetail") return adminUserDetail(db, params.target);
+  if (action === "adminFeedback") return adminFeedback(db, params);
   if (action === "adminGames") {
     const { results } = await db
       .prepare(
@@ -1087,7 +1172,7 @@ async function adminAction(db, action, params, user) {
     return { ok: true, audit: results };
   }
   if (action === "adminExport") {
-    const [users, games, audit, chatMessages, chatReports, chatMutes] =
+    const [users, games, audit, chatMessages, chatReports, chatMutes, feedback] =
       await Promise.all([
         db
           .prepare(
@@ -1100,17 +1185,19 @@ async function adminAction(db, action, params, user) {
         db.prepare("SELECT * FROM chat_messages ORDER BY id").all(),
         db.prepare("SELECT * FROM chat_reports ORDER BY id").all(),
         db.prepare("SELECT * FROM chat_mutes ORDER BY username_key").all(),
+        db.prepare("SELECT * FROM feedback ORDER BY id").all(),
       ]);
     return {
       ok: true,
       exportedAt: now(),
-      schemaVersion: 2,
+      schemaVersion: 3,
       users: users.results,
       games: games.results,
       audit: audit.results,
       chatMessages: chatMessages.results,
       chatReports: chatReports.results,
       chatMutes: chatMutes.results,
+      feedback: feedback.results,
     };
   }
   // Las herramientas de mantenimiento devuelven su propio detalle, asi que
@@ -1183,6 +1270,12 @@ async function adminAction(db, action, params, user) {
         .bind(salt, pinHash, targetUser.id),
       db.prepare("DELETE FROM sessions WHERE user_id=?").bind(targetUser.id),
     ]);
+  } else if (action === "adminUpdateFeedback") {
+    const result = await adminUpdateFeedback(db, params);
+    if (!result.ok) return result;
+  } else if (action === "adminDeleteFeedback") {
+    const result = await adminDeleteFeedback(db, params);
+    if (!result.ok) return result;
   } else if (action === "adminCloseGame") {
     await db
       .prepare(
@@ -1226,13 +1319,37 @@ async function logAudit(db, user, action, target, details) {
     .run();
 }
 
-async function routeApi(request, env) {
+async function routeApi(request, env, ctx) {
   const params = await bodyParams(request);
   const action = String(params.action || "");
   if (action === "loginUser")
     return json(
       await login(env.DB, params, env.SESSION_TTL_HOURS, requestOrigin(request)),
     );
+  // El buzon se abre desde la pantalla de inicio, donde todavia no hay sesion,
+  // asi que es el unico endpoint que escribe sin autenticar. Si de todas formas
+  // llega una sesion valida, el nombre se guarda para poder responder.
+  if (action === "sendFeedback") {
+    let author = "";
+    try {
+      const signed = await authenticate(env.DB, request, params);
+      if (!signed.error) author = signed.user.username;
+    } catch {
+      author = "";
+    }
+    const result = await submitFeedback(
+      env.DB,
+      params,
+      requestOrigin(request),
+      author,
+    );
+    if (result.ok && result.entry) {
+      const notify = notifyFeedback(env, result.entry);
+      if (ctx?.waitUntil) ctx.waitUntil(notify);
+      else await notify;
+    }
+    return json({ ok: result.ok, error: result.error });
+  }
   let auth = null;
   if (PROTECTED.has(action) || ADMIN_ACTIONS.has(action)) {
     auth = await authenticate(env.DB, request, params);
@@ -1480,13 +1597,13 @@ export function canonicalRedirect(url) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const redirect = canonicalRedirect(url);
     if (redirect) return redirect;
     try {
       if (url.pathname === "/api" || url.pathname.startsWith("/api/"))
-        return await routeApi(request, env);
+        return await routeApi(request, env, ctx);
       const assetPath = assetPathFor(url.pathname);
       if (assetPath) {
         const asset = noStoreHtml(

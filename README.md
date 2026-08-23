@@ -6,7 +6,7 @@ Este es el único documento de referencia del proyecto. Está pensado para perso
 
 Picas y Fijas es un juego multijugador web en español, inglés y francés. La versión vigente funciona íntegramente en Cloudflare; la implementación anterior de Google Sheets y Apps Script fue retirada del árbol actual después de completar la migración. Sigue disponible en el historial de Git si alguna vez se necesita consultar.
 
-Versión actual: **2.4.0**.
+Versión actual: **2.5.0**.
 
 - Juego: https://picasyfijas.fans/ (también https://www.picasyfijas.fans/)
 - Dirección anterior, sigue activa: https://picas-y-fijas.picas-y-fijas.workers.dev/
@@ -62,7 +62,7 @@ El creador elige su secreto y estas reglas:
 - **Posiciones del secreto:** 3, 4, 5 o 6.
 - **Repeticiones:** permitidas o prohibidas. Si están prohibidas, ningún símbolo puede aparecer dos veces en el código o en un intento.
 - **Intentos por jugador:** sin límite, 6 o 10.
-- **Tiempo por turno:** sin límite, 30 segundos, 60 segundos o 2 minutos.
+- **Reloj:** sin límite, **por turno** (30 segundos, 60 segundos o 2 minutos) o **bolsa de tiempo** (3, 5 o 10 minutos por jugador, con incremento opcional de 3, 5 o 10 segundos por jugada). Las dos formas son excluyentes.
 - **Visibilidad:** pública, visible en el lobby, o privada, accesible solamente mediante su código.
 - **Revelar secretos al terminar:** desactivado inicialmente; si se activa, cada jugador podrá ver el código del rival cuando finalice la partida.
 
@@ -79,11 +79,13 @@ En partidas con cronómetro, la cuenta comienza cuando ambos jugadores han entra
 Durante su turno, el jugador envía un código completo. El servidor valida el intento, calcula picas y fijas y pasa el turno al rival.
 
 - Con tiempo ilimitado, la partida puede jugarse de forma asíncrona: se puede volver al lobby y continuar minutos u horas después.
-- En una partida cronometrada, al llegar a cero el turno pasa automáticamente al rival.
+- Con cronómetro **por turno**, al llegar a cero el turno pasa automáticamente al rival.
+- Con **bolsa de tiempo**, al llegar a cero se pierde la partida. La partida se cierra con `finish_reason = 'timeout'`.
 - El servidor es la autoridad del reloj; alterar la hora o la interfaz del navegador no permite jugar fuera de tiempo.
-- Si un jugador vuelve al lobby durante una partida cronometrada, el reloj se detiene hasta que ambos regresen.
-- La pausa manual solo está disponible con cronómetro, dura como máximo 5 minutos y tiene un minuto de espera antes de poder solicitar otra.
+- Si un jugador vuelve al lobby durante una partida con cronómetro **por turno**, el reloj se detiene hasta que ambos regresen.
+- La pausa manual solo está disponible con cronómetro **por turno**, dura como máximo 5 minutos y tiene un minuto de espera antes de poder solicitar otra.
 - Solo quien solicitó una pausa manual puede reanudarla antes de su vencimiento.
+- **En una partida con bolsa de tiempo no hay ninguna pausa**, ni manual ni al volver al lobby. Es una partida síncrona: los dos jugadores deben estar presentes de principio a fin.
 
 Volver al lobby no cancela ni abandona una partida. El navegador recuerda la partida abierta e intenta recuperarla después de recargar.
 
@@ -98,6 +100,20 @@ Una partida normal termina cuando alguien obtiene tantas fijas como posiciones t
 5. Si quien iba segundo en la ronda acierta sin que hubiera un ganador pendiente, gana inmediatamente porque la ronda ya estaba completa.
 
 Cuando existe límite de intentos y ambos jugadores lo agotan sin resolver el código, la partida termina en empate.
+
+### La bolsa de tiempo
+
+Desde 2.5 el reloj tiene una tercera forma, tomada del ajedrez: en lugar de un cronómetro que se reinicia en cada turno, cada jugador recibe una **bolsa** de 3, 5 o 10 minutos y gasta de ella mientras le toca. Quien la agota pierde la partida, sin importar cómo vayan los intentos. Un **incremento** opcional de 3, 5 o 10 segundos se abona al terminar cada jugada, nunca por encima del tamaño inicial de la bolsa.
+
+La aritmética es la misma del cronómetro por turno, con dos diferencias: la reserva es por jugador —`bank1_remaining` y `bank2_remaining`— y `turn_started_at` pasa a significar «cuándo arrancó el reloj de quien juega». **Solo corre el reloj de quien tiene el turno**; el del rival se queda quieto.
+
+**Por eso en modo bolsa no hay pausas, y no es un olvido.** Detener el reloj al volver al lobby permitiría esquivar la caída de bandera para siempre. Y no hace falta ninguna protección: como solo corre el reloj de quien juega, irse mientras no te toca no cuesta nada e irse cuando te toca cuesta tu propio tiempo. En el código sale casi gratis, porque `togglePause` y la pausa por lobby ya estaban condicionadas a `turn_seconds > 0`, que en una partida con bolsa vale 0. El apretón de manos que ya existía —`timer_ready_by`, `timer_activated` y la cortesía de 5 segundos— sirve tal cual para arrancar el reloj cuando las dos pantallas están listas.
+
+**Nadie depende del navegador de quien pierde.** El cliente avisa con `passTurn` cuando cae su propia bandera, pero el rival descubre lo mismo en su consulta periódica, porque `state` vuelve a hacer la cuenta. Si los dos cierran el navegador, la partida se resuelve correctamente al abrirla: todo se calcula sobre sellos de tiempo, no sobre temporizadores vivos.
+
+En pantalla son dos relojes tipo ajedrez sobre la fila de jugadores. El activo descuenta y pasa a ámbar bajo 30 segundos y a rojo bajo 10. Una victoria por tiempo no cuenta para las métricas de eficiencia del historial, igual que una victoria por abandono.
+
+La práctica **contra el computador** también admite bolsa. Ahí solo corre la del jugador: el computador responde al instante y no gasta reloj. En **Solo** no aparece la opción porque su «Tiempo total» ya era exactamente eso.
 
 ### Cancelar, abandonar y caducidad
 
@@ -115,7 +131,7 @@ El historial muestra hasta las 40 partidas terminadas más recientes del jugador
 
 ### Práctica Solo y Contra el computador
 
-Desde el lobby se puede abrir **Practicar** y escoger entre **Solo** o **Contra el computador**. Ambos modos permiten números o colores, entre 3 y 6 posiciones, repeticiones, 4, 6 u 8 colores, límite de intentos y cronómetro, o una **Partida aleatoria** que combina las reglas. La creación de una partida clásica también ofrece **Partida aleatoria**: combina sus reglas y lleva al jugador a crear su propio código secreto antes de abrir la sala; la visibilidad y la preferencia de revelado escogidas se mantienen.
+Desde el lobby se puede abrir **Practicar** y escoger entre **Solo** o **Contra el computador**. Ambos modos permiten números o colores, entre 3 y 6 posiciones, repeticiones, 4, 6 u 8 colores, límite de intentos y cronómetro —contra el computador, además, bolsa de tiempo—, o una **Partida aleatoria** que combina las reglas. La creación de una partida clásica también ofrece **Partida aleatoria**: combina sus reglas y lleva al jugador a crear su propio código secreto antes de abrir la sala; la visibilidad y la preferencia de revelado escogidas se mantienen.
 
 - El secreto se genera con Web Crypto, permanece oculto durante la partida y siempre se revela al terminar.
 - Las partidas de práctica no se envían a la API, no crean filas en D1 y no afectan el historial ni el ranking competitivo.
@@ -131,6 +147,34 @@ El rival funciona íntegramente sin conexión y no utiliza ChatGPT ni ninguna AP
 - **Fácil:** elige al azar entre combinaciones compatibles con todas las pistas anteriores.
 - **Normal:** mantiene y elimina el conjunto completo de combinaciones posibles usando cada resultado de picas y fijas.
 - **Experto:** evalúa cómo distintos intentos dividen el conjunto compatible y escoge uno que reduzca estratégicamente el peor grupo restante.
+
+### El buzón de sugerencias
+
+Desde la pantalla de inicio, justo debajo de los créditos, hay un enlace a **Sugerencias y errores**; el lobby lo repite en su pie. Se puede escribir sin haber entrado: es el único endpoint del juego que escribe en D1 sin sesión.
+
+Como se llega antes de elegir idioma, la pantalla **lleva su propio selector de `es/en/fr`**. Es el mismo destino que el del registro: elegir ahí cambia el idioma de toda la aplicación, no solo el del formulario, y el idioma escogido se guarda con el mensaje para saber en qué responder.
+
+Se elige un tipo —idea, error, pregunta u otro—, se escribe un mensaje de 10 a 1000 caracteres y, si se quiere, un contacto para recibir respuesta. El resto se captura solo: idioma, versión de la aplicación, navegador, país e IP —los pone Cloudflare, como en el resto del juego— y el nombre de usuario si había sesión abierta.
+
+**No se envía a un correo y ya está: se guarda en D1 y se tría en `/admin`.** Un correo suelto no tiene estado ni filtro, y cualquier «envío directo» habría metido en el proyecto una API externa y un secreto. La fila es la fuente de verdad; el correo es solo un aviso, y si falla no se pierde nada.
+
+Al ser público, el endpoint necesita barandillas propias. Son cuatro y viven en `src/feedback.js`:
+
+- un **campo trampa** invisible en la pantalla: si viene relleno se responde que todo fue bien y no se guarda nada;
+- entre 10 y 1000 caracteres, sin caracteres de control;
+- **30 segundos** entre mensajes de la misma IP;
+- un máximo de **5 por hora y 15 por día** por IP.
+
+Los tres cortes de tiempo se resuelven con una sola consulta por envío, contando filas por `ip`.
+
+**El aviso por correo usa Cloudflare Email Routing**, que entrega a una dirección ya verificada de la cuenta sin API key ni servicio externo. El Worker declara el binding `FEEDBACK_MAIL` en `wrangler.jsonc` y arma el mensaje MIME a mano —cabeceras y un cuerpo en base64, porque lleva acentos— para no añadir una dependencia a un proyecto que no tiene ninguna. El destino y el remitente **no** están en el repositorio, que es público: viajan como secretos.
+
+```text
+wrangler secret put FEEDBACK_TO      # la dirección verificada que recibe el aviso
+wrangler secret put FEEDBACK_FROM    # un remitente del dominio, p. ej. buzon@picasyfijas.fans
+```
+
+Antes hay que activar **Email Routing** en `picasyfijas.fans` y verificar la dirección de destino en el panel de Cloudflare. Mientras falten el binding o los dos secretos, `notifyFeedback` se retira en silencio y el buzón sigue funcionando: la fila se guarda y se lee en el panel.
 
 ### Interfaz y accesibilidad
 
@@ -157,7 +201,8 @@ El rival funciona íntegramente sin conexión y no utiliza ChatGPT ni ninguna AP
 - `src/game.js`: reglas puras, validaciones, cronómetro y sanitización del estado.
 - `src/security.js`: PIN, autenticación, sesiones, limitación de intentos y lectura del país y la IP que pone Cloudflare.
 - `src/admin.js`: herramientas de mantenimiento del panel: ficha de usuario, detección de cuentas repetidas, fusión, borrado, limpieza de partidas y consola SQL.
-- `migrations/0001_initial.sql`: esquema reproducible de D1. No es un residuo de la migración desde Google y no debe eliminarse. Las migraciones siguientes solo añaden: `0002` el chat, `0003` los hilos privados y `0004` el origen de cada cuenta.
+- `src/feedback.js`: el buzón de sugerencias y errores: validación, barandillas del endpoint público, consultas del panel y el aviso por correo.
+- `migrations/0001_initial.sql`: esquema reproducible de D1. No es un residuo de la migración desde Google y no debe eliminarse. Las migraciones siguientes solo añaden: `0002` el chat, `0003` los hilos privados, `0004` el origen de cada cuenta, `0005` el buzón de sugerencias y `0006` la bolsa de tiempo.
 - `test/`: pruebas automáticas de reglas, rutas, teclado y regresiones.
 - `tools/make-icons.mjs`: genera los cuatro PNG de la aplicación instalada. Se ejecuta con `npm run icons`.
 - `tools/make-rules-pages.py`: convierte `RULES` en las tres páginas públicas de reglas. El texto no se duplica: la única fuente sigue siendo el juego.
@@ -311,7 +356,7 @@ Dos detalles que conviene no deshacer:
 
 ### Volver al lobby desde la marca
 
-El logo es un `<button>` (`#brand-home`) que lleva al lobby, pero solo desde las pantallas de consulta que enumera `BRAND_HOME_FROM`: historial, ranking, reglas, crear, unirse y configuración de práctica. Desde una partida o una práctica en curso queda inerte a propósito, porque saltar al lobby se saltaría el flujo que guarda o abandona y le costaría el progreso al jugador. `test/keyboard.test.js` fija las dos mitades de esa regla.
+El logo es un `<button>` (`#brand-home`) que lleva al lobby, pero solo desde las pantallas de consulta que enumera `BRAND_HOME_FROM`: historial, ranking, reglas, crear, unirse y configuración de práctica. El buzón de sugerencias queda fuera a propósito: se abre también desde la pantalla de inicio, donde todavía no hay sesión ni lobby al que volver; su botón **Volver** recuerda de dónde se entró. Desde una partida o una práctica en curso queda inerte a propósito, porque saltar al lobby se saltaría el flujo que guarda o abandona y le costaría el progreso al jugador. `test/keyboard.test.js` fija las dos mitades de esa regla.
 
 ## Modelo de datos
 
@@ -324,6 +369,9 @@ El logo es un `<button>` (`#brand-home`) que lleva al lobby, pero solo desde las
 - `chat_messages`: chat mundial del lobby, chat privado de partida, eventos y zumbidos.
 - `chat_reports`: reportes de moderación, únicos por mensaje y usuario.
 - `chat_mutes`: silencios temporales o permanentes impuestos por administración.
+- `feedback`: el buzón de sugerencias y errores, con su estado de triaje y la nota interna de administración.
+
+Las columnas de la bolsa de tiempo viven en `games` y conviven con el cronómetro por turno de siempre: `time_mode` (`turn` o `bank`) decide cuál manda, y `bank_seconds`, `bank_increment`, `bank1_remaining` y `bank2_remaining` describen el reloj de cada jugador. `time_mode` vale `turn` por omisión, así que las partidas anteriores no cambian de comportamiento. Los dos relojes son excluyentes por construcción: `gameInsertValues` deja en cero el que no se eligió, y por eso la validación solo comprueba los valores de la bolsa.
 
 El país y la IP no los declara el navegador: los pone Cloudflare delante del Worker (`request.cf.country` y `CF-Connecting-IP`, en `requestOrigin`). Se escriben solo al entrar —una escritura por sesión, no por petición— y su único uso es administrativo. El país que enseña la bandera de una partida sigue siendo el que averigua el navegador; son dos datos distintos y no se mezclan.
 
@@ -344,6 +392,7 @@ El toro azul de la esquina superior cierra el panel en ese navegador y devuelve 
 | Partidas | Las últimas 200, con filtro, y el cierre de las que siguen abiertas. |
 | Conversaciones | Una fila por chat, no un río de mensajes: quiénes hablan, cuántos mensajes, cuántos zumbidos y cuántos reportes. El histórico se abre aparte, en su propia ventana. |
 | Moderación | Los reportes del chat, con borrar y silenciar a mano. |
+| Feedback | Las sugerencias y los errores que llegan del juego. Filtro por estado y por tipo, cambio de estado desde la propia fila, nota interna y borrado. |
 | Mantenimiento | Limpieza de partidas por estado y antigüedad, y la consola SQL. |
 | Auditoría | Todo lo que la administración ha cambiado, con fecha, objetivo y detalle. |
 
@@ -369,7 +418,9 @@ Cada partida tiene una columna `version`. Las modificaciones usan actualización
 
 Las jugadas incluyen `requestId`. Si el navegador repite una petición por pérdida de conexión, el servidor debe devolver el resultado guardado, no insertar una segunda jugada.
 
-El servidor es la autoridad sobre turnos y temporizadores. El navegador muestra una cuenta regresiva basada en el estado recibido, pero no decide por sí solo el resultado. Una petición recibida tras expirar el turno debe ser rechazada y provocar la transición válida del servidor.
+El servidor es la autoridad sobre turnos y temporizadores. El navegador muestra una cuenta regresiva basada en el estado recibido, pero no decide por sí solo el resultado. Una petición recibida tras expirar el turno debe ser rechazada y provocar la transición válida del servidor. Con bolsa de tiempo eso significa cerrar la partida: `passTurn` no pasa el turno, vuelve a hacer la cuenta y, si la bandera cayó de verdad, entrega la victoria al rival.
+
+El buzón de sugerencias es el único endpoint que escribe en D1 sin sesión. Cualquier cambio en él debe conservar sus cuatro barandillas —campo trampa, longitud, espera entre mensajes y tope por hora y por día—, porque son lo único que lo separa de un grifo abierto.
 
 La administración no está enlazada desde el juego. Requiere una cuenta con rol `admin`, y toda acción que cambie algo queda en `audit_log`. Un jugador sin ese rol recibe siempre un error, tenga o no sesión válida.
 
@@ -418,6 +469,13 @@ pnpm run db:remote
 git push origin main
 ```
 
+La 2.5 trae dos migraciones nuevas, `0005_feedback.sql` y `0006_time_bank.sql`, así que le aplica esta misma regla. El aviso por correo del buzón necesita además, una sola vez, activar Email Routing en el dominio y colocar sus dos secretos:
+
+```text
+wrangler secret put FEEDBACK_TO
+wrangler secret put FEEDBACK_FROM
+```
+
 Al revés, el Worker nuevo llegaría a una base sin las columnas que espera y cualquier entrada fallaría hasta que la migración se aplicara. Al derecho no hay ventana rota: las columnas nuevas siempre se añaden con valor por omisión, así que el Worker anterior las ignora sin enterarse.
 
 El plan gratuito de D1 incluye por cuenta 5 millones de filas leídas al día, 100.000 filas escritas al día y 5 GB de almacenamiento. Las cuotas diarias se reinician a las 00:00 UTC. Los índices reducen lecturas, pero actualizar una columna indexada puede sumar escrituras adicionales. Antes de aumentar el tráfico se deben revisar las métricas de D1, la frecuencia de consultas y el polling.
@@ -432,6 +490,8 @@ Nunca se deben subir a GitHub:
 - `.private/`, `.wrangler/`, `dist/`, cachés o perfiles de rendimiento.
 
 Estas exclusiones están definidas en `.gitignore`. Los PIN se almacenan con hash SHA-256 y una sal individual. No se deben registrar PIN, tokens de sesión, secretos de partida ni contenido privado en logs o documentación.
+
+El contacto que alguien deja en el buzón de sugerencias es un dato personal y recibe el mismo trato que la IP: se guarda para poder responder, solo se ve dentro de `/admin`, no aparece en ninguna respuesta del juego y sí va en la exportación, que pasó a `schemaVersion: 3` al incluir el buzón.
 
 La IP y el país de cada cuenta son datos personales. Se guardan porque sin ellos no hay forma de reconocer a quien vuelve con otro nombre tras olvidar su PIN, y por eso solo se ven dentro de `/admin`: no aparecen en ninguna respuesta del juego, no viajan al navegador de ningún jugador y no se escriben en logs. Sí van en la exportación, que por lo tanto es un archivo con datos personales y nunca debe subirse al repositorio.
 

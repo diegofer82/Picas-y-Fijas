@@ -82,6 +82,7 @@
       <button data-tab="partidas">Partidas</button>
       <button data-tab="chat">Conversaciones</button>
       <button data-tab="moderacion">Moderación</button>
+      <button data-tab="feedback">Feedback</button>
       <button data-tab="mantenimiento">Mantenimiento</button>
       <button data-tab="auditoria">Auditoría</button>
     </nav>
@@ -128,6 +129,18 @@
       <div class="panel">
         <h2>Reportes del chat</h2>
         <div class="scroll"><table><thead><tr><th>Mensaje</th><th>Autor</th><th>Reportado por</th><th>Motivo</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="reports"></tbody></table></div>
+      </div>
+    </div>
+
+    <div id="tab-feedback" class="hidden">
+      <div class="panel">
+        <div class="row"><h2 class="grow">Sugerencias y errores</h2>
+          <select id="fbStatus"><option value="">Todos los estados</option><option value="new">Nuevos</option><option value="read">Leídos</option><option value="planned">Planificados</option><option value="done">Hechos</option><option value="discarded">Descartados</option></select>
+          <select id="fbKind"><option value="">Cualquier tipo</option><option value="idea">Idea</option><option value="bug">Error</option><option value="question">Pregunta</option><option value="other">Otro</option></select>
+        </div>
+        <p class="muted small">Llegan desde la pantalla de inicio del juego, con o sin sesión. El contacto y la IP son datos personales: no salen de aquí.</p>
+        <div class="row" id="fbCounts"></div>
+        <div class="scroll"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Mensaje</th><th>De</th><th class="nowrap">Idioma</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="feedback"></tbody></table></div>
       </div>
     </div>
 
@@ -188,7 +201,7 @@ async function login(){
 }
 
 /* ---- pestañas: cada una pide sus datos la primera vez que se abre ---- */
-const loaders={resumen:loadSummary,usuarios:loadUsers,partidas:loadGames,chat:loadThreads,moderacion:loadReports,mantenimiento:loadRecipes,auditoria:loadAudit};
+const loaders={resumen:loadSummary,usuarios:loadUsers,partidas:loadGames,chat:loadThreads,moderacion:loadReports,feedback:loadFeedback,mantenimiento:loadRecipes,auditoria:loadAudit};
 async function openTab(name){
   for(const button of $('tabs').children)button.classList.toggle('on',button.dataset.tab===name);
   for(const key of Object.keys(loaders))$('tab-'+key).classList.toggle('hidden',key!==name);
@@ -206,7 +219,7 @@ async function loadSummary(){
   const card=(label,value,warn)=>`<div class="card${warn&&value?' warn':''}">${label}<b>${value??0}</b></div>`;
   $('summary').innerHTML=card('Usuarios',s.users)+card('En línea',s.online)+card('Nuevos (7 d)',a.newUsersWeek)+card('Activos (7 d)',a.activeUsersWeek)
     +card('Bloqueados',a.blocked,true)+card('Partidas (24 h)',a.gamesDay)+card('Mensajes (24 h)',a.messagesDay)
-    +card('Reportes abiertos',a.openReports,true)+card('Silenciados',a.mutes,true)+card('Conversaciones',a.threads)+card('Sesiones vivas',a.sessions)
+    +card('Reportes abiertos',a.openReports,true)+card('Feedback sin leer',a.openFeedback,true)+card('Feedback total',a.feedback)+card('Silenciados',a.mutes,true)+card('Conversaciones',a.threads)+card('Sesiones vivas',a.sessions)
     +s.games.map(x=>card(x.status,x.count)).join('');
   $('countries').innerHTML=(s.countries||[]).map(c=>`<div class="card">${flag(c.country)} ${esc(String(c.country).toUpperCase())}<b>${c.count}</b></div>`).join('')||'<div class="muted">Todavía no hay países registrados.</div>';
 }
@@ -277,6 +290,26 @@ async function openThread(id){
 }
 
 /* ---- moderación ---- */
+const FB_KIND={idea:'Idea',bug:'Error',question:'Pregunta',other:'Otro'};
+const FB_STATUS={new:'Nuevo',read:'Leído',planned:'Planificado',done:'Hecho',discarded:'Descartado'};
+async function loadFeedback(){
+  const r=await api('adminFeedback',{status:$('fbStatus').value,kind:$('fbKind').value});
+  $('fbCounts').innerHTML=Object.entries(FB_STATUS)
+    .map(([key,label])=>`<div class="card${key==='new'&&r.counts[key]?' warn':''}">${label}<b>${r.counts[key]||0}</b></div>`).join('');
+  $('feedback').innerHTML=r.items.map(x=>`<tr>
+    <td class="nowrap">${when(x.createdAt)}</td>
+    <td class="nowrap">${esc(FB_KIND[x.kind]||x.kind)}</td>
+    <td style="max-width:420px;white-space:pre-wrap">${esc(x.message)}${x.adminNote?`<div class="muted small">Nota: ${esc(x.adminNote)}</div>`:''}</td>
+    <td>${esc(x.username||x.contact||'—')}${x.username&&x.contact?`<div class="muted small">${esc(x.contact)}</div>`:''}
+        <div class="muted small">${flag(x.country)} ${esc(x.ip||'')}</div></td>
+    <td class="nowrap">${esc(x.lang)}${x.appVersion?` · v${esc(x.appVersion)}`:''}</td>
+    <td class="nowrap">${esc(FB_STATUS[x.status]||x.status)}</td>
+    <td class="nowrap">
+      <select data-feedback-status="${x.id}">${Object.entries(FB_STATUS).map(([key,label])=>`<option value="${key}"${key===x.status?' selected':''}>${label}</option>`).join('')}</select>
+      <button class="tiny" data-feedback-note="${x.id}">Nota</button>
+      <button class="tiny danger" data-feedback-delete="${x.id}">Borrar</button>
+    </td></tr>`).join('')||'<tr><td colspan="7" class="muted">Sin mensajes todavía.</td></tr>';
+}
 async function loadReports(){
   const r=await api('adminChatReports');
   $('reports').innerHTML=r.reports.map(x=>`<tr><td>${esc(x.deleted_at?'[eliminado]':x.body)}</td><td>${esc(x.sender)}</td><td>${esc(x.reporter)}</td>
@@ -426,6 +459,13 @@ async function handleAction(e){
     if(mergeGroup){const list=mergeGroup.dataset.mergeGroup.split('|');return openMerge(list[0],list[1]);}
     const mergePair=hit('data-merge-into');
     if(mergePair)return openMerge(mergePair.dataset.mergeFrom,mergePair.dataset.mergeInto);
+    const fbNote=hit('data-feedback-note');
+    if(fbNote){const note=prompt('Nota interna para este mensaje:','');
+      if(note===null)return;
+      await api('adminUpdateFeedback',{id:fbNote.dataset.feedbackNote,target:fbNote.dataset.feedbackNote,adminNote:note});return afterChange();}
+    const fbDelete=hit('data-feedback-delete');
+    if(fbDelete){if(!confirm('¿Borrar este mensaje del buzón? No hay vuelta atrás.'))return;
+      await api('adminDeleteFeedback',{id:fbDelete.dataset.feedbackDelete,target:fbDelete.dataset.feedbackDelete});return afterChange();}
     const recipe=hit('data-recipe');
     if(recipe){$('sql').value=RECIPES[Number(recipe.dataset.recipe)][1];return runSql(false);}
   }catch(err){reportFailure(err)}
@@ -436,6 +476,15 @@ document.addEventListener('click',handleAction);
 /* ---- enganches sueltos ---- */
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b)openTab(b.dataset.tab)});
 $('userFilter').oninput=renderUsers;$('gameFilter').oninput=renderGames;$('threadFilter').oninput=renderThreads;
+const reloadFeedback=async()=>{try{await loadFeedback()}catch(e){reportFailure(e)}};
+$('fbStatus').onchange=reloadFeedback;$('fbKind').onchange=reloadFeedback;
+// El estado se cambia desde el propio desplegable: es la accion mas repetida
+// de la pestana y no merece una confirmacion cada vez.
+document.addEventListener('change',async e=>{
+  const select=e.target.closest('[data-feedback-status]');if(!select)return;
+  try{await api('adminUpdateFeedback',{id:select.dataset.feedbackStatus,target:select.dataset.feedbackStatus,status:select.value});
+    loaded.delete('resumen');await loadFeedback();}catch(err){reportFailure(err)}
+});
 $('mergeOpen').onclick=()=>openMerge('','');
 $('sqlRun').onclick=()=>runSql(false);
 $('refresh').onclick=reload;

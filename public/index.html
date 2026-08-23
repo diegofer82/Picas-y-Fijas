@@ -199,7 +199,7 @@
 
   .statusrow{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
   .statusrow .pause-inline{margin-left:0}
-  .chip{font-size:12px;color:var(--muted);background:#0D0B07;border:1px solid var(--edge);border-radius:999px;padding:6px 12px;font-family:'JetBrains Mono',monospace}
+  .chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);background:#0D0B07;border:1px solid var(--edge);border-radius:999px;padding:6px 12px;font-family:'JetBrains Mono',monospace}
   button.pause-chip{width:auto;min-width:38px;height:32px;padding:0 11px;background:#0D0B07;border:1px solid var(--edge);border-radius:999px;color:var(--muted);font-size:14px;line-height:1;cursor:pointer;display:inline-grid;place-items:center}
   button.pause-chip:hover{color:var(--text);border-color:var(--muted)}
   button.pause-chip:disabled{opacity:.55;cursor:not-allowed}
@@ -293,6 +293,24 @@
   .banner .toro{margin:0 auto 4px}
   .banner .rule{display:block;margin:0 auto 10px;color:var(--fija)}
   .banner.lose .rule{color:var(--muted)}
+  /* 2.5: el buzon de sugerencias */
+  textarea{width:100%;box-sizing:border-box;padding:12px 13px;border-radius:12px;border:1px solid var(--edge);background:#100D08;color:var(--text);font:inherit;font-size:15px;line-height:1.45;resize:vertical;min-height:120px}
+  textarea:focus{outline:none;border-color:var(--accent)}
+  .charcount{text-align:right;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-top:5px}
+  .charcount.hot{color:var(--pink)}
+  .linkbtn{display:inline-flex;align-items:center;gap:6px;background:none;border:0;padding:0;margin:0;color:var(--accent);font:inherit;font-size:13px;cursor:pointer}
+  .linkbtn:hover{text-decoration:underline}
+  /* 2.5: los dos relojes de la bolsa de tiempo, uno por jugador */
+  .banks{display:flex;gap:8px;margin:10px 0 4px}
+  .bank{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px;padding:8px 10px;border:1px solid var(--edge);border-radius:12px;background:var(--panel-2)}
+  .bank .who{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bank .clock{display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:21px;font-weight:700;color:var(--muted)}
+  .bank.running{border-color:var(--accent);background:rgba(91,141,239,.10)}
+  .bank.running .clock{color:var(--text)}
+  .bank.running.warn{border-color:var(--pica)}.bank.running.warn .clock{color:var(--pica)}
+  .bank.running.hot{border-color:var(--pink)}.bank.running.hot .clock{color:var(--pink);animation:bankPulse 1s ease-in-out infinite}
+  .bank.out .clock{color:var(--pink)}
+  @keyframes bankPulse{0%,100%{opacity:1}50%{opacity:.45}}
   .credits{margin-top:12px;line-height:1.7}
   .credits a{color:var(--accent);text-decoration:none}
   .credits a:hover{text-decoration:underline}
@@ -371,6 +389,53 @@
     <button class="btn" id="btn-login" onclick="doLogin()" data-i18n="login_enter">Entrar</button>
     <div class="foot"><a class="link" data-rules-link href="/como-se-juega" onclick="openRules();return false" data-i18n="rules_link">¿Cómo se juega?</a><span id="login-install" class="hidden"> · <a class="link" data-install-link id="login-install-link" href="/instalar"></a></span></div>
     <div class="foot credits"></div>
+    <div class="foot"><button type="button" class="linkbtn" onclick="openFeedback()"><span data-ico="globo" data-ico-size="14"></span><span data-i18n="feedback_link">Sugerencias y errores</span></button></div>
+  </section>
+
+  <!-- BUZON DE SUGERENCIAS -->
+  <section id="s-feedback" class="hidden">
+    <div class="card">
+      <h2 data-i18n="feedback_title">Cuéntanos qué mejorarías</h2>
+      <p class="hint" data-i18n="feedback_hint">Toda idea es bienvenida: una mejora que se te ocurra, un error que encontraste o una duda. Lo leemos todo.</p>
+
+      <label data-i18n="feedback_lang">Idioma de tu mensaje</label>
+      <div class="seg" id="fb-seg-lang">
+        <button data-lang="es">Español</button>
+        <button data-lang="en">English</button>
+        <button data-lang="fr">Français</button>
+      </div>
+
+      <label data-i18n="feedback_kind">¿De qué se trata?</label>
+      <div class="seg" id="fb-seg-kind">
+        <button data-k="idea" class="on"><span data-ico="bombilla" data-ico-size="15"></span><span data-i18n="fb_idea">Idea</span></button>
+        <button data-k="bug"><span data-ico="bicho" data-ico-size="15"></span><span data-i18n="fb_bug">Error</span></button>
+        <button data-k="question"><span data-ico="interrogacion" data-ico-size="15"></span><span data-i18n="fb_question">Pregunta</span></button>
+        <button data-k="other"><span data-ico="globo" data-ico-size="15"></span><span data-i18n="fb_other">Otro</span></button>
+      </div>
+
+      <label for="fb-message" data-i18n="feedback_msg">Tu mensaje</label>
+      <textarea id="fb-message" maxlength="1000" data-i18n-ph="feedback_msg_ph"></textarea>
+      <div class="charcount" id="fb-count">0/1000</div>
+
+      <label for="fb-contact" data-i18n="feedback_contact">Cómo responderte (opcional)</label>
+      <input type="text" id="fb-contact" maxlength="120" data-i18n-ph="feedback_contact_ph" autocomplete="off">
+      <p class="fieldnote" data-i18n="feedback_contact_note">Solo se usa para responderte. Si lo dejas vacío, el mensaje llega igual.</p>
+      <!-- Campo trampa: invisible para una persona, irresistible para un bot. -->
+      <input type="text" id="fb-website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+
+      <div class="val" id="fb-val"></div>
+      <button class="btn" id="fb-send" onclick="sendFeedback()" data-i18n="feedback_send">Enviar</button>
+      <div style="height:10px"></div>
+      <button class="btn ghost" id="fb-back" onclick="closeFeedback()" data-i18n="back">Volver</button>
+    </div>
+    <div class="card hidden" id="fb-done" style="text-align:center">
+      <h2 data-i18n="feedback_sent_title">Mensaje enviado</h2>
+      <p class="hint" data-i18n="feedback_sent_hint">Gracias por tomarte el tiempo. Si dejaste un contacto, te responderemos.</p>
+      <div style="height:14px"></div>
+      <button class="btn green" onclick="resetFeedbackForm()" data-i18n="feedback_another">Enviar otro</button>
+      <div style="height:10px"></div>
+      <button class="btn ghost" onclick="closeFeedback()" data-i18n="back">Volver</button>
+    </div>
   </section>
 
   <!-- LOBBY -->
@@ -453,7 +518,7 @@
       </div>
     </div>
 
-    <div class="foot"><span class="link" id="sound-link" onclick="toggleSound()"></span> · <a class="link" data-rules-link href="/como-se-juega" onclick="openRules();return false" data-i18n="rules_link">¿Cómo se juega?</a> · <span class="link" onclick="logout()" data-i18n="lobby_changeuser">Cambiar de usuario</span></div>
+    <div class="foot"><span class="link" id="sound-link" onclick="toggleSound()"></span> · <a class="link" data-rules-link href="/como-se-juega" onclick="openRules();return false" data-i18n="rules_link">¿Cómo se juega?</a> · <span class="link" onclick="openFeedback()" data-i18n="feedback_link">Sugerencias y errores</span> · <span class="link" onclick="logout()" data-i18n="lobby_changeuser">Cambiar de usuario</span></div>
   </section>
 
   <!-- PRACTICA: CONFIGURACION -->
@@ -490,8 +555,21 @@
       <div class="seg" id="p-seg-repeat"><button data-r="0" class="on" data-i18n="rep_no">No permitir</button><button data-r="1" data-i18n="rep_yes">Permitir</button></div>
       <label data-i18n="lbl_attempts">Límite de intentos</label>
       <div class="seg mono" id="p-seg-attempts"><button data-a="0" class="on" data-i18n="nolimit">Sin límite</button><button data-a="6">6</button><button data-a="10">10</button></div>
-      <label id="practice-time-label" data-i18n="practice_time">Tiempo total</label>
-      <div class="seg mono" id="p-seg-time"><button data-t="0" class="on" data-i18n="nolimit">Sin límite</button><button data-t="60">60s</button><button data-t="120">2min</button><button data-t="300">5min</button></div>
+      <div id="p-clock-wrap" class="hidden">
+        <label data-i18n="lbl_clock">Reloj</label>
+        <div class="seg" id="p-seg-clock"><button data-c="none" class="on" data-i18n="nolimit">Sin límite</button><button data-c="turn" data-i18n="clock_turn">Por turno</button><button data-c="bank" data-i18n="clock_bank">Bolsa de tiempo</button></div>
+      </div>
+      <div id="p-time-wrap">
+        <label id="practice-time-label" data-i18n="practice_time">Tiempo total</label>
+        <div class="seg mono" id="p-seg-time"><button data-t="0" class="on" data-i18n="nolimit">Sin límite</button><button data-t="60">60s</button><button data-t="120">2min</button><button data-t="300">5min</button></div>
+      </div>
+      <div id="p-bank-wrap" class="hidden">
+        <label data-i18n="lbl_bank">Bolsa por jugador</label>
+        <div class="seg mono" id="p-seg-bank"><button data-b="180">3 min</button><button data-b="300" class="on">5 min</button><button data-b="600">10 min</button></div>
+        <label data-i18n="lbl_bank_inc">Incremento por jugada</label>
+        <div class="seg mono" id="p-seg-bank-inc"><button data-bi="0" data-i18n="bank_inc_off">Sin incremento</button><button data-bi="3">+3s</button><button data-bi="5" class="on">+5s</button><button data-bi="10">+10s</button></div>
+        <p class="hint" data-i18n="bank_hint" style="margin:8px 0 0">Como en el ajedrez: cada jugador gasta de su propia bolsa mientras le toca y pierde si se le acaba.</p>
+      </div>
       <div id="p-secret-wrap" class="hidden">
         <div class="secret-label-row"><label data-i18n="lbl_secret">Tu código secreto</label><button type="button" class="random-code-btn" onclick="suggestPracticeSecret()" data-i18n-title="random_secret" title="Proponer un código aleatorio" data-ico="dado"></button></div>
         <input type="text" id="practice-player-secret" class="code" inputmode="numeric" autocomplete="off">
@@ -614,12 +692,37 @@
         <button data-a="10">10</button>
       </div>
 
-      <label data-i18n="lbl_time">Tiempo por turno</label>
-      <div class="seg mono" id="seg-time">
-        <button data-t="0" class="on" data-i18n="nolimit">Sin límite</button>
-        <button data-t="30">30s</button>
-        <button data-t="60">60s</button>
-        <button data-t="120">2min</button>
+      <label data-i18n="lbl_clock">Reloj</label>
+      <div class="seg" id="seg-clock">
+        <button data-c="none" class="on" data-i18n="nolimit">Sin límite</button>
+        <button data-c="turn" data-i18n="clock_turn">Por turno</button>
+        <button data-c="bank" data-i18n="clock_bank">Bolsa de tiempo</button>
+      </div>
+
+      <div id="turn-time-wrap" class="hidden">
+        <label data-i18n="lbl_time">Tiempo por turno</label>
+        <div class="seg mono" id="seg-time">
+          <button data-t="30" class="on">30s</button>
+          <button data-t="60">60s</button>
+          <button data-t="120">2min</button>
+        </div>
+      </div>
+
+      <div id="bank-wrap" class="hidden">
+        <label data-i18n="lbl_bank">Bolsa por jugador</label>
+        <div class="seg mono" id="seg-bank">
+          <button data-b="180">3 min</button>
+          <button data-b="300" class="on">5 min</button>
+          <button data-b="600">10 min</button>
+        </div>
+        <label data-i18n="lbl_bank_inc">Incremento por jugada</label>
+        <div class="seg mono" id="seg-bank-inc">
+          <button data-bi="0" data-i18n="bank_inc_off">Sin incremento</button>
+          <button data-bi="3">+3s</button>
+          <button data-bi="5" class="on">+5s</button>
+          <button data-bi="10">+10s</button>
+        </div>
+        <p class="hint" data-i18n="bank_hint" style="margin:8px 0 0">Como en el ajedrez: cada jugador gasta de su propia bolsa mientras le toca y pierde si se le acaba.</p>
       </div>
 
       <label data-i18n="lbl_visibility">Visibilidad</label>
@@ -704,6 +807,10 @@
   <section id="s-game" class="hidden">
     <div class="card">
       <div class="players" id="g-players"></div>
+      <div class="banks hidden" id="g-banks">
+        <div class="bank" id="g-bank-mine"><span class="who"></span><span class="clock"></span></div>
+        <div class="bank" id="g-bank-theirs"><span class="who"></span><span class="clock"></span></div>
+      </div>
       <div class="mysecret">
         <span><span data-i18n="game_match">Partida</span> <b class="n" style="letter-spacing:3px" id="g-code"></b> · <span id="g-rules"></span></span>
         <span class="code-view"><span data-i18n="game_yourcode">Tu código:</span>&nbsp;<span id="g-mysecret"></span></span>
@@ -776,7 +883,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = '2.4';
+const APP_VERSION = '2.5';
 /* Enlace de invitación: ...?game=SZ93 */
 let pendingJoinCode = '';
 (function(){
@@ -1032,6 +1139,91 @@ Object.assign(I18N.fr,{
   hist_filter_all:"Toutes",hist_filter_wins:"Gagnées",hist_filter_losses:"Perdues",hist_filter_draws:"Égalités",hist_filter_empty:"Aucune partie avec ce résultat.",
   hist_attempts:"{n} essais",hist_best_game:"Meilleure partie",hist_hardest_game:"Victoire la plus difficile",hist_no_data:"—"
 });
+/* ---- 2.5: el buzon de sugerencias y la bolsa de tiempo ---- */
+Object.assign(I18N.es,{
+  feedback_link:"Sugerencias y errores",
+  feedback_title:"Cuéntanos qué mejorarías",
+  feedback_hint:"Toda idea es bienvenida: una mejora que se te ocurra, un error que encontraste o una duda. Lo leemos todo.",
+  feedback_lang:"Idioma de tu mensaje",
+  feedback_kind:"¿De qué se trata?",
+  fb_idea:"Idea", fb_bug:"Error", fb_question:"Pregunta", fb_other:"Otro",
+  feedback_msg:"Tu mensaje",
+  feedback_msg_ph:"Cuanto más concreto, mejor. Si es un error, cuenta qué estabas haciendo cuando ocurrió.",
+  feedback_contact:"Cómo responderte (opcional)",
+  feedback_contact_ph:"Correo o tu nombre de jugador",
+  feedback_contact_note:"Solo se usa para responderte. Si lo dejas vacío, el mensaje llega igual.",
+  feedback_send:"Enviar",
+  feedback_sending:"Enviando…",
+  feedback_thanks:"¡Gracias! Tu mensaje llegó.",
+  feedback_short:"Escribe al menos 10 caracteres.",
+  feedback_sent_title:"Mensaje enviado",
+  feedback_sent_hint:"Gracias por tomarte el tiempo. Si dejaste un contacto, te responderemos.",
+  feedback_another:"Enviar otro",
+  lbl_clock:"Reloj", clock_turn:"Por turno", clock_bank:"Bolsa de tiempo",
+  lbl_bank:"Bolsa por jugador", lbl_bank_inc:"Incremento por jugada", bank_inc_off:"Sin incremento",
+  bank_hint:"Como en el ajedrez: cada jugador gasta de su propia bolsa mientras le toca y pierde si se le acaba. No hay pausas, y los dos deben estar presentes de principio a fin.",
+  rl_bank:"bolsa {n}", rl_bank_inc:"+{n}s por jugada",
+  bank_yours:"Tu tiempo", bank_theirs:"Tiempo de {name}",
+  win_timeout:"A {name} se le acabó la bolsa de tiempo", lose_timeout:"Se te acabó la bolsa de tiempo",
+  timeout_toast:"Se te acabó el tiempo", hist_timeout:"por tiempo",
+  min_short:"{n} min"
+});
+Object.assign(I18N.en,{
+  feedback_link:"Ideas and bugs",
+  feedback_title:"Tell us what you would improve",
+  feedback_hint:"Every idea is welcome: an improvement you thought of, a bug you hit or a question. We read them all.",
+  feedback_lang:"Language of your message",
+  feedback_kind:"What is it about?",
+  fb_idea:"Idea", fb_bug:"Bug", fb_question:"Question", fb_other:"Other",
+  feedback_msg:"Your message",
+  feedback_msg_ph:"The more specific, the better. If it is a bug, tell us what you were doing when it happened.",
+  feedback_contact:"How to reach you (optional)",
+  feedback_contact_ph:"Email or your player name",
+  feedback_contact_note:"Only used to reply to you. Leave it empty and the message still arrives.",
+  feedback_send:"Send",
+  feedback_sending:"Sending…",
+  feedback_thanks:"Thank you! Your message arrived.",
+  feedback_short:"Write at least 10 characters.",
+  feedback_sent_title:"Message sent",
+  feedback_sent_hint:"Thanks for taking the time. If you left a contact, we will get back to you.",
+  feedback_another:"Send another",
+  lbl_clock:"Clock", clock_turn:"Per turn", clock_bank:"Time bank",
+  lbl_bank:"Bank per player", lbl_bank_inc:"Increment per move", bank_inc_off:"No increment",
+  bank_hint:"Just like chess: each player spends from their own bank while it is their turn, and loses when it runs out. No pauses, and both players must stay for the whole game.",
+  rl_bank:"{n} bank", rl_bank_inc:"+{n}s per move",
+  bank_yours:"Your time", bank_theirs:"{name}'s time",
+  win_timeout:"{name} ran out of time", lose_timeout:"Your time bank ran out",
+  timeout_toast:"You ran out of time", hist_timeout:"on time",
+  min_short:"{n} min"
+});
+Object.assign(I18N.fr,{
+  feedback_link:"Idées et bugs",
+  feedback_title:"Dis-nous ce que tu améliorerais",
+  feedback_hint:"Toute idée est la bienvenue : une amélioration, un bug rencontré ou une question. On lit tout.",
+  feedback_lang:"Langue de ton message",
+  feedback_kind:"De quoi s'agit-il ?",
+  fb_idea:"Idée", fb_bug:"Bug", fb_question:"Question", fb_other:"Autre",
+  feedback_msg:"Ton message",
+  feedback_msg_ph:"Plus c'est précis, mieux c'est. Si c'est un bug, raconte ce que tu faisais au moment où il est arrivé.",
+  feedback_contact:"Comment te répondre (facultatif)",
+  feedback_contact_ph:"E-mail ou ton nom de joueur",
+  feedback_contact_note:"Utilisé uniquement pour te répondre. Laisse vide, le message arrive quand même.",
+  feedback_send:"Envoyer",
+  feedback_sending:"Envoi…",
+  feedback_thanks:"Merci ! Ton message est bien arrivé.",
+  feedback_short:"Écris au moins 10 caractères.",
+  feedback_sent_title:"Message envoyé",
+  feedback_sent_hint:"Merci d'avoir pris le temps. Si tu as laissé un contact, on te répondra.",
+  feedback_another:"En envoyer un autre",
+  lbl_clock:"Horloge", clock_turn:"Par tour", clock_bank:"Réserve de temps",
+  lbl_bank:"Réserve par joueur", lbl_bank_inc:"Incrément par coup", bank_inc_off:"Sans incrément",
+  bank_hint:"Comme aux échecs : chaque joueur puise dans sa propre réserve pendant son tour et perd si elle s'épuise. Pas de pause, et les deux doivent rester jusqu'au bout.",
+  rl_bank:"réserve {n}", rl_bank_inc:"+{n}s par coup",
+  bank_yours:"Ton temps", bank_theirs:"Temps de {name}",
+  win_timeout:"{name} n'a plus de temps", lose_timeout:"Ta réserve de temps est épuisée",
+  timeout_toast:"Tu n'as plus de temps", hist_timeout:"au temps",
+  min_short:"{n} min"
+});
 /* Mensajes de error del backend (español) → traducción */
 const ERR = {
   en:{
@@ -1066,7 +1258,14 @@ const ERR = {
     "El tiempo por turno debe ser ilimitado, 30, 60 o 120 segundos.":"Turn time must be unlimited, 30, 60 or 120 seconds.",
     "Código inválido.":"Invalid code.",
     "Símbolo fuera de rango.":"Symbol out of range.",
-    "No se permiten repetidos en esta partida.":"Repeats aren't allowed in this game."
+    "No se permiten repetidos en esta partida.":"Repeats aren't allowed in this game.",
+    "La bolsa de tiempo debe ser de 3, 5 o 10 minutos.":"The time bank must be 3, 5 or 10 minutes.",
+    "El incremento debe ser 0, 3, 5 o 10 segundos.":"The increment must be 0, 3, 5 or 10 seconds.",
+    "Se te acabó la bolsa de tiempo.":"Your time bank ran out.",
+    "El mensaje debe tener al menos 10 caracteres.":"The message must be at least 10 characters long.",
+    "Espera unos segundos antes de enviar otro mensaje.":"Wait a few seconds before sending another message.",
+    "Has enviado varios mensajes seguidos. Inténtalo dentro de un rato.":"You have sent several messages in a row. Try again in a while.",
+    "Has alcanzado el máximo de mensajes por día. Gracias, los leeremos todos.":"You have reached the daily message limit. Thank you, we will read them all."
   },
   fr:{
     "Falta el nombre de usuario.":"Nom d'utilisateur manquant.",
@@ -1100,7 +1299,14 @@ const ERR = {
     "El tiempo por turno debe ser ilimitado, 30, 60 o 120 segundos.":"Le temps par tour doit être illimité, 30, 60 ou 120 secondes.",
     "Código inválido.":"Code invalide.",
     "Símbolo fuera de rango.":"Symbole hors limites.",
-    "No se permiten repetidos en esta partida.":"Les répétitions ne sont pas autorisées dans cette partie."
+    "No se permiten repetidos en esta partida.":"Les répétitions ne sont pas autorisées dans cette partie.",
+    "La bolsa de tiempo debe ser de 3, 5 o 10 minutos.":"La réserve de temps doit être de 3, 5 ou 10 minutes.",
+    "El incremento debe ser 0, 3, 5 o 10 segundos.":"L'incrément doit être de 0, 3, 5 ou 10 secondes.",
+    "Se te acabó la bolsa de tiempo.":"Ta réserve de temps est épuisée.",
+    "El mensaje debe tener al menos 10 caracteres.":"Le message doit contenir au moins 10 caractères.",
+    "Espera unos segundos antes de enviar otro mensaje.":"Attends quelques secondes avant d'envoyer un autre message.",
+    "Has enviado varios mensajes seguidos. Inténtalo dentro de un rato.":"Tu as envoyé plusieurs messages d'affilée. Réessaie dans un moment.",
+    "Has alcanzado el máximo de mensajes por día. Gracias, los leeremos todos.":"Tu as atteint le maximum de messages par jour. Merci, nous les lirons tous."
   }
 };
 
@@ -1114,7 +1320,7 @@ const RULES = {
         <li><b>Posiciones</b>: 3, 4, 5 o 6.</li>
         <li><b>Repetidos</b>: permitir o no.</li>
         <li><b>Límite de intentos</b>: sin límite, 6 o 10 por jugador.</li>
-        <li><b>Tiempo por turno</b>: sin límite, 30 s, 60 s o 2 min.</li>
+        <li><b>Reloj</b>: sin límite; <b>por turno</b> (30 s, 60 s o 2 min), y al llegar a cero el turno pasa al rival; o <b>bolsa de tiempo</b> (3, 5 o 10 min por jugador, con incremento opcional por jugada), como en el ajedrez: solo corre el reloj de quien juega, no hay pausas y quien agota su bolsa pierde la partida.</li>
         <li><b>Visibilidad</b>: pública (lobby) o privada (solo por código).</li>
         <li><b>Revelar códigos al terminar</b>: desactivado por defecto; si se activa, cada jugador verá el secreto de su rival al finalizar.</li>
       </ul>
@@ -1138,7 +1344,7 @@ const RULES = {
         <li><b>Positions</b>: 3, 4, 5 or 6.</li>
         <li><b>Repeats</b>: allowed or not.</li>
         <li><b>Attempt limit</b>: none, 6 or 10 per player.</li>
-        <li><b>Time per turn</b>: none, 30 s, 60 s or 2 min.</li>
+        <li><b>Clock</b>: none; <b>per turn</b> (30 s, 60 s or 2 min), and reaching zero passes the turn to your opponent; or a <b>time bank</b> (3, 5 or 10 min each, with an optional increment per move), just like chess: only the clock of whoever is playing runs, there are no pauses and running out of bank loses the game.</li>
         <li><b>Visibility</b>: public (lobby) or private (code only).</li>
         <li><b>Reveal codes at the end</b>: off by default; when enabled, each player sees their opponent's secret after the game.</li>
       </ul>
@@ -1162,7 +1368,7 @@ const RULES = {
         <li><b>Positions</b> : 3, 4, 5 ou 6.</li>
         <li><b>Répétitions</b> : autorisées ou non.</li>
         <li><b>Limite d'essais</b> : illimité, 6 ou 10 par joueur.</li>
-        <li><b>Temps par tour</b> : illimité, 30 s, 60 s ou 2 min.</li>
+        <li><b>Horloge</b> : illimitée ; <b>par tour</b> (30 s, 60 s ou 2 min), et à zéro le tour passe à l'adversaire ; ou <b>réserve de temps</b> (3, 5 ou 10 min par joueur, avec incrément facultatif par coup), comme aux échecs : seule l'horloge de celui qui joue tourne, il n'y a pas de pause et épuiser sa réserve fait perdre la partie.</li>
         <li><b>Visibilité</b> : publique (lobby) ou privée (code seulement).</li>
         <li><b>Révéler les codes à la fin</b> : désactivé par défaut ; si activé, chaque joueur voit le secret de son adversaire à la fin.</li>
       </ul>
@@ -1218,7 +1424,13 @@ const ICONS={
   dado:'<path class="dl" d="M4.8 5c4.8-.5 9.6-.5 14.4 0 .5 4.7.5 9.3 0 14-4.8.5-9.6.5-14.4 0-.5-4.7-.5-9.3 0-14Z"></path><circle cx="8.6" cy="8.6" r="1.5" fill="currentColor"></circle><circle cx="12" cy="12" r="1.5" fill="currentColor"></circle><circle cx="15.4" cy="15.4" r="1.5" fill="currentColor"></circle>',
   pausa:'<path class="dl" d="M9.6 5.5c.3 4.4.3 8.8 0 13.2M14.5 5.5c.3 4.4.3 8.8 0 13.2"></path>',
   estrella:'<path class="dl" d="M12 3.4 14.5 9.2 20.9 9.9 16.1 14.2 17.4 20.5 12 17.4 6.6 20.5 7.9 14.2 3.1 9.9 9.5 9.2Z"></path>',
-  llama:'<path class="dl" d="M12 3.4c-.4 3-1.6 5.2-3.6 6.6-1.6 1.2-2.4 2.8-2.4 4.8 0 3.2 2.6 5.8 6 5.8s6-2.6 6-5.8c0-3.4-2-7.2-6-11.4Z"></path><path class="dl" d="M12 12.4c-1.4 1.4-2.1 2.7-2.1 3.9 0 1.3 1 2.3 2.1 2.3s2.1-1 2.1-2.3c0-1.2-.7-2.5-2.1-3.9Z"></path>'
+  llama:'<path class="dl" d="M12 3.4c-.4 3-1.6 5.2-3.6 6.6-1.6 1.2-2.4 2.8-2.4 4.8 0 3.2 2.6 5.8 6 5.8s6-2.6 6-5.8c0-3.4-2-7.2-6-11.4Z"></path><path class="dl" d="M12 12.4c-1.4 1.4-2.1 2.7-2.1 3.9 0 1.3 1 2.3 2.1 2.3s2.1-1 2.1-2.3c0-1.2-.7-2.5-2.1-3.9Z"></path>',
+  /* 2.5: el reloj del cronometro y de la bolsa, y los cuatro tipos del buzon */
+  reloj:'<path class="dl" d="M12.3 3.7c4.6-.2 8.5 3.7 8.3 8.4-.2 4.5-3.9 8.1-8.4 8.1-4.7 0-8.5-3.9-8.2-8.6.3-4.2 3.7-7.5 7.9-7.6"></path><path class="dl" d="M11.9 7.4c.2 1.7.2 3.3.1 4.8 1.1.8 2.2 1.4 3.3 1.9"></path>',
+  bombilla:'<path class="dl" d="M12.2 3.4c3.3-.2 5.9 2.3 5.8 5.4-.1 1.9-.9 3-1.9 4.1-.7.8-1.1 1.6-1.2 2.6-1.9.3-3.9.3-5.8 0-.1-1-.5-1.8-1.2-2.6C6.9 11.8 6.1 10.7 6 8.8c-.1-2.9 2.3-5.3 5.4-5.4"></path><path class="dl" d="M9.6 18.2c1.6.3 3.2.3 4.8 0M10.5 20.6c1 .2 2 .2 3 0"></path>',
+  bicho:'<path class="dl" d="M12 7.6c2.7 0 4.6 2.4 4.6 5.7s-1.9 5.9-4.6 5.9-4.6-2.6-4.6-5.9S9.3 7.6 12 7.6Z"></path><path class="dl" d="M12 9.4c.2 2.7.2 5.4 0 8.1"></path><path class="dl" d="M10.3 5.1c.3-1.7 3.1-1.7 3.4 0"></path><path class="dl" d="M10.7 4.2 9.1 2.3M13.3 4.2 14.9 2.3"></path><path class="dl" d="M7.6 10.6 4.3 8.7M7.4 16.2 4.3 18.4M16.4 10.6l3.3-1.9M16.6 16.2l3.1 2.2"></path>',
+  interrogacion:'<path class="dl" d="M8.7 8.8c-.2-2.4 1.3-3.9 3.4-3.9 2.1 0 3.5 1.3 3.5 3.1 0 2.4-3 2.7-3.5 5.1-.1.5-.1 1-.1 1.5"></path><circle cx="12" cy="18.6" r="1.4" fill="currentColor"></circle>',
+  globo:'<path class="dl" d="M4.4 11.4c0-3.7 3.4-6.6 7.6-6.6s7.5 2.9 7.4 6.6c-.1 3.6-3.3 6.5-7.5 6.5-.9 0-1.8-.1-2.6-.4-1.3.9-2.7 1.5-4 1.9.6-1.2 1-2.4 1.2-3.5-1.3-1.2-2.1-2.8-2.1-4.5Z"></path>'
 };
 function ico(nombre,tam){
   const p=ICONS[nombre]; if(!p) return '';
@@ -1261,7 +1473,7 @@ function applyI18n(){
   document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ el.placeholder = t(el.dataset.i18nPh); });
   document.querySelectorAll('[data-i18n-title]').forEach(el=>{ el.title = t(el.dataset.i18nTitle); el.setAttribute('aria-label',t(el.dataset.i18nTitle)); });
-  document.querySelectorAll('#seg-lang button').forEach(b=> b.classList.toggle('on', b.dataset.lang===lang));
+  document.querySelectorAll('#seg-lang button, #fb-seg-lang button').forEach(b=> b.classList.toggle('on', b.dataset.lang===lang));
   // El enlace a las reglas apunta a su pagina publica en el idioma actual: es
   // un enlace de verdad para los buscadores y sigue abriendo el panel al pulsarlo.
   const rulesHref = RULES_PAGE_PATH[lang] || RULES_PAGE_PATH.es;
@@ -1300,8 +1512,8 @@ const COLORS = [
 let user = localStorage.getItem('pf_user') || '';
 let userPin = '';
 let sessionToken = localStorage.getItem('pf_session') || '';
-let cfg = { digits:3, mode:'numbers', numColors:6, allowRepeats:false, isPublic:true, maxAttempts:0, turnSeconds:0, revealSecrets:false };
-let practiceCfg = { type:'solo', difficulty:'normal', digits:3, mode:'numbers', numColors:6, allowRepeats:false, maxAttempts:0, turnSeconds:0 };
+let cfg = { digits:3, mode:'numbers', numColors:6, allowRepeats:false, isPublic:true, maxAttempts:0, turnSeconds:0, timeMode:'turn', bankSeconds:300, bankIncrement:5, revealSecrets:false };
+let practiceCfg = { type:'solo', difficulty:'normal', digits:3, mode:'numbers', numColors:6, allowRepeats:false, maxAttempts:0, turnSeconds:0, timeMode:'turn', bankSeconds:0, bankIncrement:0 };
 let practice = null, practiceTickTimer = null, practiceComputerTimer = null;
 const PRACTICE_SAVE_KEY='pf_practice_active_v1';
 let joinMeta = null, finishedMeta = null;
@@ -1365,7 +1577,7 @@ function brandHome(){ if(BRAND_HOME_FROM.has(currentView)) enterLobby(); }
 function show(name){
   currentView = name;
   if(name!=='game') gameViewEpoch++;
-  ['login','lobby','rank','history','rules','practice','practice-game','create','wait','join','rematch','game'].forEach(s=>{
+  ['login','lobby','feedback','rank','history','rules','practice','practice-game','create','wait','join','rematch','game'].forEach(s=>{
     $('s-'+s).classList.toggle('hidden', s!==name);
   });
   if(name!=='game') stopTick();
@@ -1492,6 +1704,10 @@ function rulesLabel(m){
     (m.allowRepeats?t('rl_repeat'):t('rl_norepeat')) ];
   if(m.maxAttempts>0) parts.push(t('rl_attempts',{n:m.maxAttempts}));
   if(m.turnSeconds>0) parts.push(t('rl_turn',{n:m.turnSeconds}));
+  if(m.timeMode==='bank'&&m.bankSeconds>0){
+    parts.push(t('rl_bank',{n:t('min_short',{n:Math.round(m.bankSeconds/60)})}));
+    if(m.bankIncrement>0) parts.push(t('rl_bank_inc',{n:m.bankIncrement}));
+  }
   parts.push(t(m.revealSecrets?'rl_reveal':'rl_noreveal'));
   return parts.join(' · ');
 }
@@ -1792,8 +2008,53 @@ function syncLangUrl(){
   // La invitacion viaja en la busqueda (?game=XXXX): no se puede perder.
   try{ history.replaceState(history.state, '', path + location.search + location.hash); }catch(e){}
 }
-$('seg-lang').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
-  lang=b.dataset.lang; localStorage.setItem('pf_lang', lang); syncLangUrl(); applyI18n(); });
+function pickLang(code){ lang=code; localStorage.setItem('pf_lang', lang); syncLangUrl(); applyI18n(); }
+$('seg-lang').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; pickLang(b.dataset.lang); });
+/* El buzon se abre desde la pantalla de inicio, donde el idioma todavia puede
+   no estar elegido, asi que lleva su propio selector. Es el mismo destino: la
+   eleccion vale para toda la aplicacion, no solo para el formulario. */
+$('fb-seg-lang').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; pickLang(b.dataset.lang); });
+
+/* -------------------- buzon de sugerencias -------------------- */
+let feedbackKind='idea', feedbackReturn='login', feedbackSending=false;
+$('fb-seg-kind').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
+  feedbackKind=b.dataset.k; segPick($('fb-seg-kind'),b); });
+$('fb-message').addEventListener('input', ()=>{
+  const value=$('fb-message').value, count=$('fb-count');
+  count.textContent=value.length+'/1000';
+  count.className='charcount'+(value.length>=960?' hot':'');
+  if(value.trim().length>=10) $('fb-val').textContent='';
+});
+function openFeedback(){
+  feedbackReturn = currentView==='lobby' ? 'lobby' : 'login';
+  resetFeedbackForm();
+  show('feedback');
+}
+function closeFeedback(){ show(feedbackReturn); }
+function resetFeedbackForm(){
+  $('fb-done').classList.add('hidden');
+  $('fb-message').closest('.card').classList.remove('hidden');
+  $('fb-message').value=''; $('fb-contact').value=''; $('fb-website').value='';
+  $('fb-count').textContent='0/1000'; $('fb-count').className='charcount'; $('fb-val').textContent='';
+  feedbackKind='idea'; segPick($('fb-seg-kind'), $('fb-seg-kind').querySelector('[data-k="idea"]'));
+}
+async function sendFeedback(){
+  if(feedbackSending) return;
+  const message=$('fb-message').value.trim();
+  if(message.length<10){ $('fb-val').textContent=t('feedback_short'); $('fb-val').className='val err'; $('fb-message').focus(); return; }
+  feedbackSending=true;
+  const button=$('fb-send'); button.disabled=true; button.textContent=t('feedback_sending');
+  try{
+    const res=await api('sendFeedback',{ kind:feedbackKind, message, contact:$('fb-contact').value.trim(),
+      website:$('fb-website').value, lang, appVersion:APP_VERSION, userAgent:navigator.userAgent });
+    if(!res.ok){ $('fb-val').textContent=te(res.error); $('fb-val').className='val err'; return; }
+    $('fb-message').closest('.card').classList.add('hidden');
+    $('fb-done').classList.remove('hidden');
+    toast(t('feedback_thanks'));
+    window.scrollTo(0,0);
+  }catch(e){ toast(t('net_error'),true); }
+  finally{ feedbackSending=false; button.disabled=false; button.textContent=t('feedback_send'); }
+}
 
 /* -------------------- login -------------------- */
 async function doLogin(){
@@ -1998,7 +2259,7 @@ function renderHistoryList(){
     const el=document.createElement('button'); el.type='button'; el.className=`gitem history-link${isBest?' history-best':isHardest?' history-hardest':''}`;
     el.setAttribute('aria-label',`${badge}: ${h.opp||'—'} · ${t('hist_attempts',{n:h.myAttempts})}`);
     el.innerHTML=`<div class="meta"><div class="who">${vsPlayer(h.oppCountry, h.opp||'—')}</div>
-      <div class="det">${t('hist_attempts',{n:h.myAttempts})} · ${rulesLabel(h)} · ${date}</div>${award}</div>
+      <div class="det">${t('hist_attempts',{n:h.myAttempts})}${h.timedOut?' · '+t('hist_timeout'):''} · ${rulesLabel(h)} · ${date}</div>${award}</div>
       <span class="${badgeCls}">${badge}</span>`;
     el.addEventListener('click',()=>openHistoryGame(h.gameId));
     $('hist-list').appendChild(el);
@@ -2018,6 +2279,7 @@ async function openHistory(){
 
 /* -------------------- crear -------------------- */
 function segPick(container, btn){ [...container.children].forEach(x=>x.classList.toggle('on', x===btn)); }
+function segValue(id, attribute){ return $(id).querySelector('button.on')?.dataset[attribute]; }
 
 async function openHistoryGame(gameId){
   const epoch=++gameViewEpoch;
@@ -2043,7 +2305,7 @@ function clearSavedPractice(){localStorage.removeItem(PRACTICE_SAVE_KEY);renderP
 function saveActivePractice(){
   if(!practice||practice.finished)return;
   const remainingMs=practice.deadline?Math.max(0,practice.deadline-Date.now()):Math.max(0,practice.pausedRemainingMs||0);
-  const state={secret:practice.secret,playerSecret:practice.playerSecret||'',guesses:practice.guesses||[],computerGuesses:practice.computerGuesses||[],missedTurns:practice.missedTurns||0,turn:practice.turn||'player',pendingWinner:practice.pendingWinner||'',finished:false,elapsedMs:Math.max(0,Date.now()-practice.startedAt),remainingMs};
+  const state={secret:practice.secret,playerSecret:practice.playerSecret||'',guesses:practice.guesses||[],computerGuesses:practice.computerGuesses||[],missedTurns:practice.missedTurns||0,turn:practice.turn||'player',pendingWinner:practice.pendingWinner||'',finished:false,elapsedMs:Math.max(0,Date.now()-practice.startedAt),remainingMs,bankMs:Math.max(0,practice.bankMs||0)};
   localStorage.setItem(PRACTICE_SAVE_KEY,JSON.stringify({version:1,cfg:{...practiceCfg},state,savedAt:Date.now()}));
 }
 function pauseActivePractice(){
@@ -2082,14 +2344,16 @@ function resumePractice(){
   stopPracticeTick();practiceCfg={...practiceCfg,...saved.cfg};
   const state=saved.state,solver=practiceCfg.type==='computer'?ComputerAI.createSolver(practiceCfg,practiceCfg.difficulty,{random:cryptoRandom}):null;
   if(solver)for(const turn of state.computerGuesses||[])solver.record(turn.guess,{fijas:turn.fijas,picas:turn.picas});
-  practice={secret:state.secret,playerSecret:state.playerSecret||'',guesses:state.guesses||[],computerGuesses:state.computerGuesses||[],missedTurns:state.missedTurns||0,solver,startedAt:Date.now()-Math.max(0,state.elapsedMs||0),deadline:0,pausedRemainingMs:Math.max(0,state.remainingMs||0),finished:false,turn:state.turn||'player',pendingWinner:state.pendingWinner||''};
+  practice={secret:state.secret,playerSecret:state.playerSecret||'',guesses:state.guesses||[],computerGuesses:state.computerGuesses||[],missedTurns:state.missedTurns||0,solver,startedAt:Date.now()-Math.max(0,state.elapsedMs||0),deadline:0,pausedRemainingMs:Math.max(0,state.remainingMs||0),bankMs:Math.max(0,state.bankMs||0),finished:false,turn:state.turn||'player',pendingWinner:state.pendingWinner||''};
   displayPracticeGame(true);resumePracticeTimers();
 }
 function resumePracticeTimers(){
   if(!practice||practice.finished)return;
-  if(practiceCfg.turnSeconds&&practice.turn!=='computer')practice.deadline=Date.now()+Math.max(1,Number.isFinite(practice.pausedRemainingMs)?practice.pausedRemainingMs:practiceCfg.turnSeconds*1000);
+  if(isPracticeBank()){
+    if(practice.turn!=='computer')practice.deadline=Date.now()+Math.max(1,practice.pausedRemainingMs||practice.bankMs||practiceCfg.bankSeconds*1000);
+  }else if(practiceCfg.turnSeconds&&practice.turn!=='computer')practice.deadline=Date.now()+Math.max(1,Number.isFinite(practice.pausedRemainingMs)?practice.pausedRemainingMs:practiceCfg.turnSeconds*1000);
   practice.pausedRemainingMs=0;
-  if(practice.deadline)practiceTickTimer=setInterval(renderPracticeStatus,250);
+  if(practice.deadline||isPracticeBank())practiceTickTimer=setInterval(renderPracticeStatus,250);
   if(practiceCfg.type==='computer'&&practice.turn==='computer'){ $('practice-turn').className='turnbar sending';$('practice-turn-txt').textContent=t('computer_thinking');practiceComputerTimer=setTimeout(runComputerTurn,450); }
   renderPracticeStatus();saveActivePractice();
 }
@@ -2120,6 +2384,13 @@ function syncPracticeControls(){
   const computer=practiceCfg.type==='computer';
   $('p-computer-options').classList.toggle('hidden',!computer); $('p-secret-wrap').classList.toggle('hidden',!computer);
   $('practice-hint').textContent=t(computer?'computer_hint':'practice_hint'); $('practice-time-label').textContent=t(computer?'practice_turn_time':'practice_time');
+  // En Solo el unico reloj posible ya es un tiempo total, asi que la eleccion
+  // de tres formas solo aparece contra el computador, donde hay turnos.
+  $('p-clock-wrap').classList.toggle('hidden',!computer);
+  if(!computer){ practiceClock='legacy'; practiceCfg.timeMode='turn'; practiceCfg.bankSeconds=0; practiceCfg.bankIncrement=0; }
+  else if(practiceClock==='legacy'){ practiceClock = practiceCfg.turnSeconds>0 ? 'turn' : 'none';
+    segPick($('p-seg-clock'),$('p-seg-clock').querySelector(`[data-c="${practiceClock}"]`)); }
+  syncPracticeClock();
   const input=$('practice-player-secret'); input.maxLength=practiceCfg.digits; input.placeholder='•'.repeat(practiceCfg.digits);
   practiceSecretPad.refresh(); applyMode('practice-secret',practiceCfg.mode,'practice-player-secret','practice-secret-pad',practiceSecretPad); renderPracticeStats();
 }
@@ -2129,6 +2400,13 @@ function selectPracticeRandomRules(){
   practiceCfg.allowRepeats=!!randomInt(2);
   if(practiceCfg.mode==='colors'&&practiceCfg.digits>practiceCfg.numColors) practiceCfg.allowRepeats=true;
   practiceCfg.maxAttempts=[0,6,10][randomInt(3)]; practiceCfg.turnSeconds=[0,60,120,300][randomInt(4)];
+  if(practiceCfg.type==='computer'){
+    practiceClock=['none','turn','bank'][randomInt(3)];
+    if(practiceClock==='turn'&&!practiceCfg.turnSeconds) practiceCfg.turnSeconds=60;
+    segPick($('p-seg-bank'),$('p-seg-bank').querySelector(`[data-b="${[180,300,600][randomInt(3)]}"]`));
+    segPick($('p-seg-bank-inc'),$('p-seg-bank-inc').querySelector(`[data-bi="${[0,3,5,10][randomInt(4)]}"]`));
+    segPick($('p-seg-clock'),$('p-seg-clock').querySelector(`[data-c="${practiceClock}"]`));
+  }
   const pick=(id,selector)=>segPick($(id),$(id).querySelector(selector));
   pick('p-seg-mode',`[data-m="${practiceCfg.mode}"]`); pick('p-seg-colors',`[data-nc="${practiceCfg.numColors}"]`);
   pick('p-seg-digits',`[data-d="${practiceCfg.digits}"]`); pick('p-seg-repeat',`[data-r="${practiceCfg.allowRepeats?1:0}"]`);
@@ -2144,6 +2422,18 @@ function readPracticeControls(){
   practiceCfg.allowRepeats=selected('p-seg-repeat','r')==='1';
   practiceCfg.maxAttempts=+(selected('p-seg-attempts','a')||0);
   practiceCfg.turnSeconds=+(selected('p-seg-time','t')||0);
+  if(practiceCfg.type==='computer') syncPracticeClock();
+  else { practiceCfg.timeMode='turn'; practiceCfg.bankSeconds=0; practiceCfg.bankIncrement=0; }
+}
+/* La bolsa solo existe contra el computador: en Solo el reloj ya era un
+   tiempo total. Solo corre la bolsa del jugador; el computador responde al
+   instante y no gasta reloj. */
+const isPracticeBank=()=>practiceCfg.type==='computer'&&practiceCfg.timeMode==='bank'&&practiceCfg.bankSeconds>0;
+function settlePracticeBank(){
+  if(!isPracticeBank()||!practice||!practice.deadline) return;
+  const left=Math.max(0,practice.deadline-Date.now());
+  practice.bankMs=Math.min(practiceCfg.bankSeconds*1000, left+(practiceCfg.bankIncrement||0)*1000);
+  practice.deadline=0;
 }
 function startPractice(randomRules){
   if(readSavedPractice()&&!confirm(t('practice_replace_confirm')))return;
@@ -2159,7 +2449,9 @@ function startPractice(randomRules){
     if(validateLive(playerSecret,practiceCfg.digits,practiceCfg.allowRepeats).cls!=='ok'){toast(t('computer_invalid_secret'),true);return;}
   }
   const solver=practiceCfg.type==='computer'?ComputerAI.createSolver(practiceCfg,practiceCfg.difficulty,{random:cryptoRandom}):null;
-  practice={secret:randomSecret(practiceCfg),playerSecret,guesses:[],computerGuesses:[],missedTurns:0,solver,startedAt:Date.now(),deadline:practiceCfg.turnSeconds?Date.now()+practiceCfg.turnSeconds*1000:0,finished:false,turn:'player',pendingWinner:''};
+  const bankMs=isPracticeBank()?practiceCfg.bankSeconds*1000:0;
+  practice={secret:randomSecret(practiceCfg),playerSecret,guesses:[],computerGuesses:[],missedTurns:0,solver,startedAt:Date.now(),
+    bankMs,deadline:bankMs?Date.now()+bankMs:(practiceCfg.turnSeconds?Date.now()+practiceCfg.turnSeconds*1000:0),finished:false,turn:'player',pendingWinner:''};
   displayPracticeGame(false);saveActivePractice();
   if(practice.deadline)practiceTickTimer=setInterval(renderPracticeStatus,250);
 }
@@ -2184,8 +2476,14 @@ function renderPracticeStatus(){
   $('practice-attempts').textContent=practiceCfg.maxAttempts?t('attempts_chip',{left,max:practiceCfg.maxAttempts}):`${used} ${t('rl_attempts',{n:''}).trim()}`;
   const computer=practiceCfg.type==='computer'; $('practice-computer-attempts').classList.toggle('hidden',!computer); $('practice-difficulty').classList.toggle('hidden',!computer);
   if(computer){const n=practice.computerGuesses.length,l=practiceCfg.maxAttempts?Math.max(0,practiceCfg.maxAttempts-n):'∞';$('practice-computer-attempts').textContent=`🤖 ${practiceCfg.maxAttempts?l+'/'+practiceCfg.maxAttempts:n}`;$('practice-difficulty').textContent=t('computer_difficulty',{level:t('difficulty_'+practiceCfg.difficulty)});}
-  const timer=$('practice-timer'); timer.classList.toggle('hidden',!practice.deadline);
-  if(practice.deadline){ const remaining=practice.deadline-Date.now(); timer.textContent='⏱ '+formatPracticeTime(remaining); timer.className='chip'+(remaining<=10000?' hot':''); if(remaining<=0){if(computer)expireComputerPlayerTurn();else finishPractice(false,'time');} }
+  const bank=isPracticeBank(), timer=$('practice-timer');
+  timer.classList.toggle('hidden',!practice.deadline&&!bank);
+  if(practice.deadline||bank){
+    const remaining=practice.deadline?practice.deadline-Date.now():Math.max(0,practice.bankMs);
+    timer.innerHTML=ico('reloj',14)+'<span>'+formatPracticeTime(remaining)+'</span>';
+    timer.className='chip'+(remaining<=10000?' hot':(bank&&remaining<=30000?' warn':''));
+    if(practice.deadline&&remaining<=0){if(computer)expireComputerPlayerTurn();else finishPractice(false,'time');}
+  }
   if(computer&&practice.turn==='player'){$('practice-turn').className='turnbar mine';$('practice-turn-txt').textContent=t(practice.pendingWinner==='computer'?'computer_last_turn':'computer_your_turn');}
 }
 function evaluatePractice(secret,guess){
@@ -2213,6 +2511,7 @@ function renderComputerLog(){
   $('practice-computer-log').innerHTML=practice.computerGuesses.length?practice.computerGuesses.slice().reverse().map(g=>{let p='';for(let i=0;i<g.fijas;i++)p+='<span class="pip f"></span>';for(let i=0;i<g.picas;i++)p+='<span class="pip p"></span>';if(!p)p=`<span class="scoretxt">${t('log_nada')}</span>`;return `<div class="g">${codeViewHTML(g.guess,practiceCfg.mode)}<span class="scoretxt">${g.fijas}F · ${g.picas}P</span><span class="pips">${p}</span></div>`;}).join(''):`<div class="empty">${t('log_empty_theirs')}</div>`;
 }
 function handlePlayerComputerScore(score){
+  settlePracticeBank();
   if(score.fijas===practiceCfg.digits)practice.pendingWinner='player';
   if(practice.pendingWinner==='computer'){finishComputerPractice(score.fijas===practiceCfg.digits?'draw':'loss');return;}
   const canTry=!practiceCfg.maxAttempts||practice.computerGuesses.length<practiceCfg.maxAttempts;
@@ -2231,13 +2530,16 @@ function runComputerTurn(){
   if(practiceCfg.maxAttempts&&playerPracticeAttempts()>=practiceCfg.maxAttempts&&practice.computerGuesses.length>=practiceCfg.maxAttempts){finishComputerPractice('draw');return;}
   beginPlayerTurn();
 }
-function beginPlayerTurn(){practice.turn='player';practice.deadline=practiceCfg.turnSeconds?Date.now()+practiceCfg.turnSeconds*1000:0;$('practice-guessarea').classList.remove('hidden');renderPracticeStatus();saveActivePractice();}
-function expireComputerPlayerTurn(){if(!practice||practice.finished||practice.turn!=='player')return;practice.deadline=0;practice.missedTurns++;toast(t('computer_timeout'));if(practice.pendingWinner==='computer'){finishComputerPractice('loss');return;}if(practiceCfg.maxAttempts&&playerPracticeAttempts()>=practiceCfg.maxAttempts&&practice.computerGuesses.length>=practiceCfg.maxAttempts){finishComputerPractice('draw');return;}if(!practiceCfg.maxAttempts||practice.computerGuesses.length<practiceCfg.maxAttempts)beginComputerTurn();else beginPlayerTurn();}
+function beginPlayerTurn(){practice.turn='player';practice.deadline=isPracticeBank()?Date.now()+Math.max(1,practice.bankMs):(practiceCfg.turnSeconds?Date.now()+practiceCfg.turnSeconds*1000:0);$('practice-guessarea').classList.remove('hidden');renderPracticeStatus();saveActivePractice();}
+function expireComputerPlayerTurn(){if(!practice||practice.finished||practice.turn!=='player')return;
+  if(isPracticeBank()){practice.deadline=0;practice.bankMs=0;finishComputerPractice('loss','timeout');return;}
+  practice.deadline=0;practice.missedTurns++;toast(t('computer_timeout'));if(practice.pendingWinner==='computer'){finishComputerPractice('loss');return;}if(practiceCfg.maxAttempts&&playerPracticeAttempts()>=practiceCfg.maxAttempts&&practice.computerGuesses.length>=practiceCfg.maxAttempts){finishComputerPractice('draw');return;}if(!practiceCfg.maxAttempts||practice.computerGuesses.length<practiceCfg.maxAttempts)beginComputerTurn();else beginPlayerTurn();}
 function finishComputerPractice(result,reason=''){
   if(!practice||practice.finished)return;practice.finished=true;stopPracticeTick();clearSavedPractice();
   const s=computerStats(),key=result==='win'?'wins':result==='loss'?'losses':'draws';s.played++;s[key]++;s.byDifficulty[practiceCfg.difficulty][key]++;localStorage.setItem('pf_computer_stats',JSON.stringify(s));
   $('practice-secret').innerHTML=codeViewHTML(practice.playerSecret,practiceCfg.mode);$('practice-guessarea').classList.add('hidden');$('practice-turn').classList.add('hidden');$('practice-active-actions').classList.add('hidden');$('practice-actions').classList.remove('hidden');$('practice-lobby-btn').textContent=t('result_lobby');$('practice-lobby-btn').dataset.i18n='result_lobby';
-  const surrendered=reason==='surrender',title=surrendered?t('practice_surrendered'):t('computer_result_'+result),detail=surrendered?t('practice_surrender_detail'):t('computer_both_codes',{yours:practice.playerSecret,computer:practice.secret});
+  const surrendered=reason==='surrender',title=surrendered?t('practice_surrendered'):t('computer_result_'+result),
+    detail=surrendered?t('practice_surrender_detail'):reason==='timeout'?t('lose_timeout'):t('computer_both_codes',{yours:practice.playerSecret,computer:practice.secret});
   $('practice-banner').innerHTML=`<div class="banner ${result==='win'?'win':result==='loss'?'lose':'draw'}"><h2>${title}</h2><p>${detail}</p></div><div class="note"><b>${t('practice_secret')}</b> ${codeViewHTML(practice.playerSecret,practiceCfg.mode)} · <b>🤖</b> ${codeViewHTML(practice.secret,practiceCfg.mode)}</div>`;endSound(result==='draw'?'draw':result==='win'?'win':'lose');
 }
 function finishPractice(won,reason){
@@ -2257,6 +2559,29 @@ $('p-seg-digits').addEventListener('click',e=>{const b=e.target.closest('button'
 $('p-seg-repeat').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;practiceCfg.allowRepeats=b.dataset.r==='1';segPick($('p-seg-repeat'),b);});
 $('p-seg-attempts').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;practiceCfg.maxAttempts=+b.dataset.a;segPick($('p-seg-attempts'),b);});
 $('p-seg-time').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;practiceCfg.turnSeconds=+b.dataset.t;segPick($('p-seg-time'),b);});
+/* 'legacy' es la practica en Solo, donde el mismo control significa tiempo
+   total y no hay nada que elegir. */
+let practiceClock='legacy';
+function syncPracticeClock(){
+  const bank=practiceClock==='bank';
+  // En Solo ('legacy') el control de tiempo es el unico que hay y siempre se
+  // ve; contra el computador solo aparece si se eligio cronometro por turno.
+  $('p-time-wrap').classList.toggle('hidden', practiceClock==='bank'||practiceClock==='none');
+  $('p-bank-wrap').classList.toggle('hidden', !bank);
+  if(bank){
+    practiceCfg.timeMode='bank'; practiceCfg.turnSeconds=0;
+    practiceCfg.bankSeconds=+(segValue('p-seg-bank','b')||300);
+    practiceCfg.bankIncrement=+(segValue('p-seg-bank-inc','bi')||0);
+  }else{
+    practiceCfg.timeMode='turn'; practiceCfg.bankSeconds=0; practiceCfg.bankIncrement=0;
+    if(practiceClock==='none') practiceCfg.turnSeconds=0;
+    else if(practiceClock==='turn') practiceCfg.turnSeconds=+(segValue('p-seg-time','t')||0)||60;
+    else practiceCfg.turnSeconds=+(segValue('p-seg-time','t')||0);
+  }
+}
+$('p-seg-clock').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;practiceClock=b.dataset.c;segPick($('p-seg-clock'),b);syncPracticeClock();});
+$('p-seg-bank').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;segPick($('p-seg-bank'),b);syncPracticeClock();});
+$('p-seg-bank-inc').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;segPick($('p-seg-bank-inc'),b);syncPracticeClock();});
 $('practice-guess').addEventListener('input',e=>setVal('practice-guess-val',e.target.value,practiceCfg.digits,practiceCfg.allowRepeats));
 $('practice-player-secret').addEventListener('input',e=>setVal('practice-secret-val',e.target.value,practiceCfg.digits,practiceCfg.allowRepeats));
 bindEnterToButton('practice-guess','practice-guess-btn');
@@ -2281,11 +2606,19 @@ function selectCreateRandomRules(){
   cfg.numColors=[4,6,8][randomInt(3)]; cfg.digits=[3,4,5,6][randomInt(4)];
   cfg.allowRepeats=!!randomInt(2);
   if(cfg.mode==='colors'&&cfg.digits>cfg.numColors) cfg.allowRepeats=true;
-  cfg.maxAttempts=[0,6,10][randomInt(3)]; cfg.turnSeconds=[0,30,60,120][randomInt(4)];
+  cfg.maxAttempts=[0,6,10][randomInt(3)];
   const pick=(id,selector)=>segPick($(id),$(id).querySelector(selector));
+  // El reloj entra en el sorteo con sus tres formas; la bolsa trae ademas su
+  // tamano y su incremento.
+  clockChoice=['none','turn','bank'][randomInt(3)];
+  pick('seg-time',`[data-t="${[30,60,120][randomInt(3)]}"]`);
+  pick('seg-bank',`[data-b="${[180,300,600][randomInt(3)]}"]`);
+  pick('seg-bank-inc',`[data-bi="${[0,3,5,10][randomInt(4)]}"]`);
+  pick('seg-clock',`[data-c="${clockChoice}"]`);
+  syncClockControls();
   pick('seg-mode',`[data-m="${cfg.mode}"]`); pick('seg-colors',`[data-nc="${cfg.numColors}"]`);
   pick('seg-digits',`[data-d="${cfg.digits}"]`); pick('seg-repeat',`[data-r="${cfg.allowRepeats?1:0}"]`);
-  pick('seg-attempts',`[data-a="${cfg.maxAttempts}"]`); pick('seg-time',`[data-t="${cfg.turnSeconds}"]`);
+  pick('seg-attempts',`[data-a="${cfg.maxAttempts}"]`);
   $('colors-wrap').classList.toggle('hidden',cfg.mode!=='colors');
   const input=$('secret-c'); input.maxLength=cfg.digits; input.placeholder='•'.repeat(cfg.digits);
   syncRepeatAvailability(); padC.reset(); applyMode('c',cfg.mode,'secret-c','pad-c',padC); $('secret-c-val').textContent='';
@@ -2306,8 +2639,28 @@ $('seg-repeat').addEventListener('click', e=>{ const b=e.target.closest('button'
   setVal('secret-c-val', getSecret('c'), cfg.digits, cfg.allowRepeats); });
 $('seg-attempts').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
   cfg.maxAttempts=parseInt(b.dataset.a,10); segPick($('seg-attempts'),b); });
+/* El reloj tiene tres formas y son excluyentes: sin limite, cronometro por
+   turno o bolsa de tiempo. `clockChoice` es lo que se ve; `cfg.turnSeconds` y
+   `cfg.timeMode` son lo que viaja al servidor. */
+let clockChoice='none';
+function syncClockControls(){
+  $('turn-time-wrap').classList.toggle('hidden', clockChoice!=='turn');
+  $('bank-wrap').classList.toggle('hidden', clockChoice!=='bank');
+  cfg.timeMode = clockChoice==='bank' ? 'bank' : 'turn';
+  cfg.turnSeconds = clockChoice==='turn' ? (+(segValue('seg-time','t')||30)) : 0;
+  if(clockChoice==='bank'){
+    cfg.bankSeconds=+(segValue('seg-bank','b')||300);
+    cfg.bankIncrement=+(segValue('seg-bank-inc','bi')||0);
+  }else{ cfg.bankSeconds=0; cfg.bankIncrement=0; }
+}
+$('seg-clock').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
+  clockChoice=b.dataset.c; segPick($('seg-clock'),b); syncClockControls(); });
 $('seg-time').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
-  cfg.turnSeconds=parseInt(b.dataset.t,10); segPick($('seg-time'),b); });
+  segPick($('seg-time'),b); syncClockControls(); });
+$('seg-bank').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
+  segPick($('seg-bank'),b); syncClockControls(); });
+$('seg-bank-inc').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
+  segPick($('seg-bank-inc'),b); syncClockControls(); });
 $('seg-public').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
   cfg.isPublic=b.dataset.p==='1'; segPick($('seg-public'),b);
   $('pub-hint').textContent=cfg.isPublic?t('pub_hint_public'):t('pub_hint_private'); });
@@ -2328,10 +2681,13 @@ async function createGame(){
   $('btn-create').disabled=true; $('btn-create-random').disabled=true;
   try{
     const res=await api('createGame',{username:user, digits:cfg.digits, secret, mode:cfg.mode, numColors:cfg.numColors,
-      allowRepeats:cfg.allowRepeats, isPublic:cfg.isPublic, maxAttempts:cfg.maxAttempts, turnSeconds:cfg.turnSeconds, revealSecrets:cfg.revealSecrets, country:myCountry});
+      allowRepeats:cfg.allowRepeats, isPublic:cfg.isPublic, maxAttempts:cfg.maxAttempts, turnSeconds:cfg.turnSeconds,
+      timeMode:cfg.timeMode, bankSeconds:cfg.bankSeconds, bankIncrement:cfg.bankIncrement,
+      revealSecrets:cfg.revealSecrets, country:myCountry});
     if(!res.ok){ toast(te(res.error),true); return; }
     localStorage.setItem('pf_secret_'+res.gameId, secret);
-    enterWait({id:res.gameId, digits:cfg.digits, mode:cfg.mode, numColors:cfg.numColors, allowRepeats:cfg.allowRepeats, maxAttempts:cfg.maxAttempts, turnSeconds:cfg.turnSeconds, revealSecrets:cfg.revealSecrets});
+    enterWait({id:res.gameId, digits:cfg.digits, mode:cfg.mode, numColors:cfg.numColors, allowRepeats:cfg.allowRepeats, maxAttempts:cfg.maxAttempts,
+      turnSeconds:cfg.turnSeconds, timeMode:cfg.timeMode, bankSeconds:cfg.bankSeconds, bankIncrement:cfg.bankIncrement, revealSecrets:cfg.revealSecrets});
   }catch(e){ toast(t('net_error'),true); } finally{ $('btn-create').disabled=false; $('btn-create-random').disabled=false; }
 }
 function prepareRandomGame(){
@@ -2344,7 +2700,8 @@ function prepareRandomGame(){
 /* -------------------- sala de espera -------------------- */
 function enterWait(meta){
   localStorage.removeItem('pf_current_game');
-  game={id:meta.id, digits:meta.digits, mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats, maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0, revealSecrets:!!meta.revealSecrets};
+  game={id:meta.id, digits:meta.digits, mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats, maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0,
+    timeMode:meta.timeMode||'turn', bankSeconds:meta.bankSeconds||0, bankIncrement:meta.bankIncrement||0, revealSecrets:!!meta.revealSecrets};
   $('wait-code').textContent=meta.id; $('wait-info').textContent=rulesLabel(meta);
   show('wait');
   const waitEpoch=gameViewEpoch, waitGameId=game.id;
@@ -2398,7 +2755,7 @@ function closeRules(){ show(rulesReturn); }
 function openJoin(meta){
   localStorage.removeItem('pf_current_game');
   joinMeta={gameId:meta.gameId||meta.id, digits:meta.digits, mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats,
-    maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0, revealSecrets:!!meta.revealSecrets};
+    maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0, timeMode:meta.timeMode||'turn', bankSeconds:meta.bankSeconds||0, bankIncrement:meta.bankIncrement||0, revealSecrets:!!meta.revealSecrets};
   $('join-code').textContent=joinMeta.gameId;
   $('join-rules-txt').textContent=t('join_rules',{rules:rulesLabel(joinMeta)});
   const inp=$('secret-j'); inp.maxLength=joinMeta.digits; inp.value=''; inp.placeholder='•'.repeat(joinMeta.digits);
@@ -2415,14 +2772,16 @@ async function confirmJoin(){
     const res=await api('joinGame',{gameId:joinMeta.gameId, username:user, secret, country:myCountry});
     if(!res.ok){ toast(te(res.error),true); enterLobby(); return; }
     localStorage.setItem('pf_secret_'+joinMeta.gameId, secret);
-    enterGame({id:joinMeta.gameId, digits:joinMeta.digits, mode:joinMeta.mode, numColors:joinMeta.numColors, allowRepeats:joinMeta.allowRepeats, maxAttempts:joinMeta.maxAttempts, turnSeconds:joinMeta.turnSeconds});
+    enterGame({id:joinMeta.gameId, digits:joinMeta.digits, mode:joinMeta.mode, numColors:joinMeta.numColors, allowRepeats:joinMeta.allowRepeats, maxAttempts:joinMeta.maxAttempts,
+      turnSeconds:joinMeta.turnSeconds, timeMode:joinMeta.timeMode, bankSeconds:joinMeta.bankSeconds, bankIncrement:joinMeta.bankIncrement});
   }catch(e){ toast(t('net_error'),true); } finally{ $('btn-join').disabled=false; }
 }
 
 /* -------------------- revancha -------------------- */
 function openRematch(){
   finishedMeta={gameId:gState.gameId, digits:gState.digits, mode:gState.mode, numColors:gState.numColors||6, allowRepeats:gState.allowRepeats,
-    maxAttempts:gState.maxAttempts, turnSeconds:gState.turnSeconds, revealSecrets:gState.revealSecrets};
+    maxAttempts:gState.maxAttempts, turnSeconds:gState.turnSeconds, timeMode:gState.timeMode, bankSeconds:gState.bankSeconds, bankIncrement:gState.bankIncrement,
+    revealSecrets:gState.revealSecrets};
   $('rematch-rules-txt').textContent=t('rematch_rules',{rules:rulesLabel(finishedMeta)});
   const inp=$('secret-r'); inp.maxLength=finishedMeta.digits; inp.value=''; inp.placeholder='•'.repeat(finishedMeta.digits);
   padR.reset(); applyMode('r', finishedMeta.mode, 'secret-r', 'pad-r', padR); $('secret-r-val').textContent='';
@@ -2490,7 +2849,8 @@ async function resumeStoredGame(){
 /* -------------------- juego -------------------- */
 function metaFromState(st){
   return {id:st.gameId, digits:parseInt(st.digits,10), mode:st.mode, numColors:st.numColors||6, allowRepeats:st.allowRepeats,
-    maxAttempts:st.maxAttempts||0, turnSeconds:st.turnSeconds||0, revealSecrets:!!st.revealSecrets};
+    maxAttempts:st.maxAttempts||0, turnSeconds:st.turnSeconds||0, timeMode:st.timeMode||'turn', bankSeconds:st.bankSeconds||0, bankIncrement:st.bankIncrement||0,
+    revealSecrets:!!st.revealSecrets};
 }
 function resetGameView(){
   hideToast();
@@ -2502,6 +2862,7 @@ function resetGameView(){
   $('g-turn').className='turnbar theirs'; $('g-turn').classList.remove('hidden');
   $('g-turn-txt').textContent=t('waiting_generic');
   $('g-statusrow').classList.add('hidden'); $('g-timer').classList.add('hidden'); $('g-attempts').classList.add('hidden');
+  $('g-banks').classList.add('hidden');
   $('g-guessarea').classList.toggle('hidden',!!game.spectator); $('g-guess').disabled=true; $('g-guess-btn').disabled=true;
   $('g-abandon-wrap').classList.add('hidden'); $('g-legend').style.display='flex';
   $('g-pause-cover').classList.add('hidden'); $('g-pause-btn').classList.add('hidden');
@@ -2511,7 +2872,7 @@ function enterGame(meta,initialState=null){
   guessSubmitting=false;
   reviewingHistory=!!meta.review;
   game={id:meta.id, digits:parseInt(meta.digits,10), mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats,
-    maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0, revealSecrets:!!meta.revealSecrets, spectator:!!meta.spectator};
+    maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0, timeMode:meta.timeMode||'turn', bankSeconds:meta.bankSeconds||0, bankIncrement:meta.bankIncrement||0, revealSecrets:!!meta.revealSecrets, spectator:!!meta.spectator};
   const inp=$('g-guess'); inp.maxLength=game.digits; inp.value=''; inp.placeholder='•'.repeat(game.digits);
   padG.reset(); applyMode('g', game.mode, 'g-guess', 'pad-g', padG);
   $('g-code').textContent=meta.id; $('g-guess-val').textContent='';
@@ -2596,6 +2957,7 @@ function renderGame(st){
     $('g-abandon-wrap').classList.add('hidden');
     $('g-pause-cover').classList.add('hidden'); $('g-pause-btn').classList.add('hidden');
     turn.classList.add('hidden'); guessarea.classList.add('hidden'); statusrow.classList.add('hidden'); legend.style.display='none';
+    renderBanks(st);
     stopTick();
     const won = st.winner===user;
     if(!endSoundPlayed&&!spectator){ endSoundPlayed=true; endSound(st.isDraw?'draw':(won?'win':'lose')); }
@@ -2608,7 +2970,9 @@ function renderGame(st){
     }else{
       const resultMsg = st.finishReason==='abandon'
         ? (won?t('win_abandon',{name:esc(oppLabel)}):t('lose_abandon',{name:esc(st.winner)}))
-        : (won?t('win_msg',{name:esc(oppLabel)}):t('lose_msg',{name:esc(st.winner)}));
+        : st.finishReason==='timeout'
+          ? (won?t('win_timeout',{name:esc(oppLabel)}):t('lose_timeout'))
+          : (won?t('win_msg',{name:esc(oppLabel)}):t('lose_msg',{name:esc(st.winner)}));
       banner.innerHTML=`<div class="banner ${won?'win':'lose'}">${won?toroSVG('happy',150,true):toroSVG('sad',118,false)}<h2>${won?t('win_title'):t('lose_title')}</h2>${ruleSVG(won?150:118)}
         <p>${resultMsg}</p></div>`;
     }
@@ -2636,6 +3000,7 @@ function renderGame(st){
   turn.classList.remove('hidden'); guessarea.classList.toggle('hidden',spectator);
   updatePauseCover();
 
+  renderBanks(st);
   const myAttempts = me===1 ? st.attemptsP1 : st.attemptsP2;
   const canGuessAttempts = !(st.maxAttempts>0 && myAttempts>=st.maxAttempts);
   if(st.maxAttempts>0 || st.turnSeconds>0){
@@ -2650,7 +3015,7 @@ function renderGame(st){
   const pending = st.pendingWinner || '';
   if(st.yourTurn){
     turn.className='turnbar mine'; $('g-turn-txt').textContent=t('your_turn');
-    const ok=canGuessAttempts&&!st.timerPaused&&(!(st.turnSeconds>0)||st.turnRemaining>0);
+    const ok=canGuessAttempts&&!st.timerPaused&&(!(st.turnSeconds>0)||st.turnRemaining>0)&&(st.timeMode!=='bank'||bankLeft(st,me)>0);
     $('g-guess-btn').disabled=!ok||guessSubmitting; $('g-guess').disabled=!ok||guessSubmitting; padG.setDisabled(!ok||guessSubmitting);
     if(!ok) $('g-turn-txt').textContent=t('no_attempts_wait');
     if(pending && pending!==user){
@@ -2778,10 +3143,59 @@ function pausedStatusText(st){
   return t('timer_paused');
 }
 
-/* -------------------- cronómetro por turno -------------------- */
+/* -------------------- los relojes --------------------
+   Dos formas con la misma aritmetica: el cronometro por turno vive en un chip
+   y la bolsa de tiempo en dos relojes, uno por jugador. En los dos casos el
+   navegador solo descuenta desde el estado que mando el servidor; quien decide
+   sigue siendo el servidor. */
+function fmtClock(seconds){
+  const total=Math.max(0,seconds), mm=Math.floor(total/60), ss=total%60;
+  return mm>0 ? mm+':'+String(ss).padStart(2,'0') : ss+'s';
+}
+/* Solo corre el reloj de quien tiene el turno: el del rival se queda quieto en
+   el valor que trajo el estado. */
+function bankLeft(st, side){
+  if(!st || st.timeMode!=='bank') return 0;
+  const stored=Number(side===1?st.bank1Remaining:st.bank2Remaining)||0;
+  if(st.status!=='active' || st.turn!==side || st.timerPaused) return Math.max(0,stored);
+  const since=Number(st.clientReceivedAt)||Date.now();
+  return Math.max(0, Math.min(st.bankSeconds, stored - Math.floor((Date.now()-since)/1000)));
+}
+function paintBank(id, label, seconds, running){
+  const box=$(id); box.querySelector('.who').textContent=label;
+  box.querySelector('.clock').innerHTML=ico('reloj',16)+'<span>'+fmtClock(seconds)+'</span>';
+  box.className='bank'+(running?' running':'')+(seconds<=0?' out':'')+(running?(seconds<=10?' hot':(seconds<=30?' warn':'')):'');
+}
+function renderBanks(st){
+  const host=$('g-banks'), on=st&&st.timeMode==='bank'&&st.bankSeconds>0;
+  host.classList.toggle('hidden',!on);
+  if(!on) return;
+  // El primer reloj es siempre el propio. Un espectador no tiene reloj, asi que
+  // ve los dos con su nombre, en el orden de la fila de jugadores.
+  const near = st.youAre===2 ? 2 : 1, far = near===1 ? 2 : 1;
+  const nameOf = side => side===1 ? st.p1 : st.p2;
+  const label = side => st.youAre===side ? t('bank_yours') : t('bank_theirs',{name:nameOf(side)||t('rival')});
+  const running = side => st.status==='active' && st.turn===side && !st.timerPaused;
+  paintBank('g-bank-mine', label(near), bankLeft(st,near), running(near));
+  paintBank('g-bank-theirs', label(far), bankLeft(st,far), running(far));
+}
 function updateTimer(){
   updatePauseCover();
-  if(!gState || gState.status!=='active' || !(gState.turnSeconds>0)){ return; }
+  if(!gState || gState.status!=='active') return;
+  if(gState.timeMode==='bank'){
+    renderBanks(gState);
+    // Se avisa al servidor cuando cae la propia bandera. El rival tambien lo
+    // descubre por su consulta periodica, asi que cerrar el navegador no salva
+    // la partida ni la deja colgada.
+    const me=gState.youAre;
+    if(me && gState.turn===me && bankLeft(gState,me)<=0 && !passRequested){
+      passRequested=true;
+      $('g-guess-btn').disabled=true; $('g-guess').disabled=true; padG.setDisabled(true);
+      api('passTurn',{gameId:game.id, username:user}).then(()=>refreshGame()).catch(()=>{});
+    }
+    return;
+  }
+  if(!(gState.turnSeconds>0)) return;
   const el=$('g-timer'); el.classList.remove('hidden');
   if(gState.timerPaused){
     el.textContent=pausedStatusText(gState); el.className='chip warn'; passRequested=false; return;
@@ -2789,8 +3203,7 @@ function updateTimer(){
   const started=Number(gState.clientReceivedAt)||Date.now();
   const base=Number.isFinite(Number(gState.turnRemaining))?Number(gState.turnRemaining):gState.turnSeconds;
   const remaining=Math.max(0, Math.min(gState.turnSeconds, base - Math.floor((Date.now()-started)/1000)));
-  const mm=Math.floor(remaining/60), ss=remaining%60;
-  el.textContent='⏱ '+(mm>0?mm+':'+String(ss).padStart(2,'0'):ss+'s');
+  el.innerHTML=ico('reloj',14)+'<span>'+fmtClock(remaining)+'</span>';
   el.className='chip'+(remaining<=5?' hot':(remaining<=10?' warn':''));
   if(remaining<=0 && !passRequested){
     passRequested=true;
