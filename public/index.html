@@ -270,6 +270,13 @@
   .toro .t-line{fill:none;stroke:#12100C;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
   .toro .t-dot{fill:#12100C}
   .dl{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .ico{display:block;flex:0 0 auto}
+  /* Las fichas de color se distinguen por forma, no solo por color. Se dibujan
+     en SVG para que pesen lo mismo entre ellas y no dependan de la fuente. */
+  .sym{display:block}
+  .slot .sym,.sw .sym{filter:drop-shadow(0 1px 0 rgba(255,255,255,.35))}
+  .chat-icon-btn,.random-code-btn,.chat-send{display:grid;place-items:center}
+  .chat-actions button{display:inline-grid;place-items:center}
   .greet{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px}
   .greet-main{flex:1;min-width:0}
   .greet h2{margin:0}
@@ -484,7 +491,7 @@
       <label id="practice-time-label" data-i18n="practice_time">Tiempo total</label>
       <div class="seg mono" id="p-seg-time"><button data-t="0" class="on" data-i18n="nolimit">Sin límite</button><button data-t="60">60s</button><button data-t="120">2min</button><button data-t="300">5min</button></div>
       <div id="p-secret-wrap" class="hidden">
-        <div class="secret-label-row"><label data-i18n="lbl_secret">Tu código secreto</label><button type="button" class="random-code-btn" onclick="suggestPracticeSecret()" data-i18n-title="random_secret" title="Proponer un código aleatorio">🔄</button></div>
+        <div class="secret-label-row"><label data-i18n="lbl_secret">Tu código secreto</label><button type="button" class="random-code-btn" onclick="suggestPracticeSecret()" data-i18n-title="random_secret" title="Proponer un código aleatorio" data-ico="dado"></button></div>
         <input type="text" id="practice-player-secret" class="code" inputmode="numeric" autocomplete="off">
         <div class="pad hidden" id="practice-secret-pad"><div class="slots" id="practice-secret-slots"></div><div class="palette" id="practice-secret-palette"></div></div>
         <div class="val" id="practice-secret-val"></div>
@@ -630,7 +637,7 @@
       <div style="height:18px"></div>
       <button class="btn pink" id="btn-create-random" onclick="prepareRandomGame()" data-i18n="create_random">Partida aleatoria 🎲</button>
 
-      <div class="secret-label-row"><label data-i18n="lbl_secret">Tu código secreto</label><button type="button" class="random-code-btn" onclick="suggestSecret('c')" data-i18n-title="random_secret" title="Proponer código aleatorio">🔄</button></div>
+      <div class="secret-label-row"><label data-i18n="lbl_secret">Tu código secreto</label><button type="button" class="random-code-btn" onclick="suggestSecret('c')" data-i18n-title="random_secret" title="Proponer código aleatorio" data-ico="dado"></button></div>
       <input type="text" id="secret-c" class="code" inputmode="numeric" maxlength="3" placeholder="•••">
       <div class="pad hidden" id="pad-c"><div class="slots" id="slots-c"></div><div class="palette" id="palette-c"></div></div>
       <div class="val" id="secret-c-val"></div>
@@ -666,7 +673,7 @@
     <div class="card">
       <h2><span data-i18n="join_to">Unirse a</span> <span id="join-code" style="font-family:'JetBrains Mono',monospace;color:var(--accent)"></span></h2>
       <p class="hint" id="join-rules-txt">Define tu código secreto.</p>
-      <div class="secret-label-row"><label data-i18n="lbl_secret">Tu código secreto</label><button type="button" class="random-code-btn" onclick="suggestSecret('j')" data-i18n-title="random_secret" title="Proponer código aleatorio">🔄</button></div>
+      <div class="secret-label-row"><label data-i18n="lbl_secret">Tu código secreto</label><button type="button" class="random-code-btn" onclick="suggestSecret('j')" data-i18n-title="random_secret" title="Proponer código aleatorio" data-ico="dado"></button></div>
       <input type="text" id="secret-j" class="code" inputmode="numeric" maxlength="3" placeholder="•••">
       <div class="pad hidden" id="pad-j"><div class="slots" id="slots-j"></div><div class="palette" id="palette-j"></div></div>
       <div class="val" id="secret-j-val"></div>
@@ -681,7 +688,7 @@
     <div class="card">
       <h2 data-i18n="rematch_title">Revancha 🔁</h2>
       <p class="hint" id="rematch-rules-txt">Mismas reglas, mismo rival. Define tu nuevo código secreto.</p>
-      <div class="secret-label-row"><label data-i18n="lbl_newsecret">Tu nuevo código secreto</label><button type="button" class="random-code-btn" onclick="suggestSecret('r')" data-i18n-title="random_secret" title="Proponer código aleatorio">🔄</button></div>
+      <div class="secret-label-row"><label data-i18n="lbl_newsecret">Tu nuevo código secreto</label><button type="button" class="random-code-btn" onclick="suggestSecret('r')" data-i18n-title="random_secret" title="Proponer código aleatorio" data-ico="dado"></button></div>
       <input type="text" id="secret-r" class="code" inputmode="numeric" maxlength="3" placeholder="•••">
       <div class="pad hidden" id="pad-r"><div class="slots" id="slots-r"></div><div class="palette" id="palette-r"></div></div>
       <div class="val" id="secret-r-val"></div>
@@ -739,7 +746,7 @@
     <div class="foot"><span class="link" onclick="leaveGame()" data-i18n="back_home">Volver al inicio</span><span id="g-abandon-wrap"> · <span class="link" onclick="abandonGame()" data-i18n="abandon_game">Abandonar partida</span></span></div>
     <div class="pause-cover hidden" id="g-pause-cover">
       <div class="pause-box">
-        <div class="pause-icon">⏸</div>
+        <div class="pause-icon" data-ico="pausa" data-ico-size="42"></div>
         <h2 id="g-pause-title" data-i18n="pause_title">Partida en pausa</h2>
         <p id="g-pause-message"></p>
         <div class="pause-countdown" id="g-pause-countdown"></div>
@@ -753,10 +760,10 @@
 <button class="chat-launch hidden" id="chat-launch" type="button" onclick="openPrimaryChat()" aria-label="Chat"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.4 12c0-3.7 3.5-6.7 7.7-6.7s7.6 3 7.5 6.7c-.1 3.7-3.4 6.6-7.6 6.6-.9 0-1.8-.1-2.6-.4-1.3.9-2.7 1.5-4 1.9.6-1.2 1-2.4 1.2-3.5-1.4-1.2-2.2-2.8-2.2-4.6Z"></path></svg><span class="chat-badge hidden" id="chat-badge">0</span></button>
 <div class="private-chat-bubbles hidden" id="private-chat-bubbles"></div><div class="private-chat-menu hidden" id="private-chat-menu"></div>
 <aside class="chat-panel hidden" id="chat-panel" aria-label="Chat">
-  <div class="chat-head"><strong id="chat-title">Chat</strong><button class="chat-icon-btn hidden" id="chat-nudge" type="button" onclick="sendChatNudge()">⚡</button><button class="chat-icon-btn hidden" id="chat-nudge-toggle" type="button" onclick="toggleNudges()">⚡✓</button><button class="chat-icon-btn" id="chat-muted-btn" type="button" onclick="toggleMutedPanel()">🔇</button><button class="chat-icon-btn" type="button" onclick="toggleChat()">×</button></div>
+  <div class="chat-head"><strong id="chat-title">Chat</strong><button class="chat-icon-btn hidden" id="chat-nudge" type="button" onclick="sendChatNudge()" data-ico="rayo"></button><button class="chat-icon-btn hidden" id="chat-nudge-toggle" type="button" onclick="toggleNudges()"></button><button class="chat-icon-btn" id="chat-muted-btn" type="button" onclick="toggleMutedPanel()" data-ico="mudo"></button><button class="chat-icon-btn" type="button" onclick="toggleChat()" data-ico="cerrar" data-ico-size="18"></button></div>
   <div class="chat-muted-panel hidden" id="chat-muted-panel"></div>
   <div class="chat-messages" id="chat-messages"><div class="chat-empty">Cargando…</div></div>
-  <form class="chat-compose" id="chat-form"><input type="text" id="chat-input" maxlength="300" autocomplete="off"><button class="btn chat-send" id="chat-send" type="submit">➤</button></form>
+  <form class="chat-compose" id="chat-form"><input type="text" id="chat-input" maxlength="300" autocomplete="off"><button class="btn chat-send" id="chat-send" type="submit" data-ico="enviar" data-ico-size="18"></button></form>
 </aside>
 
 <div class="toast" id="toast"></div>
@@ -1195,6 +1202,45 @@ const TORO_FACE={
   sad:'<path class="t-line" d="M29.5 31.5l5 5M34.5 31.5l-5 5"></path><path class="t-line" d="M53.5 31.5l5 5M58.5 31.5l-5 5"></path><path class="t-line" d="M39.4 56.4c.9-1 1.8-1 2.7 0s1.8 1 2.7 0 1.8-1 2.7 0"></path>'
 };
 const TORO_SPARKS='<g style="color:var(--pica)"><path class="dl" d="M-4 -2c1.6-1.6 3-3.4 4.2-5.4"></path><path class="dl" d="M22 -8c.4-2.4.6-4.8.6-7.2"></path><path class="dl" d="M66 -8c-.4-2.4-.6-4.8-.6-7.2"></path><path class="dl" d="M92 -2c-1.6-1.6-3-3.4-4.2-5.4"></path></g><g style="color:var(--accent)"><path class="dl" d="M-4 26c-2.2.6-4.4.8-6.6.6"></path><path class="dl" d="M92 26c2.2.6 4.4.8 6.6.6"></path></g>';
+/* -------------------- iconos dibujados --------------------
+   Un solo juego, en trazo de rotulador como el resto de la interfaz. Los
+   botones estaticos se rellenan por data-ico para no repetir los trazados. */
+const ICONS={
+  rayo:'<path class="dl" d="M13.7 3.5c-2.6 3.4-5 6.9-7.2 10.4 1.6.1 3.2.1 4.8 0-.4 2.4-.8 4.9-1.1 7.4 2.7-3.6 5.2-7.3 7.5-11.1-1.7-.1-3.4-.1-5.1 0 .4-2.2.8-4.5 1.1-6.7Z"></path>',
+  campana:'<path class="dl" d="M6.3 16c1.1-1.4 1.6-3.5 1.7-6.2.1-3.4 1.8-5.5 4-5.5s3.9 2.1 4 5.5c.1 2.7.6 4.8 1.7 6.2-3.8.6-7.6.6-11.4 0Z"></path><path class="dl" d="M10 18.2c.4 1 1.1 1.5 2 1.5s1.6-.5 2-1.5"></path>',
+  campanaOff:'<path class="dl" d="M6.3 16c1.1-1.4 1.6-3.5 1.7-6.2.1-3.4 1.8-5.5 4-5.5s3.9 2.1 4 5.5c.1 2.7.6 4.8 1.7 6.2-3.8.6-7.6.6-11.4 0Z"></path><path class="dl" d="M10 18.2c.4 1 1.1 1.5 2 1.5s1.6-.5 2-1.5"></path><path class="dl" d="M4.6 4.3c5 5 9.9 10 14.8 15"></path>',
+  mudo:'<path class="dl" d="M4 9.4c1.2-.1 2.4-.1 3.6 0 1.4-1.2 2.9-2.4 4.3-3.5.2 4 .2 8 0 12-1.4-1.1-2.9-2.3-4.3-3.4-1.2.1-2.4.1-3.6 0-.2-1.7-.2-3.4 0-5.1Z"></path><path class="dl" d="M14.8 9.2c1.7 1.9 3.4 3.8 5.1 5.6M19.9 9.2c-1.7 1.9-3.4 3.8-5.1 5.6"></path>',
+  cerrar:'<path class="dl" d="M6.2 5.9c4 4.1 8 8.2 12 12.3M18.2 5.9c-4 4.1-8 8.2-12 12.3"></path>',
+  enviar:'<path class="dl" d="M3.8 11.6c5.5-2.4 11-4.8 16.5-7.1-2.2 5.2-4.4 10.3-6.7 15.4-.9-2.1-1.9-4.1-2.9-6.1-2.3-.8-4.6-1.5-6.9-2.2Z"></path><path class="dl" d="M10.7 13.8c3.1-3.1 6.1-6.1 9.2-9.2"></path>',
+  bandera:'<path class="dl" d="M6.4 3.4c.3 5.7.3 11.4 0 17.2"></path><path class="dl" d="M6.7 4.5c4.6 1.3 9.2 2.7 13.7 4.2-4.5 1.5-9.1 2.9-13.7 4.2"></path>',
+  dado:'<path class="dl" d="M4.8 5c4.8-.5 9.6-.5 14.4 0 .5 4.7.5 9.3 0 14-4.8.5-9.6.5-14.4 0-.5-4.7-.5-9.3 0-14Z"></path><circle cx="8.6" cy="8.6" r="1.5" fill="currentColor"></circle><circle cx="12" cy="12" r="1.5" fill="currentColor"></circle><circle cx="15.4" cy="15.4" r="1.5" fill="currentColor"></circle>',
+  pausa:'<path class="dl" d="M9.6 5.5c.3 4.4.3 8.8 0 13.2M14.5 5.5c.3 4.4.3 8.8 0 13.2"></path>'
+};
+function ico(nombre,tam){
+  const p=ICONS[nombre]; if(!p) return '';
+  return `<svg class="ico" width="${tam}" height="${tam}" viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
+}
+function pintarIconos(raiz){
+  (raiz||document).querySelectorAll('[data-ico]').forEach(el=>{
+    el.innerHTML=ico(el.dataset.ico, Number(el.dataset.icoSize)||16);
+  });
+}
+/* Ocho formas con el mismo peso optico sobre una rejilla de 24. Son lo que
+   permite leer un codigo de colores sin distinguirlos: la forma manda. */
+const SYMBOL_D=[
+  /* circulo  */ 'M12 4.5a7.5 7.5 0 1 1 0 15 7.5 7.5 0 0 1 0-15Z',
+  /* cuadrado */ 'M6.7 5.3h10.6a1.4 1.4 0 0 1 1.4 1.4v10.6a1.4 1.4 0 0 1-1.4 1.4H6.7a1.4 1.4 0 0 1-1.4-1.4V6.7a1.4 1.4 0 0 1 1.4-1.4Z',
+  /* triangulo*/ 'M12 1.5 21.3 17.3H2.7Z',
+  /* tri. abajo*/'M12 22.5 2.7 6.7h18.6Z',
+  /* rombo    */ 'M12 2.7 21.3 12 12 21.3 2.7 12Z',
+  /* estrella */ 'M12 1.4 15.3 7.5 22.1 8.7 17.3 13.7 18.2 20.6 12 17.6 5.8 20.6 6.7 13.7 1.9 8.7 8.7 7.5Z',
+  /* cruz     */ 'M8.9 3.3h6.2v5.6h5.6v6.2h-5.6v5.6H8.9v-5.6H3.3V8.9h5.6Z',
+  /* anillo   */ 'M12 3.4a8.6 8.6 0 1 1 0 17.2 8.6 8.6 0 0 1 0-17.2Zm0 4.4a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4Z'
+];
+function symbolSVG(idx,tam){
+  const d=SYMBOL_D[idx]; if(d===undefined) return '';
+  return `<svg class="sym" width="${tam}" height="${tam}" viewBox="0 0 24 24" aria-hidden="true"><path d="${d}" fill="currentColor" fill-rule="evenodd"></path></svg>`;
+}
 function toroSVG(mood,width,sparks){
   return `<svg class="toro" width="${width}" height="${Math.round(width*90/104)}" viewBox="-8 -16 104 90" aria-hidden="true">${sparks?TORO_SPARKS:''}${TORO_HORNS}${TORO_HEAD}${TORO_MUZZLE}${TORO_FACE[mood]||TORO_FACE.calm}</svg>`;
 }
@@ -1228,6 +1274,7 @@ function applyI18n(){
   if(typeof updateInstallCard==='function') updateInstallCard();
   if(typeof renderPracticeStats==='function'&&$('practice-stats')) renderPracticeStats();
   if(typeof renderPracticeResumeCard==='function'&&$('practice-resume-card')) renderPracticeResumeCard();
+  pintarIconos();
   setCredits();
 }
 /* Aviso en el registro cuando se llega por un enlace de invitación (?game=XXXX). */
@@ -1379,7 +1426,7 @@ function updateChatLabels(){
   $('chat-input').placeholder=t('chat_placeholder');
   $('chat-nudge').title=t('chat_nudge');$('chat-nudge').setAttribute('aria-label',t('chat_nudge'));
   $('chat-nudge-toggle').title=t(chatNudgesOn?'chat_nudges_on':'chat_nudges_off');
-  $('chat-nudge-toggle').textContent=chatNudgesOn?'⚡✓':'⚡×';
+  $('chat-nudge-toggle').innerHTML=ico(chatNudgesOn?'campana':'campanaOff',16);
   $('chat-nudge').classList.toggle('hidden',room.roomType!=='private');$('chat-nudge-toggle').classList.toggle('hidden',room.roomType!=='private');
   const mutedCount=chatMutedUsers().size;$('chat-muted-btn').textContent=mutedCount?'🔇'+mutedCount:'🔇';$('chat-muted-btn').title=t('chat_manage_muted');$('chat-muted-btn').setAttribute('aria-label',t('chat_manage_muted'));
 }
@@ -1398,7 +1445,7 @@ function renderChat(){
     if(m.kind==='system')return`<div class="chat-msg system">${esc(systemChatText(m.body))}</div>`;
     if(m.kind==='nudge')return`<div class="chat-msg nudge">${esc(t('chat_nudged',{name:m.sender}))}</div>`;
     const mine=chatUserKey(m.sender)===chatUserKey(user),body=m.deleted?t('chat_deleted'):m.body;
-    const actions=!mine&&!m.deleted?`<span class="chat-actions"><button type="button" title="${esc(t('chat_mute'))}" onclick="muteChatUser('${encodeURIComponent(m.sender)}')">🔇</button><button type="button" title="${esc(t('chat_report'))}" onclick="reportChatMessage(${m.id})">⚑</button></span>`:'';
+    const actions=!mine&&!m.deleted?`<span class="chat-actions"><button type="button" title="${esc(t('chat_mute'))}" onclick="muteChatUser('${encodeURIComponent(m.sender)}')">${ico('mudo',14)}</button><button type="button" title="${esc(t('chat_report'))}" onclick="reportChatMessage(${m.id})">${ico('bandera',14)}</button></span>`:'';
     return`<div class="chat-msg${mine?' mine':''}"><div class="chat-meta"><b>${esc(m.sender)}</b><span>${chatTime(m.createdAt)}</span>${actions}</div><div class="chat-body">${esc(body)}</div></div>`;
   }).join('');box.scrollTop=box.scrollHeight;
 }
@@ -1646,7 +1693,7 @@ window.addEventListener('appinstalled', ()=>{ deferredInstall=null; installSteps
 
 function codeViewHTML(str, mode){
   if(mode==='colors'){
-    let h=''; for(const ch of String(str)){ const col=COLORS[+ch]||{c:'#555',s:'?'}; h+=`<span class="mini" style="background:${col.c}" aria-hidden="true">${col.s}</span>`; }
+    let h=''; for(const ch of String(str)){ const i=+ch, col=COLORS[i]||{c:'#555'}; h+=`<span class="mini" style="background:${col.c}" aria-hidden="true">${symbolSVG(i,12)}</span>`; }
     return `<span class="code-view">${h}</span>`;
   }
   return `<span class="n">${esc(str)}</span>`;
@@ -1660,7 +1707,7 @@ function makePad(slotsId, paletteId, getLen, getColors, onChange){
     const len=getLen(); slots.innerHTML='';
     for(let i=0;i<len;i++){
       const d=document.createElement('div'); d.className='slot';
-      if(i<value.length){ const col=COLORS[+value[i]]; d.classList.add('filled'); d.style.background=col.c; d.textContent=col.s; }
+      if(i<value.length){ const k=+value[i], col=COLORS[k]; d.classList.add('filled'); d.style.background=col.c; d.innerHTML=symbolSVG(k,24); }
       slots.appendChild(d);
     }
   }
@@ -1668,7 +1715,7 @@ function makePad(slotsId, paletteId, getLen, getColors, onChange){
     pal.innerHTML='';
     const n=Math.min(getColors(), COLORS.length);
     for(let idx=0; idx<n; idx++){
-      const b=document.createElement('button'); const col=COLORS[idx]; b.type='button'; b.className='sw'; b.style.background=col.c; b.textContent=col.s;
+      const b=document.createElement('button'); const col=COLORS[idx]; b.type='button'; b.className='sw'; b.style.background=col.c; b.innerHTML=symbolSVG(idx,26);
       b.onclick=()=>{ if(value.length<getLen()){ value+=idx; drawSlots(); onChange&&onChange(value); } };
       pal.appendChild(b);
     }
