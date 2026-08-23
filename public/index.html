@@ -145,7 +145,7 @@
   .history-filters{margin:0 0 14px}
   .gitem.history-best{border-color:rgba(79,201,124,.65);background:#131B10}
   .gitem.history-hardest{border-color:rgba(240,180,41,.55)}
-  .history-award{margin-top:4px;color:var(--fija);font-size:11px;font-weight:700}
+  .history-award{margin-top:4px;color:var(--fija);font-size:11px;font-weight:700;display:flex;align-items:center;gap:5px}
   .history-hardest .history-award{color:var(--pica)}
 
   .seg{display:flex;gap:8px;flex-wrap:wrap}
@@ -276,6 +276,8 @@
   .sym{display:block}
   .slot .sym,.sw .sym{filter:drop-shadow(0 1px 0 rgba(255,255,255,.35))}
   .chat-icon-btn,.random-code-btn,.chat-send{display:grid;place-items:center}
+  #chat-muted-btn{grid-auto-flow:column;gap:4px;padding:0 8px}
+  .chat-muted-count{font:700 11px 'JetBrains Mono',ui-monospace,monospace;color:var(--pica)}
   .chat-actions button{display:inline-grid;place-items:center}
   .greet{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px}
   .greet-main{flex:1;min-width:0}
@@ -839,7 +841,7 @@ const I18N = {
     tiebreak_you:"⚡ Último intento: {name} ya descifró tu código. ¡Aciértalo para empatar!",
     turn_of:"Turno de {name} …", waiting_generic:"Esperando… …", activity_now:"Activo ahora", activity_min:"Activo hace {n} min", activity_hours:"Activo hace {n} h", activity_days:"Activo hace {n} días",
     solved_wait:"✅ ¡Descifraste su código! Esperando el último intento de {name} para ver si empata…",
-    attempts_chip:"Intentos: {left}/{max}", timer_paused:"⏸ En pausa", timer_paused_lobby:"⏸ En pausa · esperando que {name} regrese a la partida", timer_paused_manual:"⏸ En pausa · {name} pausó la partida; esperando reanudación",
+    attempts_chip:"Intentos: {left}/{max}", timer_paused:"En pausa", timer_paused_lobby:"En pausa · esperando que {name} regrese a la partida", timer_paused_manual:"En pausa · {name} pausó la partida; esperando reanudación",
     pause_btn:"Pausar partida", pause_title:"Partida en pausa", pause_confirm:"¿Pausar la partida? Los dos jugadores dejarán de ver códigos e intentos.",
     pause_mine:"Tú solicitaste la pausa. Puedes reanudar cuando estés listo.", pause_other:"{name} solicitó la pausa. La partida se reanudará cuando regrese.",
     pause_auto:"Reanudación automática en {time}", resume_btn:"▶ Quitar pausa", pause_limit:"La pausa dura como máximo 5 minutos y solo está disponible en partidas con tiempo por turno.",
@@ -908,7 +910,7 @@ const I18N = {
     tiebreak_you:"⚡ Last try: {name} already cracked your code. Match it to tie!",
     turn_of:"{name}'s turn …", waiting_generic:"Waiting… …", activity_now:"Active now", activity_min:"Active {n} min ago", activity_hours:"Active {n} h ago", activity_days:"Active {n} days ago",
     solved_wait:"✅ You cracked their code! Waiting for {name}'s last try to see if it's a tie…",
-    attempts_chip:"Attempts: {left}/{max}", timer_paused:"⏸ Paused", timer_paused_lobby:"⏸ Paused · waiting for {name} to return to the game", timer_paused_manual:"⏸ Paused · {name} paused the game; waiting to resume",
+    attempts_chip:"Attempts: {left}/{max}", timer_paused:"Paused", timer_paused_lobby:"Paused · waiting for {name} to return to the game", timer_paused_manual:"Paused · {name} paused the game; waiting to resume",
     pause_btn:"Pause game", pause_title:"Game paused", pause_confirm:"Pause the game? Both players will stop seeing codes and attempts.",
     pause_mine:"You requested the pause. Resume when you're ready.", pause_other:"{name} requested the pause. The game will resume when they return.",
     pause_auto:"Automatic resume in {time}", resume_btn:"▶ Resume game", pause_limit:"The pause lasts up to 5 minutes and is only available in games with a turn timer.",
@@ -977,7 +979,7 @@ const I18N = {
     tiebreak_you:"⚡ Dernier essai : {name} a déjà trouvé ton code. Réussis pour égaliser !",
     turn_of:"Tour de {name} …", waiting_generic:"En attente… …", activity_now:"Actif maintenant", activity_min:"Actif il y a {n} min", activity_hours:"Actif il y a {n} h", activity_days:"Actif il y a {n} jours",
     solved_wait:"✅ Tu as trouvé son code ! En attente du dernier essai de {name} pour voir si c'est une égalité…",
-    attempts_chip:"Essais : {left}/{max}", timer_paused:"⏸ En pause", timer_paused_lobby:"⏸ En pause · en attente du retour de {name} dans la partie", timer_paused_manual:"⏸ En pause · {name} a mis la partie en pause ; reprise en attente",
+    attempts_chip:"Essais : {left}/{max}", timer_paused:"En pause", timer_paused_lobby:"En pause · en attente du retour de {name} dans la partie", timer_paused_manual:"En pause · {name} a mis la partie en pause ; reprise en attente",
     pause_btn:"Mettre en pause", pause_title:"Partie en pause", pause_confirm:"Mettre la partie en pause ? Les codes et les essais seront masqués pour les deux joueurs.",
     pause_mine:"Tu as demandé la pause. Reprends la partie quand tu es prêt.", pause_other:"{name} a demandé la pause. La partie reprendra à son retour.",
     pause_auto:"Reprise automatique dans {time}", resume_btn:"▶ Reprendre la partie", pause_limit:"La pause dure au maximum 5 minutes et n'est disponible que dans les parties avec un temps par tour.",
@@ -1214,7 +1216,9 @@ const ICONS={
   enviar:'<path class="dl" d="M3.8 11.6c5.5-2.4 11-4.8 16.5-7.1-2.2 5.2-4.4 10.3-6.7 15.4-.9-2.1-1.9-4.1-2.9-6.1-2.3-.8-4.6-1.5-6.9-2.2Z"></path><path class="dl" d="M10.7 13.8c3.1-3.1 6.1-6.1 9.2-9.2"></path>',
   bandera:'<path class="dl" d="M6.4 3.4c.3 5.7.3 11.4 0 17.2"></path><path class="dl" d="M6.7 4.5c4.6 1.3 9.2 2.7 13.7 4.2-4.5 1.5-9.1 2.9-13.7 4.2"></path>',
   dado:'<path class="dl" d="M4.8 5c4.8-.5 9.6-.5 14.4 0 .5 4.7.5 9.3 0 14-4.8.5-9.6.5-14.4 0-.5-4.7-.5-9.3 0-14Z"></path><circle cx="8.6" cy="8.6" r="1.5" fill="currentColor"></circle><circle cx="12" cy="12" r="1.5" fill="currentColor"></circle><circle cx="15.4" cy="15.4" r="1.5" fill="currentColor"></circle>',
-  pausa:'<path class="dl" d="M9.6 5.5c.3 4.4.3 8.8 0 13.2M14.5 5.5c.3 4.4.3 8.8 0 13.2"></path>'
+  pausa:'<path class="dl" d="M9.6 5.5c.3 4.4.3 8.8 0 13.2M14.5 5.5c.3 4.4.3 8.8 0 13.2"></path>',
+  estrella:'<path class="dl" d="M12 3.4 14.5 9.2 20.9 9.9 16.1 14.2 17.4 20.5 12 17.4 6.6 20.5 7.9 14.2 3.1 9.9 9.5 9.2Z"></path>',
+  llama:'<path class="dl" d="M12 3.4c-.4 3-1.6 5.2-3.6 6.6-1.6 1.2-2.4 2.8-2.4 4.8 0 3.2 2.6 5.8 6 5.8s6-2.6 6-5.8c0-3.4-2-7.2-6-11.4Z"></path><path class="dl" d="M12 12.4c-1.4 1.4-2.1 2.7-2.1 3.9 0 1.3 1 2.3 2.1 2.3s2.1-1 2.1-2.3c0-1.2-.7-2.5-2.1-3.9Z"></path>'
 };
 function ico(nombre,tam){
   const p=ICONS[nombre]; if(!p) return '';
@@ -1286,9 +1290,10 @@ function renderLoginInvite(){
 }
 
 /* Paleta de hasta 8 colores (índices 0-7). Cada color conserva siempre su figura. */
+/* Solo el color: la forma que lo acompana vive en SYMBOL_D, por indice. */
 const COLORS = [
-  {c:'#F87171',s:'◆'}, {c:'#FB923C',s:'●'}, {c:'#FBBF24',s:'▲'}, {c:'#4ADE80',s:'■'},
-  {c:'#22D3EE',s:'★'}, {c:'#60A5FA',s:'⬢'}, {c:'#A78BFA',s:'✚'}, {c:'#F472B6',s:'♥'}
+  {c:'#F87171'}, {c:'#FB923C'}, {c:'#FBBF24'}, {c:'#4ADE80'},
+  {c:'#22D3EE'}, {c:'#60A5FA'}, {c:'#A78BFA'}, {c:'#F472B6'}
 ];
 
 /* -------------------- estado -------------------- */
@@ -1428,7 +1433,7 @@ function updateChatLabels(){
   $('chat-nudge-toggle').title=t(chatNudgesOn?'chat_nudges_on':'chat_nudges_off');
   $('chat-nudge-toggle').innerHTML=ico(chatNudgesOn?'campana':'campanaOff',16);
   $('chat-nudge').classList.toggle('hidden',room.roomType!=='private');$('chat-nudge-toggle').classList.toggle('hidden',room.roomType!=='private');
-  const mutedCount=chatMutedUsers().size;$('chat-muted-btn').textContent=mutedCount?'🔇'+mutedCount:'🔇';$('chat-muted-btn').title=t('chat_manage_muted');$('chat-muted-btn').setAttribute('aria-label',t('chat_manage_muted'));
+  const mutedCount=chatMutedUsers().size;$('chat-muted-btn').innerHTML=ico('mudo',16)+(mutedCount?`<span class="chat-muted-count">${mutedCount}</span>`:'');$('chat-muted-btn').title=t('chat_manage_muted');$('chat-muted-btn').setAttribute('aria-label',t('chat_manage_muted'));
 }
 function toggleChat(){
   if(!chatEnabled)return;const panel=$('chat-panel'),opening=panel.classList.contains('hidden');panel.classList.toggle('hidden',!opening);
@@ -1989,7 +1994,7 @@ function renderHistoryList(){
     const badgeCls = h.result==='win'?'pill f':(h.result==='draw'?'pill':'pill p');
     let date=''; try{ date=new Date(h.updatedAt).toLocaleDateString(LOCALE[lang]||'es',{day:'2-digit',month:'short'}); }catch(e){}
     const isBest=h.gameId===historyStats?.bestGameId, isHardest=h.gameId===historyStats?.hardestGameId;
-    const award=isBest?`<div class="history-award">⭐ ${t('hist_best_game')}</div>`:(isHardest?`<div class="history-award">◆ ${t('hist_hardest_game')}</div>`:'');
+    const award=isBest?`<div class="history-award">${ico('estrella',13)}${t('hist_best_game')}</div>`:(isHardest?`<div class="history-award">${ico('llama',13)}${t('hist_hardest_game')}</div>`:'');
     const el=document.createElement('button'); el.type='button'; el.className=`gitem history-link${isBest?' history-best':isHardest?' history-hardest':''}`;
     el.setAttribute('aria-label',`${badge}: ${h.opp||'—'} · ${t('hist_attempts',{n:h.myAttempts})}`);
     el.innerHTML=`<div class="meta"><div class="who">${vsPlayer(h.oppCountry, h.opp||'—')}</div>
