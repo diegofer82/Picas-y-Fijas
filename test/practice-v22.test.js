@@ -92,3 +92,19 @@ test('Solo practice supports every approved rule family and reveals at the end',
   assert.match(practiceSource, /practice-secret.*codeViewHTML\(practice\.secret/s);
   assert.match(practiceSource, /practice_reveal/);
 });
+
+test('starting from practice settings uses the rules that are visibly selected', () => {
+  assert.match(practiceSource, /function readPracticeControls\(\)/);
+  assert.match(practiceSource, /practiceCfg\.allowRepeats=selected\('p-seg-repeat','r'\)==='1'/);
+  assert.match(practiceSource, /else if\(currentView==='practice'\) readPracticeControls\(\)/);
+});
+
+test('classic game creation also offers a random game', () => {
+  assert.match(html, /id="btn-create-random" onclick="prepareRandomGame\(\)"/);
+  assert.equal((html.match(/create_random:/g)||[]).length, 3);
+  assert.match(html, /function selectCreateRandomRules\(\)/);
+  const prepareSource=html.slice(html.indexOf('function prepareRandomGame()'),html.indexOf('/* -------------------- sala de espera'));
+  assert.match(prepareSource, /selectCreateRandomRules\(\)/);
+  assert.match(prepareSource, /target\.focus\(\)/);
+  assert.doesNotMatch(prepareSource, /suggestSecret\(|createGame\(|\bapi\s*\(/);
+});

@@ -627,6 +627,9 @@
       </div>
       <p class="hint" data-i18n="reveal_hint" style="margin:8px 0 0">Si se activa, cada jugador verá el código secreto de su rival cuando termine la partida.</p>
 
+      <div style="height:18px"></div>
+      <button class="btn pink" id="btn-create-random" onclick="prepareRandomGame()" data-i18n="create_random">Partida aleatoria 🎲</button>
+
       <div class="secret-label-row"><label data-i18n="lbl_secret">Tu código secreto</label><button type="button" class="random-code-btn" onclick="suggestSecret('c')" data-i18n-title="random_secret" title="Proponer código aleatorio">🔄</button></div>
       <input type="text" id="secret-c" class="code" inputmode="numeric" maxlength="3" placeholder="•••">
       <div class="pad hidden" id="pad-c"><div class="slots" id="slots-c"></div><div class="palette" id="palette-c"></div></div>
@@ -810,7 +813,7 @@ const I18N = {
     lbl_visibility:"Visibilidad", vis_public:"Pública", vis_private:"Privada", lbl_reveal:"Revelar códigos al terminar", reveal_no:"No revelar", reveal_yes:"Revelar", reveal_hint:"Si se activa, cada jugador verá el código secreto de su rival cuando termine la partida.",
     pub_hint_public:"Aparece en el lobby: cualquiera puede unirse.",
     pub_hint_private:"No aparece en el lobby: solo se entra con el código.",
-    lbl_secret:"Tu código secreto", create_btn:"Crear y esperar rival", random_secret:"Proponer un código aleatorio",
+    lbl_secret:"Tu código secreto", create_btn:"Crear y esperar rival", create_random:"Partida aleatoria 🎲", random_secret:"Proponer un código aleatorio",
     practice_unranked:"Práctica · no afecta al ranking", practice_title:"Práctica 🎯", practice_hint:"Escoge cómo quieres practicar. Los resultados se guardan solo en este dispositivo.", practice_type:"Tipo de práctica", practice_solo:"Solo", practice_computer:"Contra el computador", practice_difficulty:"Dificultad", difficulty_easy:"Fácil", difficulty_normal:"Normal", difficulty_expert:"Experto", practice_time:"Tiempo total", practice_turn_time:"Tiempo por turno", practice_start:"Comenzar práctica", practice_random:"Partida aleatoria 🎲", practice_secret:"Código secreto:", practice_again:"Jugar otra vez", practice_settings:"Cambiar reglas", practice_won:"¡Código descubierto! 🎉", practice_lost:"Fin de la práctica", practice_reveal:"El código era:", practice_played:"Partidas", practice_wins:"Resueltas", practice_streak:"Racha", practice_attempts_used:"Lo resolviste en {n} intentos y {time}.", practice_time_up:"Se terminó el tiempo.", practice_attempts_up:"Agotaste los intentos.", computer_title:"Contra el computador 🤖", computer_hint:"Ambos intentan descubrir el código rival por turnos.", computer_thinking:"El computador está pensando…", computer_your_turn:"Tu turno — descubre el código del computador", computer_last_turn:"Último intento para empatar: el computador descubrió tu código.", computer_attempts:"Intentos del computador", computer_your_attempts:"Tus intentos", computer_difficulty:"Dificultad: {level}", computer_wins:"Victorias", computer_losses:"Derrotas", computer_draws:"Empates", computer_result_win:"¡Ganaste! 🎉", computer_result_loss:"Ganó el computador", computer_result_draw:"Empate 🤝", computer_both_codes:"Tu código: {yours} · Código del computador: {computer}", computer_timeout:"Se agotó tu tiempo; el turno pasa al computador.", computer_stats_detail:"{level}: {wins}V · {losses}D · {draws}E", computer_invalid_secret:"Revisa tu código secreto.",
     practice_saved_badge:"Práctica guardada", practice_resume_title:"Práctica en curso 🎯", practice_resume:"Continuar práctica", practice_discard:"Descartar", practice_discard_confirm:"¿Descartar esta práctica y todo su progreso?", practice_replace_confirm:"Ya tienes una práctica guardada. ¿Descartarla y comenzar una nueva?", practice_save_lobby:"Guardar y volver al lobby", practice_resume_progress:"{yours} intentos tuyos · {computer} del computador", practice_resume_solo_progress:"{n} intentos realizados", practice_saved_toast:"Práctica guardada. Puedes continuarla desde el lobby.", practice_cancel:"Cancelar", practice_cancel_confirm:"¿Cancelar esta práctica? Se eliminará todo el progreso y no se guardará ningún resultado.", practice_surrender:"Rendirse", practice_surrender_confirm:"¿Rendirse? La práctica terminará y se revelará el código.", practice_surrendered:"Te rendiste", practice_surrender_detail:"El código queda revelado. Puedes revisar tus intentos y las pistas.",
     wait_title:"Partida creada", wait_hint:"Comparte este código con tu rival. Empieza en cuanto se una.",
@@ -879,7 +882,7 @@ const I18N = {
     lbl_visibility:"Visibility", vis_public:"Public", vis_private:"Private", lbl_reveal:"Reveal codes at the end", reveal_no:"Do not reveal", reveal_yes:"Reveal", reveal_hint:"When enabled, each player will see their opponent's secret code after the game ends.",
     pub_hint_public:"Shown in the lobby: anyone can join.",
     pub_hint_private:"Not shown in the lobby: join only with the code.",
-    lbl_secret:"Your secret code", create_btn:"Create and wait for opponent", random_secret:"Suggest a random code",
+    lbl_secret:"Your secret code", create_btn:"Create and wait for opponent", create_random:"Random game 🎲", random_secret:"Suggest a random code",
     practice_unranked:"Practice · does not affect ranking", practice_title:"Practice 🎯", practice_hint:"Choose how you want to practice. Results are saved only on this device.", practice_type:"Practice type", practice_solo:"Solo", practice_computer:"Against the computer", practice_difficulty:"Difficulty", difficulty_easy:"Easy", difficulty_normal:"Normal", difficulty_expert:"Expert", practice_time:"Total time", practice_turn_time:"Time per turn", practice_start:"Start practice", practice_random:"Random game 🎲", practice_secret:"Secret code:", practice_again:"Play again", practice_settings:"Change rules", practice_won:"Code discovered! 🎉", practice_lost:"Practice over", practice_reveal:"The code was:", practice_played:"Games", practice_wins:"Solved", practice_streak:"Streak", practice_attempts_used:"Solved in {n} attempts and {time}.", practice_time_up:"Time is up.", practice_attempts_up:"No attempts remaining.", computer_title:"Against the computer 🤖", computer_hint:"Take turns trying to discover each other's code.", computer_thinking:"The computer is thinking…", computer_your_turn:"Your turn — discover the computer's code", computer_last_turn:"Last try to draw: the computer discovered your code.", computer_attempts:"Computer attempts", computer_your_attempts:"Your attempts", computer_difficulty:"Difficulty: {level}", computer_wins:"Wins", computer_losses:"Losses", computer_draws:"Draws", computer_result_win:"You won! 🎉", computer_result_loss:"The computer won", computer_result_draw:"Draw 🤝", computer_both_codes:"Your code: {yours} · Computer code: {computer}", computer_timeout:"Your time ran out; the turn passes to the computer.", computer_stats_detail:"{level}: {wins}W · {losses}L · {draws}D", computer_invalid_secret:"Check your secret code.",
     practice_saved_badge:"Saved practice", practice_resume_title:"Practice in progress 🎯", practice_resume:"Continue practice", practice_discard:"Discard", practice_discard_confirm:"Discard this practice and all its progress?", practice_replace_confirm:"You already have a saved practice. Discard it and start a new one?", practice_save_lobby:"Save and return to lobby", practice_resume_progress:"{yours} of your attempts · {computer} by the computer", practice_resume_solo_progress:"{n} attempts made", practice_saved_toast:"Practice saved. You can continue it from the lobby.", practice_cancel:"Cancel", practice_cancel_confirm:"Cancel this practice? All progress will be deleted and no result will be saved.", practice_surrender:"Surrender", practice_surrender_confirm:"Surrender? The practice will end and the code will be revealed.", practice_surrendered:"You surrendered", practice_surrender_detail:"The code is now revealed. You can review your attempts and clues.",
     wait_title:"Game created", wait_hint:"Share this code with your opponent. It starts as soon as they join.",
@@ -948,7 +951,7 @@ const I18N = {
     lbl_visibility:"Visibilité", vis_public:"Publique", vis_private:"Privée", lbl_reveal:"Révéler les codes à la fin", reveal_no:"Ne pas révéler", reveal_yes:"Révéler", reveal_hint:"Si cette option est activée, chaque joueur verra le code secret de son adversaire à la fin de la partie.",
     pub_hint_public:"Visible dans le lobby : tout le monde peut rejoindre.",
     pub_hint_private:"Absente du lobby : on rejoint uniquement avec le code.",
-    lbl_secret:"Ton code secret", create_btn:"Créer et attendre l'adversaire", random_secret:"Proposer un code aléatoire",
+    lbl_secret:"Ton code secret", create_btn:"Créer et attendre l'adversaire", create_random:"Partie aléatoire 🎲", random_secret:"Proposer un code aléatoire",
     practice_unranked:"Entraînement · sans effet sur le classement", practice_title:"Entraînement 🎯", practice_hint:"Choisis ton type d'entraînement. Les résultats restent sur cet appareil.", practice_type:"Type d'entraînement", practice_solo:"Solo", practice_computer:"Contre l'ordinateur", practice_difficulty:"Difficulté", difficulty_easy:"Facile", difficulty_normal:"Normal", difficulty_expert:"Expert", practice_time:"Temps total", practice_turn_time:"Temps par tour", practice_start:"Commencer", practice_random:"Partie aléatoire 🎲", practice_secret:"Code secret :", practice_again:"Rejouer", practice_settings:"Changer les règles", practice_won:"Code découvert ! 🎉", practice_lost:"Fin de l'entraînement", practice_reveal:"Le code était :", practice_played:"Parties", practice_wins:"Résolues", practice_streak:"Série", practice_attempts_used:"Résolu en {n} essais et {time}.", practice_time_up:"Temps écoulé.", practice_attempts_up:"Plus aucun essai.", computer_title:"Contre l'ordinateur 🤖", computer_hint:"Chacun tente de découvrir le code adverse à tour de rôle.", computer_thinking:"L'ordinateur réfléchit…", computer_your_turn:"À toi — découvre le code de l'ordinateur", computer_last_turn:"Dernier essai pour égaliser : l'ordinateur a découvert ton code.", computer_attempts:"Essais de l'ordinateur", computer_your_attempts:"Tes essais", computer_difficulty:"Difficulté : {level}", computer_wins:"Victoires", computer_losses:"Défaites", computer_draws:"Nuls", computer_result_win:"Tu as gagné ! 🎉", computer_result_loss:"L'ordinateur a gagné", computer_result_draw:"Match nul 🤝", computer_both_codes:"Ton code : {yours} · Code de l'ordinateur : {computer}", computer_timeout:"Temps écoulé ; le tour passe à l'ordinateur.", computer_stats_detail:"{level} : {wins}V · {losses}D · {draws}N", computer_invalid_secret:"Vérifie ton code secret.",
     practice_saved_badge:"Entraînement sauvegardé", practice_resume_title:"Entraînement en cours 🎯", practice_resume:"Continuer", practice_discard:"Supprimer", practice_discard_confirm:"Supprimer cet entraînement et toute sa progression ?", practice_replace_confirm:"Un entraînement est déjà sauvegardé. Le supprimer et en commencer un nouveau ?", practice_save_lobby:"Sauvegarder et retourner au lobby", practice_resume_progress:"{yours} de tes essais · {computer} de l'ordinateur", practice_resume_solo_progress:"{n} essais effectués", practice_saved_toast:"Entraînement sauvegardé. Tu peux le continuer depuis le lobby.", practice_cancel:"Annuler", practice_cancel_confirm:"Annuler cet entraînement ? Toute la progression sera supprimée et aucun résultat ne sera enregistré.", practice_surrender:"Abandonner", practice_surrender_confirm:"Abandonner ? L'entraînement prendra fin et le code sera révélé.", practice_surrendered:"Tu as abandonné", practice_surrender_detail:"Le code est maintenant révélé. Tu peux examiner tes essais et les indices.",
     wait_title:"Partie créée", wait_hint:"Partage ce code avec ton adversaire. La partie démarre dès qu'il rejoint.",
@@ -2079,10 +2082,24 @@ function selectPracticeRandomRules(){
   pick('p-seg-digits',`[data-d="${practiceCfg.digits}"]`); pick('p-seg-repeat',`[data-r="${practiceCfg.allowRepeats?1:0}"]`);
   pick('p-seg-attempts',`[data-a="${practiceCfg.maxAttempts}"]`); pick('p-seg-time',`[data-t="${practiceCfg.turnSeconds}"]`); syncPracticeControls();
 }
+function readPracticeControls(){
+  const selected=(id,attribute)=>$(id).querySelector('button.on')?.dataset[attribute];
+  practiceCfg.type=selected('p-seg-type','type')||practiceCfg.type;
+  practiceCfg.difficulty=selected('p-seg-difficulty','level')||practiceCfg.difficulty;
+  practiceCfg.mode=selected('p-seg-mode','m')||practiceCfg.mode;
+  practiceCfg.numColors=+(selected('p-seg-colors','nc')||practiceCfg.numColors);
+  practiceCfg.digits=+(selected('p-seg-digits','d')||practiceCfg.digits);
+  practiceCfg.allowRepeats=selected('p-seg-repeat','r')==='1';
+  practiceCfg.maxAttempts=+(selected('p-seg-attempts','a')||0);
+  practiceCfg.turnSeconds=+(selected('p-seg-time','t')||0);
+}
 function startPractice(randomRules){
   if(readSavedPractice()&&!confirm(t('practice_replace_confirm')))return;
   clearSavedPractice();
   if(randomRules) selectPracticeRandomRules();
+  // La configuracion visible manda. Esto tambien cubre una practica restaurada:
+  // sus reglas pueden diferir de los controles que el jugador ve al cambiarlas.
+  else if(currentView==='practice') readPracticeControls();
   stopPracticeTick();
   let playerSecret='';
   if(practiceCfg.type==='computer'){
@@ -2207,6 +2224,20 @@ function syncRepeatAvailability(){
     segPick($('seg-repeat'),$('seg-repeat').querySelector('[data-r="1"]'));
   }
 }
+function selectCreateRandomRules(){
+  cfg.mode=randomInt(2)?'colors':'numbers';
+  cfg.numColors=[4,6,8][randomInt(3)]; cfg.digits=[3,4,5,6][randomInt(4)];
+  cfg.allowRepeats=!!randomInt(2);
+  if(cfg.mode==='colors'&&cfg.digits>cfg.numColors) cfg.allowRepeats=true;
+  cfg.maxAttempts=[0,6,10][randomInt(3)]; cfg.turnSeconds=[0,30,60,120][randomInt(4)];
+  const pick=(id,selector)=>segPick($(id),$(id).querySelector(selector));
+  pick('seg-mode',`[data-m="${cfg.mode}"]`); pick('seg-colors',`[data-nc="${cfg.numColors}"]`);
+  pick('seg-digits',`[data-d="${cfg.digits}"]`); pick('seg-repeat',`[data-r="${cfg.allowRepeats?1:0}"]`);
+  pick('seg-attempts',`[data-a="${cfg.maxAttempts}"]`); pick('seg-time',`[data-t="${cfg.turnSeconds}"]`);
+  $('colors-wrap').classList.toggle('hidden',cfg.mode!=='colors');
+  const input=$('secret-c'); input.maxLength=cfg.digits; input.placeholder='•'.repeat(cfg.digits);
+  syncRepeatAvailability(); padC.reset(); applyMode('c',cfg.mode,'secret-c','pad-c',padC); $('secret-c-val').textContent='';
+}
 $('seg-mode').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
   cfg.mode=b.dataset.m; segPick($('seg-mode'),b);
   $('colors-wrap').classList.toggle('hidden', cfg.mode!=='colors');
@@ -2242,14 +2273,20 @@ async function createGame(){
   const secret=getSecret('c');
   const r=validateLive(secret, cfg.digits, cfg.allowRepeats);
   if(r.cls!=='ok'){ toast(t('check_secret'),true); return; }
-  $('btn-create').disabled=true;
+  $('btn-create').disabled=true; $('btn-create-random').disabled=true;
   try{
     const res=await api('createGame',{username:user, digits:cfg.digits, secret, mode:cfg.mode, numColors:cfg.numColors,
       allowRepeats:cfg.allowRepeats, isPublic:cfg.isPublic, maxAttempts:cfg.maxAttempts, turnSeconds:cfg.turnSeconds, revealSecrets:cfg.revealSecrets, country:myCountry});
     if(!res.ok){ toast(te(res.error),true); return; }
     localStorage.setItem('pf_secret_'+res.gameId, secret);
     enterWait({id:res.gameId, digits:cfg.digits, mode:cfg.mode, numColors:cfg.numColors, allowRepeats:cfg.allowRepeats, maxAttempts:cfg.maxAttempts, turnSeconds:cfg.turnSeconds, revealSecrets:cfg.revealSecrets});
-  }catch(e){ toast(t('net_error'),true); } finally{ $('btn-create').disabled=false; }
+  }catch(e){ toast(t('net_error'),true); } finally{ $('btn-create').disabled=false; $('btn-create-random').disabled=false; }
+}
+function prepareRandomGame(){
+  selectCreateRandomRules();
+  // Solo se sortean las reglas. El jugador conserva la decision sobre su secreto.
+  const target=cfg.mode==='colors'?$('palette-c').querySelector('button'):$('secret-c');
+  if(target){ target.focus(); target.scrollIntoView({behavior:'smooth',block:'center'}); }
 }
 
 /* -------------------- sala de espera -------------------- */

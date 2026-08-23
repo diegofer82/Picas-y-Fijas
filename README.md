@@ -115,7 +115,7 @@ El historial muestra hasta las 40 partidas terminadas más recientes del jugador
 
 ### Práctica Solo y Contra el computador
 
-Desde el lobby se puede abrir **Practicar** y escoger entre **Solo** o **Contra el computador**. Ambos modos permiten números o colores, entre 3 y 6 posiciones, repeticiones, 4, 6 u 8 colores, límite de intentos y cronómetro, o una **Partida aleatoria** que combina las reglas.
+Desde el lobby se puede abrir **Practicar** y escoger entre **Solo** o **Contra el computador**. Ambos modos permiten números o colores, entre 3 y 6 posiciones, repeticiones, 4, 6 u 8 colores, límite de intentos y cronómetro, o una **Partida aleatoria** que combina las reglas. La creación de una partida clásica también ofrece **Partida aleatoria**: combina sus reglas y lleva al jugador a crear su propio código secreto antes de abrir la sala; la visibilidad y la preferencia de revelado escogidas se mantienen.
 
 - El secreto se genera con Web Crypto, permanece oculto durante la partida y siempre se revela al terminar.
 - Las partidas de práctica no se envían a la API, no crean filas en D1 y no afectan el historial ni el ranking competitivo.
