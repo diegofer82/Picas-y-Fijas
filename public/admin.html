@@ -24,6 +24,7 @@
     button{cursor:pointer;background:#17314a}button:hover{border-color:var(--blue)}
     button.primary{background:#0e7490}button.danger{color:#fecdd3;border-color:#7f1d1d;background:#2a1119}
     button.ghost{background:transparent}button.tiny{padding:5px 9px;font-size:12px}
+    button:disabled{opacity:.45;cursor:not-allowed}button:disabled:hover{border-color:var(--line)}
     .back{display:flex;gap:8px;align-items:center;background:#123a52;border-color:#1d5f80;padding:6px 14px 6px 8px;border-radius:999px}
     .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 0}
     .tabs button{background:transparent;border-color:transparent;color:var(--muted);border-bottom:2px solid transparent;border-radius:8px 8px 0 0}
@@ -182,7 +183,7 @@ const esc=v=>String(v??'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&am
 const when=v=>v?String(v).replace('T',' ').slice(0,16):'—';
 const flag=cc=>/^[a-z]{2}$/i.test(String(cc||''))?String(cc).toUpperCase().replace(/./g,c=>String.fromCodePoint(0x1F1E6+c.charCodeAt(0)-65)):'';
 const loaded=new Set();
-const state={users:[],games:[],threads:[],lobby:null};
+const state={users:[],games:[],threads:[],lobby:null,feedback:[]};
 
 async function api(action,payload={}){
   const r=await fetch('/api',{method:'POST',headers:{'content-type':'application/json',...(token?{authorization:'Bearer '+token}:{})},body:JSON.stringify({action,...payload})});
@@ -291,9 +292,26 @@ async function openThread(id){
 
 /* ---- moderación ---- */
 const FB_KIND={idea:'Idea',bug:'Error',question:'Pregunta',other:'Otro'};
+/* La respuesta se redacta en el idioma en el que escribio la persona, no en el
+   del panel. Solo es el andamio —saludo, firma y su mensaje citado—; el texto
+   lo escribe quien responde. */
+const FB_REPLY={
+  es:{subject:'Picas y Fijas — respuesta a tu mensaje',hello:'Hola:',quoted:'Tu mensaje del {date}:',sign:'— Diego, Picas y Fijas'},
+  en:{subject:'Picas y Fijas — reply to your message',hello:'Hi,',quoted:'Your message from {date}:',sign:'— Diego, Picas y Fijas'},
+  fr:{subject:'Picas y Fijas — réponse à ton message',hello:'Bonjour,',quoted:'Ton message du {date} :',sign:'— Diego, Picas y Fijas'},
+};
+function feedbackMailto(item){
+  const copy=FB_REPLY[item.lang]||FB_REPLY.es;
+  const quote=String(item.message||'').split('\n').map(line=>'> '+line).join('\n');
+  const body=[copy.hello,'','',copy.sign,'','---',copy.quoted.replace('{date}',when(item.createdAt)),quote].join('\n');
+  return 'mailto:'+encodeURIComponent(item.replyTo)
+    +'?subject='+encodeURIComponent(copy.subject)
+    +'&body='+encodeURIComponent(body);
+}
 const FB_STATUS={new:'Nuevo',read:'Leído',planned:'Planificado',done:'Hecho',discarded:'Descartado'};
 async function loadFeedback(){
   const r=await api('adminFeedback',{status:$('fbStatus').value,kind:$('fbKind').value});
+  state.feedback=r.items;
   $('fbCounts').innerHTML=Object.entries(FB_STATUS)
     .map(([key,label])=>`<div class="card${key==='new'&&r.counts[key]?' warn':''}">${label}<b>${r.counts[key]||0}</b></div>`).join('');
   $('feedback').innerHTML=r.items.map(x=>`<tr>
@@ -306,6 +324,9 @@ async function loadFeedback(){
     <td class="nowrap">${esc(FB_STATUS[x.status]||x.status)}</td>
     <td class="nowrap">
       <select data-feedback-status="${x.id}">${Object.entries(FB_STATUS).map(([key,label])=>`<option value="${key}"${key===x.status?' selected':''}>${label}</option>`).join('')}</select>
+      ${x.replyTo
+        ? `<button class="tiny" data-feedback-reply="${x.id}" title="Responder a ${esc(x.replyTo)}">Responder</button>`
+        : `<button class="tiny" disabled title="${x.contact?`Dejó «${esc(x.contact)}», que no es un correo`:'No dejó ningún contacto'}">Responder</button>`}
       <button class="tiny" data-feedback-note="${x.id}">Nota</button>
       <button class="tiny danger" data-feedback-delete="${x.id}">Borrar</button>
     </td></tr>`).join('')||'<tr><td colspan="7" class="muted">Sin mensajes todavía.</td></tr>';
@@ -459,6 +480,15 @@ async function handleAction(e){
     if(mergeGroup){const list=mergeGroup.dataset.mergeGroup.split('|');return openMerge(list[0],list[1]);}
     const mergePair=hit('data-merge-into');
     if(mergePair)return openMerge(mergePair.dataset.mergeFrom,mergePair.dataset.mergeInto);
+    // Responder no toca la base: entrega el borrador al cliente de correo para
+    // que la respuesta salga de la direccion de verdad y el hilo quede en su
+    // bandeja. Por eso no llama a afterChange().
+    const fbReply=hit('data-feedback-reply');
+    if(fbReply){
+      const item=state.feedback.find(x=>String(x.id)===fbReply.dataset.feedbackReply);
+      if(item&&item.replyTo) location.href=feedbackMailto(item);
+      return;
+    }
     const fbNote=hit('data-feedback-note');
     if(fbNote){const note=prompt('Nota interna para este mensaje:','');
       if(note===null)return;

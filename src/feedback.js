@@ -36,6 +36,17 @@ const cleanLang = (value) =>
     ? String(value).trim().toLowerCase()
     : "es";
 
+// El contacto es texto libre a proposito: mucha gente deja su nombre de
+// jugador y no un correo. El panel necesita saber cual de las dos cosas es
+// para encender o apagar su boton de responder, y esa decision se toma aqui,
+// donde se puede probar, y no dentro del marcado del panel.
+export function replyAddress(contact) {
+  const value = String(contact ?? "").trim();
+  return /^[^\s@,;<>"]+@[^\s@,;<>"]+\.[^\s@,;<>".]{2,}$/.test(value)
+    ? value
+    : "";
+}
+
 export function validateFeedback(params) {
   const message = cleanText(params.message, FEEDBACK_LIMITS.messageMax);
   if (message.length < FEEDBACK_LIMITS.messageMin)
@@ -157,6 +168,7 @@ export async function adminFeedback(db, params = {}) {
       userAgent: row.user_agent,
       ip: row.ip,
       country: row.country,
+      replyTo: replyAddress(row.contact),
       status: row.status,
       adminNote: row.admin_note,
       createdAt: row.created_at,

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { Miniflare } from 'miniflare';
 import { bankRemaining, expiredTurnChanges, freshTurnClock, isBankGame, sanitizeGame } from '../src/game.js';
-import { feedbackEmail, validateFeedback } from '../src/feedback.js';
+import { feedbackEmail, replyAddress, validateFeedback } from '../src/feedback.js';
 
 let mf;
 let db;
@@ -407,6 +407,41 @@ test('la práctica contra el computador también puede jugarse con bolsa', async
   assert.match(html, /const isPracticeBank=\(\)=>practiceCfg\.type==='computer'/);
   // Agotar la bolsa en la practica pierde la partida, no pasa el turno.
   assert.match(html, /if\(isPracticeBank\(\)\)\{practice\.deadline=0;practice\.bankMs=0;finishComputerPractice\('loss','timeout'\);return;\}/);
+});
+
+test('solo se puede responder a quien dejó un correo de verdad', () => {
+  for (const good of ['diego@example.com', 'a@b.co', '  espacio@x.com  ']) {
+    assert.equal(replyAddress(good), good.trim(), good);
+  }
+  // El contacto es texto libre: mucha gente deja su nombre de jugador.
+  for (const bad of ['Monito', '', null, undefined, 'sin arroba.com', 'uno@dominio',
+    'dos@@x.com', 'Nombre <n@x.com>', 'con espacio@x.com', 'a@b.c']) {
+    assert.equal(replyAddress(bad), '', JSON.stringify(bad));
+  }
+});
+
+test('el panel marca cada mensaje con la dirección a la que se puede responder', async () => {
+  const admin = await player('Responder-Admin');
+  await db.prepare("UPDATE users SET role='admin' WHERE username_key=?").bind(admin.username.toLowerCase()).run();
+  await api('sendFeedback', { message:'Con correo para responder, por favor.', contact:'jugador@example.com', lang:'fr' }, admin.token);
+  const listed = await api('adminFeedback', {}, admin.token);
+  const withMail = listed.items.find((item) => item.message.startsWith('Con correo'));
+  assert.equal(withMail.replyTo, 'jugador@example.com');
+
+  const soloName = listed.items.find((item) => item.contact === 'Monito');
+  if (soloName) assert.equal(soloName.replyTo, '');
+});
+
+test('el botón Responder se apaga cuando no hay correo, y redacta en el idioma del mensaje', async () => {
+  const html = await readFile(new URL('../public/admin.html', import.meta.url), 'utf8');
+  assert.match(html, /data-feedback-reply="\$\{x\.id\}"/);
+  assert.match(html, /<button class="tiny" disabled title=/);
+  assert.match(html, /function feedbackMailto\(item\)/);
+  // Andamio en los tres idiomas, porque quien escribe no tiene por que leer español.
+  for (const lang of ['es','en','fr']) assert.ok(html.includes(lang + ":{subject:"), lang);
+  // Responder no cambia nada en la base, asi que no puede recargar el panel.
+  const action = html.slice(html.indexOf("const fbReply=hit('data-feedback-reply')"), html.indexOf("const fbNote=hit("));
+  assert.doesNotMatch(action, /afterChange|api\(/);
 });
 
 test('el panel de administración tiene su pestaña de feedback', async () => {

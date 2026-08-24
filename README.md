@@ -158,6 +158,12 @@ Se elige un tipo —idea, error, pregunta u otro—, se escribe un mensaje de 10
 
 **No se envía a un correo y ya está: se guarda en D1 y se tría en `/admin`.** Un correo suelto no tiene estado ni filtro, y cualquier «envío directo» habría metido en el proyecto una API externa y un secreto. La fila es la fuente de verdad; el correo es solo un aviso, y si falla no se pierde nada.
 
+**Responder es manual, y a propósito.** El panel no envía nada: el botón **Responder** de cada fila abre el cliente de correo con el borrador hecho —asunto, un hueco para escribir, la firma y el mensaje original citado con su fecha—, redactado en el idioma en el que escribió la persona. Así la respuesta sale de una dirección de verdad y el hilo queda en la bandeja de quien responde. Cambiar el estado de un mensaje no envía nada nunca; el único correo que el sistema manda en toda su vida es el aviso de llegada.
+
+No podía ser de otra forma con lo que hay: **Email Routing solo entrega a direcciones ya verificadas de la cuenta**, así que sirve para avisar al administrador pero no para escribir a un jugador cualquiera. Contestar desde el servidor exigiría un servicio de envío con su API key, que es justo la dependencia que este proyecto no tiene.
+
+El contacto es texto libre a propósito —mucha gente deja su nombre de jugador en vez de un correo—, así que el botón se apaga cuando no hay a dónde escribir y su título dice por qué. Quién tiene dirección y quién no lo decide `replyAddress` en `src/feedback.js`, no el marcado del panel, para poder probarlo.
+
 Al ser público, el endpoint necesita barandillas propias. Son cuatro y viven en `src/feedback.js`:
 
 - un **campo trampa** invisible en la pantalla: si viene relleno se responde que todo fue bien y no se guarda nada;
@@ -392,7 +398,7 @@ El toro azul de la esquina superior cierra el panel en ese navegador y devuelve 
 | Partidas | Las últimas 200, con filtro, y el cierre de las que siguen abiertas. |
 | Conversaciones | Una fila por chat, no un río de mensajes: quiénes hablan, cuántos mensajes, cuántos zumbidos y cuántos reportes. El histórico se abre aparte, en su propia ventana. |
 | Moderación | Los reportes del chat, con borrar y silenciar a mano. |
-| Feedback | Las sugerencias y los errores que llegan del juego. Filtro por estado y por tipo, cambio de estado desde la propia fila, nota interna y borrado. |
+| Feedback | Las sugerencias y los errores que llegan del juego. Filtro por estado y por tipo, cambio de estado desde la propia fila, respuesta, nota interna y borrado. |
 | Mantenimiento | Limpieza de partidas por estado y antigüedad, y la consola SQL. |
 | Auditoría | Todo lo que la administración ha cambiado, con fecha, objetivo y detalle. |
 
