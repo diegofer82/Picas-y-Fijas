@@ -359,6 +359,17 @@ test('la pantalla del buzón existe, lleva su propio selector de idioma y se abr
   assert.match(html, /\['login','lobby','feedback',/);
 });
 
+test('la marca devuelve desde el buzón al sitio del que se entró', async () => {
+  const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
+  const screens = html.match(/const BRAND_HOME_FROM = new Set\(\[([^\]]*)\]\)/)[1];
+  assert.match(screens, /'feedback'/);
+  // Es la unica pantalla de la lista a la que se llega sin sesion, asi que no
+  // puede saltar al lobby a ciegas.
+  assert.match(html, /if\(currentView==='feedback'\) closeFeedback\(\);/);
+  assert.match(html, /else enterLobby\(\);/);
+  assert.match(html, /function brandHomeLabel\(\)/);
+});
+
 test('cada texto nuevo está en los tres idiomas', async () => {
   const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
   for (const key of ['feedback_link','feedback_title','feedback_msg','feedback_sent_title',

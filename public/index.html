@@ -1564,16 +1564,27 @@ const $ = id => document.getElementById(id);
 /* El logo lleva al lobby, pero solo desde las pantallas de consulta: desde una
    partida o una practica en curso saltarse su propio flujo de salida podria
    costarle el progreso al jugador. */
-const BRAND_HOME_FROM = new Set(['rank','history','rules','create','join','practice']);
+let feedbackReturn = 'login';
+const BRAND_HOME_FROM = new Set(['rank','history','rules','create','join','practice','feedback']);
 let currentView = 'login';
+/* El buzon es la unica de estas pantallas a la que se puede llegar sin sesion,
+   asi que la marca lo devuelve a donde se entro —el registro o el lobby— en vez
+   de al lobby siempre. Su etiqueta dice lo mismo que su boton Volver. */
+function brandHomeLabel(){
+  return currentView==='feedback' && feedbackReturn!=='lobby' ? t('back') : t('result_lobby');
+}
 function syncBrandHome(){
   const b = $('brand-home'); if(!b) return;
   const on = BRAND_HOME_FROM.has(currentView);
   b.disabled = !on;
-  b.title = on ? t('result_lobby') : '';
-  if(on) b.setAttribute('aria-label', t('result_lobby')); else b.removeAttribute('aria-label');
+  b.title = on ? brandHomeLabel() : '';
+  if(on) b.setAttribute('aria-label', brandHomeLabel()); else b.removeAttribute('aria-label');
 }
-function brandHome(){ if(BRAND_HOME_FROM.has(currentView)) enterLobby(); }
+function brandHome(){
+  if(!BRAND_HOME_FROM.has(currentView)) return;
+  if(currentView==='feedback') closeFeedback();
+  else enterLobby();
+}
 function show(name){
   currentView = name;
   if(name!=='game') gameViewEpoch++;
@@ -2016,7 +2027,7 @@ $('seg-lang').addEventListener('click', e=>{ const b=e.target.closest('button');
 $('fb-seg-lang').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; pickLang(b.dataset.lang); });
 
 /* -------------------- buzon de sugerencias -------------------- */
-let feedbackKind='idea', feedbackReturn='login', feedbackSending=false;
+let feedbackKind='idea', feedbackSending=false;
 $('fb-seg-kind').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
   feedbackKind=b.dataset.k; segPick($('fb-seg-kind'),b); });
 $('fb-message').addEventListener('input', ()=>{

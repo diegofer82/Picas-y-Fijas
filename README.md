@@ -356,7 +356,7 @@ Dos detalles que conviene no deshacer:
 
 ### Volver al lobby desde la marca
 
-El logo es un `<button>` (`#brand-home`) que lleva al lobby, pero solo desde las pantallas de consulta que enumera `BRAND_HOME_FROM`: historial, ranking, reglas, crear, unirse y configuración de práctica. El buzón de sugerencias queda fuera a propósito: se abre también desde la pantalla de inicio, donde todavía no hay sesión ni lobby al que volver; su botón **Volver** recuerda de dónde se entró. Desde una partida o una práctica en curso queda inerte a propósito, porque saltar al lobby se saltaría el flujo que guarda o abandona y le costaría el progreso al jugador. `test/keyboard.test.js` fija las dos mitades de esa regla.
+El logo es un `<button>` (`#brand-home`) que lleva al lobby, pero solo desde las pantallas de consulta que enumera `BRAND_HOME_FROM`: historial, ranking, reglas, crear, unirse y configuración de práctica. El buzón de sugerencias también entra, con una salvedad: es la única de esas pantallas a la que se llega sin sesión, así que la marca lo devuelve a donde se entró —el registro o el lobby—, igual que su botón **Volver**, y su etiqueta cambia con el destino. Desde una partida o una práctica en curso queda inerte a propósito, porque saltar al lobby se saltaría el flujo que guarda o abandona y le costaría el progreso al jugador. `test/keyboard.test.js` fija las dos mitades de esa regla.
 
 ## Modelo de datos
 
