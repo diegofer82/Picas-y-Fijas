@@ -39,6 +39,8 @@
     .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;background:#0c1627;border:1px solid var(--line)}
     .tag.admin{color:var(--accent);border-color:#0e7490}.tag.blocked{color:var(--danger);border-color:#7f1d1d}
     .tag.dup{color:var(--warn);border-color:#78350f}
+    .presence-dot{display:inline-block;width:7px;height:7px;margin-right:8px;border-radius:50%;background:#64748b;vertical-align:middle}
+    .presence-dot.online{background:var(--ok);box-shadow:0 0 0 2px #34d3991f}
     a.user{color:var(--blue);text-decoration:none;border-bottom:1px dotted currentColor;cursor:pointer}
     .scroll{overflow:auto;max-width:100%}
     .hidden{display:none}
@@ -239,7 +241,7 @@ function renderUsers(){
   const needle=$('userFilter').value.trim().toLowerCase();
   const rows=state.users.filter(x=>!needle||[x.username,x.last_country,x.last_ip].join(' ').toLowerCase().includes(needle));
   $('users').innerHTML=rows.map(x=>`<tr>
-    <td><a class="user" data-detail="${esc(x.username)}">${esc(x.username)}</a>${x.muted?' <span class="tag dup">chat</span>':''}</td>
+    <td><span class="presence-dot${x.online?' online':''}" role="img" aria-label="${x.online?'En línea':'Desconectado'}" title="${x.online?'En línea':'Desconectado'}"></span><a class="user" data-detail="${esc(x.username)}">${esc(x.username)}</a>${x.muted?' <span class="tag dup">chat</span>':''}</td>
     <td class="nowrap">${flag(x.last_country)} ${esc(String(x.last_country||'').toUpperCase()||'—')}</td>
     <td class="nowrap"><code>${esc(x.last_ip||'—')}</code></td>
     <td>${x.games||0}${x.wins?` <span class="muted small">(${x.wins} G)</span>`:''}</td>

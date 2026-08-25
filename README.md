@@ -394,13 +394,15 @@ El toro azul de la esquina superior cierra el panel en ese navegador y devuelve 
 | Pestaña | Qué resuelve |
 | --- | --- |
 | Resumen | Usuarios, gente en línea, altas y activos de la semana, partidas y mensajes del día, moderación pendiente y los países de donde entra la gente. |
-| Usuarios | La lista completa con país, última IP, partidas y mensajes. Bloquear, cambiar el PIN, dar o quitar el rol `admin`, cerrar sesiones, reactivar el chat, borrar y fusionar. Arriba, las cuentas que parecen repetidas. |
+| Usuarios | La lista completa con un punto verde/gris de presencia junto al nombre, país, última IP, partidas y mensajes. Bloquear, cambiar el PIN, dar o quitar el rol `admin`, cerrar sesiones, reactivar el chat, borrar y fusionar. Arriba, las cuentas que parecen repetidas. |
 | Partidas | Las últimas 200, con filtro, y el cierre de las que siguen abiertas. |
 | Conversaciones | Una fila por chat, no un río de mensajes: quiénes hablan, cuántos mensajes, cuántos zumbidos y cuántos reportes. El histórico se abre aparte, en su propia ventana. |
 | Moderación | Los reportes del chat, con borrar y silenciar a mano. |
 | Feedback | Las sugerencias y los errores que llegan del juego. Filtro por estado y por tipo, cambio de estado desde la propia fila, respuesta, nota interna y borrado. |
 | Mantenimiento | Limpieza de partidas por estado y antigüedad, y la consola SQL. |
 | Auditoría | Todo lo que la administración ha cambiado, con fecha, objetivo y detalle. |
+
+El punto de cada fila reutiliza la tabla `presence` y el mismo umbral del contador general: verde significa actividad autenticada en los últimos 2 minutos y gris, desconectado. El texto accesible y el título del punto expresan también el estado, de modo que la información no depende únicamente del color. La consulta es parte de `adminUsers`, no genera escrituras adicionales y no cambia la versión de la aplicación.
 
 ### Cuentas repetidas y fusión
 

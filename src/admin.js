@@ -3,7 +3,7 @@
 // de partidas y una consola SQL con barandillas. Viven aparte de `index.js`
 // porque son operaciones de mantenimiento, no del juego, y porque cada una
 // necesita mas cuidado que una consulta suelta.
-import { usernameKey } from "./game.js";
+import { LIMITS, usernameKey } from "./game.js";
 
 const now = () => new Date().toISOString();
 const KEY_DIEGO = "diego";
@@ -56,6 +56,7 @@ const USER_COLUMNS = `u.id,u.username,u.username_key,u.role,u.blocked_at,u.creat
   u.last_ip,u.last_country,u.signup_ip,u.signup_country,u.login_count`;
 
 export async function adminUsers(db) {
+  const presenceCutoff = new Date(Date.now() - LIMITS.presenceMs).toISOString();
   const { results } = await db
     .prepare(
       `SELECT ${USER_COLUMNS},
@@ -63,10 +64,11 @@ export async function adminUsers(db) {
         (SELECT COUNT(*) FROM games g WHERE g.winner=u.username) wins,
         (SELECT COUNT(*) FROM chat_messages m WHERE m.sender_key=u.username_key) messages,
         (SELECT COUNT(*) FROM sessions s WHERE s.user_id=u.id AND s.expires_at>?) sessions,
+        EXISTS(SELECT 1 FROM presence p WHERE p.username_key=u.username_key AND p.last_seen_at>=?) online,
         EXISTS(SELECT 1 FROM chat_mutes c WHERE c.username_key=u.username_key) muted
        FROM users u ORDER BY u.username_key LIMIT 500`,
     )
-    .bind(now())
+    .bind(now(), presenceCutoff)
     .all();
   return { ok: true, users: results, duplicates: duplicateGroups(results) };
 }

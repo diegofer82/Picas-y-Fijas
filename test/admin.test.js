@@ -83,6 +83,23 @@ test('entrar deja registrado el pais y la ultima IP de cada cuenta', async () =>
   assert.equal(carlos.login_count, 1);
 });
 
+test('el listado administrativo distingue jugadores conectados y desconectados', async () => {
+  const boss = await admin();
+  const connected = await player('Conectada');
+  const disconnected = await player('Desconectada');
+  await api('presence', {}, connected.token);
+  await api('presence', {}, disconnected.token);
+  const db = await mf.getD1Database('DB');
+  await db
+    .prepare("UPDATE presence SET last_seen_at=? WHERE username_key='desconectada'")
+    .bind(new Date(Date.now() - 3 * 60 * 1000).toISOString())
+    .run();
+
+  const list = await api('adminUsers', {}, boss.token);
+  assert.equal(Number(list.users.find((u) => u.username === 'Conectada').online), 1);
+  assert.equal(Number(list.users.find((u) => u.username === 'Desconectada').online), 0);
+});
+
 test('la raiz del nombre ignora acentos, digitos y signos', () => {
   assert.equal(aliasRoot('Carlos46'), 'carlos');
   assert.equal(aliasRoot('Nuboso_2'), 'nuboso');
@@ -225,4 +242,8 @@ test('el panel abre las conversaciones aparte y ofrece la vuelta al juego', asyn
   assert.doesNotMatch(html, /Mensajes recientes/, 'ya no hay un listado plano de mensajes');
   assert.match(html, /adminChatThreads/);
   assert.match(html, /adminChatThread'/);
+  assert.match(html, /class="presence-dot\$\{x\.online\?' online':''\}"/,
+    'cada usuario lleva un punto de presencia');
+  assert.match(html, /aria-label="\$\{x\.online\?'En línea':'Desconectado'\}"/,
+    'el estado no depende solo del color');
 });
