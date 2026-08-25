@@ -14,6 +14,7 @@ export function requestOrigin(request) {
 
 const encoder = new TextEncoder();
 const hex = (bytes) => [...new Uint8Array(bytes)].map((value) => value.toString(16).padStart(2, '0')).join('');
+export const SESSION_TOUCH_MS = 15 * 60 * 1000;
 
 export async function sha256(value) {
   return hex(await crypto.subtle.digest('SHA-256', encoder.encode(String(value))));
@@ -53,12 +54,19 @@ export async function authenticate(db, request, params) {
   const token = authorization.startsWith('Bearer ') ? authorization.slice(7).trim() : String(params.sessionToken || '');
   if (!token) return { error: 'Sesión inválida. Vuelve a entrar con tu nombre y PIN.' };
   const tokenHash = await sha256(token);
-  const user = await db.prepare(`SELECT u.id,u.username,u.username_key,u.role,u.blocked_at,s.expires_at
+  const user = await db.prepare(`SELECT u.id,u.username,u.username_key,u.role,u.blocked_at,s.expires_at,s.last_seen_at
     FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=?`).bind(tokenHash).first();
   if (!user || Date.parse(user.expires_at) <= Date.now()) return { error: 'La sesión ha expirado. Vuelve a entrar.' };
   if (user.blocked_at) return { error: 'Este usuario está bloqueado.' };
   params.username = user.username;
-  await db.prepare('UPDATE sessions SET last_seen_at=? WHERE token_hash=?').bind(new Date().toISOString(), tokenHash).run();
+  // `authenticate` se ejecuta en cada polling. La expiracion de la sesion es
+  // fija, no deslizante, asi que escribir `last_seen_at` en cada peticion no
+  // aporta seguridad ni funcionalidad. Una muestra cada 15 minutos conserva
+  // la informacion administrativa y elimina casi todas esas escrituras.
+  const seenAt = Date.parse(user.last_seen_at || '');
+  if (!Number.isFinite(seenAt) || Date.now() - seenAt >= SESSION_TOUCH_MS)
+    await db.prepare('UPDATE sessions SET last_seen_at=? WHERE token_hash=?')
+      .bind(new Date().toISOString(), tokenHash).run();
   return { user, tokenHash };
 }
 

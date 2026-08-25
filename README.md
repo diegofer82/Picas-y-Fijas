@@ -206,9 +206,11 @@ Antes hay que activar **Email Routing** en `picasyfijas.fans` y verificar la dir
 - `src/index.js`: Worker, rutas, API, acceso a D1 y operaciones administrativas.
 - `src/game.js`: reglas puras, validaciones, cronómetro y sanitización del estado.
 - `src/security.js`: PIN, autenticación, sesiones, limitación de intentos y lectura del país y la IP que pone Cloudflare.
+- `src/chat.js`: permisos, hilos privados, mensajes incrementales y retención del chat.
+- `src/maintenance.js`: mantenimiento horario fuera del camino crítico de las peticiones.
 - `src/admin.js`: herramientas de mantenimiento del panel: ficha de usuario, detección de cuentas repetidas, fusión, borrado, limpieza de partidas y consola SQL.
 - `src/feedback.js`: el buzón de sugerencias y errores: validación, barandillas del endpoint público, consultas del panel y el aviso por correo.
-- `migrations/0001_initial.sql`: esquema reproducible de D1. No es un residuo de la migración desde Google y no debe eliminarse. Las migraciones siguientes solo añaden: `0002` el chat, `0003` los hilos privados, `0004` el origen de cada cuenta, `0005` el buzón de sugerencias y `0006` la bolsa de tiempo.
+- `migrations/0001_initial.sql`: esquema reproducible de D1. No es un residuo de la migración desde Google y no debe eliminarse. Las migraciones siguientes añaden o ajustan: `0002` el chat, `0003` los hilos privados, `0004` el origen de cada cuenta, `0005` el buzón de sugerencias, `0006` la bolsa de tiempo y `0007` los índices necesarios para permanecer dentro de D1 Free.
 - `test/`: pruebas automáticas de reglas, rutas, teclado y regresiones.
 - `tools/make-icons.mjs`: genera los cuatro PNG de la aplicación instalada. Se ejecuta con `npm run icons`.
 - `tools/make-rules-pages.py`: convierte `RULES` en las tres páginas públicas de reglas. El texto no se duplica: la única fuente sigue siendo el juego.
@@ -367,9 +369,9 @@ El logo es un `<button>` (`#brand-home`) que lleva al lobby, pero solo desde las
 ## Modelo de datos
 
 - `users`: identidad, hash y sal del PIN, rol, bloqueo y el origen de la cuenta: país e IP del alta, país e IP de la última entrada y número de entradas.
-- `sessions`: sesiones temporales; el PIN no viaja durante las consultas periódicas. Cada sesión guarda la IP y el país desde los que se abrió.
+- `sessions`: sesiones temporales; el PIN no viaja durante las consultas periódicas. Cada sesión guarda la IP y el país desde los que se abrió. `last_seen_at` se muestrea como máximo una vez cada 15 minutos por sesión; la caducidad es fija y no depende de ese campo.
 - `games`: estado completo, opciones, cronómetro y versión de concurrencia.
-- `presence`: usuario conectado y ubicación en lobby o partida.
+- `presence`: usuario conectado y ubicación en lobby o partida. Una ubicación estable se toca como máximo una vez por minuto; un cambio entre lobby y partida se escribe inmediatamente.
 - `request_receipts`: respuestas de jugadas ya procesadas para evitar duplicados.
 - `audit_log`: acciones administrativas.
 - `chat_messages`: chat mundial del lobby, chat privado de partida, eventos y zumbidos.
@@ -383,7 +385,7 @@ El país y la IP no los declara el navegador: los pone Cloudflare delante del Wo
 
 Los secretos de jugadores nunca deben exponerse mientras una partida esté activa. Toda nueva respuesta API debe pasar por la sanitización correspondiente.
 
-El chat del lobby conserva 24 horas. El chat de partida es exclusivo de sus dos jugadores, se cierra 24 horas después de terminar y conserva sus filas durante 7 días. La limpieza es progresiva al usar el chat. Los zumbidos requieren que el rival esté presente en la partida y tienen 30 segundos de espera por emisor.
+El chat del lobby conserva 24 horas. El chat de partida es exclusivo de sus dos jugadores, se cierra 24 horas después de terminar y conserva sus filas durante 7 días. La limpieza se ejecuta una vez por hora mediante el Cron Trigger, nunca dentro del polling de chat. Los zumbidos requieren que el rival esté presente en la partida y tienen 30 segundos de espera por emisor.
 
 ## La administración
 
@@ -477,7 +479,7 @@ pnpm run db:remote
 git push origin main
 ```
 
-La 2.5 trae dos migraciones nuevas, `0005_feedback.sql` y `0006_time_bank.sql`, así que le aplica esta misma regla. El aviso por correo del buzón necesita además, una sola vez, activar Email Routing en el dominio y colocar sus dos secretos:
+La 2.5 trae `0005_feedback.sql` y `0006_time_bank.sql`; la optimización de D1 Free añade `0007_d1_free_optimization.sql`. A todas les aplica esta misma regla. El aviso por correo del buzón necesita además, una sola vez, activar Email Routing en el dominio y colocar sus dos secretos:
 
 ```text
 wrangler secret put FEEDBACK_TO
@@ -487,6 +489,50 @@ wrangler secret put FEEDBACK_FROM
 Al revés, el Worker nuevo llegaría a una base sin las columnas que espera y cualquier entrada fallaría hasta que la migración se aplicara. Al derecho no hay ventana rota: las columnas nuevas siempre se añaden con valor por omisión, así que el Worker anterior las ignora sin enterarse.
 
 El plan gratuito de D1 incluye por cuenta 5 millones de filas leídas al día, 100.000 filas escritas al día y 5 GB de almacenamiento. Las cuotas diarias se reinician a las 00:00 UTC. Los índices reducen lecturas, pero actualizar una columna indexada puede sumar escrituras adicionales. Antes de aumentar el tráfico se deben revisar las métricas de D1, la frecuencia de consultas y el polling.
+
+### Optimización para D1 Free — 25 de agosto de 2026
+
+Cloudflare avisó que empezaría a hacer cumplir las cuotas diarias de D1 Free. La revisión de Analytics entre el 2 y el 25 de agosto encontró 18,807 millones de filas leídas y 1,330 millones escritas. Las lecturas no superaron 5 millones en ningún día; las escrituras cruzaron 100.000 el 9 de agosto (100.617) y el 13 de agosto (114.417).
+
+Query Insights de los 31 días anteriores atribuyó casi todas las escrituras repetitivas a tres caminos:
+
+| Consulta o tabla | Filas escritas | Decisión permanente |
+| --- | ---: | --- |
+| `presence` | 737.408 | Escribir solo al cambiar de ubicación o después de 60 segundos; el chat no altera presencia y se elimina el índice sobre `last_seen_at`, que duplicaba el coste del heartbeat. |
+| `chat_threads` | 321.192 | Crear o activar el hilo al comenzar una pareja, no hacer `UPSERT` durante cada consulta de estado. El cliente reutiliza el identificador estable del hilo. |
+| `sessions.last_seen_at` | 251.260 | Muestrear una vez cada 15 minutos; la sesión tiene vencimiento fijo y no necesita una escritura deslizante por petición. |
+
+Esas tres fuentes sumaban aproximadamente el 98,5 % de las filas escritas observadas. Las lecturas más caras se reducen así:
+
+- el chat carga los últimos 100 mensajes una sola vez y después pide únicamente `id > cursor`;
+- la lista de hilos privados se refresca como máximo cada 15 segundos y evita peticiones simultáneas;
+- `threadForGame` deriva las claves normalizadas de los jugadores que ya están en la partida, en lugar de volver a leer dos filas de `users`;
+- `myGames` parte de los índices por jugador y solo materializa partidas `waiting` o `active`; en la comprobación remota pasó de 395 a 2 filas leídas para la misma lista activa;
+- `listGames` oculta inmediatamente partidas vencidas mediante sus fechas, pero ya no ejecuta dos `UPDATE` globales en cada polling;
+- las limpiezas salen del camino crítico y se agrupan en `cleanupDatabase`.
+
+El Cron Trigger `17 * * * *` se ejecuta a los 17 minutos de cada hora UTC. Borra chat del lobby con más de 24 horas, mensajes de partida heredados con más de 7 días, hilos con más de 7 días, silencios vencidos, recibos idempotentes con más de 7 días, sesiones vencidas y presencia con más de 24 horas. También marca como vencidas las partidas en espera de más de 2 horas y como inactivas las partidas sin actividad durante 48 horas. Las consultas de los jugadores siguen ocultando o cerrando una partida vencida en el momento, por lo que el retraso máximo del mantenimiento no cambia el comportamiento visible.
+
+La migración `0007` elimina `presence_last_seen` y el índice de chat por `game_id`, que no tenían lectores capaces de compensar su coste de escritura. Sustituye el índice general del lobby por uno parcial que solo contiene mensajes `room_type='lobby' AND thread_id IS NULL`. No borra filas ni modifica mensajes, partidas, usuarios o sesiones.
+
+#### Verificación y vigilancia
+
+La regresión específica está en `test/d1-optimization.test.js` y cubre polling sin escrituras, chat incremental, mantenimiento, salida repetida idempotente, salida de uno o ambos jugadores, regreso conservando el tiempo restante y pausa manual vencida. La batería completa tiene 121 pruebas. También se comprueban por separado la modalidad de bolsa —que nunca se pausa al salir—, la migración local, `wrangler types` y el empaquetado con `wrangler deploy --dry-run`.
+
+Después de publicar se deben revisar `D1 > Metrics > Row Metrics` durante las primeras 24 y 48 horas y comparar Query Insights a los siete días. Como umbral operativo, 80.000 filas escritas o 4 millones leídas en un día requieren revisar de nuevo las consultas antes de alcanzar la cuota. Las cifras se evalúan por día UTC.
+
+#### Reversión
+
+El código se revierte con una versión anterior del Worker. El código viejo y el nuevo funcionan tanto antes como después de `0007`, porque la migración solo cambia índices. Si un plan de consulta empeora, se pueden reconstruir los índices anteriores con una migración nueva:
+
+```sql
+DROP INDEX IF EXISTS chat_messages_lobby;
+CREATE INDEX presence_last_seen ON presence(last_seen_at);
+CREATE INDEX chat_messages_game ON chat_messages(game_id,id DESC);
+CREATE INDEX chat_messages_lobby ON chat_messages(room_type,id DESC);
+```
+
+Reconstruir índices escribe filas y solo debe hacerse después de confirmar el plan con `EXPLAIN QUERY PLAN`. Wrangler crea una copia de seguridad automática antes de aplicar una migración remota; para pérdida o corrupción de datos se usa esa copia o Time Travel, no SQL improvisado. Para detener únicamente el mantenimiento se cambia `triggers.crons` a `[]` y se despliega esa configuración.
 
 ## Seguridad y archivos locales
 

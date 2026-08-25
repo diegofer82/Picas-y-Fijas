@@ -63,16 +63,13 @@ function pairData(a, b) {
     ? { pairKey: `${a.username_key}|${b.username_key}`, u1: a, u2: b }
     : { pairKey: `${b.username_key}|${a.username_key}`, u1: b, u2: a };
 }
-async function gameUsers(db, game) {
-  const a = await db
-      .prepare("SELECT username,username_key FROM users WHERE username=?")
-      .bind(game.p1)
-      .first(),
-    b = await db
-      .prepare("SELECT username,username_key FROM users WHERE username=?")
-      .bind(game.p2)
-      .first();
-  return a && b ? pairData(a, b) : null;
+function gameUsers(game) {
+  // Los nombres de una partida proceden de `users` y son inmutables. Derivar
+  // aqui la misma clave normalizada evita dos lecturas de `users` por cada
+  // polling de estado/chat.
+  const a = { username: game.p1, username_key: key(game.p1) },
+    b = { username: game.p2, username_key: key(game.p2) };
+  return a.username_key && b.username_key ? pairData(a, b) : null;
 }
 export async function threadForGame(db, gameOrId, activate = false) {
   const game =
@@ -83,12 +80,19 @@ export async function threadForGame(db, gameOrId, activate = false) {
           .first()
       : gameOrId;
   if (!game?.p2) return null;
-  const p = await gameUsers(db, game);
+  const p = gameUsers(game);
   if (!p) return null;
+  if (!activate) {
+    const existing = await db
+      .prepare("SELECT * FROM chat_threads WHERE pair_key=?")
+      .bind(p.pairKey)
+      .first();
+    if (existing) return existing;
+  }
   const stamp = now();
   await db
     .prepare(
-      `INSERT INTO chat_threads(pair_key,user1,user1_key,user2,user2_key,created_at,last_game_at,latest_game_id) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(pair_key) DO UPDATE SET last_game_at=CASE WHEN ? THEN excluded.last_game_at ELSE chat_threads.last_game_at END,latest_game_id=CASE WHEN ? THEN excluded.latest_game_id ELSE chat_threads.latest_game_id END`,
+      `INSERT INTO chat_threads(pair_key,user1,user1_key,user2,user2_key,created_at,last_game_at,latest_game_id) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(pair_key) DO UPDATE SET last_game_at=excluded.last_game_at,latest_game_id=excluded.latest_game_id`,
     )
     .bind(
       p.pairKey,
@@ -99,8 +103,6 @@ export async function threadForGame(db, gameOrId, activate = false) {
       stamp,
       stamp,
       game.game_id,
-      activate ? 1 : 0,
-      activate ? 1 : 0,
     )
     .run();
   return db
@@ -110,15 +112,21 @@ export async function threadForGame(db, gameOrId, activate = false) {
 }
 export const activateThreadForGame = (db, game) =>
   threadForGame(db, game, true);
-async function cleanup(db) {
-  const lobby = new Date(Date.now() - CHAT.lobbyRetentionMs).toISOString(),
-    threads = new Date(Date.now() - CHAT.threadRetentionMs).toISOString();
+export async function cleanupChat(db, at = Date.now()) {
+  const lobby = new Date(at - CHAT.lobbyRetentionMs).toISOString(),
+    games = new Date(at - CHAT.gameRetentionMs).toISOString(),
+    threads = new Date(at - CHAT.threadRetentionMs).toISOString();
   await db.batch([
     db
       .prepare(
-        "DELETE FROM chat_messages WHERE room_type='lobby' AND created_at<?",
+        "DELETE FROM chat_messages WHERE room_type='lobby' AND thread_id IS NULL AND created_at<?",
       )
       .bind(lobby),
+    db
+      .prepare(
+        "DELETE FROM chat_messages WHERE room_type='game' AND thread_id IS NULL AND created_at<?",
+      )
+      .bind(games),
     db
       .prepare(
         "DELETE FROM chat_threads WHERE CASE WHEN last_message_at IS NOT NULL AND last_message_at>last_game_at THEN last_message_at ELSE last_game_at END<?",
@@ -128,7 +136,7 @@ async function cleanup(db) {
       .prepare(
         "DELETE FROM chat_mutes WHERE muted_until IS NOT NULL AND muted_until<=?",
       )
-      .bind(now()),
+      .bind(new Date(at).toISOString()),
   ]);
 }
 async function roomAccess(db, p, user) {
@@ -194,7 +202,6 @@ function publicMessage(r) {
   };
 }
 export async function listThreads(db, user) {
-  await cleanup(db);
   const cutoff = new Date(Date.now() - CHAT.threadActiveMs).toISOString();
   const { results } = await db
     .prepare(
@@ -216,7 +223,6 @@ export async function listThreads(db, user) {
 }
 export async function listChat(db, p, user) {
   if (p.listThreads) return listThreads(db, user);
-  await cleanup(db);
   const room = await roomAccess(db, p, user);
   if (!room.ok) return room;
   const after = Math.max(0, parseInt(p.after, 10) || 0);
@@ -224,18 +230,22 @@ export async function listChat(db, p, user) {
     room.roomType === "lobby"
       ? db
           .prepare(
-            "SELECT * FROM chat_messages WHERE room_type='lobby' AND id>? ORDER BY id DESC LIMIT 100",
+            after
+              ? "SELECT * FROM chat_messages WHERE room_type='lobby' AND thread_id IS NULL AND id>? ORDER BY id ASC LIMIT 100"
+              : "SELECT * FROM chat_messages WHERE room_type='lobby' AND thread_id IS NULL ORDER BY id DESC LIMIT 100",
           )
-          .bind(after)
+          .bind(...(after ? [after] : []))
       : db
           .prepare(
-            "SELECT * FROM chat_messages WHERE thread_id=? AND id>? ORDER BY id DESC LIMIT 100",
+            after
+              ? "SELECT * FROM chat_messages WHERE thread_id=? AND id>? ORDER BY id ASC LIMIT 100"
+              : "SELECT * FROM chat_messages WHERE thread_id=? ORDER BY id DESC LIMIT 100",
           )
-          .bind(room.threadId, after);
+          .bind(...(after ? [room.threadId, after] : [room.threadId]));
   const { results } = await q.all();
   return {
     ok: true,
-    messages: results.reverse().map(publicMessage),
+    messages: (after ? results : results.reverse()).map(publicMessage),
     roomType: room.roomType,
     threadId: room.threadId || 0,
     opponent: room.opponent || "",

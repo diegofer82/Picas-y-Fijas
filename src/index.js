@@ -46,6 +46,7 @@ import {
   systemChat,
   threadForGame,
 } from "./chat.js";
+import { cleanupDatabase } from "./maintenance.js";
 
 const PROTECTED = new Set([
   "createGame",
@@ -96,6 +97,12 @@ const ADMIN_ACTIONS = new Set([
   "adminUpdateFeedback",
   "adminDeleteFeedback",
 ]);
+const PASSIVE_PRESENCE_ACTIONS = new Set([
+  "chatList",
+  "chatSend",
+  "chatReport",
+  "chatNudge",
+]);
 const GAME_COLUMNS = new Set([
   "status",
   "p2",
@@ -121,6 +128,7 @@ const GAME_COLUMNS = new Set([
   "bank2_remaining",
 ]);
 class ConflictError extends Error {}
+const PRESENCE_TOUCH_MS = 60 * 1000;
 
 const json = (body, status = 200, extra = {}) =>
   new Response(JSON.stringify(body), {
@@ -210,12 +218,17 @@ async function withConflictRetry(task) {
 
 async function touchPresence(db, user, gameId = null, location = "lobby") {
   const stamp = now();
+  const cutoff = new Date(Date.now() - PRESENCE_TOUCH_MS).toISOString();
   await db
     .prepare(
       `INSERT INTO presence(username_key,username,game_id,location,last_seen_at) VALUES(?,?,?,?,?)
-    ON CONFLICT(username_key) DO UPDATE SET username=excluded.username,game_id=excluded.game_id,location=excluded.location,last_seen_at=excluded.last_seen_at`,
+    ON CONFLICT(username_key) DO UPDATE SET username=excluded.username,game_id=excluded.game_id,location=excluded.location,last_seen_at=excluded.last_seen_at
+    WHERE presence.username<>excluded.username
+       OR COALESCE(presence.game_id,'')<>COALESCE(excluded.game_id,'')
+       OR presence.location<>excluded.location
+       OR presence.last_seen_at<?`,
     )
-    .bind(user.username_key, user.username, gameId || null, location, stamp)
+    .bind(user.username_key, user.username, gameId || null, location, stamp, cutoff)
     .run();
 }
 
@@ -419,25 +432,14 @@ async function createGame(db, params, user, source = null) {
 
 async function listGames(db) {
   const cutoff = new Date(Date.now() - LIMITS.waitingTtlMs).toISOString();
-  const inactiveCutoff = new Date(
-    Date.now() - LIMITS.activeTtlMs,
-  ).toISOString();
-  await db.batch([
-    db
-      .prepare(
-        `UPDATE games SET status='expired',turn=0,updated_at=?,version=version+1 WHERE status='waiting' AND created_at<?`,
-      )
-      .bind(now(), cutoff),
-    db
-      .prepare(
-        `UPDATE games SET status='inactive',turn=0,turn_started_at='',updated_at=?,version=version+1 WHERE status='active' AND updated_at<?`,
-      )
-      .bind(now(), inactiveCutoff),
-  ]);
+  const inactiveCutoff = new Date(Date.now() - LIMITS.activeTtlMs).toISOString();
   const { results } = await db
     .prepare(
-      `SELECT * FROM games WHERE status IN ('waiting','active') ORDER BY created_at DESC`,
+      `SELECT * FROM games
+       WHERE (status='waiting' AND created_at>=?) OR (status='active' AND updated_at>=?)
+       ORDER BY created_at DESC`,
     )
+    .bind(cutoff, inactiveCutoff)
     .all();
   const games = results
     .filter((g) => g.status === "waiting" && truthy(g.is_public))
@@ -528,33 +530,33 @@ async function state(db, params, user) {
     if (closed[game.status]) return { ok: false, error: closed[game.status] };
     const participant = game.p1 === user.username || game.p2 === user.username;
     if (game.status === "active" && participant && hasClock(game)) {
-      const autoResumeFrom =
+      const checkedAt = Date.now();
+      const manualExpired = Boolean(
         game.manual_paused_by &&
-        Date.parse(game.manual_pause_until) <= Date.now()
-          ? game.manual_paused_by
-          : "";
+          Date.parse(game.manual_pause_until) <= checkedAt,
+      );
+      const autoResumeFrom = manualExpired ? game.manual_paused_by : "";
       const changes = {};
-      if (
-        game.manual_paused_by &&
-        Date.parse(game.manual_pause_until) <= Date.now()
-      ) {
-        const held = parseJsonList(game.lobby_paused_by).length > 0;
+      let manualPausedBy = manualExpired ? "" : game.manual_paused_by;
+      let lobby = parseJsonList(game.lobby_paused_by);
+      let pauseStateChanged = false;
+      if (manualExpired) {
         Object.assign(changes, {
           manual_paused_by: "",
           manual_pause_until: "",
           last_manual_pause_at: now(),
-          timer_paused: held ? 1 : 0,
-          turn_started_at: held ? "" : now(),
         });
+        pauseStateChanged = true;
       }
-      let lobby = parseJsonList(game.lobby_paused_by);
       if (lobby.includes(user.username)) {
         lobby = lobby.filter((name) => name !== user.username);
-        Object.assign(changes, {
-          lobby_paused_by: lobby.length ? JSON.stringify(lobby) : "",
-          timer_paused: game.manual_paused_by || lobby.length ? 1 : 0,
-          turn_started_at: game.manual_paused_by || lobby.length ? "" : now(),
-        });
+        changes.lobby_paused_by = lobby.length ? JSON.stringify(lobby) : "";
+        pauseStateChanged = true;
+      }
+      if (pauseStateChanged) {
+        const held = Boolean(manualPausedBy) || lobby.length > 0;
+        changes.timer_paused = held ? 1 : 0;
+        changes.turn_started_at = held ? "" : now();
       }
       if (!truthy(game.timer_activated)) {
         const ready = parseJsonList(game.timer_ready_by);
@@ -566,7 +568,7 @@ async function state(db, params, user) {
           timer_paused: both ? 0 : 1,
           turn_remaining: game.turn_seconds,
           turn_started_at: both
-            ? new Date(Date.now() + LIMITS.turnStartGraceMs).toISOString()
+            ? new Date(checkedAt + LIMITS.turnStartGraceMs).toISOString()
             : "",
         });
       }
@@ -583,11 +585,16 @@ async function state(db, params, user) {
       if (expired)
         game = await saveGame(db, game, { ...expired, updated_at: now() });
     }
-    await touchPresence(db, user, game.game_id, "game");
     const response = sanitizeGame(game, user.username);
     if (participant && game.p2) {
-      const thread = await threadForGame(db, game, false);
-      response.chatThreadId = Number(thread?.id) || 0;
+      // El hilo es estable para la pareja. Tras la primera respuesta el
+      // navegador devuelve su id y evita una lectura en cada polling de 2 s.
+      const knownThreadId = Math.max(0, toInt(params.chatThreadId));
+      if (knownThreadId) response.chatThreadId = knownThreadId;
+      else {
+        const thread = await threadForGame(db, game, false);
+        response.chatThreadId = Number(thread?.id) || 0;
+      }
       response.chatOpponent = game.p1 === user.username ? game.p2 : game.p1;
     }
     return response;
@@ -597,8 +604,15 @@ async function state(db, params, user) {
 async function myGames(db, user) {
   const { results } = await db
     .prepare(
-      `SELECT * FROM games WHERE p1=? OR p2=? OR game_id IN
-    (SELECT rematch_id FROM games WHERE status='finished' AND (p1=? OR p2=?) AND rematch_id<>'') ORDER BY updated_at DESC LIMIT 100`,
+      `WITH candidates(game_id) AS (
+         SELECT game_id FROM games WHERE p1=? AND status IN ('waiting','active')
+         UNION SELECT game_id FROM games WHERE p2=? AND status IN ('waiting','active')
+         UNION SELECT rematch_id FROM games WHERE p1=? AND status='finished' AND rematch_id<>''
+         UNION SELECT rematch_id FROM games WHERE p2=? AND status='finished' AND rematch_id<>''
+       )
+       SELECT g.* FROM games g JOIN candidates c ON c.game_id=g.game_id
+       WHERE g.status IN ('waiting','active')
+       ORDER BY g.updated_at DESC LIMIT 100`,
     )
     .bind(user.username, user.username, user.username, user.username)
     .all();
@@ -1078,14 +1092,16 @@ async function gamePresence(db, params, user) {
       let lobby = parseJsonList(game.lobby_paused_by),
         changes = {};
       if (!connected && String(params.reason || "") === "lobby") {
-        if (!lobby.includes(user.username)) lobby.push(user.username);
-        changes = {
-          lobby_paused_by: JSON.stringify(lobby),
-          timer_paused: 1,
-          turn_remaining: timerRemaining(game),
-          turn_started_at: "",
-          updated_at: now(),
-        };
+        if (!lobby.includes(user.username)) {
+          lobby.push(user.username);
+          changes = {
+            lobby_paused_by: JSON.stringify(lobby),
+            timer_paused: 1,
+            turn_remaining: timerRemaining(game),
+            turn_started_at: "",
+            updated_at: now(),
+          };
+        }
       } else if (connected && lobby.includes(user.username)) {
         lobby = lobby.filter((name) => name !== user.username);
         const held = lobby.length > 0 || Boolean(game.manual_paused_by);
@@ -1354,12 +1370,19 @@ async function routeApi(request, env, ctx) {
   if (PROTECTED.has(action) || ADMIN_ACTIONS.has(action)) {
     auth = await authenticate(env.DB, request, params);
     if (auth.error) return error(auth.error, 401);
-    await touchPresence(
-      env.DB,
-      auth.user,
-      params.gameId || null,
-      params.gameId ? "game" : "lobby",
-    );
+    // Estas dos acciones administran su propia salida. Escribir presencia
+    // antes de borrarla o cambiarla produciria dos escrituras contradictorias.
+    if (
+      action !== "leavePresence" &&
+      action !== "gamePresence" &&
+      !PASSIVE_PRESENCE_ACTIONS.has(action)
+    )
+      await touchPresence(
+        env.DB,
+        auth.user,
+        params.gameId || null,
+        params.gameId ? "game" : "lobby",
+      );
   }
   let result;
   switch (action) {
@@ -1632,5 +1655,8 @@ export default {
             : "Error temporal del servidor.";
       return error(message, 500);
     }
+  },
+  async scheduled(_controller, env, _ctx) {
+    await cleanupDatabase(env.DB);
   },
 };

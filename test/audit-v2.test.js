@@ -18,7 +18,7 @@ before(async () => {
     bindings: { SESSION_TTL_HOURS:'168', ADMIN_PATH:'/admin', DEBUG_ERRORS:'1' },
   });
   db = await mf.getD1Database('DB');
-  for (const file of ['0001_initial.sql','0002_chat.sql','0003_private_threads.sql','0004_admin_insight.sql','0005_feedback.sql','0006_time_bank.sql']) {
+  for (const file of ['0001_initial.sql','0002_chat.sql','0003_private_threads.sql','0004_admin_insight.sql','0005_feedback.sql','0006_time_bank.sql','0007_d1_free_optimization.sql']) {
     const migration = await readFile(new URL('../migrations/'+file, import.meta.url), 'utf8');
     for (const statement of migration.split(';').map((sql) => sql.trim()).filter(Boolean)) {
       await db.prepare(statement).run();

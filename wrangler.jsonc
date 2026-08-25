@@ -10,6 +10,9 @@
     "traces": { "enabled": true, "head_sampling_rate": 0.05 }
   },
   "workers_dev": true,
+  "triggers": {
+    "crons": ["17 * * * *"]
+  },
   "routes": [
     { "pattern": "picasyfijas.fans", "custom_domain": true },
     { "pattern": "www.picasyfijas.fans", "custom_domain": true }

@@ -1530,7 +1530,7 @@ let audioCtx = null, serviceWorkerRegistration = null, sessionExpiryHandled = fa
 let myCountry = localStorage.getItem('pf_country') || '';
 let chatTimer=null,chatRoom='',chatItems=[],chatLastId=0,chatUnread=0,chatEnabled=false,chatPollGeneration=0;
 let chatNudgesOn=localStorage.getItem('pf_chat_nudges')!=='0';
-let privateThreads=[],selectedPrivateThread=null;
+let privateThreads=[],selectedPrivateThread=null,privateThreadsFetchedAt=0,privateThreadsBusy=false;
 const privateMessageAudio=new Audio('/audio/icq-message-received.mp3'),wizzAudio=new Audio('/audio/msn-wizz.mp3');
 [privateMessageAudio,wizzAudio].forEach(a=>{a.preload='auto';a.volume=1;});
 function playChatAudio(audio){if(!soundOn)return;try{audio.currentTime=0;const p=audio.play();if(p)p.catch(()=>{});}catch(e){}}
@@ -1638,7 +1638,7 @@ function currentChatRoom(){if(!$('s-game').classList.contains('hidden')&&gState?
 function openPrivateChat(id){selectedPrivateThread=privateThreads.find(x=>x.id===Number(id))||{id:Number(id),opponent:''};chatRoom='';chatItems=[];chatLastId=0;updateChatLabels();$('chat-panel').classList.remove('hidden');pollChat();}
 function openPrimaryChat(){if($('s-game').classList.contains('hidden'))selectedPrivateThread=null;toggleChat();}
 function renderPrivateThreads(){const host=$('private-chat-bubbles'),menu=$('private-chat-menu'),inLobby=!$('s-lobby').classList.contains('hidden');host.classList.toggle('hidden',!inLobby||!privateThreads.length);if(!inLobby)return;const visible=privateThreads.slice(0,3),rest=privateThreads.slice(3);host.innerHTML=visible.map(x=>`<button class="private-chat-bubble ${Number(x.lastMessageId)>Number(localStorage.getItem('pf_chat_read_'+x.id)||0)?'unread':''}" onclick="openPrivateChat(${x.id})" title="${esc(x.opponent)}">${esc([...x.opponent][0]?.toUpperCase()||'?')}</button>`).join('')+(rest.length?`<button class="private-chat-bubble" onclick="$('private-chat-menu').classList.toggle('hidden')">+${rest.length}</button>`:'');menu.innerHTML=rest.map(x=>`<button onclick="openPrivateChat(${x.id});$('private-chat-menu').classList.add('hidden')">💬 ${esc(x.opponent)}</button>`).join('');}
-async function refreshPrivateThreads(){if(!sessionToken)return;try{const r=await api('chatList',{listThreads:true});if(r.ok){privateThreads=r.threads||[];renderPrivateThreads();}}catch(e){}}
+async function refreshPrivateThreads(force=false){if(!sessionToken||privateThreadsBusy||(!force&&Date.now()-privateThreadsFetchedAt<15000))return;privateThreadsBusy=true;privateThreadsFetchedAt=Date.now();try{const r=await api('chatList',{listThreads:true});if(r.ok){privateThreads=r.threads||[];renderPrivateThreads();}}catch(e){}finally{privateThreadsBusy=false;}}
 function setChatContext(view){
   const allowed=!!sessionToken&&(view==='lobby'||(view==='game'&&gState&&gState.youAre>0&&gState.p2));
   chatEnabled=allowed;$('chat-launch').classList.toggle('hidden',!allowed);
@@ -1646,7 +1646,7 @@ function setChatContext(view){
   if(view==='lobby')selectedPrivateThread=null;
   const room=view==='game'?'private:'+(gState?.chatThreadId||game.id):'lobby';
   if(room!==chatRoom){chatRoom=room;chatItems=[];chatLastId=0;chatUnread=0;renderChat();updateChatBadge();}
-  updateChatLabels();startChatPoll();if(view==='lobby')refreshPrivateThreads();renderPrivateThreads();
+  updateChatLabels();startChatPoll();if(view==='lobby')refreshPrivateThreads(true);renderPrivateThreads();
 }
 function updateChatLabels(){
   if(!$('chat-title'))return;const room=currentChatRoom();
@@ -1679,8 +1679,8 @@ function renderChat(){
 }
 async function pollChat(){
   if(!chatEnabled||!sessionToken)return;const room=currentChatRoom();
-  try{const res=await api('chatList',room);if(!res.ok)return;const previous=chatLastId;chatItems=res.messages||[];chatLastId=chatItems.reduce((max,m)=>Math.max(max,Number(m.id)||0),0);
-    const incoming=chatItems.filter(m=>Number(m.id)>previous&&previous>0&&chatUserKey(m.sender)!==chatUserKey(user));
+  try{const res=await api('chatList',{...room,after:chatLastId});if(!res.ok)return;const previous=chatLastId,received=res.messages||[],merged=new Map(chatItems.map(m=>[Number(m.id),m]));received.forEach(m=>merged.set(Number(m.id),m));chatItems=[...merged.values()].sort((a,b)=>Number(a.id)-Number(b.id)).slice(-100);chatLastId=received.reduce((max,m)=>Math.max(max,Number(m.id)||0),previous);
+    const incoming=received.filter(m=>Number(m.id)>previous&&previous>0&&chatUserKey(m.sender)!==chatUserKey(user));
     if(incoming.length&&$('chat-panel').classList.contains('hidden')){chatUnread+=incoming.length;updateChatBadge();const launch=$('chat-launch');launch.classList.remove('bump');void launch.offsetWidth;launch.classList.add('bump');}
     if(room.roomType==='private'&&incoming.some(m=>m.kind==='user'&&!chatMutedUsers().has(chatUserKey(m.sender))))playChatAudio(privateMessageAudio);
     const muted=chatMutedUsers();const nudge=incoming.find(m=>m.kind==='nudge'&&!muted.has(chatUserKey(m.sender))&&Date.now()-Date.parse(m.createdAt)<15000);
@@ -2902,7 +2902,7 @@ async function refreshGame(expectedEpoch=gameViewEpoch, expectedGameId=game.id){
   const requestEpoch=expectedEpoch, requestGameId=expectedGameId;
   const requestSeq=++gameRequestSeq;
   try{
-    const st=await api('state',{gameId:requestGameId, username:user, inGame:true});
+    const st=await api('state',{gameId:requestGameId, username:user, inGame:true, chatThreadId:gState?.chatThreadId||0});
     if(requestSeq!==gameRequestSeq||requestEpoch!==gameViewEpoch||requestGameId!==game.id||$('s-game').classList.contains('hidden')) return;
     if(st.ok) renderGame(st);
     else if(terminalGameError(st.error)){
