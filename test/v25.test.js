@@ -245,12 +245,15 @@ test('la revancha hereda la bolsa, su tamaño y su incremento', async () => {
 
 test('una partida sin bolsa sigue comportándose exactamente igual que antes', () => {
   const classic = { status:'active', time_mode:'turn', bank_seconds:0, turn_seconds:30, turn:1,
-    turn_remaining:30, timer_paused:0, turn_started_at:new Date(0).toISOString(), p1:'Ana', p2:'Beto' };
+    turn_remaining:30, timer_paused:0, turn_started_at:new Date(0).toISOString(), p1:'Ana', p2:'Beto',
+    guesses:'[]', max_attempts:0 };
   assert.equal(isBankGame(classic), false);
   assert.equal(bankRemaining(classic, 1, 10_000), 0);
   const expired = expiredTurnChanges(classic, 31_000);
   assert.equal(expired.turn, 2, 'el cronometro por turno pasa el turno, no cierra la partida');
   assert.equal(expired.status, undefined);
+  assert.deepEqual(JSON.parse(expired.guesses).map(({ by, missed, reason }) => ({ by, missed, reason })),
+    [{ by:'Ana', missed:true, reason:'timeout' }]);
 
   const view = sanitizeGame({ ...classic, digits:3, secret1:'012', secret2:'345', guesses:'[]', game_id:'AAAA' }, 'Ana');
   assert.equal(view.timeMode, 'turn');
@@ -406,6 +409,13 @@ test('cada texto nuevo está en los tres idiomas', async () => {
     'lbl_clock','clock_bank','lbl_bank','lbl_bank_inc','bank_hint','rl_bank','win_timeout','lose_timeout','hist_timeout']) {
     assert.equal((html.match(new RegExp(`\\b${key}:`, 'g')) || []).length, 3, `${key} debería estar en es, en y fr`);
   }
+});
+
+test('la interfaz distingue visualmente un intento perdido por tiempo', async () => {
+  const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
+  assert.equal((html.match(/I18N\.(?:es|en|fr)\.missed_timeout=/g) || []).length, 3);
+  assert.match(html, /if\(g\.missed\)[\s\S]*t\('missed_timeout'\)/);
+  assert.match(html, /\.glog \.g\.missed/);
 });
 
 test('el reloj de la creación ofrece las tres formas y la bolsa viaja al servidor', async () => {

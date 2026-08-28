@@ -818,22 +818,12 @@ async function passTurn(db, params, user) {
       );
       return { ok: true, resolved: true, timeout: true };
     }
-    if (timerRemaining(game) > 0)
-      return { ok: false, error: "Aún queda tiempo." };
-    const changes = game.pending_winner
-      ? {
-          status: "finished",
-          winner: game.pending_winner,
-          pending_winner: "",
-          timer_paused: 1,
-          updated_at: now(),
-        }
-      : {
-          ...freshTurnClock(game),
-          turn: game.turn === 1 ? 2 : 1,
-          updated_at: now(),
-        };
-    const updated = await saveGame(db, game, changes);
+    const expired = expiredTurnChanges(game);
+    if (!expired) return { ok: false, error: "Aún queda tiempo." };
+    const updated = await saveGame(db, game, {
+      ...expired,
+      updated_at: now(),
+    });
     if (updated.status === "finished")
       await systemChat(
         db,
@@ -841,8 +831,8 @@ async function passTurn(db, params, user) {
         `finished:${updated.version}`,
         "finished|",
       );
-    return game.pending_winner
-      ? { ok: true, resolved: true }
+    return updated.status === "finished"
+      ? { ok: true, resolved: true, timeout: true }
       : { ok: true, passed: true };
   });
 }

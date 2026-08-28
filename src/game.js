@@ -149,10 +149,46 @@ export function expiredTurnChanges(game, at = Date.now()) {
     };
   }
   if (toInt(game.turn_seconds) <= 0 || timerRemaining(game, at) > 0) return null;
+  const side = toInt(game.turn);
+  const expiredPlayer = side === 1 ? game.p1 : side === 2 ? game.p2 : '';
+  if (!expiredPlayer) return null;
+  const guesses = parseJsonList(game.guesses);
+  guesses.push({
+    by: expiredPlayer,
+    missed: true,
+    reason: 'timeout',
+    ts: new Date(at).toISOString(),
+  });
+  const timeoutAttempt = { guesses: JSON.stringify(guesses) };
   if (game.pending_winner) {
-    return { status:'finished', winner:game.pending_winner, pending_winner:'', timer_paused:1 };
+    return {
+      ...timeoutAttempt,
+      status:'finished',
+      winner:game.pending_winner,
+      pending_winner:'',
+      timer_paused:1,
+      turn_started_at:'',
+      turn_remaining:0,
+    };
   }
-  return { ...freshTurnClock(game, at), turn:game.turn === 1 ? 2 : 1 };
+  const maxAttempts = Math.max(0, toInt(game.max_attempts));
+  const p1Attempts = guesses.filter((entry) => entry.by === game.p1).length;
+  const p2Attempts = guesses.filter((entry) => entry.by === game.p2).length;
+  if (maxAttempts > 0 && p1Attempts >= maxAttempts && p2Attempts >= maxAttempts) {
+    return {
+      ...timeoutAttempt,
+      status:'finished',
+      winner:'',
+      timer_paused:1,
+      turn_started_at:'',
+      turn_remaining:0,
+    };
+  }
+  return {
+    ...timeoutAttempt,
+    ...freshTurnClock(game, at),
+    turn:side === 1 ? 2 : 1,
+  };
 }
 
 export function gameMeta(game) {
@@ -177,6 +213,9 @@ export function sanitizeGame(game, username) {
   const secret1 = padCode(game.secret1, game.digits);
   const secret2 = padCode(game.secret2, game.digits);
   const guesses = parseJsonList(game.guesses).map((entry) => {
+    if (truthy(entry.missed)) {
+      return { ...entry, guess:'', fijas:0, picas:0, missed:true, requestId:undefined };
+    }
     const guess = padCode(entry.guess, game.digits);
     const target = entry.by === game.p1 ? secret2 : secret1;
     return { ...entry, guess, ...evaluate(target, guess), requestId: undefined };

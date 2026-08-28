@@ -21,12 +21,53 @@ test('an expired 30 second turn advances even with five repeated digits', () => 
   const game = {
     status:'active', turn:1, turn_seconds:30, turn_remaining:30, timer_paused:0,
     turn_started_at:'2026-01-01T00:00:00.000Z', lobby_paused_by:'', manual_paused_by:'',
-    pending_winner:'', digits:5, allow_repeats:1,
+    pending_winner:'', digits:5, allow_repeats:1, p1:'Ana', p2:'Luis', guesses:'[]', max_attempts:0,
   };
   const changes = expiredTurnChanges(game, Date.parse('2026-01-01T00:00:30.000Z'));
   assert.equal(changes.turn, 2);
   assert.equal(changes.turn_remaining, 30);
   assert.equal(changes.timer_paused, 0);
+  assert.deepEqual(JSON.parse(changes.guesses), [{
+    by:'Ana', missed:true, reason:'timeout', ts:'2026-01-01T00:00:30.000Z',
+  }]);
+});
+
+test('a timed-out turn consumes the last attempt and can finish a draw', () => {
+  const game = {
+    status:'active', turn:1, turn_seconds:30, turn_remaining:30, timer_paused:0,
+    turn_started_at:'2026-01-01T00:00:00.000Z', lobby_paused_by:'', manual_paused_by:'',
+    pending_winner:'', digits:4, p1:'Ana', p2:'Luis', max_attempts:2,
+    guesses:JSON.stringify([
+      { by:'Ana', guess:'1234' },
+      { by:'Luis', guess:'2345' },
+      { by:'Luis', guess:'3456' },
+    ]),
+  };
+  const changes = expiredTurnChanges(game, Date.parse('2026-01-01T00:00:30.000Z'));
+  const guesses = JSON.parse(changes.guesses);
+  assert.equal(changes.status, 'finished');
+  assert.equal(changes.winner, '');
+  assert.equal(changes.timer_paused, 1);
+  assert.equal(guesses.filter((entry) => entry.by === 'Ana').length, 2);
+  assert.deepEqual(guesses.at(-1), {
+    by:'Ana', missed:true, reason:'timeout', ts:'2026-01-01T00:00:30.000Z',
+  });
+});
+
+test('sanitizeGame exposes a missed timed turn without inventing a guess', () => {
+  const game = {
+    game_id:'MISSED', status:'active', digits:4, p1:'Ana', secret1:'0123', p2:'Luis', secret2:'4567',
+    turn:2, guesses:JSON.stringify([{by:'Ana',missed:true,reason:'timeout',ts:'x'}]), winner:'',
+    created_at:'x', updated_at:'x', allow_repeats:0, is_public:1, mode:'numbers', num_colors:10,
+    max_attempts:10, turn_seconds:30, turn_started_at:'x', rematch_id:'', pending_winner:'',
+    country1:'co', country2:'fr', turn_remaining:30, timer_paused:0, manual_paused_by:'',
+    manual_pause_until:'', lobby_paused_by:'', reveal_secrets:0, finish_reason:'', version:2,
+  };
+  const state = sanitizeGame(game, 'Ana');
+  assert.equal(state.attemptsP1, 1);
+  assert.deepEqual(state.guesses[0], {
+    by:'Ana', missed:true, reason:'timeout', ts:'x', guess:'', fijas:0, picas:0, requestId:undefined,
+  });
 });
 
 test('an active timed game never reports an expired turn as playable', () => {

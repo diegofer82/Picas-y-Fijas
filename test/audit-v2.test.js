@@ -205,6 +205,8 @@ test('server advances an expired timed turn and rejects the late player', async 
   assert.equal(rejected.ok,false);
   assert.match(rejected.error,/tiempo/i);
   assert.equal(rejected.state.yourTurn,false);
+  assert.equal(rejected.state.guesses.filter((entry)=>entry.by===late.username).length,1);
+  assert.equal(rejected.state.guesses.at(-1).missed,true);
   const nextState = await api('state',{ gameId },next.token);
   assert.equal(nextState.yourTurn,true);
   assert.ok(nextState.turnRemaining>=29);
@@ -220,8 +222,43 @@ test('simultaneous timeout requests advance the turn exactly once', async () => 
     .bind(new Date(Date.now()-31_000).toISOString(),gameId).run();
   const results=await Promise.all([api('passTurn',{gameId},p1.token),api('passTurn',{gameId},p2.token)]);
   assert.equal(results.filter((result)=>result.ok).length,1);
-  const final=await db.prepare('SELECT turn FROM games WHERE game_id=?').bind(gameId).first();
+  const final=await db.prepare('SELECT turn,guesses FROM games WHERE game_id=?').bind(gameId).first();
   assert.equal(final.turn,initial.turn===1?2:1);
+  const timeoutAttempts=JSON.parse(final.guesses).filter((entry)=>entry.missed&&entry.reason==='timeout');
+  assert.equal(timeoutAttempts.length,1);
+});
+
+test('a timed-out turn counts toward the attempt limit', async () => {
+  const p1=await player('LimitTimer-A'),p2=await player('LimitTimer-B');
+  const options={digits:4,mode:'numbers',numColors:10,allowRepeats:false,isPublic:true,maxAttempts:10,turnSeconds:30,revealSecrets:false,secret:'0123',secret2:'4567'};
+  const gameId=await createAndJoin(p1,p2,options);
+  await api('state',{gameId},p1.token);await api('state',{gameId},p2.token);
+  const initial=await api('state',{gameId},p1.token);
+  const expiredPlayer=initial.yourTurn?p1:p2;
+  const nextPlayer=initial.yourTurn?p2:p1;
+  const previousGuesses=[];
+  for(let attempt=0;attempt<9;attempt++){
+    previousGuesses.push({by:p1.username,guess:'6789'});
+    previousGuesses.push({by:p2.username,guess:'6789'});
+  }
+  await db.prepare('UPDATE games SET guesses=?,turn_started_at=?,turn_remaining=30,timer_paused=0 WHERE game_id=?')
+    .bind(JSON.stringify(previousGuesses),new Date(Date.now()-31_000).toISOString(),gameId).run();
+
+  const passed=await api('passTurn',{gameId},expiredPlayer.token);
+  assert.equal(passed.ok,true,passed.error);
+  const afterTimeout=await api('state',{gameId},expiredPlayer.token);
+  const expiredAttempts=afterTimeout.guesses.filter((entry)=>entry.by===expiredPlayer.username);
+  assert.equal(expiredAttempts.length,10);
+  assert.equal(expiredAttempts.filter((entry)=>entry.missed).length,1);
+  assert.equal(afterTimeout.status,'active');
+
+  const finalGuess=await api('guess',{gameId,guess:'6789',requestId:'limit-after-timeout'},nextPlayer.token);
+  assert.equal(finalGuess.ok,true,finalGuess.error);
+  assert.equal(finalGuess.draw,true);
+  assert.equal(finalGuess.state.status,'finished');
+  assert.equal(finalGuess.state.isDraw,true);
+  assert.equal(finalGuess.state.guesses.length,20);
+  assert.equal(finalGuess.state.guesses.filter((entry)=>entry.missed).length,1);
 });
 
 test('simultaneous guesses cannot both consume the same turn', async () => {
