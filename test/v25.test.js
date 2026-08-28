@@ -2,7 +2,7 @@ import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { Miniflare } from 'miniflare';
-import { bankRemaining, expiredTurnChanges, freshTurnClock, isBankGame, sanitizeGame } from '../src/game.js';
+import { bankRemaining, expiredTurnChanges, finalClock, freshTurnClock, isBankGame, sanitizeGame } from '../src/game.js';
 import { feedbackEmail, replyAddress, validateFeedback } from '../src/feedback.js';
 
 let mf;
@@ -125,6 +125,36 @@ test('la jugada descuenta lo consumido y abona el incremento sin pasarse de la b
   // El incremento nunca levanta la bolsa por encima de su tamano inicial.
   const quick = freshTurnClock({ ...base, bank1_remaining:300 }, 1_000);
   assert.equal(quick.bank1_remaining, 300);
+});
+
+test('el último intento liquida la bolsa antes de detener el reloj', async () => {
+  const a = await player('FinalClock-A');
+  const b = await player('FinalClock-B');
+  const gameId = await bankGame(a, b);
+  const game = await db.prepare('SELECT turn,p1,p2 FROM games WHERE game_id=?').bind(gameId).first();
+  const mover = game.turn === 1 ? a : b;
+  const pendingWinner = game.turn === 1 ? b : a;
+  const bankColumn = game.turn === 1 ? 'bank1_remaining' : 'bank2_remaining';
+  await db.prepare(`UPDATE games SET pending_winner=?,${bankColumn}=200,turn_started_at=? WHERE game_id=?`)
+    .bind(pendingWinner.username, new Date(Date.now()-40_000).toISOString(), gameId).run();
+
+  const wrongGuess = game.turn === 1 ? '0123' : '4567';
+  const result = await api('guess', { gameId, guess:wrongGuess, requestId:'final-clock' }, mover.token);
+  assert.equal(result.ok, true, result.error);
+  assert.equal(result.state.status, 'finished');
+  assert.equal(result.state.winner, pendingWinner.username);
+
+  const closed = await db.prepare(`SELECT ${bankColumn} remaining,timer_paused,turn_started_at FROM games WHERE game_id=?`)
+    .bind(gameId).first();
+  assert.ok(closed.remaining>=164&&closed.remaining<=165, `saldo final inesperado: ${closed.remaining}`);
+  assert.equal(closed.timer_paused, 1);
+  assert.equal(closed.turn_started_at, '');
+});
+
+test('finalClock conserva el saldo exacto del cronómetro por turno', () => {
+  const game = { time_mode:'turn',turn_seconds:60,turn_remaining:45,timer_paused:0,
+    turn_started_at:new Date(0).toISOString() };
+  assert.deepEqual(finalClock(game, 12_000), { timer_paused:1,turn_started_at:'',turn_remaining:33 });
 });
 
 test('cuando cae la bandera pierde quien agotó su bolsa, y el rival lo descubre al consultar', async () => {

@@ -115,6 +115,22 @@ export function freshTurnClock(game, at = Date.now()) {
   };
 }
 
+// Al terminar una partida hay que materializar el tiempo consumido antes de
+// detener el reloj. De lo contrario, `sanitizeGame` muestra la reserva que
+// estaba guardada al comenzar el turno, aunque hayan pasado varios minutos.
+export function finalClock(game, at = Date.now()) {
+  if (isBankGame(game)) {
+    const changes = freshTurnClock(game, at);
+    changes.timer_paused = 1;
+    changes.turn_started_at = '';
+    return changes;
+  }
+  const changes = { timer_paused: 1, turn_started_at: '' };
+  if (toInt(game.turn_seconds) > 0)
+    changes.turn_remaining = timerRemaining(game, at);
+  return changes;
+}
+
 export function expiredTurnChanges(game, at = Date.now()) {
   if (game.status !== 'active' || truthy(game.timer_paused)) return null;
   if (isBankGame(game)) {

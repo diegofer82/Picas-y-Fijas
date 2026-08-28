@@ -77,6 +77,16 @@ test('expired sessions and stale finished games recover without a hard refresh',
   assert.doesNotMatch(publicHtml,/if\(resumeId&&!deepLinkPending\) goToRematch\(resumeId\)/);
 });
 
+test('restoring an active game restarts polling and its local clock',()=>{
+  const start=publicHtml.indexOf('function enterGame(meta,initialState=null)');
+  const end=publicHtml.indexOf('function terminalGameError',start);
+  assert.ok(start>=0&&end>start,'no se encontro enterGame');
+  const source=publicHtml.slice(start,end);
+  assert.match(source,/if\(initialState\)renderGame\(initialState\)/);
+  assert.match(source,/if\(!initialState\|\|initialState\.status==='active'\)\{[\s\S]*startPoll\(\(\)=>refreshGame\(epoch,game\.id\)\)[\s\S]*startTick\(\)/);
+  assert.doesNotMatch(source,/if\(initialState\)renderGame\(initialState\);\s*else\{[^}]*startPoll/);
+});
+
 test('a received nudge plays its sound even while the chat panel is open',()=>{
   assert.match(publicHtml,/if\(nudge&&chatNudgesOn\).*playChatAudio\(wizzAudio\)/);
   assert.doesNotMatch(publicHtml,/if\(soundOn&&\$\('chat-panel'\)\.classList\.contains\('hidden'\)\)chord/);

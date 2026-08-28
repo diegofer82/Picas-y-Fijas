@@ -4,6 +4,7 @@ import {
   cleanName,
   evaluate,
   expiredTurnChanges,
+  finalClock,
   freshTurnClock,
   gameMeta,
   hasClock,
@@ -763,6 +764,7 @@ async function makeGuess(db, params, user) {
       changes.turn = youAre === 1 ? 2 : 1;
       Object.assign(changes, freshTurnClock(game));
     }
+    if (changes.status === "finished") Object.assign(changes, finalClock(game));
     const updated = await saveGame(db, game, changes);
     response.state = sanitizeGame(updated, user.username);
     if (updated.status === "finished")

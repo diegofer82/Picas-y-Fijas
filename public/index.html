@@ -2892,7 +2892,14 @@ function enterGame(meta,initialState=null){
   if(!reviewingHistory)localStorage.setItem('pf_current_game',game.id);
   show('game');
   if(initialState)renderGame(initialState);
-  else{refreshGame(epoch,game.id);startPoll(()=>refreshGame(epoch,game.id));startTick();}
+  else refreshGame(epoch,game.id);
+  // Una partida restaurada ya trae un estado para pintar, pero sigue siendo una
+  // partida viva: tambien necesita volver a encender la sincronizacion y el
+  // reloj local. El historial terminado, en cambio, no necesita ninguno.
+  if(!initialState||initialState.status==='active'){
+    startPoll(()=>refreshGame(epoch,game.id));
+    startTick();
+  }
 }
 function terminalGameError(msg){
   return ['Partida no encontrada.','La partida ha expirado.','La partida se cerró tras 48 horas sin actividad.',
