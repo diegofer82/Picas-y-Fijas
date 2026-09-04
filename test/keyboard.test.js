@@ -7,8 +7,11 @@ const adminHtml = await readFile(new URL('../public/admin.html', import.meta.url
 
 test('every typed game action can be submitted with Enter', () => {
   const bindings = [
-    ['uname', 'btn-login'],
+    // El registro tiene dos pasos: el nombre envia el primero, la contrasena
+    // y su confirmacion envian el segundo.
+    ['uname', 'btn-name'],
     ['upin', 'btn-login'],
+    ['upin2', 'btn-login'],
     ['join-code-inp', 'btn-join-code'],
     ['secret-c', 'btn-create'],
     ['secret-j', 'btn-join'],

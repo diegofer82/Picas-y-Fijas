@@ -46,12 +46,15 @@ Por ejemplo, si el secreto es `1234` y el intento es `1356`, el resultado es **1
 
 ### Entrar y proteger el usuario
 
-1. Escribe un nombre de al menos 2 caracteres y un PIN de 4 a 8 dígitos.
-2. Si el nombre no existe, se registra automáticamente con ese PIN.
-3. Si ya existe, se debe introducir el mismo PIN. El nombre identifica al jugador en partidas, historial y ranking.
-4. Después de 5 PIN incorrectos, el acceso a ese nombre se bloquea durante 15 minutos.
+La entrada tiene **dos pasos**, y la razón es un problema observado: una sola pantalla decía a la vez «regístrate» y «vuelve a entrar», y mucha gente tecleaba cuatro dígitos cualquiera creyendo que era un código de partida.
 
-El PIN de acceso no es el código secreto de una partida. No se debe compartir el PIN; para invitar a alguien se comparte únicamente el código de partida.
+1. Se escribe un nombre de al menos 2 caracteres y se pulsa **Continuar**.
+2. La app pregunta al servidor si ese nombre ya tiene dueño y la segunda mitad cambia de palabras: a quien vuelve le pide *su* contraseña; a quien es nuevo le dice que el nombre está libre, le pide crear una contraseña de 4 a 8 dígitos, se la hace **repetir** y le avisa de que hoy no se puede recuperar sola.
+3. Al registrarse, el lobby enseña una vez el recordatorio de que esa misma contraseña hará falta la próxima vez.
+4. Si la contraseña no es la del nombre, el mensaje ofrece las dos salidas reales: probar otra vez o usar el enlace **¿Olvidaste tu contraseña?**, que abre el buzón con el mensaje ya escrito para que un administrador la reponga desde `/admin`.
+5. Después de 5 intentos fallidos, el acceso a ese nombre se bloquea durante 15 minutos.
+
+En toda la interfaz se le llama **contraseña**, no PIN: la palabra «PIN» invitaba a confundirla con el código de la partida. No se debe compartir; para invitar a alguien se comparte únicamente el código de partida.
 
 ### Crear una partida
 
@@ -150,7 +153,7 @@ El rival funciona íntegramente sin conexión y no utiliza ChatGPT ni ninguna AP
 
 ### El buzón de sugerencias
 
-Desde la pantalla de inicio, justo debajo de los créditos, hay un enlace a **Sugerencias y errores**; el lobby lo repite en su pie. Se puede escribir sin haber entrado: es el único endpoint del juego que escribe en D1 sin sesión.
+Desde la pantalla de inicio, justo debajo de los créditos, hay un enlace a **Sugerencias y errores**; el lobby lo repite en su pie. Se puede escribir sin haber entrado: es el único endpoint del juego que **escribe** en D1 sin sesión —`loginUser` y `checkUsername` también responden sin sesión, pero el segundo solo lee—.
 
 Como se llega antes de elegir idioma, la pantalla **lleva su propio selector de `es/en/fr`**. Es el mismo destino que el del registro: elegir ahí cambia el idioma de toda la aplicación, no solo el del formulario, y el idioma escogido se guarda con el mensaje para saber en qué responder.
 
@@ -185,6 +188,8 @@ Antes hay que activar **Email Routing** en `picasyfijas.fans` y verificar la dir
 ### Interfaz y accesibilidad
 
 - La aplicación está disponible en español, inglés y francés.
+- El idioma se puede cambiar en cualquier momento desde el cuadrado de la cabecera.
+- La entrada tiene dos pasos: primero el nombre, después la contraseña con las palabras del caso.
 - Se puede enviar con Enter desde los campos principales, además de usar los botones.
 - Las banderas indican el país detectado, pero no afectan las reglas.
 - Puede emitir sonido, vibración o una notificación cuando llega el turno o entra un rival, según los permisos del dispositivo.
@@ -365,6 +370,20 @@ Dos detalles que conviene no deshacer:
 ### Volver al lobby desde la marca
 
 El logo es un `<button>` (`#brand-home`) que lleva al lobby, pero solo desde las pantallas de consulta que enumera `BRAND_HOME_FROM`: historial, ranking, reglas, crear, unirse y configuración de práctica. El buzón de sugerencias también entra, con una salvedad: es la única de esas pantallas a la que se llega sin sesión, así que la marca lo devuelve a donde se entró —el registro o el lobby—, igual que su botón **Volver**, y su etiqueta cambia con el destino. Desde una partida o una práctica en curso queda inerte a propósito, porque saltar al lobby se saltaría el flujo que guarda o abandona y le costaría el progreso al jugador. `test/keyboard.test.js` fija las dos mitades de esa regla.
+
+### El cuadrado de idioma en la cabecera
+
+Junto a la marca vive `#lang-cycle`, un botón cuadrado que muestra el idioma actual con dos letras y recorre en bucle `es → fr → en` a cada pulsación (`LANG_CYCLE`). No es un selector aparte: llama a `pickLang()`, la misma puerta que usan los botones grandes, así que arrastra consigo `localStorage`, la dirección (`/`, `/en`, `/fr`), el atributo `lang` del documento y el estado visual de los demás selectores.
+
+`syncLangBtn()` lo esconde en las dos pantallas que ya llevan su propio selector con los tres nombres escritos —el registro y el buzón, que enumera `LANG_BTN_HIDDEN_ON`— y lo actualiza desde `show()` y `applyI18n()`. El botón nace con la clase `hidden` en el HTML porque la primera vista es el registro. Se eligió la cabecera y no un botón flotante porque la esquina inferior derecha ya es del chat.
+
+### El registro en dos pasos
+
+`submitName()` pregunta por el nombre con la acción pública **`checkUsername`**, que responde `{ok, known, username}`. Es una sola lectura por el índice único `username_key`, sin escrituras, para no gastar el presupuesto de D1 en cada tecleo, y no revela nada que no fuese ya público: el ranking publica los nombres y el propio `loginUser` distinguía el nombre libre del ocupado en su mensaje de error. Devuelve el nombre **tal y como se guardó**, no como lo escribió quien pregunta, así que el saludo respeta las mayúsculas del dueño.
+
+`applyLoginPinStep()` es el interruptor del segundo paso: título, subtítulo, etiqueta del campo, `autocomplete` (`current-password` frente a `new-password`), campo de confirmación, texto del botón y enlace de «olvidaste» cambian según `loginKnown`. `resetLoginSteps()` se llama desde `show('login')`, así que cualquier vuelta al registro —sesión caducada, cambio de usuario, salida del buzón— empieza otra vez por el nombre. `openForgotPin()` abre el buzón con el tipo «Pregunta» y el mensaje redactado, que es la única recuperación disponible mientras no se decida una de las opciones pendientes.
+
+Enter envía el paso donde esté puesto: `uname` dispara `btn-name`; `upin` y `upin2`, `btn-login`. `test/login-two-steps.test.js` fija el endpoint y la forma de su respuesta, la confirmación obligatoria del alta, las doce claves nuevas en los tres idiomas y el aviso del lobby.
 
 ## Modelo de datos
 
@@ -549,6 +568,16 @@ El contacto que alguien deja en el buzón de sugerencias es un dato personal y r
 
 La IP y el país de cada cuenta son datos personales. Se guardan porque sin ellos no hay forma de reconocer a quien vuelve con otro nombre tras olvidar su PIN, y por eso solo se ven dentro de `/admin`: no aparecen en ninguna respuesta del juego, no viajan al navegador de ningún jugador y no se escriben en logs. Sí van en la exportación, que por lo tanto es un archivo con datos personales y nunca debe subirse al repositorio.
 
+## Versionado
+
+El proyecto sigue versionado semántico `MAYOR.MENOR.PARCHE`:
+
+- **MAYOR (X)**: cambios incompatibles del API o del contrato de datos —una respuesta que cambia de forma, un endpoint que desaparece, una migración que obliga a rehacer clientes.
+- **MENOR (Y)**: funcionalidad nueva compatible hacia atrás —una pantalla, un modo de juego, un ajuste como el cuadrado de idioma.
+- **PARCHE (Z)**: correcciones compatibles hacia atrás, retoques de texto, estilos y rendimiento.
+
+El número vive en dos sitios y los dos se cambian en el mismo commit: `version` en `package.json` y `APP_VERSION` en `public/index.html`. De ahí sale lo que ve el jugador en los créditos y lo que viaja con cada mensaje del buzón (`appVersion`), así que un número desfasado hace que un informe apunte a una versión que no es. La versión sube en el commit que introduce el cambio, no al desplegar.
+
 ## Procedimiento para futuras modificaciones
 
 1. Leer este documento y revisar `git status` para no sobrescribir trabajo pendiente.
@@ -557,7 +586,8 @@ La IP y el país de cada cuenta son datos personales. Se guardan porque sin ello
 4. Ejecutar `pnpm run check` y añadir pruebas de regresión cuando corresponda.
 5. Revisar que no se filtren datos privados ni secretos.
 6. Actualizar este documento si cambian arquitectura, operación, rutas, límites o decisiones duraderas.
-7. Confirmar los cambios en Git y enviar `main`; comprobar después el despliegue automático.
+7. Subir la versión según las reglas de «Versionado», en `package.json` y `APP_VERSION` a la vez.
+8. Confirmar los cambios en Git y enviar `main`; comprobar después el despliegue automático.
 
 No se deben borrar datos, ejecutar importaciones, alterar producción, cambiar roles o publicar secretos sin autorización explícita del propietario.
 
@@ -570,5 +600,14 @@ Para recuperar D1 se debe usar una exportación confiable o Time Travel de Cloud
 ## Capacidad prevista y mejoras
 
 La aplicación fue concebida inicialmente para menos de 20 conexiones simultáneas y preparada para crecer aproximadamente a 100 después de medir consumo. Actualmente usa consultas periódicas; si el tráfico aumenta, una evolución posible es WebSockets o coordinación con Durable Objects. Esa decisión requiere mediciones reales y no debe introducirse solo por anticipación.
+
+### Recuperación del PIN — opciones pendientes
+
+Hoy el PIN no se puede recuperar: se guarda como hash con sal y solo un administrador puede reemplazarlo (`adminResetPin`). La tabla `users` no tiene correo y el binding `FEEDBACK_MAIL` es de Email Routing, que solo entrega a direcciones verificadas del propietario, así que **no puede escribir a los jugadores**. Cualquiera de estos caminos exige limitar los intentos por IP y por nombre, al estilo de `login_attempts`; si no, la recuperación acaba siendo una puerta más débil que el propio PIN. Ninguno está decidido:
+
+- **Código de secreto de un solo uso (preferido).** Al registrarse se enseña una vez un código tipo `PYF-7K2M-QX9`, guardado con hash como el PIN. «¿Olvidaste tu PIN?» pide nombre y código, deja poner un PIN nuevo y emite otro código. No añade infraestructura ni datos personales.
+- **Aviso al buzón como red de seguridad.** El enlace abre el buzón con el asunto y el nombre ya puestos; el reinicio se hace desde `/admin`, que ya sabe hacerlo. Barato, pero manual y con prueba de identidad floja.
+- **Correo y enlace de reinicio.** Columna `email` opcional, tabla `pin_resets` con token hasheado, caducidad corta y un solo uso, y una respuesta siempre igual —«si la dirección existe, se envió»— para no delatar qué nombres están registrados. Obliga a contratar un emisor real (Cloudflare Email Sending o equivalente) y a guardar datos personales, con lo que eso implica.
+- **Identidad externa (GitHub, Google).** Quita el secreto de encima del jugador, pero es lo más pesado: flujo OAuth, secretos y ruta de retorno.
 
 Toda nueva tarea debe tratar este archivo como fuente principal de contexto. Cuando el código y este documento discrepen, se debe verificar el comportamiento con pruebas y corregir la documentación en el mismo cambio.

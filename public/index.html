@@ -98,6 +98,14 @@
   .brand h1{font-family:'Instrument Serif',Georgia,serif;font-size:25px;margin:0;font-weight:400;letter-spacing:0;line-height:1.05}
   .brand .sub{font-size:12px;color:var(--muted);margin-top:2px;letter-spacing:.14em;text-transform:uppercase}
   .brand .aka{font-size:9.5px;opacity:.8;color:var(--muted);margin-top:3px;line-height:1.25;letter-spacing:.01em}
+  /* Cambio de idioma siempre a mano: un cuadrado discreto en la cabecera que
+     recorre ES -> FR -> EN a cada pulsacion. La cabecera vive en todas las
+     vistas, asi que no hace falta un boton flotante que tape el chat. */
+  .langbtn{margin-left:auto;flex:0 0 auto;width:34px;height:34px;padding:0;border-radius:9px;
+    background:#0D0B07;border:1px solid var(--edge);color:var(--muted);cursor:pointer;
+    font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;font-weight:700;letter-spacing:.06em;
+    display:grid;place-items:center;transition:color .15s ease,border-color .15s ease,background .15s ease}
+  .langbtn:hover,.langbtn:focus-visible{color:var(--text);border-color:var(--accent);background:rgba(91,141,239,.14)}
 
   .card{background:linear-gradient(180deg,var(--panel),var(--panel-2));
     border:1px solid var(--edge);border-radius:var(--r);padding:20px;margin-bottom:16px;
@@ -319,6 +327,10 @@
   .link{color:var(--accent);cursor:pointer;text-decoration:underline;font-size:13px}
   .hidden{display:none!important}
   .fieldnote{margin:7px 0 0;font-size:12px;line-height:1.45;color:var(--muted)}
+  .fieldnote.warn{color:var(--pica)}
+  .whoami{display:flex;align-items:center;gap:8px;margin:0 0 16px;font-size:13px;color:var(--muted)}
+  .whoami b{color:var(--text)}
+  .whoami .linkbtn{margin-left:auto}
   .invite-banner{background:rgba(79,201,124,.12);border:1px solid rgba(79,201,124,.4);border-radius:12px;
     padding:11px 13px;margin:0 0 14px;font-size:13px;line-height:1.5;color:var(--fija)}
   .invite-banner b{font-family:'JetBrains Mono',monospace;letter-spacing:2px;font-size:15px}
@@ -369,26 +381,46 @@
   <div class="brand">
     <button type="button" class="logo" id="brand-home" onclick="brandHome()"><svg width="30" height="19" viewBox="-4 3 100 62" aria-hidden="true"><path d="M19 21C12.5 16.5 4.5 11 -2 5c0 9.5 4.5 18.5 12.5 25C13 27.5 16 24 19 21Z" fill="#F5EFE3" stroke="#12100C" stroke-width="2.6" stroke-linejoin="round"></path><path d="M69 21C75.5 16.5 83.5 11 90 5c0 9.5-4.5 18.5-12.5 25C75 27.5 72 24 69 21Z" fill="#F5EFE3" stroke="#12100C" stroke-width="2.6" stroke-linejoin="round"></path><path d="M15 32c0-11.6 13-20.6 29-20.6s29 9 29 20.6c0 7-1.6 12.8-4.8 17.6C64.6 57 55.4 61.6 44 61.6S23.4 57 19.8 49.6C16.6 44.8 15 39 15 32Z" fill="#F5EFE3" stroke="#12100C" stroke-width="2.6" stroke-linejoin="round"></path><path d="M32.5 54c0-3.4 5.2-5.6 11.5-5.6s11.5 2.2 11.5 5.6-5.2 5.6-11.5 5.6-11.5-2.2-11.5-5.6Z" fill="none" stroke="#12100C" stroke-width="2.4"></path><circle cx="32" cy="34" r="3.4" fill="#12100C"></circle><circle cx="56" cy="34" r="3.4" fill="#12100C"></circle><circle cx="40" cy="53.6" r="1.8" fill="#12100C"></circle><circle cx="48" cy="53.6" r="1.8" fill="#12100C"></circle></svg></button>
     <div><h1>Picas y Fijas</h1><div class="sub" data-i18n="brand_sub">Duelo de deducción online</div><div class="aka" data-i18n="brand_alias">También conocido como “Bulls and Cows” · inspirado en “Mastermind”</div></div>
+    <button type="button" class="langbtn hidden" id="lang-cycle" data-i18n-title="lang_switch" onclick="cycleLang()">ES</button>
   </div>
 
   <!-- LOGIN -->
   <section id="s-login" class="card">
     <div class="invite-banner hidden" id="login-invite"></div>
-    <h2 data-i18n="login_title">Elige tu nombre de jugador</h2>
-    <p class="hint" data-i18n="login_hint">Tu nombre aparecerá en las partidas y el ranking. Elige un PIN para protegerlo.</p>
-    <label data-i18n="login_lang">Idioma</label>
-    <div class="seg" id="seg-lang">
-      <button data-lang="es">Español</button>
-      <button data-lang="en">English</button>
-      <button data-lang="fr">Français</button>
+    <!-- Paso 1: solo el nombre. La pantalla decia a la vez «registrate» y
+         «vuelve a entrar», y el jugador no sabia en cual estaba. -->
+    <div id="login-step-name">
+      <h2 data-i18n="login_title">Elige tu nombre de jugador</h2>
+      <p class="hint" data-i18n="login_hint">Tu nombre aparecerá en las partidas y el ranking. En el paso siguiente eliges la contraseña que lo protege.</p>
+      <label data-i18n="login_lang">Idioma</label>
+      <div class="seg" id="seg-lang">
+        <button data-lang="es">Español</button>
+        <button data-lang="en">English</button>
+        <button data-lang="fr">Français</button>
+      </div>
+      <label for="uname" data-i18n="login_name">Nombre de usuario</label>
+      <input type="text" id="uname" maxlength="24" data-i18n-ph="login_name_ph" placeholder="p.ej. Diego" autocomplete="off">
+      <div class="val" id="uname-val"></div>
+      <button class="btn" id="btn-name" onclick="submitName()" data-i18n="login_continue">Continuar</button>
     </div>
-    <label for="uname" data-i18n="login_name">Nombre de usuario</label>
-    <input type="text" id="uname" maxlength="24" data-i18n-ph="login_name_ph" placeholder="p.ej. Diego" autocomplete="off">
-    <label for="upin" data-i18n="login_pin">PIN de acceso</label>
-    <input type="password" id="upin" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" data-i18n-ph="login_pin_ph" placeholder="4–8 dígitos" autocomplete="current-password">
-    <p class="fieldnote" data-i18n="login_pin_note">🔒 Es tu contraseña para entrar en la app. No es el código secreto del juego ni el código de la partida.</p>
-    <div class="val" id="uname-val"></div>
-    <button class="btn" id="btn-login" onclick="doLogin()" data-i18n="login_enter">Entrar</button>
+
+    <!-- Paso 2: la contrasena, con las palabras del caso. -->
+    <div id="login-step-pin" class="hidden">
+      <h2 id="login-pin-title"></h2>
+      <p class="hint" id="login-pin-hint"></p>
+      <p class="whoami"><b id="login-who"></b><button type="button" class="linkbtn" onclick="backToName()" data-i18n="login_change_name">Cambiar</button></p>
+      <label for="upin" id="login-pin-label"></label>
+      <p class="fieldnote" data-i18n="login_pin_note">🔒 Es tu contraseña para entrar en la app. No es el código secreto del juego ni el código de la partida.</p>
+      <input type="password" id="upin" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" data-i18n-ph="login_pin_ph" placeholder="4–8 dígitos" autocomplete="current-password">
+      <div id="login-pin2-row" class="hidden">
+        <label for="upin2" data-i18n="login_pin2">Repite tu contraseña</label>
+        <input type="password" id="upin2" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" data-i18n-ph="login_pin_ph" placeholder="4–8 dígitos" autocomplete="new-password">
+        <p class="fieldnote warn" data-i18n="login_pin_warn">📝 Apúntala donde no se pierda: hoy no se puede recuperar sola.</p>
+      </div>
+      <div class="val" id="upin-val"></div>
+      <button class="btn" id="btn-login" onclick="doLogin()" data-i18n="login_enter">Entrar</button>
+      <div class="foot"><button type="button" class="linkbtn hidden" id="login-forgot" onclick="openForgotPin()" data-i18n="login_forgot">¿Olvidaste tu contraseña?</button></div>
+    </div>
     <div class="foot"><a class="link" data-rules-link href="/como-se-juega" onclick="openRules();return false" data-i18n="rules_link">¿Cómo se juega?</a><span id="login-install" class="hidden"> · <a class="link" data-install-link id="login-install-link" href="/instalar"></a></span></div>
     <div class="foot credits"></div>
     <div class="foot"><button type="button" class="linkbtn" onclick="openFeedback()"><span data-ico="globo" data-ico-size="14"></span><span data-i18n="feedback_link">Sugerencias y errores</span></button></div>
@@ -443,6 +475,7 @@
   <!-- LOBBY -->
   <section id="s-lobby" class="hidden">
     <div class="card">
+      <div class="invite-banner hidden" id="lobby-welcome"></div>
       <div class="greet">
         <div class="greet-main">
           <h2 id="lobby-greet"></h2>
@@ -885,7 +918,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = '2.5';
+const APP_VERSION = '2.6.0';
 /* Enlace de invitación: ...?game=SZ93 */
 let pendingJoinCode = '';
 (function(){
@@ -901,11 +934,22 @@ const I18N = {
   es:{
     brand_sub:"Duelo de deducción online", brand_alias:"También conocido como “Bulls and Cows” · inspirado en “Mastermind”",
     login_title:"Elige tu nombre de jugador",
-    login_hint:"Tu nombre aparecerá en las partidas y el ranking. Elige un PIN para protegerlo.",
-    login_lang:"Idioma", login_name:"Nombre de usuario", login_name_ph:"p.ej. Diego", login_pin:"PIN de acceso", login_pin_ph:"4–8 dígitos",
+    login_hint:"Tu nombre aparecerá en las partidas y el ranking. En el paso siguiente eliges la contraseña que lo protege.",
+    login_lang:"Idioma", lang_switch:"Cambiar idioma", login_name:"Nombre de usuario", login_name_ph:"p.ej. Diego", login_pin:"Tu contraseña · 4–8 dígitos", login_pin_ph:"4–8 dígitos",
     login_pin_note:"🔒 Es tu contraseña para entrar en la app. No es el código secreto del juego ni el código de la partida.",
-    login_invite:"🎮 Te han invitado a la partida {code}. Crea tu nombre y tu PIN y entrarás directo.",
-    login_enter:"Entrar", login_min:"Mínimo 2 caracteres", login_pin_invalid:"El PIN debe tener entre 4 y 8 dígitos",
+    login_invite:"🎮 Te han invitado a la partida {code}. Crea tu nombre y tu contraseña y entrarás directo.",
+    login_enter:"Entrar", login_min:"Mínimo 2 caracteres", login_pin_invalid:"La contraseña debe tener entre 4 y 8 dígitos",
+    login_continue:"Continuar", login_change_name:"Cambiar",
+    login_back_title:"Hola otra vez, {name}", login_back_hint:"Escribe la contraseña que elegiste al registrarte.",
+    login_new_title:"Nombre libre: crea tu contraseña", login_new_hint:"Nadie usa ese nombre todavía. Elige una contraseña de 4 a 8 dígitos: la necesitarás cada vez que vuelvas.",
+    login_pin_new:"Crea tu contraseña · 4–8 dígitos", login_pin2:"Repite tu contraseña",
+    login_pin_warn:"📝 Apúntala donde no se pierda: hoy no se puede recuperar sola.",
+    login_pin_mismatch:"Las dos contraseñas no coinciden",
+    login_create:"Crear mi cuenta", login_forgot:"¿Olvidaste tu contraseña?",
+    login_wrong_pin:"Esa contraseña no es la de {name}. Prueba otra vez, usa otro nombre o escríbenos.",
+    login_try_other_name:"Usar otro nombre",
+    login_forgot_msg:"No recuerdo la contraseña de mi cuenta «{name}». ¿Podéis ayudarme a recuperarla?",
+    login_welcome:"✅ Cuenta creada. Para volver a entrar como {name} necesitarás esa misma contraseña: guárdala.",
     lobby_greeting:"Hola, {name} 👋",
     lobby_hint:"Crea una partida y comparte el código, o únete a una pública abierta.",
     lobby_create:"Crear partida", lobby_practice:"Practicar", lobby_ranking:"Ranking", lobby_refresh:"Actualizar lista",
@@ -970,11 +1014,22 @@ const I18N = {
   en:{
     brand_sub:"Online deduction duel", brand_alias:"Also known as “Bulls and Cows” · inspired by “Mastermind”",
     login_title:"Choose your player name",
-    login_hint:"Your name appears in games and on the ranking. Choose a PIN to protect it.",
-    login_lang:"Language", login_name:"Username", login_name_ph:"e.g. Diego", login_pin:"Access PIN", login_pin_ph:"4–8 digits",
+    login_hint:"Your name appears in games and on the ranking. You will choose the password that protects it in the next step.",
+    login_lang:"Language", lang_switch:"Change language", login_name:"Username", login_name_ph:"e.g. Diego", login_pin:"Your password · 4–8 digits", login_pin_ph:"4–8 digits",
     login_pin_note:"🔒 It's your password to sign in to the app. It is not the game's secret code nor the game code.",
-    login_invite:"🎮 You've been invited to game {code}. Choose your name and PIN and you'll go straight in.",
-    login_enter:"Enter", login_min:"At least 2 characters", login_pin_invalid:"The PIN must contain 4 to 8 digits",
+    login_invite:"🎮 You've been invited to game {code}. Choose your name and password and you'll go straight in.",
+    login_enter:"Enter", login_min:"At least 2 characters", login_pin_invalid:"The password must contain 4 to 8 digits",
+    login_continue:"Continue", login_change_name:"Change",
+    login_back_title:"Welcome back, {name}", login_back_hint:"Type the password you chose when you signed up.",
+    login_new_title:"Name available: create your password", login_new_hint:"Nobody uses that name yet. Choose a 4 to 8 digit password: you will need it every time you come back.",
+    login_pin_new:"Create your password · 4–8 digits", login_pin2:"Repeat your password",
+    login_pin_warn:"📝 Write it down somewhere safe: today it cannot be recovered on its own.",
+    login_pin_mismatch:"The two passwords do not match",
+    login_create:"Create my account", login_forgot:"Forgot your password?",
+    login_wrong_pin:"That is not {name}'s password. Try again, use another name or write to us.",
+    login_try_other_name:"Use another name",
+    login_forgot_msg:"I cannot remember the password of my account “{name}”. Could you help me recover it?",
+    login_welcome:"✅ Account created. To sign in as {name} again you will need that same password: keep it safe.",
     lobby_greeting:"Hi, {name} 👋",
     lobby_hint:"Create a game and share the code, or join an open public one.",
     lobby_create:"Create game", lobby_practice:"Practice", lobby_ranking:"Ranking", lobby_refresh:"Refresh list",
@@ -1039,11 +1094,22 @@ const I18N = {
   fr:{
     brand_sub:"Duel de déduction en ligne", brand_alias:"Aussi appelé « Bulls and Cows » · inspiré de « Mastermind »",
     login_title:"Choisis ton nom de joueur",
-    login_hint:"Ton nom apparaît dans les parties et le classement. Choisis un PIN pour le protéger.",
-    login_lang:"Langue", login_name:"Nom d'utilisateur", login_name_ph:"ex. Diego", login_pin:"PIN d'accès", login_pin_ph:"4–8 chiffres",
+    login_hint:"Ton nom apparaît dans les parties et le classement. Tu choisiras à l'étape suivante le mot de passe qui le protège.",
+    login_lang:"Langue", lang_switch:"Changer de langue", login_name:"Nom d'utilisateur", login_name_ph:"ex. Diego", login_pin:"Ton mot de passe · 4–8 chiffres", login_pin_ph:"4–8 chiffres",
     login_pin_note:"🔒 C'est ton mot de passe pour entrer dans l'app. Ce n'est ni le code secret du jeu ni le code de la partie.",
-    login_invite:"🎮 Tu es invité à la partie {code}. Choisis ton nom et ton PIN et tu entreras directement.",
-    login_enter:"Entrer", login_min:"2 caractères minimum", login_pin_invalid:"Le PIN doit contenir de 4 à 8 chiffres",
+    login_invite:"🎮 Tu es invité à la partie {code}. Choisis ton nom et ton mot de passe et tu entreras directement.",
+    login_enter:"Entrer", login_min:"2 caractères minimum", login_pin_invalid:"Le mot de passe doit contenir de 4 à 8 chiffres",
+    login_continue:"Continuer", login_change_name:"Changer",
+    login_back_title:"Te revoilà, {name}", login_back_hint:"Écris le mot de passe choisi lors de ton inscription.",
+    login_new_title:"Nom libre : crée ton mot de passe", login_new_hint:"Personne n'utilise encore ce nom. Choisis un mot de passe de 4 à 8 chiffres : il te sera demandé à chaque retour.",
+    login_pin_new:"Crée ton mot de passe · 4–8 chiffres", login_pin2:"Répète ton mot de passe",
+    login_pin_warn:"📝 Note-le en lieu sûr : aujourd'hui il ne peut pas être récupéré tout seul.",
+    login_pin_mismatch:"Les deux mots de passe ne correspondent pas",
+    login_create:"Créer mon compte", login_forgot:"Mot de passe oublié ?",
+    login_wrong_pin:"Ce n'est pas le mot de passe de {name}. Réessaie, prends un autre nom ou écris-nous.",
+    login_try_other_name:"Utiliser un autre nom",
+    login_forgot_msg:"Je ne me souviens plus du mot de passe de mon compte « {name} ». Pouvez-vous m'aider à le récupérer ?",
+    login_welcome:"✅ Compte créé. Pour revenir en tant que {name} il te faudra ce même mot de passe : garde-le.",
     lobby_greeting:"Salut, {name} 👋",
     lobby_hint:"Crée une partie et partage le code, ou rejoins une partie publique ouverte.",
     lobby_create:"Créer une partie", lobby_practice:"S'entraîner", lobby_ranking:"Classement", lobby_refresh:"Actualiser la liste",
@@ -1475,6 +1541,7 @@ function creditsHTML(){
 function setCredits(){ document.querySelectorAll('.credits').forEach(el=>{ el.innerHTML=creditsHTML(); }); }
 function applyI18n(){
   document.documentElement.lang = lang;
+  syncLangBtn();
   document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ el.placeholder = t(el.dataset.i18nPh); });
   document.querySelectorAll('[data-i18n-title]').forEach(el=>{ el.title = t(el.dataset.i18nTitle); el.setAttribute('aria-label',t(el.dataset.i18nTitle)); });
@@ -1489,6 +1556,7 @@ function applyI18n(){
   if(typeof updateSoundLabel==='function') updateSoundLabel();
   syncBrandHome();
   if(typeof renderLoginInvite==='function') renderLoginInvite();
+  if(typeof applyLoginPinStep==='function'&&!$('login-step-pin').classList.contains('hidden')) applyLoginPinStep();
   if(typeof updateChatLabels==='function') updateChatLabels();
   if(typeof renderMutedPanel==='function') renderMutedPanel();
   if(typeof updateExperiencePrompt==='function') updateExperiencePrompt();
@@ -1578,6 +1646,14 @@ let currentView = 'login';
 function brandHomeLabel(){
   return currentView==='feedback' && feedbackReturn!=='lobby' ? t('back') : t('result_lobby');
 }
+/* La pantalla de inicio y el buzon ya llevan su propio selector de idioma, con
+   los tres nombres escritos: alli el cuadrado de la cabecera sobra. */
+const LANG_BTN_HIDDEN_ON = new Set(['login','feedback']);
+function syncLangBtn(){
+  const b = $('lang-cycle'); if(!b) return;
+  b.textContent = lang.toUpperCase();
+  b.classList.toggle('hidden', LANG_BTN_HIDDEN_ON.has(currentView));
+}
 function syncBrandHome(){
   const b = $('brand-home'); if(!b) return;
   const on = BRAND_HOME_FROM.has(currentView);
@@ -1599,6 +1675,8 @@ function show(name){
   if(name!=='game') stopTick();
   if(name!=='practice-game') stopPracticeTick();
   syncBrandHome();
+  syncLangBtn();
+  if(name==='login') resetLoginSteps();
   if(!['game','wait'].includes(name)) stopPoll();
   if(name==='lobby'){ startLobbyPoll(); if(typeof updateInstallCard==='function') updateInstallCard(); } else stopLobbyPoll();
   setChatContext(name);
@@ -2024,6 +2102,10 @@ function syncLangUrl(){
   // La invitacion viaja en la busqueda (?game=XXXX): no se puede perder.
   try{ history.replaceState(history.state, '', path + location.search + location.hash); }catch(e){}
 }
+/* El cuadrado de la cabecera recorre los idiomas en bucle: una pulsacion, el
+   siguiente. Es el mismo destino que los botones grandes del login. */
+const LANG_CYCLE = ['es','fr','en'];
+function cycleLang(){ const i = LANG_CYCLE.indexOf(lang); pickLang(LANG_CYCLE[(i+1) % LANG_CYCLE.length]); }
 function pickLang(code){ lang=code; localStorage.setItem('pf_lang', lang); syncLangUrl(); applyI18n(); }
 $('seg-lang').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; pickLang(b.dataset.lang); });
 /* El buzon se abre desde la pantalla de inicio, donde el idioma todavia puede
@@ -2072,22 +2154,89 @@ async function sendFeedback(){
   finally{ feedbackSending=false; button.disabled=false; button.textContent=t('feedback_send'); }
 }
 
-/* -------------------- login -------------------- */
-async function doLogin(){
+/* -------------------- login en dos pasos --------------------
+   Antes una sola pantalla queria decir dos cosas —«registrate» y «vuelve a
+   entrar»— y el jugador tecleaba cuatro digitos cualquiera creyendo que era
+   un codigo de partida. Ahora se pregunta primero el nombre: con la respuesta
+   del servidor la segunda mitad ya sabe a quien le habla. */
+let loginName='', loginKnown=false;
+/* Se guarda del login al lobby para poder decir, una vez, que esa
+   contrasena hara falta manana. */
+let pendingWelcome='';
+function resetLoginSteps(){
+  loginName=''; loginKnown=false;
+  $('login-step-pin').classList.add('hidden');
+  $('login-step-name').classList.remove('hidden');
+  $('upin').value=''; $('upin2').value='';
+  $('upin-val').className='val'; $('upin-val').textContent='';
+}
+function loginStepError(box,msg){ const el=$(box); el.className='val err'; el.textContent=msg; }
+async function submitName(){
   const v=$('uname').value.trim();
-  const pin=$('upin').value.trim();
-  if(v.length<2){ $('uname-val').className='val err'; $('uname-val').textContent=t('login_min'); return; }
-  if(!/^\d{4,8}$/.test(pin)){ $('uname-val').className='val err'; $('uname-val').textContent=t('login_pin_invalid'); return; }
+  if(v.length<2) return loginStepError('uname-val',t('login_min'));
   $('uname-val').className='val'; $('uname-val').textContent=t('loading');
+  let res;
+  try{ res=await api('checkUsername',{username:v}); }
+  catch(e){ return loginStepError('uname-val',t('net_error')); }
+  if(!res.ok) return loginStepError('uname-val',te(res.error));
+  $('uname-val').className='val'; $('uname-val').textContent='';
+  loginName=res.username||v; loginKnown=!!res.known;
+  applyLoginPinStep();
+  $('login-step-name').classList.add('hidden');
+  $('login-step-pin').classList.remove('hidden');
+  try{ $('upin').focus(); }catch(e){}
+}
+/* El paso 2 cambia de palabras, de botones y de campos segun el nombre sea
+   conocido o nuevo: es la mitad del arreglo. */
+function applyLoginPinStep(){
+  $('login-who').textContent=loginName;
+  $('login-pin-title').textContent=loginKnown?t('login_back_title',{name:loginName}):t('login_new_title');
+  $('login-pin-hint').textContent=loginKnown?t('login_back_hint'):t('login_new_hint');
+  $('login-pin-label').textContent=loginKnown?t('login_pin'):t('login_pin_new');
+  $('upin').setAttribute('autocomplete',loginKnown?'current-password':'new-password');
+  $('login-pin2-row').classList.toggle('hidden',loginKnown);
+  $('btn-login').textContent=loginKnown?t('login_enter'):t('login_create');
+  $('login-forgot').classList.toggle('hidden',!loginKnown);
+}
+function backToName(){
+  resetLoginSteps();
+  $('uname-val').className='val'; $('uname-val').textContent='';
+  try{ $('uname').focus(); }catch(e){}
+}
+/* Sin recuperacion automatica todavia, la salida honesta es el buzon: llega
+   al panel con el nombre ya escrito y el PIN se repone desde ahi. */
+function openForgotPin(){
+  const name=loginName||$('uname').value.trim();
+  openFeedback();
+  feedbackKind='question'; segPick($('fb-seg-kind'), $('fb-seg-kind').querySelector('[data-k="question"]'));
+  $('fb-message').value=t('login_forgot_msg',{name});
+  $('fb-message').dispatchEvent(new Event('input'));
+  try{ $('fb-contact').focus(); }catch(e){}
+}
+async function doLogin(){
+  const v=loginName||$('uname').value.trim();
+  const pin=$('upin').value.trim();
+  if(v.length<2){ backToName(); return loginStepError('uname-val',t('login_min')); }
+  if(!/^\d{4,8}$/.test(pin)) return loginStepError('upin-val',t('login_pin_invalid'));
+  if(!loginKnown && $('upin2').value.trim()!==pin) return loginStepError('upin-val',t('login_pin_mismatch'));
+  $('upin-val').className='val'; $('upin-val').textContent=t('loading');
   try{
     userPin=pin;
     const res=await api('loginUser',{username:v});
-    if(!res.ok){ userPin=''; $('uname-val').className='val err'; $('uname-val').textContent=te(res.error); return; }
+    if(!res.ok){
+      userPin='';
+      // Si el nombre ya tenia dueno, el mensaje del servidor es correcto pero
+      // seco: aqui se acompana de las dos salidas reales.
+      loginStepError('upin-val', /PIN/.test(res.error||'') && loginKnown ? t('login_wrong_pin',{name:v}) : te(res.error));
+      $('login-forgot').classList.remove('hidden');
+      return;
+    }
+    if(res.registered) pendingWelcome=res.username||v;
     const previousUser=localStorage.getItem('pf_user')||'';
     user=res.username; sessionToken=res.sessionToken||'';sessionExpiryHandled=false;
     if(previousUser&&previousUser.toLocaleLowerCase()!==user.toLocaleLowerCase())localStorage.removeItem('pf_current_game');
     localStorage.setItem('pf_user',user); localStorage.setItem('pf_session',sessionToken); localStorage.removeItem('pf_pin'); userPin='';
-  }catch(e){ userPin=''; $('uname-val').className='val err'; $('uname-val').textContent=t('net_error'); return; }
+  }catch(e){ userPin=''; return loginStepError('upin-val',t('net_error')); }
   unlockAudio();
   const deepLinkPending=!!pendingJoinCode;
   enterLobby();
@@ -2098,16 +2247,22 @@ function handleSessionExpired(){
   localStorage.removeItem('pf_session');sessionToken='';
   stopPoll();stopLobbyPoll();stopChatPoll();stopTick();
   chatEnabled=false;$('chat-panel').classList.add('hidden');$('chat-launch').classList.add('hidden');
-  show('login');$('uname').value=user||localStorage.getItem('pf_user')||'';$('upin').value='';
+  show('login');$('uname').value=user||localStorage.getItem('pf_user')||'';
   $('uname-val').className='val err';$('uname-val').textContent=t('session_expired');
 }
 async function logout(){
   try{ if(user&&sessionToken) await api('leavePresence',{username:user}); }catch(e){}
   localStorage.removeItem('pf_user'); localStorage.removeItem('pf_pin'); localStorage.removeItem('pf_session'); localStorage.removeItem('pf_current_game'); user=''; userPin=''; sessionToken='';sessionExpiryHandled=false;
   chatEnabled=false;stopChatPoll();$('chat-panel').classList.add('hidden');$('chat-launch').classList.add('hidden');
-  show('login'); $('uname').value=''; $('upin').value='';
+  show('login'); $('uname').value='';
 }
-function enterLobby(){ $('lobby-greet').textContent=t('lobby_greeting',{name:user}); $('lobby-rule').innerHTML=ruleSVG(112); $('lobby-toro').innerHTML=toroSVG('calm',54); updateSoundLabel(); show('lobby'); renderPracticeResumeCard(); refreshLobby(); handleDeepLink(); }
+function enterLobby(){ showWelcomeNote(); $('lobby-greet').textContent=t('lobby_greeting',{name:user}); $('lobby-rule').innerHTML=ruleSVG(112); $('lobby-toro').innerHTML=toroSVG('calm',54); updateSoundLabel(); show('lobby'); renderPracticeResumeCard(); refreshLobby(); handleDeepLink(); }
+
+function showWelcomeNote(){
+  const box=$('lobby-welcome'); if(!box) return;
+  box.classList.toggle('hidden', !pendingWelcome);
+  if(pendingWelcome){ box.textContent=t('login_welcome',{name:pendingWelcome}); pendingWelcome=''; }
+}
 
 /* -------------------- lobby -------------------- */
 let myWaitingIds = new Set();
@@ -2924,8 +3079,9 @@ async function refreshGame(expectedEpoch=gameViewEpoch, expectedGameId=game.id){
 }
 $('g-guess').addEventListener('input', e=>setVal('g-guess-val', e.target.value, game.digits, game.allowRepeats));
 
-bindEnterToButton('uname','btn-login');
+bindEnterToButton('uname','btn-name');
 bindEnterToButton('upin','btn-login');
+bindEnterToButton('upin2','btn-login');
 bindEnterToButton('join-code-inp','btn-join-code');
 bindEnterToButton('secret-c','btn-create');
 bindEnterToButton('secret-j','btn-join');

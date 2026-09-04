@@ -19,7 +19,7 @@ import {
   usernameKey,
   validateCode,
 } from "./game.js";
-import { authenticate, hashPin, login, requestOrigin, validPin } from "./security.js";
+import { authenticate, hashPin, login, lookupName, requestOrigin, validPin } from "./security.js";
 import {
   adminDeleteUser,
   adminMergeUsers,
@@ -1334,6 +1334,9 @@ async function routeApi(request, env, ctx) {
     return json(
       await login(env.DB, params, env.SESSION_TTL_HOURS, requestOrigin(request)),
     );
+  // Paso previo del registro: publico como `loginUser`, porque se responde
+  // antes de que exista ninguna sesion.
+  if (action === "checkUsername") return json(await lookupName(env.DB, params));
   // El buzon se abre desde la pantalla de inicio, donde todavia no hay sesion,
   // asi que es el unico endpoint que escribe sin autenticar. Si de todas formas
   // llega una sesion valida, el nombre se guarda para poder responder.

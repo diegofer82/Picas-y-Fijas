@@ -70,6 +70,21 @@ export async function authenticate(db, request, params) {
   return { user, tokenHash };
 }
 
+/* Primer paso del registro: saber si el nombre ya tiene dueno para poder
+   pedir la contrasena con las palabras correctas —«vuelve a entrar» o «crea
+   una»— en vez de dejar al jugador adivinando en que mitad esta.
+   No revela nada nuevo: el ranking ya publica los nombres y el propio
+   `login` distingue el nombre libre del ocupado en su mensaje de error. Es
+   una sola lectura por el indice unico `username_key`, sin escrituras, para
+   no gastar el presupuesto de D1 en cada tecleo. */
+export async function lookupName(db, params) {
+  const username = cleanName(params.username);
+  if (username.length < 2) return { ok:false, error:'El nombre debe tener al menos 2 caracteres.' };
+  const row = await db.prepare('SELECT username FROM users WHERE username_key=?')
+    .bind(usernameKey(username)).first();
+  return { ok:true, known:!!row, username:row?.username || username };
+}
+
 export async function login(db, params, ttlHours, origin = {}) {
   const username = cleanName(params.username);
   const key = usernameKey(username);
