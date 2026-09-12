@@ -391,7 +391,7 @@ test('la pantalla del buzón existe, lleva su propio selector de idioma y se abr
   // El campo trampa no se ve, pero esta.
   assert.match(html, /id="fb-website"[^>]*aria-hidden="true"/);
   // Y la pantalla entra en el conmutador de vistas.
-  assert.match(html, /\['login','lobby','account','feedback',/);
+  assert.match(html, /\['login','verify','lobby','account','feedback',/);
 });
 
 test('la marca devuelve desde el buzón al sitio del que se entró', async () => {

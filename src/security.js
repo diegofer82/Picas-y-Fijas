@@ -158,9 +158,6 @@ export async function login(db, params, ttlHours, origin = {}) {
     ? 'No existe una cuenta con ese correo.'
     : 'No existe ninguna cuenta con ese nombre. Crea una cuenta para empezar.' };
   if (user.blocked_at) return { ok:false, error:'Este usuario está bloqueado.' };
-  // Solo se exige activacion a las cuentas que declararon un correo. Las
-  // cuentas historicas (sin correo) siguen entrando con nombre y PIN.
-  if (user.email && !user.email_verified_at) return { ok:false, error:'Activa tu cuenta desde el enlace enviado a tu correo.' };
   const stamp = new Date().toISOString();
   if (!await verifyPin(pin, user.pin_salt, user.pin_hash)) {
     const failures = (Number(attempt?.failures) || 0) + 1;
@@ -181,7 +178,14 @@ export async function login(db, params, ttlHours, origin = {}) {
       .bind(stamp, origin.ip || '', origin.ip || '', origin.country || '', origin.country || '', user.id),
   ]);
   const session = await createSession(db, user, ttlHours, origin);
-  return { ok:true, username:user.username, firstLogin, role:user.role, sessionToken:session.token, sessionExpiresAt:session.expiresAt };
+  // Sin correo verificado la sesion nace a medias: sirve para validar el
+  // correo y para nada mas. Entrar no se rechaza —haria falta una sesion para
+  // poder pedir el enlace, y quien nunca declaro correo no tendria por donde
+  // empezar—, pero `emailPending` manda al jugador a la pantalla que bloquea
+  // todo lo demas hasta que el enlace este abierto.
+  return { ok:true, username:user.username, firstLogin, role:user.role,
+    emailPending:!user.email_verified_at, email:user.email || '',
+    sessionToken:session.token, sessionExpiresAt:session.expiresAt };
 }
 
 export async function register(db, env, params, ttlHours, origin = {}) {

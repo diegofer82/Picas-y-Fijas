@@ -605,6 +605,25 @@
     </div>
   </section>
 
+  <!-- VALIDAR EL CORREO: nada mas se puede hacer hasta que este hecho -->
+  <section id="s-verify" class="hidden">
+    <div class="card">
+      <h2 data-i18n="verify_title">Valida tu correo</h2>
+      <p class="hint" id="verify-hint"></p>
+      <div class="whoami"><b id="verify-name">—</b></div>
+      <form id="verify-form">
+        <input class="offscreen" id="verify-username" type="text" autocomplete="username" tabindex="-1" aria-hidden="true" readonly>
+        <label for="verify-email" data-i18n="account_email">Correo de acceso</label>
+        <input id="verify-email" type="email" maxlength="254" autocomplete="email" data-i18n-ph="auth_email_ph" placeholder="tu@ejemplo.com">
+        <div class="val" id="verify-val"></div>
+        <button class="btn" id="verify-send" type="submit" data-i18n="verify_send">Enviar el enlace</button>
+      </form>
+      <div style="height:14px"></div>
+      <button class="btn ghost" onclick="recheckVerification()" data-i18n="verify_done">Ya lo he validado</button>
+      <div class="foot"><button type="button" class="linkbtn" onclick="logout()" data-i18n="lobby_changeuser">Cambiar de usuario</button></div>
+    </div>
+  </section>
+
   <!-- PRACTICA: CONFIGURACION -->
   <section id="s-practice" class="hidden">
     <div class="card">
@@ -967,7 +986,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v3.0.0';
+const APP_VERSION = 'v3.1.0';
 /* Enlace de invitación: ...?game=SZ93 */
 let pendingJoinCode = '';
 (function(){
@@ -1401,7 +1420,8 @@ const ERR = {
     "Ese correo ya está asociado a otra cuenta.":"That email already belongs to another account.",
     "No pudimos enviar el correo. Inténtalo más tarde.":"We couldn't send the email. Please try again later.",
     "El enlace no es válido o ya caducó.":"That link is invalid or has expired.",
-    "El PIN actual no es correcto.":"Your current PIN is not correct."
+    "El PIN actual no es correcto.":"Your current PIN is not correct.",
+    "Valida tu correo electrónico para continuar.":"Verify your email address to continue."
   },
   fr:{
     "Falta el nombre de usuario.":"Nom d'utilisateur manquant.",
@@ -1458,7 +1478,8 @@ const ERR = {
     "Ese correo ya está asociado a otra cuenta.":"Cet e-mail est déjà lié à un autre compte.",
     "No pudimos enviar el correo. Inténtalo más tarde.":"Nous n'avons pas pu envoyer l'e-mail. Réessaie plus tard.",
     "El enlace no es válido o ya caducó.":"Ce lien est invalide ou a expiré.",
-    "El PIN actual no es correcto.":"Ton PIN actuel n'est pas correct."
+    "El PIN actual no es correcto.":"Ton PIN actuel n'est pas correct.",
+    "Valida tu correo electrónico para continuar.":"Valide ton adresse e-mail pour continuer."
   }
 };
 
@@ -1574,9 +1595,9 @@ Object.assign(I18N.fr,{
   ,auth_pin_new:"Nouveau PIN · 4–8 chiffres",auth_reset_title:"Choisissez un nouveau PIN",auth_reset_hint:"Votre nouveau PIN protégera votre compte.",auth_reset_cta:"Enregistrer mon nouveau PIN",auth_reset_done:"PIN mis à jour. Vous pouvez vous connecter."
 });
 
-Object.assign(I18N.es,{account_link:"Mi cuenta",account_title:"Mi cuenta",account_hint:"Gestiona tu correo y tu PIN de acceso.",account_email:"Correo de acceso",account_save_email:"Verificar este nuevo correo",account_pin_title:"Cambiar mi PIN",account_pin_hint:"Tu PIN debe tener entre 4 y 8 dígitos.",account_current_pin:"PIN actual",account_new_pin:"Nuevo PIN",account_save_pin:"Guardar mi nuevo PIN",account_email_verified:"✓ Correo verificado",account_email_pending:"Revisa tu correo y abre el enlace para verificarlo.",account_email_sent:"Te enviamos un enlace de verificación.",account_pin_saved:"PIN actualizado. Tus otras sesiones se cerraron.",account_email_missing:"No has apuntado ningún correo: sin él no podrás recuperar tu PIN.",account_current_pin_invalid:"Escribe tu PIN actual."});
-Object.assign(I18N.en,{account_link:"My account",account_title:"My account",account_hint:"Manage your email and sign-in PIN.",account_email:"Sign-in email",account_save_email:"Verify this new email",account_pin_title:"Change my PIN",account_pin_hint:"Your PIN must be 4 to 8 digits.",account_current_pin:"Current PIN",account_new_pin:"New PIN",account_save_pin:"Save my new PIN",account_email_verified:"✓ Email verified",account_email_pending:"Check your email and open the link to verify it.",account_email_sent:"We sent you a verification link.",account_pin_saved:"PIN updated. Your other sessions were signed out.",account_email_missing:"No email saved yet: without one you cannot recover your PIN.",account_current_pin_invalid:"Enter your current PIN."});
-Object.assign(I18N.fr,{account_link:"Mon compte",account_title:"Mon compte",account_hint:"Gérez votre e-mail et votre PIN de connexion.",account_email:"E-mail de connexion",account_save_email:"Vérifier ce nouvel e-mail",account_pin_title:"Modifier mon PIN",account_pin_hint:"Votre PIN doit contenir de 4 à 8 chiffres.",account_current_pin:"PIN actuel",account_new_pin:"Nouveau PIN",account_save_pin:"Enregistrer mon nouveau PIN",account_email_verified:"✓ E-mail vérifié",account_email_pending:"Consultez votre e-mail et ouvrez le lien de vérification.",account_email_sent:"Nous vous avons envoyé un lien de vérification.",account_pin_saved:"PIN mis à jour. Vos autres sessions ont été fermées.",account_email_missing:"Aucun e-mail enregistré : sans lui, impossible de récupérer ton PIN.",account_current_pin_invalid:"Saisis ton PIN actuel."});
+Object.assign(I18N.es,{account_link:"Mi cuenta",account_title:"Mi cuenta",account_hint:"Gestiona tu correo y tu PIN de acceso.",account_email:"Correo de acceso",account_save_email:"Verificar este nuevo correo",account_pin_title:"Cambiar mi PIN",account_pin_hint:"Tu PIN debe tener entre 4 y 8 dígitos.",account_current_pin:"PIN actual",account_new_pin:"Nuevo PIN",account_save_pin:"Guardar mi nuevo PIN",account_email_verified:"✓ Correo verificado",account_email_pending:"Revisa tu correo y abre el enlace para verificarlo.",account_email_sent:"Te enviamos un enlace de verificación.",account_pin_saved:"PIN actualizado. Tus otras sesiones se cerraron.",account_email_missing:"No has apuntado ningún correo: sin él no podrás recuperar tu PIN.",account_current_pin_invalid:"Escribe tu PIN actual.",verify_title:"Valida tu correo",verify_hint_missing:"Tu cuenta todavía no tiene correo. Apunta uno: es lo que te permitirá recuperar tu PIN si lo olvidas, y hace falta para jugar.",verify_hint_sent:"Te enviamos un enlace. Ábrelo desde este correo para desbloquear tu cuenta; caduca en 30 días.",verify_send:"Enviar el enlace",verify_resend:"Enviar otro enlace",verify_sent:"Enlace enviado. Revisa tu bandeja de entrada y también el correo no deseado.",verify_done:"Ya lo he validado",verify_not_yet:"Todavía no nos consta validado. Abre el enlace del correo y vuelve a intentarlo."});
+Object.assign(I18N.en,{account_link:"My account",account_title:"My account",account_hint:"Manage your email and sign-in PIN.",account_email:"Sign-in email",account_save_email:"Verify this new email",account_pin_title:"Change my PIN",account_pin_hint:"Your PIN must be 4 to 8 digits.",account_current_pin:"Current PIN",account_new_pin:"New PIN",account_save_pin:"Save my new PIN",account_email_verified:"✓ Email verified",account_email_pending:"Check your email and open the link to verify it.",account_email_sent:"We sent you a verification link.",account_pin_saved:"PIN updated. Your other sessions were signed out.",account_email_missing:"No email saved yet: without one you cannot recover your PIN.",account_current_pin_invalid:"Enter your current PIN.",verify_title:"Verify your email",verify_hint_missing:"Your account has no email yet. Add one: it is what lets you recover your PIN if you forget it, and it is required to play.",verify_hint_sent:"We sent you a link. Open it from that inbox to unlock your account; it expires in 30 days.",verify_send:"Send the link",verify_resend:"Send another link",verify_sent:"Link sent. Check your inbox, and your spam folder too.",verify_done:"I have verified it",verify_not_yet:"We don't see it verified yet. Open the link in the email and try again."});
+Object.assign(I18N.fr,{account_link:"Mon compte",account_title:"Mon compte",account_hint:"Gérez votre e-mail et votre PIN de connexion.",account_email:"E-mail de connexion",account_save_email:"Vérifier ce nouvel e-mail",account_pin_title:"Modifier mon PIN",account_pin_hint:"Votre PIN doit contenir de 4 à 8 chiffres.",account_current_pin:"PIN actuel",account_new_pin:"Nouveau PIN",account_save_pin:"Enregistrer mon nouveau PIN",account_email_verified:"✓ E-mail vérifié",account_email_pending:"Consultez votre e-mail et ouvrez le lien de vérification.",account_email_sent:"Nous vous avons envoyé un lien de vérification.",account_pin_saved:"PIN mis à jour. Vos autres sessions ont été fermées.",account_email_missing:"Aucun e-mail enregistré : sans lui, impossible de récupérer ton PIN.",account_current_pin_invalid:"Saisis ton PIN actuel.",verify_title:"Valide ton e-mail",verify_hint_missing:"Ton compte n'a pas encore d'e-mail. Ajoutes-en un : c'est ce qui te permettra de récupérer ton PIN si tu l'oublies, et c'est nécessaire pour jouer.",verify_hint_sent:"Nous t'avons envoyé un lien. Ouvre-le depuis cette boîte pour débloquer ton compte ; il expire dans 30 jours.",verify_send:"Envoyer le lien",verify_resend:"Envoyer un autre lien",verify_sent:"Lien envoyé. Vérifie ta boîte de réception, et aussi les indésirables.",verify_done:"Je l'ai validé",verify_not_yet:"Nous ne le voyons pas encore validé. Ouvre le lien reçu par e-mail et réessaie."});
 
 let lang = URL_LANG || localStorage.getItem('pf_lang') || 'es';
 if(URL_LANG) localStorage.setItem('pf_lang', URL_LANG);
@@ -1787,7 +1808,7 @@ function brandHome(){
 function show(name){
   currentView = name;
   if(name!=='game') gameViewEpoch++;
-  ['login','lobby','account','feedback','rank','history','rules','practice','practice-game','create','wait','join','rematch','game'].forEach(s=>{
+  ['login','verify','lobby','account','feedback','rank','history','rules','practice','practice-game','create','wait','join','rematch','game'].forEach(s=>{
     $('s-'+s).classList.toggle('hidden', s!==name);
   });
   if(name!=='game') stopTick();
@@ -1822,6 +1843,14 @@ async function api(action, payload={}, options={}){
     if(res.status===401&&!['loginUser','registerUser'].includes(action)){
       handleSessionExpired();
       throw new Error('SESSION_EXPIRED');
+    }
+    // El servidor corta en seco cualquier accion de una cuenta sin correo
+    // verificado. El navegador no decide nada: solo obedece y enseña la
+    // pantalla que desbloquea la situacion.
+    if(res.status===403){
+      const denied=await res.json().catch(()=>({}));
+      if(denied.code==='email_pending'){ handleEmailPending(); throw new Error('EMAIL_PENDING'); }
+      throw new Error(denied.error||'HTTP 403');
     }
     if(!res.ok) throw new Error('HTTP '+res.status);
     const data=await res.json(), clientReceivedAt=Date.now();
@@ -2325,13 +2354,66 @@ function completeAccess(res, fallback){
   user=res.username; sessionToken=res.sessionToken||''; sessionExpiryHandled=false;
   if(previousUser&&previousUser.toLocaleLowerCase()!==user.toLocaleLowerCase()) localStorage.removeItem('pf_current_game');
   localStorage.setItem('pf_user',user); localStorage.setItem('pf_session',sessionToken); localStorage.removeItem('pf_pin'); userPin='';
-  unlockAudio(); const deepLinkPending=!!pendingJoinCode; enterLobby(); if(!deepLinkPending) resumeStoredGame();
+  unlockAudio();
+  if(res.emailPending) return showVerifyGate(res);
+  enterAfterAccess();
+}
+/* La entrada normal, una vez el correo esta validado. */
+function enterAfterAccess(){
+  const deepLinkPending=!!pendingJoinCode; enterLobby(); if(!deepLinkPending) resumeStoredGame();
+}
+
+/* -------------------- la puerta del correo --------------------
+   Una cuenta sin correo verificado entra, pero no llega a ninguna parte: esta
+   pantalla es lo unico que ve. Dice dos cosas distintas segun el caso —no hay
+   correo apuntado, o lo hay y falta abrir el enlace— porque lo que tiene que
+   hacer la persona tambien es distinto. */
+function paintVerifyGate(){
+  const pending=$('verify-email').value.trim();
+  $('verify-hint').textContent=t(pending?'verify_hint_sent':'verify_hint_missing');
+  $('verify-send').textContent=t(pending?'verify_resend':'verify_send');
+}
+function showVerifyGate(info={}){
+  const name=info.username||user||localStorage.getItem('pf_user')||'';
+  show('verify');
+  $('verify-name').textContent=name; $('verify-username').value=name;
+  if(info.email!==undefined) $('verify-email').value=info.email||'';
+  $('verify-val').className='val'; $('verify-val').textContent='';
+  paintVerifyGate();
+}
+function handleEmailPending(){
+  if(currentView==='verify')return;
+  stopPoll();stopLobbyPoll();stopChatPoll();stopTick();
+  chatEnabled=false;$('chat-panel').classList.add('hidden');$('chat-launch').classList.add('hidden');
+  showVerifyGate({});
+  // La ficha llega aparte: es una accion permitida aunque la puerta este cerrada.
+  api('accountProfile').then(profile=>{ if(profile&&profile.ok){ $('verify-email').value=profile.email||''; paintVerifyGate(); } }).catch(()=>{});
+}
+async function sendVerification(){
+  const email=$('verify-email').value.trim();
+  if(!/^\S+@\S+\.\S+$/.test(email))return authError('verify-val',t('auth_email_invalid'));
+  $('verify-val').className='val'; $('verify-val').textContent=t('loading');
+  try{
+    const res=await api('requestEmailVerification',{email});
+    if(!res.ok)return authError('verify-val',te(res.error));
+    $('verify-val').className='val ok'; $('verify-val').textContent=t('verify_sent'); paintVerifyGate();
+  }catch(e){ if(e.message!=='EMAIL_PENDING'&&e.message!=='SESSION_EXPIRED') authError('verify-val',t('net_error')); }
+}
+async function recheckVerification(){
+  $('verify-val').className='val'; $('verify-val').textContent=t('loading');
+  try{
+    const res=await api('accountProfile');
+    if(res.ok&&res.emailVerifiedAt){ user=res.username; return enterAfterAccess(); }
+    $('verify-email').value=res.email||''; paintVerifyGate();
+    authError('verify-val',t('verify_not_yet'));
+  }catch(e){ if(e.message!=='EMAIL_PENDING'&&e.message!=='SESSION_EXPIRED') authError('verify-val',t('net_error')); }
 }
 $('auth-register-panel').addEventListener('submit',e=>{e.preventDefault();registerAccount()});
 $('auth-login-panel').addEventListener('submit',e=>{e.preventDefault();loginAccount()});
 $('auth-forgot-panel').addEventListener('submit',e=>{e.preventDefault();requestPinRecovery()});
 $('account-email-form').addEventListener('submit',e=>{e.preventDefault();saveAccountEmail()});
 $('account-pin-form').addEventListener('submit',e=>{e.preventDefault();saveAccountPin()});
+$('verify-form').addEventListener('submit',e=>{e.preventDefault();sendVerification()});
 async function registerAccount(){
   const email=$('reg-email').value.trim(), name=$('uname').value.trim(), pin=$('upin').value.trim(), repeat=$('upin2').value.trim();
   if(!/^\S+@\S+\.\S+$/.test(email)) return authError('auth-register-val',t('auth_email_invalid'));
@@ -3596,7 +3678,12 @@ if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').then(
 const emailVerificationToken=new URLSearchParams(location.search).get('verify_email')||'';
 async function boot(){
   if(emailVerificationToken){
-    try{const res=await api('verifyEmail',{token:emailVerificationToken});history.replaceState({},'',location.pathname);if(!res.ok){show('login');setAuthMode('login');return authError('auth-login-val',te(res.error));}show('login');setAuthMode('login');$('auth-login-val').className='val ok';$('auth-login-val').textContent=t('auth_email_verified');return;}
+    try{const res=await api('verifyEmail',{token:emailVerificationToken});history.replaceState({},'',location.pathname);
+      if(!res.ok){show('login');setAuthMode('login');return authError('auth-login-val',te(res.error));}
+      // Si el enlace se abre en el mismo navegador donde la sesion esperaba
+      // detras de la puerta, no hay que volver a escribir el PIN.
+      if(sessionToken){ try{ const profile=await api('accountProfile'); if(profile.ok&&profile.emailVerifiedAt){ user=profile.username; return enterAfterAccess(); } }catch(err){} }
+      show('login');setAuthMode('login');$('auth-login-val').className='val ok';$('auth-login-val').textContent=t('auth_email_verified');return;}
     catch(e){show('login');setAuthMode('login');return authError('auth-login-val',t('net_error'));}
   }
   if(user&&sessionToken){const deepLinkPending=!!pendingJoinCode;enterLobby();if(!deepLinkPending)resumeStoredGame();}

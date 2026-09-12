@@ -113,12 +113,12 @@
       <div class="row login-row"><input id="username" name="username" placeholder="Usuario o correo" aria-label="Usuario o correo" autocomplete="username" autofocus><input id="pin" name="password" type="password" inputmode="numeric" placeholder="PIN" aria-label="PIN" autocomplete="current-password"><button class="primary" id="loginButton" type="submit">Entrar</button></div>
     </form>
     <p id="loginError" class="error"></p>
+    <div id="loginGate" class="banner hidden"></div>
     <p class="muted small">El panel usa la cuenta del juego. Si olvidaste el PIN, pide un
       <a href="/?forgot=1">enlace de recuperacion por correo</a> y vuelve aqui con el PIN nuevo.</p>
   </section>
 
   <section id="dashboard" class="hidden">
-    <div id="adminEmailWarn" class="banner hidden"></div>
     <nav class="tabs" id="tabs">
       <button data-tab="resumen" class="on">Resumen</button>
       <button data-tab="usuarios">Usuarios</button>
@@ -243,30 +243,27 @@ async function api(action,payload={}){
 function signOut(){token='';localStorage.removeItem('pf_admin_session');}
 function showLogin(message){signOut();$('login').classList.remove('hidden');$('dashboard').classList.add('hidden');$('loginError').textContent=message||'';}
 async function login(){
+  $('loginGate').classList.add('hidden');
   try{
     const r=await api('loginUser',{identifier:$('username').value.trim(),pin:$('pin').value.trim()});
     if(r.role!=='admin')throw Error('Este usuario no es administrador.');
+    // El panel corre sobre la misma sesion del juego, y una sesion sin correo
+    // verificado no puede hacer nada: mas vale decirlo aqui que dejar entrar a
+    // un panel donde cada pestana responderia con un error.
+    if(r.emailPending)return showGate(r.email);
     token=r.sessionToken;localStorage.setItem('pf_admin_session',token);
     $('pin').value='';
     $('login').classList.add('hidden');$('dashboard').classList.remove('hidden');$('loginError').textContent='';
-    loaded.clear();await openTab('resumen');checkOwnRecovery();
+    loaded.clear();await openTab('resumen');
   }catch(e){$('loginError').textContent=e.message}
 }
-
-/* Sin correo verificado, un PIN olvidado deja el portal sin ninguna puerta:
-   solo quedaria entrar por SQL. El aviso lo dice antes de que pase y lleva
-   directo a la pantalla del juego donde se anade el correo. */
-async function checkOwnRecovery(){
-  const box=$('adminEmailWarn');
-  try{
-    const me=await api('accountProfile');
-    const safe=me.email&&me.emailVerifiedAt;
-    box.classList.toggle('hidden',!!safe);
-    if(!safe)box.innerHTML=`<span>⚠️</span><div><b>Tu cuenta no puede recuperar el PIN.</b>
-      ${me.email?'Tienes un correo apuntado pero sin verificar.':'No has apuntado ningún correo.'}
-      Si lo olvidas, este panel se queda sin acceso. Añádelo en
-      <a href="/" target="_blank" rel="noopener">Mi cuenta</a>, dentro del juego.</div>`;
-  }catch(e){box.classList.add('hidden')}
+function showGate(email){
+  $('loginError').textContent='';
+  const box=$('loginGate');box.classList.remove('hidden');
+  box.innerHTML=`<span>⚠️</span><div><b>Valida tu correo antes de entrar.</b>
+    ${email?`Te enviamos un enlace a <code>${esc(email)}</code>: ábrelo y vuelve aquí.`
+           :'Tu cuenta todavía no tiene correo apuntado.'}
+    Se hace desde el juego: <a href="/">entra en Picas y Fijas</a> y sigue la pantalla que aparece.</div>`;
 }
 
 /* ---- pestañas: cada una pide sus datos la primera vez que se abre ---- */
@@ -278,6 +275,7 @@ async function openTab(name){
   try{await loaders[name]();loaded.add(name);}catch(e){reportFailure(e)}
 }
 function reportFailure(e){
+  if(/Valida tu correo/.test(e.message)){showLogin('');return showGate('')}
   if(/sesión|Sesión|administrador requerido/.test(e.message))showLogin(e.message);
   else notify('No se pudo completar la acción',e.message);
 }
@@ -702,5 +700,5 @@ $('logout').onclick=()=>{signOut();location.reload()};
 // y devuelve a la persona al juego, que tiene su propia sesión aparte.
 $('backToGame').onclick=()=>{signOut();location.href='/'};
 $('loginForm').addEventListener('submit',e=>{e.preventDefault();login()});
-if(token){$('login').classList.add('hidden');$('dashboard').classList.remove('hidden');openTab('resumen');checkOwnRecovery();}
+if(token){$('login').classList.add('hidden');$('dashboard').classList.remove('hidden');openTab('resumen');}
 </script></main></body></html>

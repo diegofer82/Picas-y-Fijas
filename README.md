@@ -6,7 +6,9 @@ Este es el único documento de referencia del proyecto. Está pensado para perso
 
 Picas y Fijas es un juego multijugador web en español, inglés y francés. La versión vigente funciona íntegramente en Cloudflare; la implementación anterior de Google Sheets y Apps Script fue retirada del árbol actual después de completar la migración. Sigue disponible en el historial de Git si alguna vez se necesita consultar.
 
-Versión actual: **3.0.0**. Sube la mayor porque desaparece un endpoint —`adminMergeUsers`— y porque `loginUser` cambia de contrato: ya no crea cuentas y ya no devuelve `registered`.
+Versión actual: **3.1.0**. La 3.0.0 subió la mayor porque desapareció un endpoint —`adminMergeUsers`— y porque `loginUser` cambió de contrato: ya no crea cuentas y ya no devuelve `registered`. La 3.1.0 añade la puerta del correo: **no hay cuenta que valga sin correo verificado**.
+
+El 12 de septiembre de 2026 la base de producción se vació a propósito: quedó una sola cuenta, `Diego`, y se borraron partidas, chat, presencia, buzón y todas las sesiones. El motivo es el mismo: arrancar sin ninguna cuenta que no cumpla la regla nueva.
 
 - Juego: https://picasyfijas.fans/ (también https://www.picasyfijas.fans/)
 - Dirección anterior, sigue activa: https://picas-y-fijas.picas-y-fijas.workers.dev/
@@ -53,7 +55,11 @@ La pantalla de acceso tiene tres caras que nunca se ven a la vez —entrar, crea
 3. **¿Olvidaste tu PIN?** pide el correo y manda un enlace de un solo uso que caduca en 15 minutos. La respuesta es siempre la misma, exista o no la cuenta, para no delatar qué direcciones están registradas.
 4. La primera entrada de verdad —la que sigue a la activación— enseña una vez en el lobby el recordatorio de que ese PIN hará falta la próxima vez.
 
-**Entrar nunca crea una cuenta.** Es una regla, no un detalle de implementación: una cuenta creada al vuelo con un nombre suelto nacería sin correo y, por tanto, sin ninguna forma de recuperar su PIN. `loginUser` con un nombre o un correo desconocido responde con un error que invita a crear la cuenta; el alta pasa siempre por `registerUser`, que exige correo. Las cuentas antiguas sin correo siguen entrando con nombre y PIN, y se les pide el correo desde **Mi cuenta**.
+**Entrar nunca crea una cuenta.** Es una regla, no un detalle de implementación: una cuenta creada al vuelo con un nombre suelto nacería sin correo y, por tanto, sin ninguna forma de recuperar su PIN. `loginUser` con un nombre o un correo desconocido responde con un error que invita a crear la cuenta; el alta pasa siempre por `registerUser`, que exige correo.
+
+**Y ninguna cuenta juega sin correo verificado.** No hay excepción para las cuentas antiguas: si `email_verified_at` está vacío, la sesión nace a medias y lo único que se puede hacer con ella es mirar la propia ficha y pedir el enlace de verificación. Todo lo demás —crear una partida, unirse, el chat, el ranking, `/admin`— responde `403` con el código `email_pending`.
+
+Entrar no se rechaza, y la razón es práctica: para pedir el enlace hace falta una sesión, y quien nunca declaró un correo no tendría por dónde empezar. Lo que se corta es lo que viene después.
 
 Los tres paneles son `<form>` de verdad, con `autocomplete` correcto en cada campo: Enter envía sin código propio y el gestor de contraseñas ofrece guardar la pareja. Lo mismo vale para **Mi cuenta**, donde el correo y el cambio de PIN son dos formularios separados con su propio mensaje, y para el acceso de `/admin`.
 
@@ -380,6 +386,16 @@ Junto a la marca vive `#lang-cycle`, un botón cuadrado que muestra el idioma ac
 
 `syncLangBtn()` lo esconde en las dos pantallas que ya llevan su propio selector con los tres nombres escritos —el registro y el buzón, que enumera `LANG_BTN_HIDDEN_ON`— y lo actualiza desde `show()` y `applyI18n()`. El botón nace con la clase `hidden` en el HTML porque la primera vista es el registro. Se eligió la cabecera y no un botón flotante porque la esquina inferior derecha ya es del chat.
 
+### La puerta del correo
+
+La regla vive en un solo sitio: en `routeApi`, justo después de `authenticate`, que es por donde pasan todas las acciones con sesión. Si la cuenta no tiene `email_verified_at` y la acción no está en `EMAIL_PENDING_ALLOWED` —`accountProfile`, `requestEmailVerification`, `leavePresence`—, la respuesta es un `403` con `code:"email_pending"`. Está ahí, y no repartida por cada acción, para que añadir una acción nueva no sea una forma de abrir un agujero por descuido.
+
+El navegador no decide nada: `api()` reconoce ese código y enseña `s-verify`, la pantalla que bloquea. Dice dos cosas distintas según el caso —no hay correo apuntado, o lo hay y falta abrir el enlace—, porque lo que tiene que hacer la persona también es distinto. Desde ahí se pide el enlace y, con «Ya lo he validado», se vuelve a preguntar por la ficha: si el correo consta, se entra al lobby **con la misma sesión**, sin volver a escribir el PIN. Abrir el enlace en ese mismo navegador hace lo mismo sin pulsar nada.
+
+`/admin` no tiene pantalla propia para esto: detecta `emailPending` en la respuesta de `loginUser` y ni siquiera guarda la sesión, porque un panel cuyas ocho pestañas responderían `403` no le sirve a nadie. Manda al juego, que es donde se arregla.
+
+`test/email-gate.test.js` fija las tres mitades: lo que queda cerrado, lo que queda abierto y que validar el correo desbloquea la sesión que ya existía.
+
 ### Los tres paneles del acceso
 
 `setAuthMode('login'|'register'|'forgot')` enseña uno de los tres formularios y esconde los otros dos; `defaultAuthMode()` abre por «crear cuenta» solo cuando alguien llega con una invitación y nunca ha entrado en ese navegador. `resetLoginSteps()` se llama desde `show('login')`, así que cualquier vuelta al acceso —sesión caducada, cambio de usuario, salida del buzón— empieza limpia.
@@ -444,7 +460,7 @@ Las tablas del panel llevan `data-label` en cada celda y viven dentro de un `.sc
 
 ### El acceso al propio panel
 
-`/admin` entra con la cuenta del juego, así que su recuperación es la del juego: el pie del formulario enlaza a `/?forgot=1`. Para que ese camino exista de verdad, el panel comprueba al abrirse el correo de quien ha entrado y enseña un aviso cuando no hay ninguno verificado, con enlace a **Mi cuenta**. Sin correo, un PIN olvidado dejaría el portal sin más puerta que el SQL.
+`/admin` entra con la cuenta del juego, así que su recuperación es la del juego: el pie del formulario enlaza a `/?forgot=1`. Y como ninguna cuenta de administración puede existir ya sin correo verificado, el portal no puede quedarse sin puerta: si el PIN se olvida, el enlace del correo lo repone.
 
 ### La consola SQL
 
@@ -591,7 +607,7 @@ El proyecto sigue versionado semántico `vMAYOR.MENOR.PARCHE`:
 - **MENOR (Y)**: funcionalidad nueva compatible hacia atrás —una pantalla, un modo de juego, un ajuste como el cuadrado de idioma.
 - **PARCHE (Z)**: correcciones compatibles hacia atrás, retoques de texto, estilos y rendimiento.
 
-El número vive en dos sitios y los dos se cambian en el mismo commit: `version` en `package.json` conserva el SemVer canónico (`3.0.0`), porque npm y pnpm lo requieren, y `APP_VERSION` en `public/index.html` publica `v3.0.0`. De ahí sale lo que ve el jugador en los créditos y lo que viaja con cada mensaje del buzón (`appVersion`), así que un número desfasado hace que un informe apunte a una versión que no es. La versión sube en el commit que introduce el cambio, no al desplegar.
+El número vive en dos sitios y los dos se cambian en el mismo commit: `version` en `package.json` conserva el SemVer canónico (`3.1.0`), porque npm y pnpm lo requieren, y `APP_VERSION` en `public/index.html` publica `v3.1.0`. De ahí sale lo que ve el jugador en los créditos y lo que viaja con cada mensaje del buzón (`appVersion`), así que un número desfasado hace que un informe apunte a una versión que no es. La versión sube en el commit que introduce el cambio, no al desplegar.
 
 ## Procedimiento para futuras modificaciones
 

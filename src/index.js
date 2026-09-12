@@ -103,6 +103,16 @@ const ADMIN_ACTIONS = new Set([
   "adminReplyFeedback",
   "adminDeleteFeedback",
 ]);
+/* Lo unico que puede hacer una sesion sin correo verificado: mirar su propia
+   ficha, pedir el enlace y soltar la presencia al salir. Todo lo demas —jugar,
+   chatear, el panel de administracion— espera a que el correo este validado.
+   La regla vive aqui, en el unico sitio por el que pasan todas las acciones
+   con sesion, para que no se pueda olvidar al anadir una nueva. */
+const EMAIL_PENDING_ALLOWED = new Set([
+  "accountProfile",
+  "requestEmailVerification",
+  "leavePresence",
+]);
 const PASSIVE_PRESENCE_ACTIONS = new Set([
   "chatList",
   "chatSend",
@@ -145,8 +155,8 @@ const json = (body, status = 200, extra = {}) =>
       ...extra,
     },
   });
-const error = (message, status = 200) =>
-  json({ ok: false, error: message }, status);
+const error = (message, status = 200, code) =>
+  json({ ok: false, error: message, ...(code ? { code } : {}) }, status);
 const now = () => new Date().toISOString();
 
 async function bodyParams(request) {
@@ -1404,6 +1414,12 @@ async function routeApi(request, env, ctx) {
   if (PROTECTED.has(action) || ADMIN_ACTIONS.has(action)) {
     auth = await authenticate(env.DB, request, params);
     if (auth.error) return error(auth.error, 401);
+    if (!auth.user.email_verified_at && !EMAIL_PENDING_ALLOWED.has(action))
+      return error(
+        "Valida tu correo electrónico para continuar.",
+        403,
+        "email_pending",
+      );
     // Estas dos acciones administran su propia salida. Escribir presencia
     // antes de borrarla o cambiarla produciria dos escrituras contradictorias.
     if (

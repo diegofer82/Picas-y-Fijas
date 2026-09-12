@@ -170,12 +170,17 @@ test('las tablas del panel se leen en un telefono', () => {
     assert.ok(adminHtml.includes(`data-label="${label}"`), `falta data-label="${label}"`);
 });
 
-test('el panel no se queda sin puerta: recuperacion y aviso de correo', () => {
+test('el panel no se queda sin puerta: recuperacion del PIN desde el acceso', () => {
   assert.match(adminHtml, /href="\/\?forgot=1"/);
-  assert.match(adminHtml, /async function checkOwnRecovery\(\)/);
-  assert.match(adminHtml, /id="adminEmailWarn"/);
   // Y el juego sabe abrir ese modo desde la URL.
   assert.match(publicHtml, /const forgotRequested=new URLSearchParams\(location\.search\)\.get\('forgot'\)==='1'/);
+});
+
+test('el panel no deja entrar a una cuenta sin correo validado', () => {
+  // Entrar a un panel cuyas ocho pestañas responderian 403 no ayuda a nadie.
+  assert.match(adminHtml, /if\(r\.emailPending\)return showGate\(r\.email\)/);
+  assert.match(adminHtml, /function showGate\(email\)/);
+  assert.doesNotMatch(adminHtml, /checkOwnRecovery/);
 });
 
 test('la consola SQL para lo que rompe: dos instrucciones, DDL y borrados sin filtro', () => {
