@@ -98,14 +98,28 @@
   .brand h1{font-family:'Instrument Serif',Georgia,serif;font-size:25px;margin:0;font-weight:400;letter-spacing:0;line-height:1.05}
   .brand .sub{font-size:12px;color:var(--muted);margin-top:2px;letter-spacing:.14em;text-transform:uppercase}
   .brand .aka{font-size:9.5px;opacity:.8;color:var(--muted);margin-top:3px;line-height:1.25;letter-spacing:.01em}
-  /* Cambio de idioma siempre a mano: un cuadrado discreto en la cabecera que
-     recorre ES -> FR -> EN a cada pulsacion. La cabecera vive en todas las
-     vistas, asi que no hace falta un boton flotante que tape el chat. */
-  .langbtn{margin-left:auto;flex:0 0 auto;width:34px;height:34px;padding:0;border-radius:9px;
+  /* Los ajustes viven donde antes estaba el cuadrado del idioma: una rueda
+     dentada en la cabecera, que esta en todas las vistas. Detras de ella caben
+     el idioma, la cuenta y la salida, asi que el pie del lobby ya no necesita
+     enlaces que la burbuja del chat acaba tapando. */
+  .gearwrap{margin-left:auto;flex:0 0 auto;position:relative}
+  .gearbtn{width:34px;height:34px;padding:0;border-radius:9px;
     background:#0D0B07;border:1px solid var(--edge);color:var(--muted);cursor:pointer;
-    font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;font-weight:700;letter-spacing:.06em;
     display:grid;place-items:center;transition:color .15s ease,border-color .15s ease,background .15s ease}
-  .langbtn:hover,.langbtn:focus-visible{color:var(--text);border-color:var(--accent);background:rgba(91,141,239,.14)}
+  .gearbtn:hover,.gearbtn:focus-visible,.gearbtn[aria-expanded=true]{color:var(--text);border-color:var(--accent);background:rgba(91,141,239,.14)}
+  .gearbtn svg{display:block;width:19px;height:19px}
+  .gearmenu{position:absolute;top:calc(100% + 8px);right:0;z-index:60;width:214px;padding:12px;
+    background:var(--panel-2);border:1px solid var(--edge);border-radius:12px;
+    box-shadow:0 14px 34px rgba(0,0,0,.45);text-align:left}
+  .gearmenu .gearlabel{margin:0 0 7px;font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+  .gearmenu .seg{gap:6px}
+  .gearmenu .seg button{min-width:0;padding:8px 4px;font-size:12px}
+  .gearsep{height:1px;margin:12px 0 8px;border:0;background:var(--edge)}
+  .gearitem{display:flex;align-items:center;gap:9px;width:100%;padding:11px 8px;border:0;border-radius:9px;
+    background:none;color:var(--text);font:600 13px 'Archivo',system-ui,sans-serif;text-align:left;cursor:pointer;
+    transition:background .15s ease}
+  .gearitem:hover,.gearitem:focus-visible{background:rgba(91,141,239,.14);outline:none}
+  .gearitem svg{flex:0 0 auto;width:17px;height:17px;color:var(--muted)}
 
   .card{background:linear-gradient(180deg,var(--panel),var(--panel-2));
     border:1px solid var(--edge);border-radius:var(--r);padding:20px;margin-bottom:16px;
@@ -391,7 +405,20 @@
   <div class="brand">
     <button type="button" class="logo" id="brand-home" onclick="brandHome()"><svg width="30" height="19" viewBox="-4 3 100 62" aria-hidden="true"><path d="M19 21C12.5 16.5 4.5 11 -2 5c0 9.5 4.5 18.5 12.5 25C13 27.5 16 24 19 21Z" fill="#F5EFE3" stroke="#12100C" stroke-width="2.6" stroke-linejoin="round"></path><path d="M69 21C75.5 16.5 83.5 11 90 5c0 9.5-4.5 18.5-12.5 25C75 27.5 72 24 69 21Z" fill="#F5EFE3" stroke="#12100C" stroke-width="2.6" stroke-linejoin="round"></path><path d="M15 32c0-11.6 13-20.6 29-20.6s29 9 29 20.6c0 7-1.6 12.8-4.8 17.6C64.6 57 55.4 61.6 44 61.6S23.4 57 19.8 49.6C16.6 44.8 15 39 15 32Z" fill="#F5EFE3" stroke="#12100C" stroke-width="2.6" stroke-linejoin="round"></path><path d="M32.5 54c0-3.4 5.2-5.6 11.5-5.6s11.5 2.2 11.5 5.6-5.2 5.6-11.5 5.6-11.5-2.2-11.5-5.6Z" fill="none" stroke="#12100C" stroke-width="2.4"></path><circle cx="32" cy="34" r="3.4" fill="#12100C"></circle><circle cx="56" cy="34" r="3.4" fill="#12100C"></circle><circle cx="40" cy="53.6" r="1.8" fill="#12100C"></circle><circle cx="48" cy="53.6" r="1.8" fill="#12100C"></circle></svg></button>
     <div><h1>Picas y Fijas</h1><div class="sub" data-i18n="brand_sub">Duelo de deducción online</div><div class="aka" data-i18n="brand_alias">También conocido como “Bulls and Cows” · inspirado en “Mastermind”</div></div>
-    <button type="button" class="langbtn hidden" id="lang-cycle" data-i18n-title="lang_switch" onclick="cycleLang()">ES</button>
+    <div class="gearwrap hidden" id="settings-wrap">
+      <button type="button" class="gearbtn" id="settings-btn" aria-haspopup="true" aria-expanded="false" aria-controls="settings-menu" data-i18n-title="menu_settings" onclick="toggleSettingsMenu()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"></circle><path d="M19.1 14.6a1.5 1.5 0 0 0 .3 1.66l.05.05a1.85 1.85 0 1 1-2.62 2.62l-.05-.05a1.5 1.5 0 0 0-1.66-.3 1.5 1.5 0 0 0-.91 1.37v.15a1.85 1.85 0 1 1-3.7 0v-.08a1.5 1.5 0 0 0-.98-1.37 1.5 1.5 0 0 0-1.66.3l-.05.05A1.85 1.85 0 1 1 4.2 16.3l.05-.05a1.5 1.5 0 0 0 .3-1.66 1.5 1.5 0 0 0-1.37-.91h-.15a1.85 1.85 0 1 1 0-3.7h.08a1.5 1.5 0 0 0 1.37-.98 1.5 1.5 0 0 0-.3-1.66l-.05-.05A1.85 1.85 0 1 1 6.75 4.67l.05.05a1.5 1.5 0 0 0 1.66.3h.07a1.5 1.5 0 0 0 .91-1.37v-.15a1.85 1.85 0 1 1 3.7 0v.08a1.5 1.5 0 0 0 .91 1.37 1.5 1.5 0 0 0 1.66-.3l.05-.05a1.85 1.85 0 1 1 2.62 2.62l-.05.05a1.5 1.5 0 0 0-.3 1.66v.07a1.5 1.5 0 0 0 1.37.91h.15a1.85 1.85 0 1 1 0 3.7h-.08a1.5 1.5 0 0 0-1.37.91Z"></path></svg></button>
+      <div class="gearmenu hidden" id="settings-menu" role="menu">
+        <p class="gearlabel" data-i18n="login_lang">Idioma</p>
+        <div class="seg" id="menu-seg-lang">
+          <button type="button" data-lang="es">ES</button>
+          <button type="button" data-lang="fr">FR</button>
+          <button type="button" data-lang="en">EN</button>
+        </div>
+        <hr class="gearsep">
+        <button type="button" class="gearitem" id="settings-account" role="menuitem" onclick="menuAccount()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"></circle><path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"></path></svg><span data-i18n="account_link">Mi cuenta</span></button>
+        <button type="button" class="gearitem" role="menuitem" onclick="menuLogout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4.8h3.7a1.5 1.5 0 0 1 1.5 1.5v11.4a1.5 1.5 0 0 1-1.5 1.5H14"></path><path d="M9.6 15.6 5.2 12l4.4-3.6"></path><path d="M5.2 12h9"></path></svg><span data-i18n="menu_logout">Cerrar sesión</span></button>
+      </div>
+    </div>
   </div>
 
   <!-- LOGIN -->
@@ -571,7 +598,7 @@
       </div>
     </div>
 
-    <div class="foot"><span class="link" id="sound-link" onclick="toggleSound()"></span> · <a class="link" data-rules-link href="/como-se-juega" onclick="openRules();return false" data-i18n="rules_link">¿Cómo se juega?</a> · <span class="link" onclick="openAccount()" data-i18n="account_link">Mon compte</span> · <span class="link" onclick="openFeedback()" data-i18n="feedback_link">Sugerencias y errores</span> · <span class="link" onclick="logout()" data-i18n="lobby_changeuser">Cambiar de usuario</span></div>
+    <div class="foot"><span class="link" id="sound-link" onclick="toggleSound()"></span> · <a class="link" data-rules-link href="/como-se-juega" onclick="openRules();return false" data-i18n="rules_link">¿Cómo se juega?</a> · <span class="link" onclick="openFeedback()" data-i18n="feedback_link">Sugerencias y errores</span></div>
   </section>
 
   <section id="s-account" class="hidden">
@@ -620,7 +647,7 @@
       </form>
       <div style="height:14px"></div>
       <button class="btn ghost" onclick="recheckVerification()" data-i18n="verify_done">Ya lo he validado</button>
-      <div class="foot"><button type="button" class="linkbtn" onclick="logout()" data-i18n="lobby_changeuser">Cambiar de usuario</button></div>
+      <div class="foot"><button type="button" class="linkbtn" onclick="logout()" data-i18n="menu_logout">Cerrar sesión</button></div>
     </div>
   </section>
 
@@ -986,7 +1013,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v3.2.0';
+const APP_VERSION = 'v3.3.0';
 /* Enlace de invitación: ...?game=SZ93 */
 let pendingJoinCode = '';
 (function(){
@@ -1021,7 +1048,7 @@ const I18N = {
     lobby_greeting:"Hola, {name} 👋",
     lobby_hint:"Crea una partida y comparte el código, o únete a una pública abierta.",
     lobby_create:"Crear partida", lobby_practice:"Practicar", lobby_ranking:"Ranking", lobby_refresh:"Actualizar lista",
-    lobby_mine:"Tus partidas activas", lobby_open:"Partidas públicas abiertas", lobby_changeuser:"Cambiar de usuario", lobby_sync_later:"última actualización hace {seconds} s",
+    lobby_mine:"Tus partidas activas", lobby_open:"Partidas públicas abiertas", lobby_sync_later:"última actualización hace {seconds} s",
     available_title:"Partidas disponibles", private_games_title:"Tus partidas privadas", private_games_hint:"Por privacidad, solo se muestran las partidas privadas en las que participas.",
     private_empty:"No tienes partidas privadas abiertas o en curso.", private_now:"🔒 {n} privadas abiertas o en curso", public_now:"🟢 {active} públicas en curso · {open} abiertas",
     loading:"Cargando…", load_error:"No se pudo cargar", open_empty:"No hay partidas públicas abiertas. ¡Crea una!",
@@ -1102,7 +1129,7 @@ const I18N = {
     lobby_greeting:"Hi, {name} 👋",
     lobby_hint:"Create a game and share the code, or join an open public one.",
     lobby_create:"Create game", lobby_practice:"Practice", lobby_ranking:"Ranking", lobby_refresh:"Refresh list",
-    lobby_mine:"Your active games", lobby_open:"Open public games", lobby_changeuser:"Change user", lobby_sync_later:"last updated {seconds}s ago",
+    lobby_mine:"Your active games", lobby_open:"Open public games", lobby_sync_later:"last updated {seconds}s ago",
     available_title:"Available games", private_games_title:"Your private games", private_games_hint:"For privacy, only private games you participate in are shown.",
     private_empty:"You have no open or active private games.", private_now:"🔒 {n} private open or in progress", public_now:"🟢 {active} public in progress · {open} open",
     loading:"Loading…", load_error:"Couldn't load", open_empty:"No open public games. Create one!",
@@ -1183,7 +1210,7 @@ const I18N = {
     lobby_greeting:"Salut, {name} 👋",
     lobby_hint:"Crée une partie et partage le code, ou rejoins une partie publique ouverte.",
     lobby_create:"Créer une partie", lobby_practice:"S'entraîner", lobby_ranking:"Classement", lobby_refresh:"Actualiser la liste",
-    lobby_mine:"Tes parties en cours", lobby_open:"Parties publiques ouvertes", lobby_changeuser:"Changer d'utilisateur", lobby_sync_later:"dernière mise à jour il y a {seconds} s",
+    lobby_mine:"Tes parties en cours", lobby_open:"Parties publiques ouvertes", lobby_sync_later:"dernière mise à jour il y a {seconds} s",
     available_title:"Parties disponibles", private_games_title:"Tes parties privées", private_games_hint:"Pour préserver la confidentialité, seules les parties privées auxquelles tu participes sont affichées.",
     private_empty:"Tu n'as aucune partie privée ouverte ou en cours.", private_now:"🔒 {n} privées ouvertes ou en cours", public_now:"🟢 {active} publiques en cours · {open} ouvertes",
     loading:"Chargement…", load_error:"Échec du chargement", open_empty:"Aucune partie publique ouverte. Crées-en une !",
@@ -1641,6 +1668,9 @@ Object.assign(I18N.fr,{
 Object.assign(I18N.es,{account_link:"Mi cuenta",account_title:"Mi cuenta",account_hint:"Gestiona tu correo y tu PIN de acceso.",account_email:"Correo de acceso",account_save_email:"Verificar este nuevo correo",account_pin_title:"Cambiar mi PIN",account_pin_hint:"Tu PIN debe tener entre 4 y 8 dígitos.",account_current_pin:"PIN actual",account_new_pin:"Nuevo PIN",account_save_pin:"Guardar mi nuevo PIN",account_email_verified:"✓ Correo verificado",account_email_pending:"Revisa tu correo y abre el enlace para verificarlo.",account_email_sent:"Te enviamos un enlace de verificación.",account_pin_saved:"PIN actualizado. Tus otras sesiones se cerraron.",account_email_missing:"No has apuntado ningún correo: sin él no podrás recuperar tu PIN.",account_current_pin_invalid:"Escribe tu PIN actual.",verify_title:"Valida tu correo",verify_hint_missing:"Tu cuenta todavía no tiene correo. Apunta uno: es lo que te permitirá recuperar tu PIN si lo olvidas, y hace falta para jugar.",verify_hint_sent:"Te enviamos un enlace. Ábrelo desde este correo para desbloquear tu cuenta; caduca en 3 días.",verify_send:"Enviar el enlace",verify_resend:"Enviar otro enlace",verify_sent:"Enlace enviado. Revisa tu bandeja de entrada y también el correo no deseado.",verify_done:"Ya lo he validado",verify_not_yet:"Todavía no nos consta validado. Abre el enlace del correo y vuelve a intentarlo."});
 Object.assign(I18N.en,{account_link:"My account",account_title:"My account",account_hint:"Manage your email and sign-in PIN.",account_email:"Sign-in email",account_save_email:"Verify this new email",account_pin_title:"Change my PIN",account_pin_hint:"Your PIN must be 4 to 8 digits.",account_current_pin:"Current PIN",account_new_pin:"New PIN",account_save_pin:"Save my new PIN",account_email_verified:"✓ Email verified",account_email_pending:"Check your email and open the link to verify it.",account_email_sent:"We sent you a verification link.",account_pin_saved:"PIN updated. Your other sessions were signed out.",account_email_missing:"No email saved yet: without one you cannot recover your PIN.",account_current_pin_invalid:"Enter your current PIN.",verify_title:"Verify your email",verify_hint_missing:"Your account has no email yet. Add one: it is what lets you recover your PIN if you forget it, and it is required to play.",verify_hint_sent:"We sent you a link. Open it from that inbox to unlock your account; it expires in 3 days.",verify_send:"Send the link",verify_resend:"Send another link",verify_sent:"Link sent. Check your inbox, and your spam folder too.",verify_done:"I have verified it",verify_not_yet:"We don't see it verified yet. Open the link in the email and try again."});
 Object.assign(I18N.fr,{account_link:"Mon compte",account_title:"Mon compte",account_hint:"Gérez votre e-mail et votre PIN de connexion.",account_email:"E-mail de connexion",account_save_email:"Vérifier ce nouvel e-mail",account_pin_title:"Modifier mon PIN",account_pin_hint:"Votre PIN doit contenir de 4 à 8 chiffres.",account_current_pin:"PIN actuel",account_new_pin:"Nouveau PIN",account_save_pin:"Enregistrer mon nouveau PIN",account_email_verified:"✓ E-mail vérifié",account_email_pending:"Consultez votre e-mail et ouvrez le lien de vérification.",account_email_sent:"Nous vous avons envoyé un lien de vérification.",account_pin_saved:"PIN mis à jour. Vos autres sessions ont été fermées.",account_email_missing:"Aucun e-mail enregistré : sans lui, impossible de récupérer ton PIN.",account_current_pin_invalid:"Saisis ton PIN actuel.",verify_title:"Valide ton e-mail",verify_hint_missing:"Ton compte n'a pas encore d'e-mail. Ajoutes-en un : c'est ce qui te permettra de récupérer ton PIN si tu l'oublies, et c'est nécessaire pour jouer.",verify_hint_sent:"Nous t'avons envoyé un lien. Ouvre-le depuis cette boîte pour débloquer ton compte ; il expire dans 3 jours.",verify_send:"Envoyer le lien",verify_resend:"Envoyer un autre lien",verify_sent:"Lien envoyé. Vérifie ta boîte de réception, et aussi les indésirables.",verify_done:"Je l'ai validé",verify_not_yet:"Nous ne le voyons pas encore validé. Ouvre le lien reçu par e-mail et réessaie."});
+Object.assign(I18N.es,{menu_settings:"Ajustes",menu_logout:"Cerrar sesión"});
+Object.assign(I18N.en,{menu_settings:"Settings",menu_logout:"Log out"});
+Object.assign(I18N.fr,{menu_settings:"Réglages",menu_logout:"Se déconnecter"});
 
 let lang = URL_LANG || localStorage.getItem('pf_lang') || 'es';
 if(URL_LANG) localStorage.setItem('pf_lang', URL_LANG);
@@ -1724,11 +1754,11 @@ function creditsHTML(){
 function setCredits(){ document.querySelectorAll('.credits').forEach(el=>{ el.innerHTML=creditsHTML(); }); }
 function applyI18n(){
   document.documentElement.lang = lang;
-  syncLangBtn();
+  syncSettingsBtn();
   document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ el.placeholder = t(el.dataset.i18nPh); });
   document.querySelectorAll('[data-i18n-title]').forEach(el=>{ el.title = t(el.dataset.i18nTitle); el.setAttribute('aria-label',t(el.dataset.i18nTitle)); });
-  document.querySelectorAll('#seg-lang button, #fb-seg-lang button').forEach(b=> b.classList.toggle('on', b.dataset.lang===lang));
+  document.querySelectorAll('#seg-lang button, #fb-seg-lang button, #menu-seg-lang button').forEach(b=> b.classList.toggle('on', b.dataset.lang===lang));
   // El enlace a las reglas apunta a su pagina publica en el idioma actual: es
   // un enlace de verdad para los buscadores y sigue abriendo el panel al pulsarlo.
   const rulesHref = RULES_PAGE_PATH[lang] || RULES_PAGE_PATH.es;
@@ -1829,12 +1859,17 @@ function brandHomeLabel(){
   return currentView==='feedback' && feedbackReturn!=='lobby' ? t('back') : t('result_lobby');
 }
 /* La pantalla de inicio y el buzon ya llevan su propio selector de idioma, con
-   los tres nombres escritos: alli el cuadrado de la cabecera sobra. */
-const LANG_BTN_HIDDEN_ON = new Set(['login','feedback']);
-function syncLangBtn(){
-  const b = $('lang-cycle'); if(!b) return;
-  b.textContent = lang.toUpperCase();
-  b.classList.toggle('hidden', LANG_BTN_HIDDEN_ON.has(currentView));
+   los tres nombres escritos, y a ninguna de las dos se llega con la sesion
+   abierta: alli la rueda de la cabecera no tiene nada que ofrecer. */
+const SETTINGS_HIDDEN_ON = new Set(['login','feedback']);
+function syncSettingsBtn(){
+  const wrap = $('settings-wrap'); if(!wrap) return;
+  const hide = SETTINGS_HIDDEN_ON.has(currentView);
+  wrap.classList.toggle('hidden', hide);
+  // Mientras el correo no esta validado el servidor rechaza todo lo de la
+  // cuenta, asi que ofrecerla desde la rueda solo devolveria a esta pantalla.
+  const account = $('settings-account'); if(account) account.classList.toggle('hidden', currentView==='verify');
+  if(hide) closeSettingsMenu();
 }
 function syncBrandHome(){
   const b = $('brand-home'); if(!b) return;
@@ -1857,7 +1892,7 @@ function show(name){
   if(name!=='game') stopTick();
   if(name!=='practice-game') stopPracticeTick();
   syncBrandHome();
-  syncLangBtn();
+  syncSettingsBtn();
   if(name==='login') resetLoginSteps();
   if(!['game','wait'].includes(name)) stopPoll();
   if(name==='lobby'){ startLobbyPoll(); if(typeof updateInstallCard==='function') updateInstallCard(); } else stopLobbyPoll();
@@ -2316,16 +2351,41 @@ function syncLangUrl(){
   // La invitacion viaja en la busqueda (?game=XXXX): no se puede perder.
   try{ history.replaceState(history.state, '', path + location.search + location.hash); }catch(e){}
 }
-/* El cuadrado de la cabecera recorre los idiomas en bucle: una pulsacion, el
-   siguiente. Es el mismo destino que los botones grandes del login. */
-const LANG_CYCLE = ['es','fr','en'];
-function cycleLang(){ const i = LANG_CYCLE.indexOf(lang); pickLang(LANG_CYCLE[(i+1) % LANG_CYCLE.length]); }
 function pickLang(code){ lang=code; localStorage.setItem('pf_lang', lang); syncLangUrl(); applyI18n(); }
 $('seg-lang').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; pickLang(b.dataset.lang); });
 /* El buzon se abre desde la pantalla de inicio, donde el idioma todavia puede
    no estar elegido, asi que lleva su propio selector. Es el mismo destino: la
    eleccion vale para toda la aplicacion, no solo para el formulario. */
 $('fb-seg-lang').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; pickLang(b.dataset.lang); });
+/* El idioma dentro de la rueda no cierra el menu: el jugador ve cambiar las
+   tres opciones que tiene delante y sabe que le ha hecho caso. */
+$('menu-seg-lang').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; pickLang(b.dataset.lang); });
+
+/* -------------------- ajustes de la cabecera -------------------- */
+/* Un menu abierto no puede sobrevivir a una pulsacion fuera ni a Escape: es lo
+   que todo el mundo espera de una rueda dentada. Se cierra tambien al irse a
+   la cuenta o al salir, para no dejarlo abierto sobre otra pantalla. */
+function closeSettingsMenu(){
+  const menu=$('settings-menu'), btn=$('settings-btn'); if(!menu) return;
+  menu.classList.add('hidden'); btn.setAttribute('aria-expanded','false');
+}
+function toggleSettingsMenu(){
+  const menu=$('settings-menu'), btn=$('settings-btn'); if(!menu) return;
+  const open=menu.classList.toggle('hidden')===false;
+  btn.setAttribute('aria-expanded', open?'true':'false');
+}
+function menuAccount(){ closeSettingsMenu(); openAccount(); }
+function menuLogout(){ closeSettingsMenu(); logout(); }
+document.addEventListener('click', e=>{
+  const menu=$('settings-menu'); if(!menu||menu.classList.contains('hidden')) return;
+  if(e.target.closest('#settings-wrap')) return;
+  closeSettingsMenu();
+});
+document.addEventListener('keydown', e=>{
+  if(e.key!=='Escape') return;
+  const menu=$('settings-menu'); if(!menu||menu.classList.contains('hidden')) return;
+  closeSettingsMenu(); $('settings-btn').focus();
+});
 
 /* -------------------- buzon de sugerencias -------------------- */
 let feedbackKind='idea', feedbackSending=false, feedbackTurnstileId, pinResetTurnstileId;
