@@ -606,14 +606,12 @@ async function handleAction(e){
     if(drop){
       const name=drop.dataset.deleteUser;
       const answer=await ask({title:'Borrar la cuenta de '+name,
-        bodyHtml:'<p>La cuenta desaparece y no se puede recuperar. Exporta antes una copia si quieres conservarla.</p>',
+        bodyHtml:'<p>Se eliminará definitivamente la cuenta y todos sus datos: partidas e historial, chats, reportes, sesiones, recuperación y rastros técnicos asociados. No se puede recuperar ni quedará una entrada de auditoría con su nombre.</p>',
         fields:[
-          {name:'purge',type:'checkbox',label:'Borrar también sus partidas y sus mensajes',
-           hint:'Sin marcar, el historial se queda con un nombre que ya no existe.'},
           {name:'confirm',type:'text',label:'Escribe «'+name+'» para confirmar',match:name,required:true}],
         confirmLabel:'Borrar la cuenta',danger:true});
       if(!answer)return;
-      await api('adminDeleteUser',{target:name,purge:answer.purge?'1':'0'});$('modal').close();return afterChange();}
+      await api('adminDeleteUser',{target:name});$('modal').close();return afterChange();}
     const fbReply=hit('data-feedback-reply');
     if(fbReply){
       const item=state.feedback.find(x=>String(x.id)===fbReply.dataset.feedbackReply);

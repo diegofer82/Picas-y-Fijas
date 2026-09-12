@@ -1244,14 +1244,11 @@ async function adminAction(db, action, params, user, env) {
   // registran su linea de auditoria aqui mismo en vez de compartir la del
   // final de la funcion.
   if (
-    action === "adminDeleteUser" ||
     action === "adminPurgeGames" ||
     action === "adminSql"
   ) {
     const result =
-      action === "adminDeleteUser"
-        ? await adminDeleteUser(db, params, user)
-        : action === "adminPurgeGames"
+      action === "adminPurgeGames"
           ? await adminPurgeGames(db, params)
           : await adminSql(db, params);
     const rehearsal = result.preview === true || result.pending === true;
@@ -1267,6 +1264,9 @@ async function adminAction(db, action, params, user, env) {
       );
     return result;
   }
+  // La purge d'un compte doit être la dernière information conservée à son
+  // sujet : elle ne crée donc pas de ligne dans audit_log.
+  if (action === "adminDeleteUser") return adminDeleteUser(db, params, user);
   const target = String(params.target || "");
   if (action === "adminCloseSessions") {
     const targetUser = await db

@@ -152,9 +152,48 @@ test('el panel confirma en su propia ventana, nunca con la del navegador', () =>
     assert.doesNotMatch(adminHtml, banned, `sigue habiendo ${banned}`);
   assert.match(adminHtml, /<dialog id="ask"/);
   assert.match(adminHtml, /function ask\(options\)/);
-  // Borrar una cuenta pide escribir el nombre exacto y ofrece el arrastre.
+  // Borrar una cuenta pide escribir el nombre exacto y siempre es una purga.
   assert.match(adminHtml, /name:'confirm',type:'text',label:'Escribe «'\+name\+'» para confirmar',match:name/);
-  assert.match(adminHtml, /name:'purge',type:'checkbox'/);
+  assert.doesNotMatch(adminHtml, /name:'purge',type:'checkbox'/);
+  assert.match(adminHtml, /todos sus datos: partidas e historial, chats, reportes, sesiones/);
+});
+
+test('borrar una cuenta purga todos los datos vinculados y no deja auditoría', async () => {
+  const boss = await admin();
+  const forgotten = await player('Olvidado'), other = await player('Testigo');
+  const db = await mf.getD1Database('DB');
+  await db.prepare("UPDATE users SET email='olvidado@example.test' WHERE username_key='olvidado'").run();
+  const row = await db.prepare("SELECT id FROM users WHERE username_key='olvidado'").first();
+  const gameId = await duel(forgotten, other, '123', '456');
+  await api('chatSend', { roomType:'game', gameId, body:'mensaje privado' }, forgotten.token);
+  await api('chatSend', { roomType:'lobby', body:'mensaje público' }, forgotten.token);
+  const otherMessage = await db.prepare("INSERT INTO chat_messages(room_type,sender,sender_key,kind,body,created_at) VALUES('lobby','Testigo','testigo','user','mensaje ajeno',?) RETURNING id")
+    .bind(new Date().toISOString()).first();
+  await db.prepare("INSERT INTO chat_reports(message_id,reporter,reporter_key,reason,created_at) VALUES(?,?,?,?,?)")
+    .bind(otherMessage.id, 'Olvidado', 'olvidado', 'spam', new Date().toISOString()).run();
+  await db.prepare("INSERT INTO request_receipts(request_id,username_key,game_id,response_json,created_at) VALUES('forget-me','olvidado',?,'{}',?)")
+    .bind(gameId, new Date().toISOString()).run();
+  await db.prepare("INSERT INTO feedback(kind,message,contact,username,lang,app_version,user_agent,ip,country,status,admin_note,created_at,updated_at) VALUES('idea','olvidar','olvidado@example.test','Olvidado','es','','','','','new','',?,?)")
+    .bind(new Date().toISOString(), new Date().toISOString()).run();
+  await db.prepare("INSERT INTO email_verifications(token_hash,user_id,email,expires_at,created_at) VALUES('forget-token',?,'olvidado@example.test',?,?)")
+    .bind(row.id, new Date(Date.now() + 86400000).toISOString(), new Date().toISOString()).run();
+  await db.prepare("INSERT INTO audit_log(admin_user_id,action,target,details_json,created_at) VALUES(?,?,?,?,?)")
+    .bind(row.id, 'oldAction', 'Olvidado', '{\"target\":\"Olvidado\"}', new Date().toISOString()).run();
+
+  const deleted = await api('adminDeleteUser', { target:'Olvidado' }, boss.token);
+  assert.equal(deleted.ok, true, deleted.error);
+  const checks = await Promise.all([
+    db.prepare("SELECT 1 FROM users WHERE username_key='olvidado'").first(),
+    db.prepare("SELECT 1 FROM games WHERE p1='Olvidado' OR p2='Olvidado'").first(),
+    db.prepare("SELECT 1 FROM chat_messages WHERE sender_key='olvidado'").first(),
+    db.prepare("SELECT 1 FROM chat_threads WHERE user1_key='olvidado' OR user2_key='olvidado'").first(),
+    db.prepare("SELECT 1 FROM chat_reports WHERE reporter_key='olvidado'").first(),
+    db.prepare("SELECT 1 FROM request_receipts WHERE username_key='olvidado' OR game_id=?").bind(gameId).first(),
+    db.prepare("SELECT 1 FROM feedback WHERE username='Olvidado' OR contact='olvidado@example.test'").first(),
+    db.prepare("SELECT 1 FROM email_verifications WHERE user_id=? OR token_hash='forget-token'").bind(row.id).first(),
+    db.prepare("SELECT 1 FROM audit_log WHERE admin_user_id=? OR target='Olvidado' OR details_json LIKE '%Olvidado%'").bind(row.id).first(),
+  ]);
+  assert.deepEqual(checks, Array(9).fill(null));
 });
 
 test('las tablas del panel se leen en un telefono', () => {

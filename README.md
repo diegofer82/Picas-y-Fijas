@@ -456,7 +456,9 @@ Con el correo verificado como identificador único, esa segunda cuenta no llega 
 
 ### Confirmar lo que borra
 
-Ninguna acción del panel usa `confirm()`, `prompt()` ni `alert()` del navegador. Todas pasan por `ask()`, un `<dialog>` propio que devuelve una promesa: `null` si se cancela y un objeto con los campos si se acepta. Cabe explicar qué va a pasar antes de que pase —a quién afecta, qué se pierde, qué no—, y el botón de aceptar se queda apagado mientras falte algo obligatorio o no coincida el texto exacto que se pide escribir. Borrar una cuenta es el caso extremo: una sola ventana con la casilla de arrastrar también partidas y mensajes y el nombre escrito a mano para confirmar.
+Ninguna acción del panel usa `confirm()`, `prompt()` ni `alert()` del navegador. Todas pasan por `ask()`, un `<dialog>` propio que devuelve una promesa: `null` si se cancela y un objeto con los campos si se acepta. Cabe explicar qué va a pasar antes de que pase —a quién afecta, qué se pierde, qué no—, y el botón de aceptar se queda apagado mientras falte algo obligatorio o no coincida el texto exacto que se pide escribir. Borrar una cuenta es el caso extremo: una sola ventana que enumera todo lo que se va —partidas, historial, chats, reportes, sesiones y rastros técnicos— y pide el nombre escrito a mano para confirmar.
+
+Ese borrado es un derecho al olvido, no una limpieza a medias: ya no hay dos modos. `adminDeleteUser` arrastra también lo que ninguna clave foránea alcanza —`request_receipts`, el chat del lobby, el buzón que lleve su nombre o su correo— y borra sus líneas de `audit_log`; la propia operación tampoco se audita, porque una entrada que dijera «se borró a Fulano» sería justo el dato que la purga viene a eliminar. La contrapartida está asumida: una partida desaparece para los dos jugadores, no solo para quien se va.
 
 Las tablas del panel llevan `data-label` en cada celda y viven dentro de un `.scroll.stack`. Por debajo de 760px cada fila se convierte en una ficha con su etiqueta delante: nueve columnas no caben en un teléfono y el scroll horizontal era la única forma de leerlas.
 

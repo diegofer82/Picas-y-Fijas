@@ -115,8 +115,8 @@ const findUser = (db, name) =>
     .bind(usernameKey(String(name || "")))
     .first();
 
-// Borrar una cuenta deja sus partidas con un nombre que ya no existe. Por eso
-// hay dos modos: conservar el rastro de juego o llevarselo todo por delante.
+// Borrar una cuenta es un derecho al olvido: no se conserva su historial de
+// juego, conversaciones ni los registros técnicos que permiten identificarla.
 export async function adminDeleteUser(db, params, admin) {
   const user = await findUser(db, params.target);
   if (!user) return { ok: false, error: "Usuario no encontrado." };
@@ -129,7 +129,11 @@ export async function adminDeleteUser(db, params, admin) {
       ok: false,
       error: "Quita primero el rol de administrador a esta cuenta.",
     };
-  const purge = user.username && (params.purge === true || params.purge === "1");
+  // Algunas tablas no tienen una clave foránea hacia users porque también se
+  // usan antes de iniciar sesión. Se limpian explícitamente aquí, junto con
+  // las que SQLite elimina mediante ON DELETE CASCADE (sesiones y recuperación).
+  const auditNeedle = `%${user.username}%`;
+  const emailNeedle = user.email ? `%${user.email}%` : null;
   const statements = [
     db.prepare("DELETE FROM sessions WHERE user_id=?").bind(user.id),
     db.prepare("DELETE FROM presence WHERE username_key=?").bind(user.username_key),
@@ -137,20 +141,33 @@ export async function adminDeleteUser(db, params, admin) {
     db
       .prepare("DELETE FROM login_attempts WHERE throttle_key=?")
       .bind(user.username_key),
+    db.prepare("DELETE FROM request_receipts WHERE username_key=? OR game_id IN (SELECT game_id FROM games WHERE p1=? OR p2=?)")
+      .bind(user.username_key, user.username, user.username),
+    db.prepare("DELETE FROM chat_reports WHERE reporter_key=?").bind(user.username_key),
+    // Un fil privé est une conversation : s'il implique le compte, il part
+    // entièrement, y compris les messages de l'autre participant.
+    db
+      .prepare("DELETE FROM chat_threads WHERE user1_key=? OR user2_key=?")
+      .bind(user.username_key, user.username_key),
+    // Les messages du lobby n'appartiennent à aucun fil et doivent donc être
+    // retirés séparément. Les signalements associés suivent par cascade.
+    db.prepare("DELETE FROM chat_messages WHERE sender_key=?").bind(user.username_key),
+    db
+      .prepare("DELETE FROM games WHERE p1=? OR p2=?")
+      .bind(user.username, user.username),
+    db
+      .prepare("DELETE FROM feedback WHERE username=? OR (?<>'' AND contact=?)")
+      .bind(user.username, user.email || "", user.email || ""),
+    // Une entrée d'audit peut désigner la personne, ou empêcher la suppression
+    // si elle a elle-même été administratrice par le passé. Elle ne doit pas
+    // survivre à cette purge, et l'opération elle-même n'est pas auditée.
+    db
+      .prepare("DELETE FROM audit_log WHERE admin_user_id=? OR target=? OR details_json LIKE ? OR (? IS NOT NULL AND details_json LIKE ?)")
+      .bind(user.id, user.username, auditNeedle, emailNeedle, emailNeedle),
   ];
-  if (purge)
-    statements.push(
-      db.prepare("DELETE FROM chat_messages WHERE sender_key=?").bind(user.username_key),
-      db
-        .prepare("DELETE FROM chat_threads WHERE user1_key=? OR user2_key=?")
-        .bind(user.username_key, user.username_key),
-      db
-        .prepare("DELETE FROM games WHERE p1=? OR p2=?")
-        .bind(user.username, user.username),
-    );
   statements.push(db.prepare("DELETE FROM users WHERE id=?").bind(user.id));
   await db.batch(statements);
-  return { ok: true, deleted: user.username, purged: !!purge };
+  return { ok: true, deleted: user.username, purged: true };
 }
 
 // Limpiar partidas siempre se hace en dos tiempos: primero se cuenta, despues
