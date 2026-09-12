@@ -331,6 +331,11 @@
   .credits a:hover{text-decoration:underline}
   .link{color:var(--accent);cursor:pointer;text-decoration:underline;font-size:13px}
   .hidden{display:none!important}
+  form{margin:0}
+  /* El gestor de contrasenas necesita ver el nombre de usuario junto al PIN
+     para ofrecer la pareja correcta; aqui ya se muestra arriba, asi que el
+     campo va fuera de la vista pero presente en el formulario. */
+  .offscreen{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
   .fieldnote{margin:7px 0 0;font-size:12px;line-height:1.45;color:var(--muted)}
   .fieldnote.warn{color:var(--pica)}
   .whoami{display:flex;align-items:center;gap:8px;margin:0 0 16px;font-size:13px;color:var(--muted)}
@@ -394,7 +399,7 @@
     <div class="invite-banner hidden" id="login-invite"></div>
     <h2 data-i18n="auth_title">À vous de jouer</h2>
     <p class="hint" id="auth-hint" data-i18n="auth_hint_login">Entrez avec votre nom ou votre e-mail et votre PIN.</p>
-    <div id="auth-register-panel" class="hidden">
+    <form id="auth-register-panel" class="hidden">
       <label data-i18n="login_lang">Idioma</label>
       <div class="seg" id="seg-lang">
         <button data-lang="es">Español</button>
@@ -411,28 +416,28 @@
       <input type="password" id="upin2" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" data-i18n-ph="login_pin_ph" placeholder="4–8 chiffres" autocomplete="new-password">
       <p class="auth-note"><span>✦</span><span data-i18n="auth_recovery_note">Votre e-mail permet de récupérer votre PIN.</span></p>
       <div class="val" id="auth-register-val"></div>
-      <button class="btn" id="auth-register-btn" onclick="registerAccount()" data-i18n="auth_register_cta">Créer mon compte</button>
+      <button class="btn" id="auth-register-btn" type="submit" data-i18n="auth_register_cta">Créer mon compte</button>
       <div class="auth-alt"><span data-i18n="auth_have_account">Vous avez déjà un compte&nbsp;?</span><button type="button" class="linkbtn" onclick="setAuthMode('login')" data-i18n="auth_go_login">Se connecter</button></div>
-    </div>
-    <div id="auth-login-panel">
+    </form>
+    <form id="auth-login-panel">
       <label for="login-id" data-i18n="auth_identifier">Nom d’utilisateur ou e-mail</label>
       <input type="text" id="login-id" maxlength="254" autocomplete="username" data-i18n-ph="auth_identifier_ph" placeholder="Diego ou vous@exemple.com">
       <label for="login-pin" data-i18n="auth_pin">PIN · 4–8 chiffres</label>
       <input type="password" id="login-pin" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" data-i18n-ph="login_pin_ph" placeholder="4–8 chiffres" autocomplete="current-password">
       <div class="val" id="auth-login-val"></div>
-      <button class="btn" id="auth-login-btn" onclick="loginAccount()" data-i18n="auth_login_cta">Entrer dans le jeu</button>
+      <button class="btn" id="auth-login-btn" type="submit" data-i18n="auth_login_cta">Entrer dans le jeu</button>
       <div class="foot"><button type="button" class="linkbtn" onclick="setAuthMode('forgot')" data-i18n="auth_forgot">PIN oublié ?</button></div>
       <div class="auth-alt"><span data-i18n="auth_no_account">Pas encore de compte&nbsp;?</span><button type="button" class="linkbtn" onclick="setAuthMode('register')" data-i18n="auth_go_register">Créer un compte</button></div>
-    </div>
-    <div id="auth-forgot-panel" class="hidden">
+    </form>
+    <form id="auth-forgot-panel" class="hidden">
       <h3 id="auth-forgot-title" data-i18n="auth_forgot_title">Récupérer mon PIN</h3>
       <p class="hint" id="auth-forgot-hint" data-i18n="auth_forgot_hint">Indiquez l’e-mail de votre compte : nous vous enverrons un lien sécurisé.</p>
       <div id="forgot-email-fields"><label for="forgot-email" data-i18n="auth_email">E-mail</label><input type="email" id="forgot-email" maxlength="254" autocomplete="email" data-i18n-ph="auth_email_ph" placeholder="vous@exemple.com"><div id="pin-reset-turnstile" aria-label="Vérification anti-spam"></div></div>
       <div id="reset-pin-fields" class="hidden"><label for="reset-pin" data-i18n="auth_pin_new">Nouveau PIN · 4–8 chiffres</label><input type="password" id="reset-pin" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" autocomplete="new-password" data-i18n-ph="login_pin_ph" placeholder="4–8 chiffres"><label for="reset-pin-repeat" data-i18n="auth_pin_repeat">Confirmer votre PIN</label><input type="password" id="reset-pin-repeat" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" autocomplete="new-password" data-i18n-ph="login_pin_ph" placeholder="4–8 chiffres"></div>
       <div class="val" id="auth-forgot-val"></div>
-      <button class="btn" id="auth-recovery-btn" onclick="requestPinRecovery()" data-i18n="auth_recover_cta">Envoyer le lien</button>
+      <button class="btn" id="auth-recovery-btn" type="submit" data-i18n="auth_recover_cta">Envoyer le lien</button>
       <div class="foot"><button type="button" class="linkbtn" onclick="setAuthMode('login')" data-i18n="auth_back_login">Retour à la connexion</button></div>
-    </div>
+    </form>
     <div class="foot"><a class="link" data-rules-link href="/como-se-juega" onclick="openRules();return false" data-i18n="rules_link">¿Cómo se juega?</a><span id="login-install" class="hidden"> · <a class="link" data-install-link id="login-install-link" href="/instalar"></a></span></div>
     <div class="foot credits"></div>
     <div class="foot"><button type="button" class="linkbtn" onclick="openFeedback()"><span data-ico="globo" data-ico-size="14"></span><span data-i18n="feedback_link">Sugerencias y errores</span></button></div>
@@ -574,21 +579,28 @@
       <h2 data-i18n="account_title">Mon compte</h2>
       <p class="hint" data-i18n="account_hint">Gérez votre e-mail et votre PIN de connexion.</p>
       <div class="whoami"><b id="account-name">—</b></div>
-      <label data-i18n="account_email">E-mail de connexion</label>
-      <input id="account-email" type="email" maxlength="254" autocomplete="email">
-      <p class="fieldnote" id="account-email-status"></p>
-      <button class="btn ghost" id="account-email-btn" onclick="saveAccountEmail()" data-i18n="account_save_email">Vérifier ce nouvel e-mail</button>
-      <div style="height:22px"></div>
-      <h3 data-i18n="account_pin_title">Modifier mon PIN</h3>
-      <p class="hint" data-i18n="account_pin_hint">Votre PIN doit contenir de 4 à 8 chiffres.</p>
-      <label for="account-current-pin" data-i18n="account_current_pin">PIN actuel</label>
-      <input id="account-current-pin" type="password" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" autocomplete="current-password">
-      <label for="account-new-pin" data-i18n="account_new_pin">Nouveau PIN</label>
-      <input id="account-new-pin" type="password" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" autocomplete="new-password">
-      <label for="account-repeat-pin" data-i18n="auth_pin_repeat">Confirmer votre PIN</label>
-      <input id="account-repeat-pin" type="password" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" autocomplete="new-password">
-      <div class="val" id="account-val"></div>
-      <button class="btn" onclick="saveAccountPin()" data-i18n="account_save_pin">Enregistrer mon nouveau PIN</button>
+      <form id="account-email-form">
+        <input class="offscreen" id="account-username" type="text" autocomplete="username" tabindex="-1" aria-hidden="true" readonly>
+        <label for="account-email" data-i18n="account_email">E-mail de connexion</label>
+        <input id="account-email" type="email" maxlength="254" autocomplete="email">
+        <p class="fieldnote" id="account-email-status"></p>
+        <div class="val" id="account-email-val"></div>
+        <button class="btn ghost" id="account-email-btn" type="submit" data-i18n="account_save_email">Vérifier ce nouvel e-mail</button>
+      </form>
+
+      <form id="account-pin-form">
+        <input class="offscreen" id="account-username-pin" type="text" autocomplete="username" tabindex="-1" aria-hidden="true" readonly>
+        <h3 data-i18n="account_pin_title">Modifier mon PIN</h3>
+        <p class="hint" data-i18n="account_pin_hint">Votre PIN doit contenir de 4 à 8 chiffres.</p>
+        <label for="account-current-pin" data-i18n="account_current_pin">PIN actuel</label>
+        <input id="account-current-pin" type="password" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" autocomplete="current-password">
+        <label for="account-new-pin" data-i18n="account_new_pin">Nouveau PIN</label>
+        <input id="account-new-pin" type="password" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" autocomplete="new-password">
+        <label for="account-repeat-pin" data-i18n="auth_pin_repeat">Confirmer votre PIN</label>
+        <input id="account-repeat-pin" type="password" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" autocomplete="new-password">
+        <div class="val" id="account-val"></div>
+        <button class="btn" type="submit" data-i18n="account_save_pin">Enregistrer mon nouveau PIN</button>
+      </form>
       <div class="foot"><button type="button" class="linkbtn" onclick="enterLobby()" data-i18n="back">Retour</button></div>
     </div>
   </section>
@@ -955,7 +967,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v2.6.0';
+const APP_VERSION = 'v3.0.0';
 /* Enlace de invitación: ...?game=SZ93 */
 let pendingJoinCode = '';
 (function(){
@@ -1373,7 +1385,23 @@ const ERR = {
     "El mensaje debe tener al menos 10 caracteres.":"The message must be at least 10 characters long.",
     "Espera unos segundos antes de enviar otro mensaje.":"Wait a few seconds before sending another message.",
     "Has enviado varios mensajes seguidos. Inténtalo dentro de un rato.":"You have sent several messages in a row. Try again in a while.",
-    "Has alcanzado el máximo de mensajes por día. Gracias, los leeremos todos.":"You have reached the daily message limit. Thank you, we will read them all."
+    "Has alcanzado el máximo de mensajes por día. Gracias, los leeremos todos.":"You have reached the daily message limit. Thank you, we will read them all.",
+    "Introduce tu nombre de usuario o correo electrónico.":"Enter your username or email address.",
+    "El PIN debe tener entre 4 y 8 dígitos.":"The PIN must be 4 to 8 digits.",
+    "La contraseña debe tener entre 4 y 8 dígitos.":"The password must be 4 to 8 digits.",
+    "Este usuario está bloqueado.":"This account is blocked.",
+    "Activa tu cuenta desde el enlace enviado a tu correo.":"Activate your account from the link we emailed you.",
+    "El PIN no es correcto.":"That PIN is not correct.",
+    "No existe una cuenta con ese correo.":"There is no account with that email address.",
+    "No existe ninguna cuenta con ese nombre. Crea una cuenta para empezar.":"There is no account with that name. Create one to get started.",
+    "El nombre debe tener al menos 2 caracteres.":"The name must be at least 2 characters long.",
+    "Introduce un correo válido.":"Enter a valid email address.",
+    "Ese nombre de usuario ya está en uso.":"That username is already taken.",
+    "Ese correo ya está asociado a una cuenta.":"That email already belongs to an account.",
+    "Ese correo ya está asociado a otra cuenta.":"That email already belongs to another account.",
+    "No pudimos enviar el correo. Inténtalo más tarde.":"We couldn't send the email. Please try again later.",
+    "El enlace no es válido o ya caducó.":"That link is invalid or has expired.",
+    "El PIN actual no es correcto.":"Your current PIN is not correct."
   },
   fr:{
     "Falta el nombre de usuario.":"Nom d'utilisateur manquant.",
@@ -1414,7 +1442,23 @@ const ERR = {
     "El mensaje debe tener al menos 10 caracteres.":"Le message doit contenir au moins 10 caractères.",
     "Espera unos segundos antes de enviar otro mensaje.":"Attends quelques secondes avant d'envoyer un autre message.",
     "Has enviado varios mensajes seguidos. Inténtalo dentro de un rato.":"Tu as envoyé plusieurs messages d'affilée. Réessaie dans un moment.",
-    "Has alcanzado el máximo de mensajes por día. Gracias, los leeremos todos.":"Tu as atteint le maximum de messages par jour. Merci, nous les lirons tous."
+    "Has alcanzado el máximo de mensajes por día. Gracias, los leeremos todos.":"Tu as atteint le maximum de messages par jour. Merci, nous les lirons tous.",
+    "Introduce tu nombre de usuario o correo electrónico.":"Saisis ton nom d'utilisateur ou ton e-mail.",
+    "El PIN debe tener entre 4 y 8 dígitos.":"Le PIN doit contenir de 4 à 8 chiffres.",
+    "La contraseña debe tener entre 4 y 8 dígitos.":"Le mot de passe doit contenir de 4 à 8 chiffres.",
+    "Este usuario está bloqueado.":"Ce compte est bloqué.",
+    "Activa tu cuenta desde el enlace enviado a tu correo.":"Active ton compte depuis le lien envoyé par e-mail.",
+    "El PIN no es correcto.":"Ce PIN n'est pas correct.",
+    "No existe una cuenta con ese correo.":"Aucun compte n'utilise cet e-mail.",
+    "No existe ninguna cuenta con ese nombre. Crea una cuenta para empezar.":"Aucun compte ne porte ce nom. Crée un compte pour commencer.",
+    "El nombre debe tener al menos 2 caracteres.":"Le nom doit contenir au moins 2 caractères.",
+    "Introduce un correo válido.":"Saisis un e-mail valide.",
+    "Ese nombre de usuario ya está en uso.":"Ce nom d'utilisateur est déjà pris.",
+    "Ese correo ya está asociado a una cuenta.":"Cet e-mail est déjà lié à un compte.",
+    "Ese correo ya está asociado a otra cuenta.":"Cet e-mail est déjà lié à un autre compte.",
+    "No pudimos enviar el correo. Inténtalo más tarde.":"Nous n'avons pas pu envoyer l'e-mail. Réessaie plus tard.",
+    "El enlace no es válido o ya caducó.":"Ce lien est invalide ou a expiré.",
+    "El PIN actual no es correcto.":"Ton PIN actuel n'est pas correct."
   }
 };
 
@@ -1530,9 +1574,9 @@ Object.assign(I18N.fr,{
   ,auth_pin_new:"Nouveau PIN · 4–8 chiffres",auth_reset_title:"Choisissez un nouveau PIN",auth_reset_hint:"Votre nouveau PIN protégera votre compte.",auth_reset_cta:"Enregistrer mon nouveau PIN",auth_reset_done:"PIN mis à jour. Vous pouvez vous connecter."
 });
 
-Object.assign(I18N.es,{account_link:"Mi cuenta",account_title:"Mi cuenta",account_hint:"Gestiona tu correo y tu PIN de acceso.",account_email:"Correo de acceso",account_save_email:"Verificar este nuevo correo",account_pin_title:"Cambiar mi PIN",account_pin_hint:"Tu PIN debe tener entre 4 y 8 dígitos.",account_current_pin:"PIN actual",account_new_pin:"Nuevo PIN",account_save_pin:"Guardar mi nuevo PIN",account_email_verified:"✓ Correo verificado",account_email_pending:"Revisa tu correo y abre el enlace para verificarlo.",account_email_sent:"Te enviamos un enlace de verificación.",account_pin_saved:"PIN actualizado. Tus otras sesiones se cerraron."});
-Object.assign(I18N.en,{account_link:"My account",account_title:"My account",account_hint:"Manage your email and sign-in PIN.",account_email:"Sign-in email",account_save_email:"Verify this new email",account_pin_title:"Change my PIN",account_pin_hint:"Your PIN must be 4 to 8 digits.",account_current_pin:"Current PIN",account_new_pin:"New PIN",account_save_pin:"Save my new PIN",account_email_verified:"✓ Email verified",account_email_pending:"Check your email and open the link to verify it.",account_email_sent:"We sent you a verification link.",account_pin_saved:"PIN updated. Your other sessions were signed out."});
-Object.assign(I18N.fr,{account_link:"Mon compte",account_title:"Mon compte",account_hint:"Gérez votre e-mail et votre PIN de connexion.",account_email:"E-mail de connexion",account_save_email:"Vérifier ce nouvel e-mail",account_pin_title:"Modifier mon PIN",account_pin_hint:"Votre PIN doit contenir de 4 à 8 chiffres.",account_current_pin:"PIN actuel",account_new_pin:"Nouveau PIN",account_save_pin:"Enregistrer mon nouveau PIN",account_email_verified:"✓ E-mail vérifié",account_email_pending:"Consultez votre e-mail et ouvrez le lien de vérification.",account_email_sent:"Nous vous avons envoyé un lien de vérification.",account_pin_saved:"PIN mis à jour. Vos autres sessions ont été fermées."});
+Object.assign(I18N.es,{account_link:"Mi cuenta",account_title:"Mi cuenta",account_hint:"Gestiona tu correo y tu PIN de acceso.",account_email:"Correo de acceso",account_save_email:"Verificar este nuevo correo",account_pin_title:"Cambiar mi PIN",account_pin_hint:"Tu PIN debe tener entre 4 y 8 dígitos.",account_current_pin:"PIN actual",account_new_pin:"Nuevo PIN",account_save_pin:"Guardar mi nuevo PIN",account_email_verified:"✓ Correo verificado",account_email_pending:"Revisa tu correo y abre el enlace para verificarlo.",account_email_sent:"Te enviamos un enlace de verificación.",account_pin_saved:"PIN actualizado. Tus otras sesiones se cerraron.",account_email_missing:"No has apuntado ningún correo: sin él no podrás recuperar tu PIN.",account_current_pin_invalid:"Escribe tu PIN actual."});
+Object.assign(I18N.en,{account_link:"My account",account_title:"My account",account_hint:"Manage your email and sign-in PIN.",account_email:"Sign-in email",account_save_email:"Verify this new email",account_pin_title:"Change my PIN",account_pin_hint:"Your PIN must be 4 to 8 digits.",account_current_pin:"Current PIN",account_new_pin:"New PIN",account_save_pin:"Save my new PIN",account_email_verified:"✓ Email verified",account_email_pending:"Check your email and open the link to verify it.",account_email_sent:"We sent you a verification link.",account_pin_saved:"PIN updated. Your other sessions were signed out.",account_email_missing:"No email saved yet: without one you cannot recover your PIN.",account_current_pin_invalid:"Enter your current PIN."});
+Object.assign(I18N.fr,{account_link:"Mon compte",account_title:"Mon compte",account_hint:"Gérez votre e-mail et votre PIN de connexion.",account_email:"E-mail de connexion",account_save_email:"Vérifier ce nouvel e-mail",account_pin_title:"Modifier mon PIN",account_pin_hint:"Votre PIN doit contenir de 4 à 8 chiffres.",account_current_pin:"PIN actuel",account_new_pin:"Nouveau PIN",account_save_pin:"Enregistrer mon nouveau PIN",account_email_verified:"✓ E-mail vérifié",account_email_pending:"Consultez votre e-mail et ouvrez le lien de vérification.",account_email_sent:"Nous vous avons envoyé un lien de vérification.",account_pin_saved:"PIN mis à jour. Vos autres sessions ont été fermées.",account_email_missing:"Aucun e-mail enregistré : sans lui, impossible de récupérer ton PIN.",account_current_pin_invalid:"Saisis ton PIN actuel."});
 
 let lang = URL_LANG || localStorage.getItem('pf_lang') || 'es';
 if(URL_LANG) localStorage.setItem('pf_lang', URL_LANG);
@@ -2244,6 +2288,9 @@ async function sendFeedback(){
 /* -------------------- accès au compte -------------------- */
 let pendingWelcome='';
 const resetToken=new URLSearchParams(location.search).get('reset_pin')||'';
+/* El panel de administración manda aquí a quien olvidó su PIN: no tiene
+   pantalla propia de recuperación porque usa la misma cuenta del juego. */
+const forgotRequested=new URLSearchParams(location.search).get('forgot')==='1';
 function resetLoginSteps(){
   ['reg-email','uname','upin','upin2','login-id','login-pin','forgot-email'].forEach(id=>{if($(id)) $(id).value='';});
   ['auth-register-val','auth-login-val','auth-forgot-val'].forEach(id=>{if($(id)){ $(id).className='val'; $(id).textContent=''; }});
@@ -2271,13 +2318,20 @@ function setAuthMode(mode){
   }
 }
 function completeAccess(res, fallback){
-  if(res.registered) pendingWelcome=res.username||fallback;
+  // El alta ya no ocurre al entrar: el aviso va en la primera entrada real,
+  // la que sigue a activar la cuenta desde el correo.
+  if(res.firstLogin) pendingWelcome=res.username||fallback;
   const previousUser=localStorage.getItem('pf_user')||'';
   user=res.username; sessionToken=res.sessionToken||''; sessionExpiryHandled=false;
   if(previousUser&&previousUser.toLocaleLowerCase()!==user.toLocaleLowerCase()) localStorage.removeItem('pf_current_game');
   localStorage.setItem('pf_user',user); localStorage.setItem('pf_session',sessionToken); localStorage.removeItem('pf_pin'); userPin='';
   unlockAudio(); const deepLinkPending=!!pendingJoinCode; enterLobby(); if(!deepLinkPending) resumeStoredGame();
 }
+$('auth-register-panel').addEventListener('submit',e=>{e.preventDefault();registerAccount()});
+$('auth-login-panel').addEventListener('submit',e=>{e.preventDefault();loginAccount()});
+$('auth-forgot-panel').addEventListener('submit',e=>{e.preventDefault();requestPinRecovery()});
+$('account-email-form').addEventListener('submit',e=>{e.preventDefault();saveAccountEmail()});
+$('account-pin-form').addEventListener('submit',e=>{e.preventDefault();saveAccountPin()});
 async function registerAccount(){
   const email=$('reg-email').value.trim(), name=$('uname').value.trim(), pin=$('upin').value.trim(), repeat=$('upin2').value.trim();
   if(!/^\S+@\S+\.\S+$/.test(email)) return authError('auth-register-val',t('auth_email_invalid'));
@@ -2315,24 +2369,47 @@ async function requestPinRecovery(){
   try{const token=pinResetTurnstileId===undefined?'':window.turnstile.getResponse(pinResetTurnstileId);const res=await api('requestPinReset',{email,'cf-turnstile-response':token}); if(!res.ok)return authError('auth-forgot-val',te(res.error)); $('auth-forgot-val').className='val ok';$('auth-forgot-val').textContent=t('auth_recovery_sent'); if(pinResetTurnstileId!==undefined)window.turnstile.reset(pinResetTurnstileId);}
   catch(e){authError('auth-forgot-val',t('net_error'));}
 }
+/* Sin correo verificado no hay forma de recuperar el PIN: la pantalla lo dice
+   con todas las letras en vez de dejarlo en un estado en gris. */
+function paintAccountEmail(profile){
+  const note=$('account-email-status');
+  note.classList.toggle('warn',!profile.emailVerifiedAt);
+  note.textContent=!profile.email?t('account_email_missing')
+    :profile.emailVerifiedAt?t('account_email_verified'):t('account_email_pending');
+}
 async function openAccount(){
-  show('account'); $('account-val').className='val'; $('account-val').textContent=t('loading');
-  try{const res=await api('accountProfile');if(!res.ok)throw new Error(); $('account-name').textContent=res.username; $('account-email').value=res.email||''; $('account-email-status').textContent=res.emailVerifiedAt?t('account_email_verified'):t('account_email_pending'); $('account-val').textContent='';}
-  catch(e){authError('account-val',t('net_error'));}
+  show('account');
+  ['account-email-val','account-val'].forEach(id=>{$(id).className='val';$(id).textContent='';});
+  ['account-current-pin','account-new-pin','account-repeat-pin'].forEach(id=>$(id).value='');
+  $('account-email-val').textContent=t('loading');
+  try{
+    const res=await api('accountProfile');if(!res.ok)throw new Error();
+    $('account-name').textContent=res.username;
+    $('account-username').value=res.username;$('account-username-pin').value=res.username;
+    $('account-email').value=res.email||'';
+    paintAccountEmail(res);
+    $('account-email-val').textContent='';
+  }catch(e){authError('account-email-val',t('net_error'));}
 }
 async function saveAccountEmail(){
   const email=$('account-email').value.trim();
-  if(!/^\S+@\S+\.\S+$/.test(email))return authError('account-val',t('auth_email_invalid'));
-  $('account-val').className='val';$('account-val').textContent=t('loading');
-  try{const res=await api('requestEmailVerification',{email});if(!res.ok)return authError('account-val',te(res.error));$('account-val').className='val ok';$('account-val').textContent=t('account_email_sent');$('account-email-status').textContent=t('account_email_pending');}
-  catch(e){authError('account-val',t('net_error'));}
+  if(!/^\S+@\S+\.\S+$/.test(email))return authError('account-email-val',t('auth_email_invalid'));
+  $('account-email-val').className='val';$('account-email-val').textContent=t('loading');
+  try{const res=await api('requestEmailVerification',{email});if(!res.ok)return authError('account-email-val',te(res.error));
+    $('account-email-val').className='val ok';$('account-email-val').textContent=t('account_email_sent');
+    paintAccountEmail({email,emailVerifiedAt:null});}
+  catch(e){authError('account-email-val',t('net_error'));}
 }
 async function saveAccountPin(){
   const currentPin=$('account-current-pin').value.trim(),newPin=$('account-new-pin').value.trim(),repeat=$('account-repeat-pin').value.trim();
+  if(!/^\d{4,8}$/.test(currentPin))return authError('account-val',t('account_current_pin_invalid'));
   if(!/^\d{4,8}$/.test(newPin))return authError('account-val',t('login_pin_invalid'));
   if(newPin!==repeat)return authError('account-val',t('login_pin_mismatch'));
   $('account-val').className='val';$('account-val').textContent=t('loading');
-  try{const res=await api('changePin',{currentPin,newPin});if(!res.ok)return authError('account-val',te(res.error));['account-current-pin','account-new-pin','account-repeat-pin'].forEach(id=>$(id).value='');$('account-val').className='val ok';$('account-val').textContent=t('account_pin_saved');}
+  try{const res=await api('changePin',{currentPin,newPin});if(!res.ok)return authError('account-val',te(res.error));
+    ['account-current-pin','account-new-pin','account-repeat-pin'].forEach(id=>$(id).value='');
+    userPin=newPin;
+    $('account-val').className='val ok';$('account-val').textContent=t('account_pin_saved');}
   catch(e){authError('account-val',t('net_error'));}
 }
 function handleSessionExpired(){
@@ -3523,7 +3600,7 @@ async function boot(){
     catch(e){show('login');setAuthMode('login');return authError('auth-login-val',t('net_error'));}
   }
   if(user&&sessionToken){const deepLinkPending=!!pendingJoinCode;enterLobby();if(!deepLinkPending)resumeStoredGame();}
-  else {show('login');setAuthMode(resetToken?'forgot':defaultAuthMode());}
+  else {show('login');setAuthMode(resetToken||forgotRequested?'forgot':defaultAuthMode());}
 }
 boot();
 </script>

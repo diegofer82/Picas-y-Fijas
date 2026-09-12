@@ -27,10 +27,12 @@ test('every typed game action can be submitted with Enter', () => {
   assert.match(publicHtml, /event\.repeat/);
 });
 
-test('admin credentials can be submitted with Enter', () => {
-  assert.match(adminHtml, /\$\('username'\)\.addEventListener\('keydown',submitLoginOnEnter\)/);
-  assert.match(adminHtml, /\$\('pin'\)\.addEventListener\('keydown',submitLoginOnEnter\)/);
-  assert.match(adminHtml, /e\.key!==['"]Enter['"]/);
+test('admin credentials live in a real form: Enter submits and managers can save it', () => {
+  assert.match(adminHtml, /<form id="loginForm">/);
+  assert.match(adminHtml, /id="username"[^>]*autocomplete="username"/);
+  assert.match(adminHtml, /id="pin"[^>]*autocomplete="current-password"/);
+  assert.match(adminHtml, /id="loginButton" type="submit"/);
+  assert.match(adminHtml, /\$\('loginForm'\)\.addEventListener\('submit'/);
 });
 
 test('the timer counts down from the received server snapshot only once', () => {

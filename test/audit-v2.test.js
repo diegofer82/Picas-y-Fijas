@@ -2,6 +2,7 @@ import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { Miniflare } from 'miniflare';
+import { seedAccount } from './accounts.js';
 import { gameMeta, maxSymbolFor, sanitizeGame, validateCode } from '../src/game.js';
 
 let mf;
@@ -102,7 +103,8 @@ async function api(action, payload = {}, token = '') {
 }
 
 async function player(username) {
-  const result = await api('loginUser', { username, pin:'2468' });
+  await seedAccount(await mf.getD1Database('DB'), username);
+  const result = await api('loginUser', { identifier:username, pin:'2468' });
   assert.equal(result.ok, true, result.error);
   return { username:result.username, token:result.sessionToken };
 }

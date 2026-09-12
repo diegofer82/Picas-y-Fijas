@@ -151,45 +151,37 @@ export async function login(db, params, ttlHours, origin = {}) {
   if (attempt?.locked_until && Date.parse(attempt.locked_until) > Date.now()) {
     return { ok:false, error:'Demasiados PIN incorrectos. Inténtalo de nuevo en 15 minutos.' };
   }
-  let user = await db.prepare(isEmail ? 'SELECT * FROM users WHERE email=?' : 'SELECT * FROM users WHERE username_key=?').bind(key).first();
-  let registered = false;
+  const user = await db.prepare(isEmail ? 'SELECT * FROM users WHERE email=?' : 'SELECT * FROM users WHERE username_key=?').bind(key).first();
+  // Entrar nunca crea una cuenta. El alta pasa siempre por `register`, que
+  // exige un correo: sin el, la cuenta naceria sin forma de recuperar el PIN.
+  if (!user) return { ok:false, error:isEmail
+    ? 'No existe una cuenta con ese correo.'
+    : 'No existe ninguna cuenta con ese nombre. Crea una cuenta para empezar.' };
+  if (user.blocked_at) return { ok:false, error:'Este usuario está bloqueado.' };
+  // Solo se exige activacion a las cuentas que declararon un correo. Las
+  // cuentas historicas (sin correo) siguen entrando con nombre y PIN.
+  if (user.email && !user.email_verified_at) return { ok:false, error:'Activa tu cuenta desde el enlace enviado a tu correo.' };
   const stamp = new Date().toISOString();
-  if (user) {
-    if (user.blocked_at) return { ok:false, error:'Este usuario está bloqueado.' };
-    // Solo se exige activacion a las cuentas que declararon un correo. Las
-    // cuentas historicas (sin correo) siguen entrando con nombre y PIN.
-    if (user.email && !user.email_verified_at) return { ok:false, error:'Activa tu cuenta desde el enlace enviado a tu correo.' };
-    if (!await verifyPin(pin, user.pin_salt, user.pin_hash)) {
-      const failures = (Number(attempt?.failures) || 0) + 1;
-      const lockedUntil = failures >= 5 ? new Date(Date.now() + 15 * 60000).toISOString() : null;
-      await db.prepare(`INSERT INTO login_attempts(throttle_key,failures,locked_until,updated_at) VALUES(?,?,?,?)
-        ON CONFLICT(throttle_key) DO UPDATE SET failures=excluded.failures,locked_until=excluded.locked_until,updated_at=excluded.updated_at`)
-        .bind(key, failures, lockedUntil, stamp).run();
-      return { ok:false, error:failures >= 5 ? 'Demasiados PIN incorrectos. Inténtalo de nuevo en 15 minutos.' : 'Ese nombre ya existe y el PIN no es correcto.' };
-    }
-    await db.batch([
-      db.prepare('DELETE FROM login_attempts WHERE throttle_key=?').bind(key),
-      db.prepare(`UPDATE users SET last_login_at=?,login_count=login_count+1,
-        last_ip=CASE WHEN ?<>'' THEN ? ELSE last_ip END,
-        last_country=CASE WHEN ?<>'' THEN ? ELSE last_country END WHERE id=?`)
-        .bind(stamp, origin.ip || '', origin.ip || '', origin.country || '', origin.country || '', user.id),
-    ]);
-  } else {
-    // El alta se hace explícitamente con `register`; un correo desconocido
-    // nunca debe crear una cuenta incompleta por accidente.
-    if (isEmail) return { ok:false, error:'No existe una cuenta con ese correo.' };
-    const salt = crypto.randomUUID();
-    const pinHash = await hashPin(pin, salt);
-    await db.prepare(`INSERT INTO users(username,username_key,pin_salt,pin_hash,role,created_at,last_login_at,
-      login_count,signup_ip,signup_country,last_ip,last_country)
-      VALUES(?,?,?,?,?,?,?,1,?,?,?,?)`)
-      .bind(username, key, salt, pinHash, 'player', stamp, stamp,
-        origin.ip || '', origin.country || '', origin.ip || '', origin.country || '').run();
-    user = await db.prepare('SELECT * FROM users WHERE username_key=?').bind(key).first();
-    registered = true;
+  if (!await verifyPin(pin, user.pin_salt, user.pin_hash)) {
+    const failures = (Number(attempt?.failures) || 0) + 1;
+    const lockedUntil = failures >= 5 ? new Date(Date.now() + 15 * 60000).toISOString() : null;
+    await db.prepare(`INSERT INTO login_attempts(throttle_key,failures,locked_until,updated_at) VALUES(?,?,?,?)
+      ON CONFLICT(throttle_key) DO UPDATE SET failures=excluded.failures,locked_until=excluded.locked_until,updated_at=excluded.updated_at`)
+      .bind(key, failures, lockedUntil, stamp).run();
+    return { ok:false, error:failures >= 5 ? 'Demasiados PIN incorrectos. Inténtalo de nuevo en 15 minutos.' : 'El PIN no es correcto.' };
   }
+  // `register` deja la cuenta sin ninguna entrada, asi que esta es la primera
+  // de verdad: la que merece el aviso de bienvenida.
+  const firstLogin = !user.last_login_at;
+  await db.batch([
+    db.prepare('DELETE FROM login_attempts WHERE throttle_key=?').bind(key),
+    db.prepare(`UPDATE users SET last_login_at=?,login_count=login_count+1,
+      last_ip=CASE WHEN ?<>'' THEN ? ELSE last_ip END,
+      last_country=CASE WHEN ?<>'' THEN ? ELSE last_country END WHERE id=?`)
+      .bind(stamp, origin.ip || '', origin.ip || '', origin.country || '', origin.country || '', user.id),
+  ]);
   const session = await createSession(db, user, ttlHours, origin);
-  return { ok:true, username:user.username, registered, role:user.role, sessionToken:session.token, sessionExpiresAt:session.expiresAt };
+  return { ok:true, username:user.username, firstLogin, role:user.role, sessionToken:session.token, sessionExpiresAt:session.expiresAt };
 }
 
 export async function register(db, env, params, ttlHours, origin = {}) {
@@ -209,10 +201,12 @@ export async function register(db, env, params, ttlHours, origin = {}) {
   const stamp = new Date().toISOString();
   const salt = crypto.randomUUID();
   const pinHash = await hashPin(pin, salt);
+  // Crear la cuenta no es entrar: el contador y la fecha de acceso se quedan
+  // vacios hasta que alguien entre de verdad con el PIN.
   await db.prepare(`INSERT INTO users(username,username_key,email,email_verified_at,pin_salt,pin_hash,role,created_at,last_login_at,
     login_count,signup_ip,signup_country,last_ip,last_country)
-    VALUES(?,?,?,?,?,?,?, ?,?,1,?,?,?,?)`)
-    .bind(username, key, email, null, salt, pinHash, 'player', stamp, stamp,
+    VALUES(?,?,?,?,?,?,?, ?,?,0,?,?,?,?)`)
+    .bind(username, key, email, null, salt, pinHash, 'player', stamp, null,
       origin.ip || '', origin.country || '', origin.ip || '', origin.country || '').run();
   const user = await db.prepare('SELECT * FROM users WHERE username_key=?').bind(key).first();
   const sent = await sendEmailVerification(db, env, user, email, origin.origin || '', true);

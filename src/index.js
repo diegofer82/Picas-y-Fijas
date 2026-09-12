@@ -22,7 +22,6 @@ import {
 import { accountProfile, authenticate, changePin, hashPin, login, lookupName, register, requestOrigin, validPin, verifyTurnstile } from "./security.js";
 import {
   adminDeleteUser,
-  adminMergeUsers,
   adminPurgeGames,
   adminSql,
   adminSummary,
@@ -95,7 +94,6 @@ const ADMIN_ACTIONS = new Set([
   "adminMuteChatUser",
   "adminUnmuteChatUser",
   "adminUserDetail",
-  "adminMergeUsers",
   "adminDeleteUser",
   "adminPurgeGames",
   "adminCloseSessions",
@@ -1236,26 +1234,23 @@ async function adminAction(db, action, params, user, env) {
   // registran su linea de auditoria aqui mismo en vez de compartir la del
   // final de la funcion.
   if (
-    action === "adminMergeUsers" ||
     action === "adminDeleteUser" ||
     action === "adminPurgeGames" ||
     action === "adminSql"
   ) {
     const result =
-      action === "adminMergeUsers"
-        ? await adminMergeUsers(db, params)
-        : action === "adminDeleteUser"
-          ? await adminDeleteUser(db, params, user)
-          : action === "adminPurgeGames"
-            ? await adminPurgeGames(db, params)
-            : await adminSql(db, params);
+      action === "adminDeleteUser"
+        ? await adminDeleteUser(db, params, user)
+        : action === "adminPurgeGames"
+          ? await adminPurgeGames(db, params)
+          : await adminSql(db, params);
     const rehearsal = result.preview === true || result.pending === true;
     if (result.ok && !rehearsal)
       await logAudit(
         db,
         user,
         action,
-        String(params.target || params.from || params.status || ""),
+        String(params.target || params.status || ""),
         action === "adminSql"
           ? { sql: String(params.sql || "").slice(0, 900), kind: result.kind, changes: result.changes ?? null }
           : { ...params },

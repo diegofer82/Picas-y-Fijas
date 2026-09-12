@@ -2,6 +2,7 @@ import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { Miniflare } from 'miniflare';
+import { seedAccount } from './accounts.js';
 
 const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
 
@@ -42,9 +43,7 @@ test('the first step tells a free name apart from a taken one', async () => {
   const free = await api('checkUsername', { username:'Mafalda' });
   assert.deepEqual({ ok:free.ok, known:free.known }, { ok:true, known:false });
 
-  const created = await api('loginUser', { username:'Mafalda', pin:'2468' });
-  assert.equal(created.ok, true, created.error);
-  assert.equal(created.registered, true, 'el primer acceso es un registro');
+  await seedAccount(await mf.getD1Database('DB'), 'Mafalda');
 
   const taken = await api('checkUsername', { username:'Mafalda' });
   assert.equal(taken.known, true);
@@ -62,9 +61,35 @@ test('the first step refuses a name too short and never reveals the PIN', async 
   assert.deepEqual(Object.keys(known).sort(), ['known','ok','username']);
 });
 
+test('entrar nunca crea una cuenta: el alta pasa por el registro con correo', async () => {
+  const unknown = await api('loginUser', { identifier:'Nadie', pin:'2468' });
+  assert.equal(unknown.ok, false);
+  assert.match(unknown.error, /No existe ninguna cuenta con ese nombre/);
+  const byEmail = await api('loginUser', { identifier:'nadie@ejemplo.test', pin:'2468' });
+  assert.equal(byEmail.ok, false);
+  assert.match(byEmail.error, /No existe una cuenta con ese correo/);
+  // Y no ha quedado ninguna fila a medias.
+  const db = await mf.getD1Database('DB');
+  const left = await db.prepare("SELECT COUNT(*) AS n FROM users WHERE username_key='nadie'").first();
+  assert.equal(Number(left.n), 0);
+});
+
+test('los tres pasos del acceso son formularios de verdad', () => {
+  const login = html.slice(html.indexOf('<section id="s-login"'), html.indexOf('<section id="s-feedback"'));
+  for (const id of ['auth-register-panel','auth-login-panel','auth-forgot-panel'])
+    assert.match(login, new RegExp('<form id="'+id+'"'), `${id} deberia ser un <form>`);
+  // Sin <form>, el gestor de contrasenas no ofrece guardar la pareja.
+  assert.match(login, /id="auth-login-btn" type="submit"/);
+  assert.match(html, /\$\('auth-login-panel'\)\.addEventListener\('submit'/);
+  const account = html.slice(html.indexOf('<section id="s-account"'), html.indexOf('<!-- PRACTICA'));
+  assert.match(account, /<form id="account-email-form">/);
+  assert.match(account, /<form id="account-pin-form">/);
+  assert.match(account, /id="account-username-pin"[^>]*autocomplete="username"/);
+});
+
 test('crear cuenta pide el PIN dos veces, entrar lo pide una sola', () => {
-  const register = html.slice(html.indexOf('<div id="auth-register-panel"'), html.indexOf('<div id="auth-login-panel"'));
-  const login = html.slice(html.indexOf('<div id="auth-login-panel"'), html.indexOf('<div id="auth-forgot-panel"'));
+  const register = html.slice(html.indexOf('<form id="auth-register-panel"'), html.indexOf('<form id="auth-login-panel"'));
+  const login = html.slice(html.indexOf('<form id="auth-login-panel"'), html.indexOf('<form id="auth-forgot-panel"'));
   assert.match(register, /id="upin"[^>]*autocomplete="new-password"/);
   assert.match(register, /id="upin2"[^>]*autocomplete="new-password"/);
   assert.match(login, /id="login-pin"[^>]*autocomplete="current-password"/);
@@ -76,10 +101,10 @@ test('la entrada es la pantalla por defecto y el alta vive en un enlace', () => 
   const login = html.slice(html.indexOf('<section id="s-login"'), html.indexOf('<section id="s-feedback"'));
   // Ya no hay conmutador de pestanas: se entra directo.
   assert.doesNotMatch(login, /auth-switch/);
-  assert.match(login, /<div id="auth-register-panel" class="hidden">/);
-  assert.match(login, /<div id="auth-login-panel">/);
+  assert.match(login, /<form id="auth-register-panel" class="hidden">/);
+  assert.match(login, /<form id="auth-login-panel">/);
   // Y el enlace de alta queda debajo del formulario de entrada.
-  const loginPanel = login.slice(login.indexOf('<div id="auth-login-panel">'), login.indexOf('<div id="auth-forgot-panel"'));
+  const loginPanel = login.slice(login.indexOf('<form id="auth-login-panel">'), login.indexOf('<form id="auth-forgot-panel"'));
   assert.match(loginPanel, /class="auth-alt"[\s\S]*setAuthMode\('register'\)/);
   assert.match(html, /function defaultAuthMode\(\)/);
 });
@@ -92,7 +117,7 @@ test('the login copy speaks of a password and warns it cannot be recovered', () 
 });
 
 test('a fresh account is told once that the password will be needed again', () => {
-  assert.match(html, /if\(res\.registered\) pendingWelcome=res\.username\|\|fallback;/);
+  assert.match(html, /if\(res\.firstLogin\) pendingWelcome=res\.username\|\|fallback;/);
   assert.match(html, /function showWelcomeNote\(\)/);
   assert.match(html, /id="lobby-welcome"/);
 });

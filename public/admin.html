@@ -52,6 +52,36 @@
     dialog::backdrop{background:#02060cd0}
     .dlg-head{display:flex;gap:12px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel)}
     .dlg-body{padding:16px 18px;max-height:70vh;overflow:auto}
+    .dlg-foot{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;padding:14px 18px;border-top:1px solid var(--line)}
+    #ask{max-width:520px}
+    #ask .dlg-body p{margin:0 0 12px;line-height:1.5}
+    #ask pre{background:#0c1627;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 12px;white-space:pre-wrap;word-break:break-word;font-size:13px}
+    .field{margin:0 0 14px}
+    .field>label{display:block;margin:0 0 6px;font-size:13px;color:var(--muted)}
+    .field input:not([type=checkbox]),.field select,.field textarea{width:100%}
+    .field textarea{min-height:110px;font-family:inherit;font-size:14px}
+    .field .hint{margin:6px 0 0;font-size:12px;color:var(--muted)}
+    .field.check>label{display:flex;gap:10px;align-items:flex-start;color:var(--text);font-size:14px}
+    .field.check input{flex:0 0 auto;margin:2px 0 0;width:auto;accent-color:var(--blue)}
+    .banner{display:flex;gap:12px;align-items:flex-start;border-radius:14px;padding:14px 16px;margin:16px 0;border:1px solid #78350f;background:#231405;color:#fde68a}
+    .banner a{color:var(--blue)}
+    .banner b{color:#fbbf24}
+    /* Nueve columnas no caben en un telefono. Por debajo de 760px cada fila se
+       convierte en una ficha con su etiqueta delante y desaparece el scroll
+       horizontal, que era la unica forma de leerlas. */
+    @media (max-width:760px){
+      .scroll.stack{overflow:visible}
+      .stack thead{display:none}
+      .stack tr{display:block;background:#0c1627;border:1px solid var(--line);border-radius:12px;padding:10px 13px;margin:0 0 10px}
+      .stack td{display:flex;gap:12px;align-items:baseline;justify-content:space-between;border:0;padding:4px 0;white-space:normal}
+      .stack td::before{content:attr(data-label);flex:0 0 auto;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+      .stack td:empty{display:none}
+      .stack td.acts{flex-wrap:wrap;gap:6px;justify-content:flex-start;margin-top:8px;padding-top:10px;border-top:1px solid var(--line)}
+      .stack td.acts::before{flex-basis:100%;margin-bottom:2px}
+      .stack td.acts select{flex:1 1 140px}
+      .stack td.empty{justify-content:center}
+      .stack td.empty::before{content:none}
+    }
     .msg{padding:7px 0;border-bottom:1px solid #1b2942}
     .msg .who{color:var(--blue);font-weight:600}
     .msg.system .who{color:var(--muted)}
@@ -77,11 +107,18 @@
   <section id="login" class="panel">
     <h2>Acceso</h2>
     <p class="muted small">Solo para cuentas con rol de administrador. Se entra con el mismo usuario (o correo) y PIN del juego.</p>
-    <div class="row login-row"><input id="username" placeholder="Usuario o correo" aria-label="Usuario o correo" autocomplete="username" autofocus><input id="pin" type="password" inputmode="numeric" placeholder="PIN" aria-label="PIN" autocomplete="current-password"><button class="primary" id="loginButton">Entrar</button></div>
+    <!-- Un <form> de verdad: el gestor de contrasenas reconoce la pareja
+         usuario + PIN y ofrece guardarla, y el Enter ya no necesita codigo. -->
+    <form id="loginForm">
+      <div class="row login-row"><input id="username" name="username" placeholder="Usuario o correo" aria-label="Usuario o correo" autocomplete="username" autofocus><input id="pin" name="password" type="password" inputmode="numeric" placeholder="PIN" aria-label="PIN" autocomplete="current-password"><button class="primary" id="loginButton" type="submit">Entrar</button></div>
+    </form>
     <p id="loginError" class="error"></p>
+    <p class="muted small">El panel usa la cuenta del juego. Si olvidaste el PIN, pide un
+      <a href="/?forgot=1">enlace de recuperacion por correo</a> y vuelve aqui con el PIN nuevo.</p>
   </section>
 
   <section id="dashboard" class="hidden">
+    <div id="adminEmailWarn" class="banner hidden"></div>
     <nav class="tabs" id="tabs">
       <button data-tab="resumen" class="on">Resumen</button>
       <button data-tab="usuarios">Usuarios</button>
@@ -105,12 +142,12 @@
     <div id="tab-usuarios" class="hidden">
       <div class="panel" id="dupPanel">
         <h2>Posibles cuentas repetidas</h2>
-        <p class="muted small">Se agrupan por la última IP y por la raíz del nombre. Es una pista, no una prueba: revisa la ficha antes de fusionar.</p>
+        <p class="muted small">Se agrupan por la última IP y por la raíz del nombre. Es una pista, no una prueba: abre la ficha antes de decidir nada.</p>
         <div id="duplicates"></div>
       </div>
       <div class="panel">
-        <div class="row"><h2 class="grow">Usuarios</h2><input id="userFilter" placeholder="Filtrar por nombre, país o IP"><button id="mergeOpen">Fusionar cuentas…</button></div>
-        <div class="scroll"><table><thead><tr>
+        <div class="row"><h2 class="grow">Usuarios</h2><input id="userFilter" placeholder="Filtrar por nombre, país o IP"></div>
+        <div class="scroll stack"><table><thead><tr>
           <th>Usuario</th><th>País</th><th>Última IP</th><th class="nowrap">Partidas</th><th class="nowrap">Msj</th><th>Rol</th><th>Último acceso</th><th>Estado</th><th>Acciones</th>
         </tr></thead><tbody id="users"></tbody></table></div>
       </div>
@@ -119,7 +156,7 @@
     <div id="tab-partidas" class="hidden">
       <div class="panel">
         <div class="row"><h2 class="grow">Partidas recientes</h2><input id="gameFilter" placeholder="Filtrar por código o jugador"></div>
-        <div class="scroll"><table><thead><tr><th>Código</th><th>Estado</th><th>Jugadores</th><th>Ganador</th><th>Actualizada</th><th>Acción</th></tr></thead><tbody id="games"></tbody></table></div>
+        <div class="scroll stack"><table><thead><tr><th>Código</th><th>Estado</th><th>Jugadores</th><th>Ganador</th><th>Actualizada</th><th>Acción</th></tr></thead><tbody id="games"></tbody></table></div>
       </div>
     </div>
 
@@ -127,14 +164,14 @@
       <div class="panel">
         <div class="row"><h2 class="grow">Conversaciones</h2><input id="threadFilter" placeholder="Filtrar por participante"></div>
         <p class="muted small">Cada fila es un chat completo. Los mensajes se abren aparte, en su propia ventana.</p>
-        <div class="scroll"><table><thead><tr><th>Conversación</th><th class="nowrap">Mensajes</th><th class="nowrap">Zumbidos</th><th class="nowrap">Borrados</th><th class="nowrap">Reportes</th><th>Última actividad</th><th></th></tr></thead><tbody id="threads"></tbody></table></div>
+        <div class="scroll stack"><table><thead><tr><th>Conversación</th><th class="nowrap">Mensajes</th><th class="nowrap">Zumbidos</th><th class="nowrap">Borrados</th><th class="nowrap">Reportes</th><th>Última actividad</th><th></th></tr></thead><tbody id="threads"></tbody></table></div>
       </div>
     </div>
 
     <div id="tab-moderacion" class="hidden">
       <div class="panel">
         <h2>Reportes del chat</h2>
-        <div class="scroll"><table><thead><tr><th>Mensaje</th><th>Autor</th><th>Reportado por</th><th>Motivo</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="reports"></tbody></table></div>
+        <div class="scroll stack"><table><thead><tr><th>Mensaje</th><th>Autor</th><th>Reportado por</th><th>Motivo</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="reports"></tbody></table></div>
       </div>
     </div>
 
@@ -146,7 +183,7 @@
         </div>
         <p class="muted small">Llegan desde la pantalla de inicio del juego, con o sin sesión. El contacto y la IP son datos personales: no salen de aquí.</p>
         <div class="row" id="fbCounts"></div>
-        <div class="scroll"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Mensaje</th><th>De</th><th class="nowrap">Idioma</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="feedback"></tbody></table></div>
+        <div class="scroll stack"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Mensaje</th><th>De</th><th class="nowrap">Idioma</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="feedback"></tbody></table></div>
       </div>
     </div>
 
@@ -174,12 +211,21 @@
     <div id="tab-auditoria" class="hidden">
       <div class="panel">
         <h2>Auditoría</h2>
-        <div class="scroll"><table><thead><tr><th>Fecha</th><th>Acción</th><th>Objetivo</th><th>Detalle</th></tr></thead><tbody id="audit"></tbody></table></div>
+        <div class="scroll stack"><table><thead><tr><th>Fecha</th><th>Acción</th><th>Objetivo</th><th>Detalle</th></tr></thead><tbody id="audit"></tbody></table></div>
       </div>
     </div>
   </section>
 
   <dialog id="modal"><div class="dlg-head"><h2 class="grow" id="modalTitle"></h2><button id="modalClose">Cerrar</button></div><div class="dlg-body" id="modalBody"></div></dialog>
+
+  <!-- Lo que borra o cambia algo se confirma aqui, no con las ventanas del
+       navegador: caben el detalle, el aviso y el campo que haya que escribir,
+       y se ve igual en el movil que en el escritorio. -->
+  <dialog id="ask" aria-labelledby="askTitle"><form method="dialog" id="askForm">
+    <div class="dlg-head"><h2 class="grow" id="askTitle"></h2></div>
+    <div class="dlg-body"><div id="askBody"></div><div id="askFields"></div></div>
+    <div class="dlg-foot"><button type="button" id="askCancel" class="ghost">Cancelar</button><button type="submit" id="askOk" class="primary" value="ok">Aceptar</button></div>
+  </form></dialog>
 </main>
 <script>
 let token=localStorage.getItem('pf_admin_session')||'';
@@ -198,12 +244,29 @@ function signOut(){token='';localStorage.removeItem('pf_admin_session');}
 function showLogin(message){signOut();$('login').classList.remove('hidden');$('dashboard').classList.add('hidden');$('loginError').textContent=message||'';}
 async function login(){
   try{
-    const r=await api('loginUser',{username:$('username').value.trim(),pin:$('pin').value.trim()});
+    const r=await api('loginUser',{identifier:$('username').value.trim(),pin:$('pin').value.trim()});
     if(r.role!=='admin')throw Error('Este usuario no es administrador.');
     token=r.sessionToken;localStorage.setItem('pf_admin_session',token);
+    $('pin').value='';
     $('login').classList.add('hidden');$('dashboard').classList.remove('hidden');$('loginError').textContent='';
-    loaded.clear();await openTab('resumen');
+    loaded.clear();await openTab('resumen');checkOwnRecovery();
   }catch(e){$('loginError').textContent=e.message}
+}
+
+/* Sin correo verificado, un PIN olvidado deja el portal sin ninguna puerta:
+   solo quedaria entrar por SQL. El aviso lo dice antes de que pase y lleva
+   directo a la pantalla del juego donde se anade el correo. */
+async function checkOwnRecovery(){
+  const box=$('adminEmailWarn');
+  try{
+    const me=await api('accountProfile');
+    const safe=me.email&&me.emailVerifiedAt;
+    box.classList.toggle('hidden',!!safe);
+    if(!safe)box.innerHTML=`<span>⚠️</span><div><b>Tu cuenta no puede recuperar el PIN.</b>
+      ${me.email?'Tienes un correo apuntado pero sin verificar.':'No has apuntado ningún correo.'}
+      Si lo olvidas, este panel se queda sin acceso. Añádelo en
+      <a href="/" target="_blank" rel="noopener">Mi cuenta</a>, dentro del juego.</div>`;
+  }catch(e){box.classList.add('hidden')}
 }
 
 /* ---- pestañas: cada una pide sus datos la primera vez que se abre ---- */
@@ -215,7 +278,8 @@ async function openTab(name){
   try{await loaders[name]();loaded.add(name);}catch(e){reportFailure(e)}
 }
 function reportFailure(e){
-  if(/sesión|Sesión|administrador requerido/.test(e.message))showLogin(e.message);else alert(e.message);
+  if(/sesión|Sesión|administrador requerido/.test(e.message))showLogin(e.message);
+  else notify('No se pudo completar la acción',e.message);
 }
 async function reload(){const current=[...$('tabs').children].find(b=>b.classList.contains('on'))?.dataset.tab||'resumen';loaded.delete(current);await openTab(current);}
 
@@ -237,28 +301,28 @@ async function loadUsers(){
   $('duplicates').innerHTML=(u.duplicates||[]).length?u.duplicates.map(g=>`<div class="row" style="margin:8px 0">
     <span class="tag dup">${g.reason==='ip'?'misma IP':'mismo nombre'}</span><code>${esc(g.value)}</code>
     ${g.members.map(m=>`<a class="user" data-detail="${esc(m.username)}">${flag(m.country)} ${esc(m.username)}</a> <span class="muted small">(${m.games} partidas, ${when(m.lastLoginAt)})</span>`).join(' · ')}
-    <button class="tiny" data-merge-group="${esc(g.members.map(m=>m.username).join('|'))}">Fusionar…</button></div>`).join(''):'<div class="muted">Ninguna coincidencia por ahora.</div>';
+    </div>`).join(''):'<div class="muted">Ninguna coincidencia por ahora.</div>';
   renderUsers();
 }
 function renderUsers(){
   const needle=$('userFilter').value.trim().toLowerCase();
   const rows=state.users.filter(x=>!needle||[x.username,x.last_country,x.last_ip].join(' ').toLowerCase().includes(needle));
   $('users').innerHTML=rows.map(x=>`<tr>
-    <td><span class="presence-dot${x.online?' online':''}" role="img" aria-label="${x.online?'En línea':'Desconectado'}" title="${x.online?'En línea':'Desconectado'}"></span><a class="user" data-detail="${esc(x.username)}">${esc(x.username)}</a>${x.muted?' <span class="tag dup">chat</span>':''}</td>
-    <td class="nowrap">${flag(x.last_country)} ${esc(String(x.last_country||'').toUpperCase()||'—')}</td>
-    <td class="nowrap"><code>${esc(x.last_ip||'—')}</code></td>
-    <td>${x.games||0}${x.wins?` <span class="muted small">(${x.wins} G)</span>`:''}</td>
-    <td>${x.messages||0}</td>
-    <td><span class="tag${x.role==='admin'?' admin':''}">${esc(x.role)}</span></td>
-    <td class="nowrap">${when(x.last_login_at)}</td>
-    <td>${x.blocked_at?'<span class="tag blocked">Bloqueado</span>':'Activo'}</td>
-    <td class="nowrap">
+    <td data-label="Usuario"><span><span class="presence-dot${x.online?' online':''}" role="img" aria-label="${x.online?'En línea':'Desconectado'}" title="${x.online?'En línea':'Desconectado'}"></span><a class="user" data-detail="${esc(x.username)}">${esc(x.username)}</a>${x.muted?' <span class="tag dup">chat</span>':''}</span></td>
+    <td data-label="País" class="nowrap"><span>${flag(x.last_country)} ${esc(String(x.last_country||'').toUpperCase()||'—')}</span></td>
+    <td data-label="Última IP" class="nowrap"><code>${esc(x.last_ip||'—')}</code></td>
+    <td data-label="Partidas"><span>${x.games||0}${x.wins?` <span class="muted small">(${x.wins} G)</span>`:''}</span></td>
+    <td data-label="Mensajes">${x.messages||0}</td>
+    <td data-label="Rol"><span class="tag${x.role==='admin'?' admin':''}">${esc(x.role)}</span></td>
+    <td data-label="Último acceso" class="nowrap">${when(x.last_login_at)}</td>
+    <td data-label="Estado">${x.blocked_at?'<span class="tag blocked">Bloqueado</span>':'Activo'}</td>
+    <td data-label="Acciones" class="acts nowrap">
       <button class="tiny" data-user="${esc(x.username)}" data-block="${x.blocked_at?'0':'1'}">${x.blocked_at?'Desbloquear':'Bloquear'}</button>
       <button class="tiny" data-pin="${esc(x.username)}">PIN</button>
       <button class="tiny" data-role="${esc(x.username)}" data-next="${x.role==='admin'?'player':'admin'}">${x.role==='admin'?'Quitar admin':'Hacer admin'}</button>
       <button class="tiny" data-unmute-chat="${esc(x.username)}">Reactivar chat</button>
       <button class="tiny danger" data-delete-user="${esc(x.username)}">Borrar</button>
-    </td></tr>`).join('')||'<tr><td colspan="9" class="muted">Sin resultados.</td></tr>';
+    </td></tr>`).join('')||'<tr><td colspan="9" class="muted empty">Sin resultados.</td></tr>';
 }
 
 /* ---- partidas ---- */
@@ -266,9 +330,9 @@ async function loadGames(){state.games=(await api('adminGames')).games;renderGam
 function renderGames(){
   const needle=$('gameFilter').value.trim().toLowerCase();
   const rows=state.games.filter(x=>!needle||[x.game_id,x.p1,x.p2].join(' ').toLowerCase().includes(needle));
-  $('games').innerHTML=rows.map(x=>`<tr><td class="nowrap"><code>${esc(x.game_id)}</code></td><td>${esc(x.status)}</td>
-    <td>${esc(x.p1)} / ${esc(x.p2||'—')}</td><td>${esc(x.winner||'—')}</td><td class="nowrap">${when(x.updated_at)}</td>
-    <td class="nowrap">${['waiting','active'].includes(x.status)?`<button class="tiny danger" data-game="${esc(x.game_id)}">Cerrar</button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="muted">Sin resultados.</td></tr>';
+  $('games').innerHTML=rows.map(x=>`<tr><td data-label="Código" class="nowrap"><code>${esc(x.game_id)}</code></td><td data-label="Estado">${esc(x.status)}</td>
+    <td data-label="Jugadores">${esc(x.p1)} / ${esc(x.p2||'—')}</td><td data-label="Ganador">${esc(x.winner||'—')}</td><td data-label="Actualizada" class="nowrap">${when(x.updated_at)}</td>
+    <td data-label="Acción" class="acts nowrap">${['waiting','active'].includes(x.status)?`<button class="tiny danger" data-game="${esc(x.game_id)}">Cerrar</button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="muted empty">Sin resultados.</td></tr>';
 }
 
 /* ---- conversaciones ---- */
@@ -276,15 +340,15 @@ async function loadThreads(){const r=await api('adminChatThreads');state.threads
 function renderThreads(){
   const needle=$('threadFilter').value.trim().toLowerCase();
   const lobby=state.lobby;
-  const head=lobby&&!needle?`<tr><td><b>Chat del lobby</b> <span class="muted small">· ${lobby.people} personas</span></td>
-    <td>${lobby.messages}</td><td>—</td><td>${lobby.deleted}</td><td>—</td><td class="nowrap">${when(lobby.lastActivity)}</td>
-    <td><button class="tiny" data-thread="0">Ver</button></td></tr>`:'';
+  const head=lobby&&!needle?`<tr><td data-label="Conversación"><b>Chat del lobby</b> <span class="muted small">· ${lobby.people} personas</span></td>
+    <td data-label="Mensajes">${lobby.messages}</td><td data-label="Zumbidos">—</td><td data-label="Borrados">${lobby.deleted}</td><td data-label="Reportes">—</td><td data-label="Última actividad" class="nowrap">${when(lobby.lastActivity)}</td>
+    <td class="acts"><button class="tiny" data-thread="0">Ver</button></td></tr>`:'';
   const rows=state.threads.filter(t=>!needle||`${t.user1} ${t.user2}`.toLowerCase().includes(needle));
   $('threads').innerHTML=head+rows.map(t=>`<tr>
-    <td><a class="user" data-detail="${esc(t.user1)}">${esc(t.user1)}</a> · <a class="user" data-detail="${esc(t.user2)}">${esc(t.user2)}</a>${t.gameId?` <span class="muted small">${esc(t.gameId)}</span>`:''}</td>
-    <td>${t.written}</td><td>${t.nudges}</td><td>${t.deleted}</td><td>${t.reports?`<span class="tag dup">${t.reports}</span>`:'0'}</td>
-    <td class="nowrap">${when(t.lastActivity)}</td><td><button class="tiny" data-thread="${t.id}">Ver</button></td></tr>`).join('');
-  if(!$('threads').innerHTML)$('threads').innerHTML='<tr><td colspan="7" class="muted">Sin conversaciones.</td></tr>';
+    <td data-label="Conversación"><span><a class="user" data-detail="${esc(t.user1)}">${esc(t.user1)}</a> · <a class="user" data-detail="${esc(t.user2)}">${esc(t.user2)}</a>${t.gameId?` <span class="muted small">${esc(t.gameId)}</span>`:''}</span></td>
+    <td data-label="Mensajes">${t.written}</td><td data-label="Zumbidos">${t.nudges}</td><td data-label="Borrados">${t.deleted}</td><td data-label="Reportes">${t.reports?`<span class="tag dup">${t.reports}</span>`:'0'}</td>
+    <td data-label="Última actividad" class="nowrap">${when(t.lastActivity)}</td><td class="acts"><button class="tiny" data-thread="${t.id}">Ver</button></td></tr>`).join('');
+  if(!$('threads').innerHTML)$('threads').innerHTML='<tr><td colspan="7" class="muted empty">Sin conversaciones.</td></tr>';
 }
 async function openThread(id){
   const r=await api('adminChatThread',{threadId:id});
@@ -320,34 +384,34 @@ async function loadFeedback(){
   $('fbCounts').innerHTML=Object.entries(FB_STATUS)
     .map(([key,label])=>`<div class="card${key==='new'&&r.counts[key]?' warn':''}">${label}<b>${r.counts[key]||0}</b></div>`).join('');
   $('feedback').innerHTML=r.items.map(x=>`<tr>
-    <td class="nowrap">${when(x.createdAt)}</td>
-    <td class="nowrap">${esc(FB_KIND[x.kind]||x.kind)}</td>
-    <td style="max-width:420px;white-space:pre-wrap">${esc(x.message)}${x.adminNote?`<div class="muted small">Nota: ${esc(x.adminNote)}</div>`:''}</td>
-    <td>${esc(x.username||x.contact||'—')}${x.username&&x.contact?`<div class="muted small">${esc(x.contact)}</div>`:''}
-        <div class="muted small">${flag(x.country)} ${esc(x.ip||'')}</div></td>
-    <td class="nowrap">${esc(x.lang)}${x.appVersion?` · v${esc(x.appVersion)}`:''}</td>
-    <td class="nowrap">${esc(FB_STATUS[x.status]||x.status)}</td>
-    <td class="nowrap">
+    <td data-label="Fecha" class="nowrap">${when(x.createdAt)}</td>
+    <td data-label="Tipo" class="nowrap">${esc(FB_KIND[x.kind]||x.kind)}</td>
+    <td data-label="Mensaje" style="max-width:420px"><span style="white-space:pre-wrap">${esc(x.message)}${x.adminNote?`<div class="muted small">Nota: ${esc(x.adminNote)}</div>`:''}</span></td>
+    <td data-label="De"><span>${esc(x.username||x.contact||'—')}${x.username&&x.contact?`<div class="muted small">${esc(x.contact)}</div>`:''}
+        <div class="muted small">${flag(x.country)} ${esc(x.ip||'')}</div></span></td>
+    <td data-label="Idioma" class="nowrap"><span>${esc(x.lang)}${x.appVersion?` · v${esc(x.appVersion)}`:''}</span></td>
+    <td data-label="Estado" class="nowrap">${esc(FB_STATUS[x.status]||x.status)}</td>
+    <td data-label="Acciones" class="acts nowrap">
       <select data-feedback-status="${x.id}">${Object.entries(FB_STATUS).map(([key,label])=>`<option value="${key}"${key===x.status?' selected':''}>${label}</option>`).join('')}</select>
       ${x.replyTo
         ? `<button class="tiny" data-feedback-reply="${x.id}" title="Responder a ${esc(x.replyTo)}">Responder</button>`
         : `<button class="tiny" disabled title="${x.contact?`Dejó «${esc(x.contact)}», que no es un correo`:'No dejó ningún contacto'}">Responder</button>`}
       <button class="tiny" data-feedback-note="${x.id}">Nota</button>
       <button class="tiny danger" data-feedback-delete="${x.id}">Borrar</button>
-    </td></tr>`).join('')||'<tr><td colspan="7" class="muted">Sin mensajes todavía.</td></tr>';
+    </td></tr>`).join('')||'<tr><td colspan="7" class="muted empty">Sin mensajes todavía.</td></tr>';
 }
 async function loadReports(){
   const r=await api('adminChatReports');
-  $('reports').innerHTML=r.reports.map(x=>`<tr><td>${esc(x.deleted_at?'[eliminado]':x.body)}</td><td>${esc(x.sender)}</td><td>${esc(x.reporter)}</td>
-    <td>${esc(x.reason)}</td><td>${esc(x.status)}</td>
-    <td class="nowrap">${!x.deleted_at?`<button class="tiny danger" data-delete-message="${x.message_id}">Borrar</button> <button class="tiny" data-mute-user="${esc(x.sender)}">Silenciar</button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="muted">Sin reportes.</td></tr>';
+  $('reports').innerHTML=r.reports.map(x=>`<tr><td data-label="Mensaje">${esc(x.deleted_at?'[eliminado]':x.body)}</td><td data-label="Autor">${esc(x.sender)}</td><td data-label="Reportado por">${esc(x.reporter)}</td>
+    <td data-label="Motivo">${esc(x.reason)}</td><td data-label="Estado">${esc(x.status)}</td>
+    <td data-label="Acciones" class="acts nowrap">${!x.deleted_at?`<button class="tiny danger" data-delete-message="${x.message_id}">Borrar</button> <button class="tiny" data-mute-user="${esc(x.sender)}">Silenciar</button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="muted empty">Sin reportes.</td></tr>';
 }
 
 /* ---- auditoría ---- */
 async function loadAudit(){
   const r=await api('adminAudit');
-  $('audit').innerHTML=r.audit.map(x=>`<tr><td class="nowrap">${when(x.created_at)}</td><td>${esc(x.action)}</td><td>${esc(x.target||'—')}</td>
-    <td class="small muted">${esc(String(x.details_json||'').slice(0,220))}</td></tr>`).join('')||'<tr><td colspan="4" class="muted">Sin registros.</td></tr>';
+  $('audit').innerHTML=r.audit.map(x=>`<tr><td data-label="Fecha" class="nowrap">${when(x.created_at)}</td><td data-label="Acción">${esc(x.action)}</td><td data-label="Objetivo">${esc(x.target||'—')}</td>
+    <td data-label="Detalle" class="small muted">${esc(String(x.details_json||'').slice(0,220))}</td></tr>`).join('')||'<tr><td colspan="4" class="muted empty">Sin registros.</td></tr>';
 }
 
 /* ---- ficha de usuario ---- */
@@ -378,8 +442,7 @@ async function openUser(name){
     </div>
     ${d.related.length?`<h3>Cuentas parecidas</h3>${d.related.map(r=>`<div class="row"><span class="tag dup">${r.reason==='ip'?'misma IP':'mismo nombre'}</span>
       <a class="user" data-detail="${esc(r.username)}">${flag(r.last_country)} ${esc(r.username)}</a>
-      <code>${esc(r.last_ip||'—')}</code><span class="muted small">${when(r.last_login_at)}</span>
-      <button class="tiny" data-merge-into="${esc(u.username)}" data-merge-from="${esc(r.username)}">Fusionar en ${esc(u.username)}</button></div>`).join('')}`:''}
+      <code>${esc(r.last_ip||'—')}</code><span class="muted small">${when(r.last_login_at)}</span></div>`).join('')}`:''}
     <h3>Sesiones (${d.sessions.length})</h3>
     ${d.sessions.length?`<div class="scroll"><table><thead><tr><th>Creada</th><th>Vista</th><th>Caduca</th><th>IP</th><th>País</th></tr></thead><tbody>
       ${d.sessions.map(x=>`<tr><td class="nowrap">${when(x.created_at)}</td><td class="nowrap">${when(x.last_seen_at)}</td><td class="nowrap">${when(x.expires_at)}</td><td><code>${esc(x.ip||'—')}</code></td><td>${flag(x.country)} ${esc(String(x.country||'').toUpperCase())}</td></tr>`).join('')}
@@ -391,23 +454,6 @@ async function openUser(name){
     ${d.games.length?`<div class="scroll"><table><thead><tr><th>Código</th><th>Estado</th><th>Rivales</th><th>Ganador</th><th>Actualizada</th></tr></thead><tbody>
       ${d.games.map(g=>`<tr><td class="nowrap"><code>${esc(g.game_id)}</code></td><td>${esc(g.status)}</td><td>${esc(g.p1)} / ${esc(g.p2||'—')}</td><td>${esc(g.winner||'—')}</td><td class="nowrap">${when(g.updated_at)}</td></tr>`).join('')}
     </tbody></table></div>`:'<div class="muted">Ninguna.</div>'}`);
-}
-
-/* ---- fusión de cuentas ---- */
-function openMerge(from,into){
-  const options=sel=>state.users.map(u=>`<option value="${esc(u.username)}"${u.username===sel?' selected':''}>${esc(u.username)}</option>`).join('');
-  openModal('Fusionar cuentas',`<p class="muted small">Todo lo de la cuenta de origen —partidas, mensajes, conversaciones— pasa a la de destino, y la de origen desaparece. El PIN que sobrevive es el de la cuenta de destino. No tiene vuelta atrás: exporta antes una copia.</p>
-    <div class="row"><label>Origen (desaparece)</label><select id="mergeFrom">${options(from)}</select></div>
-    <div class="row" style="margin-top:8px"><label>Destino (se conserva)</label><select id="mergeInto">${options(into)}</select></div>
-    <div class="row" style="margin-top:14px"><button class="danger" id="mergeRun">Fusionar</button><span id="mergeInfo" class="muted small"></span></div>`);
-  $('mergeRun').onclick=async()=>{
-    const f=$('mergeFrom').value,i=$('mergeInto').value;
-    if(!confirm(`Se absorberá "${f}" dentro de "${i}". ¿Continuar?`))return;
-    try{const r=await api('adminMergeUsers',{from:f,into:i});
-      $('mergeInfo').innerHTML=`<span class="ok">Hecho: ${r.merged.movedThreads} conversación(es) trasladada(s), ${r.merged.mergedThreads} unificada(s).</span>`;
-      loaded.delete('usuarios');loaded.delete('chat');await loadUsers();loaded.add('usuarios');
-    }catch(e){$('mergeInfo').innerHTML=`<span class="error">${esc(e.message)}</span>`}
-  };
 }
 
 /* ---- consola SQL ---- */
@@ -428,7 +474,10 @@ async function runSql(confirmed){
     const r=await api('adminSql',{sql:$('sql').value,confirm:confirmed?1:0});
     if(r.pending){
       $('sqlInfo').textContent='';
-      if(confirm('Esta instrucción MODIFICA datos:\n\n'+r.sql+'\n\n¿Ejecutar?'))return runSql(true);
+      const go=await confirmAsk('Esta instrucción modifica datos',{
+        bodyHtml:'<p>Se va a ejecutar sobre la base de producción y quedará en la auditoría.</p><pre>'+esc(r.sql)+'</pre>',
+        confirmLabel:'Ejecutar',danger:true});
+      if(go)return runSql(true);
       return;
     }
     if(r.kind==='write'){$('sqlInfo').innerHTML=`<span class="ok">${r.changes} fila(s) modificada(s) en ${r.ms} ms.</span>`;loaded.clear();return;}
@@ -442,6 +491,58 @@ async function runSql(confirmed){
 function openModal(title,html){$('modalTitle').textContent=title;$('modalBody').innerHTML=html;if(!$('modal').open)$('modal').showModal();}
 $('modalClose').onclick=()=>$('modal').close();
 
+/* ---- preguntas y confirmaciones ----
+   Sustituye a confirm/prompt/alert. Devuelve una promesa: `null` si se
+   cancela (boton, Escape o clic fuera) y un objeto con los campos si se
+   acepta. El boton de aceptar se queda apagado mientras falte algo
+   obligatorio o no coincida el texto exacto que se pide escribir. */
+let askResolve=null;
+function askFieldHtml(f,i){
+  const id='askField'+i, label=esc(f.label||''), hint=f.hint?`<p class="hint">${esc(f.hint)}</p>`:'';
+  if(f.type==='checkbox')
+    return `<div class="field check"><label for="${id}"><input type="checkbox" id="${id}" data-field${f.value?' checked':''}><span>${label}</span></label>${hint}</div>`;
+  const body=f.type==='textarea'
+    ? `<textarea id="${id}" data-field placeholder="${esc(f.placeholder||'')}">${esc(f.value||'')}</textarea>`
+    : f.type==='select'
+      ? `<select id="${id}" data-field>${f.options.map(o=>`<option value="${esc(o.value)}"${String(o.value)===String(f.value)?' selected':''}>${esc(o.label)}</option>`).join('')}</select>`
+      : `<input type="${f.type||'text'}" id="${id}" data-field value="${esc(f.value||'')}" placeholder="${esc(f.placeholder||'')}"${f.inputmode?` inputmode="${f.inputmode}"`:''}${f.maxlength?` maxlength="${f.maxlength}"`:''} autocomplete="off">`;
+  return `<div class="field"><label for="${id}">${label}</label>${body}${hint}</div>`;
+}
+function ask(options){
+  const o={title:'',body:'',bodyHtml:'',fields:[],confirmLabel:'Aceptar',cancelLabel:'Cancelar',danger:false,confirmOnly:false,...options};
+  const dialog=$('ask');
+  $('askTitle').textContent=o.title;
+  $('askBody').innerHTML=o.bodyHtml||(o.body?o.body.split('\n\n').map(part=>`<p>${esc(part)}</p>`).join(''):'');
+  $('askFields').innerHTML=o.fields.map(askFieldHtml).join('');
+  const ok=$('askOk'),cancel=$('askCancel');
+  ok.textContent=o.confirmLabel;ok.className=o.danger?'danger':'primary';
+  cancel.textContent=o.cancelLabel;cancel.classList.toggle('hidden',!!o.confirmOnly);
+  const inputs=[...$('askFields').querySelectorAll('[data-field]')];
+  const read=el=>el.type==='checkbox'?el.checked:el.value.trim();
+  const check=()=>{ok.disabled=o.fields.some((f,i)=>{
+    const el=inputs[i];if(!el)return false;const value=read(el);
+    if(f.required&&!value)return true;
+    if(f.match!==undefined&&el.value!==f.match)return true;
+    if(f.pattern&&!new RegExp(f.pattern).test(el.value))return true;
+    return false;});};
+  inputs.forEach(el=>{el.addEventListener('input',check);el.addEventListener('change',check)});
+  check();
+  dialog.returnValue='';
+  if(!dialog.open)dialog.showModal();
+  if(inputs[0])inputs[0].focus();else ok.focus();
+  return new Promise(resolve=>{askResolve=()=>{
+    if(dialog.returnValue!=='ok')return resolve(null);
+    const values={};o.fields.forEach((f,i)=>{if(inputs[i])values[f.name]=read(inputs[i])});
+    resolve(values);
+  }});
+}
+$('ask').addEventListener('close',()=>{const done=askResolve;askResolve=null;if(done)done();});
+$('askCancel').onclick=()=>{$('ask').returnValue='';$('ask').close();};
+// Un clic en el fondo oscuro equivale a cancelar, como en el resto del panel.
+$('ask').addEventListener('click',e=>{if(e.target===$('ask')){$('ask').returnValue='';$('ask').close();}});
+const confirmAsk=(title,options={})=>ask({title,confirmLabel:'Confirmar',...options}).then(v=>!!v);
+const notify=(title,body)=>ask({title,body,confirmLabel:'Entendido',confirmOnly:true});
+
 /* ---- acciones compartidas: la misma delegación sirve en las tablas y en la ficha ---- */
 async function handleAction(e){
   const hit=sel=>e.target.closest('['+sel+']');
@@ -451,58 +552,109 @@ async function handleAction(e){
   if(thread)return openThread(Number(thread.dataset.thread)).catch(reportFailure);
   try{
     const block=hit('data-user');
-    if(block){if(!confirm('¿Confirmar cambio para '+block.dataset.user+'?'))return;
+    if(block){
+      const blocking=block.dataset.block==='1';
+      const go=await confirmAsk(blocking?'Bloquear a '+block.dataset.user:'Desbloquear a '+block.dataset.user,{
+        body:blocking
+          ? 'No podrá volver a entrar hasta que lo desbloquees. Sus partidas y mensajes se quedan como están.'
+          : 'Volverá a poder entrar con su nombre y su PIN de siempre.',
+        confirmLabel:blocking?'Bloquear':'Desbloquear',danger:blocking});
+      if(!go)return;
       await api('adminSetBlocked',{target:block.dataset.user,blocked:block.dataset.block});return afterChange();}
     const pin=hit('data-pin');
-    if(pin){const newPin=prompt('Nuevo PIN de 4 a 8 dígitos para '+pin.dataset.pin);
-      if(newPin===null)return;await api('adminResetPin',{target:pin.dataset.pin,newPin});
-      alert('PIN actualizado; las sesiones anteriores se cerraron.');return afterChange();}
+    if(pin){
+      const answer=await ask({title:'Nuevo PIN para '+pin.dataset.pin,
+        body:'Se cerrarán todas sus sesiones abiertas. Tendrás que decirle el PIN nuevo por otro medio: aquí no se vuelve a ver.',
+        fields:[{name:'pin',type:'password',label:'PIN nuevo',hint:'Entre 4 y 8 dígitos.',inputmode:'numeric',maxlength:8,required:true,pattern:'^\\d{4,8}$'}],
+        confirmLabel:'Cambiar el PIN'});
+      if(!answer)return;
+      await api('adminResetPin',{target:pin.dataset.pin,newPin:answer.pin});
+      await notify('PIN actualizado','Las sesiones anteriores de '+pin.dataset.pin+' se han cerrado.');
+      return afterChange();}
     const role=hit('data-role');
-    if(role){if(!confirm(`¿Cambiar el rol de ${role.dataset.role} a "${role.dataset.next}"?`))return;
+    if(role){
+      const toAdmin=role.dataset.next==='admin';
+      const go=await confirmAsk(toAdmin?'Hacer administrador a '+role.dataset.role:'Quitar el rol de administrador a '+role.dataset.role,{
+        body:toAdmin
+          ? 'Tendrá acceso completo a este panel: usuarios, conversaciones, consola SQL y copia de la base.'
+          : 'Perderá el acceso a este panel. Seguirá jugando con normalidad.',
+        confirmLabel:toAdmin?'Hacer administrador':'Quitar administrador',danger:toAdmin});
+      if(!go)return;
       await api('adminSetRole',{target:role.dataset.role,role:role.dataset.next});return afterChange();}
     const sessions=hit('data-sessions');
-    if(sessions){if(!confirm('¿Cerrar todas las sesiones de '+sessions.dataset.sessions+'?'))return;
+    if(sessions){
+      const go=await confirmAsk('Cerrar las sesiones de '+sessions.dataset.sessions,{
+        body:'Se desconectará de todos sus dispositivos. Podrá volver a entrar enseguida con su PIN.',
+        confirmLabel:'Cerrar sus sesiones'});
+      if(!go)return;
       await api('adminCloseSessions',{target:sessions.dataset.sessions});return afterChange();}
     const unmute=hit('data-unmute-chat');
-    if(unmute){if(!confirm('¿Reactivar el chat de '+unmute.dataset.unmuteChat+'?'))return;
+    if(unmute){
+      const go=await confirmAsk('Reactivar el chat de '+unmute.dataset.unmuteChat,{
+        body:'Volverá a poder escribir en el chat de inmediato.',confirmLabel:'Reactivar'});
+      if(!go)return;
       await api('adminUnmuteChatUser',{target:unmute.dataset.unmuteChat});return afterChange();}
     const mute=hit('data-mute-user');
-    if(mute){const choice=prompt('Duración: 15, 60, 1440 minutos o 0 para permanente','60');
-      if(choice===null)return;await api('adminMuteChatUser',{target:mute.dataset.muteUser,minutes:choice});return afterChange();}
+    if(mute){
+      const answer=await ask({title:'Silenciar a '+mute.dataset.muteUser,
+        body:'Podrá seguir jugando, pero no escribir en el chat.',
+        fields:[{name:'minutes',type:'select',label:'Durante',value:'60',options:[
+          {value:'15',label:'15 minutos'},{value:'60',label:'1 hora'},{value:'1440',label:'1 día'},{value:'0',label:'Para siempre'}]}],
+        confirmLabel:'Silenciar',danger:true});
+      if(!answer)return;
+      await api('adminMuteChatUser',{target:mute.dataset.muteUser,minutes:answer.minutes});return afterChange();}
     const del=hit('data-delete-message');
-    if(del){if(!confirm('¿Borrar este mensaje?'))return;
+    if(del){
+      const go=await confirmAsk('Borrar este mensaje',{
+        body:'Dejará de verse en la conversación. Queda el rastro de que lo borraste tú.',
+        confirmLabel:'Borrar',danger:true});
+      if(!go)return;
       await api('adminDeleteChatMessage',{messageId:del.dataset.deleteMessage});return afterChange();}
     const game=hit('data-game');
-    if(game){if(!confirm('¿Cerrar la partida '+game.dataset.game+'?'))return;
+    if(game){
+      const go=await confirmAsk('Cerrar la partida '+game.dataset.game,{
+        body:'Quedará cancelada para los dos jugadores. No se puede reabrir.',
+        confirmLabel:'Cerrar la partida',danger:true});
+      if(!go)return;
       await api('adminCloseGame',{target:game.dataset.game});return afterChange();}
     const drop=hit('data-delete-user');
-    if(drop){const name=drop.dataset.deleteUser;
-      if(!confirm(`Se borrará la cuenta "${name}". Escribe después si quieres arrastrar también sus partidas y mensajes.`))return;
-      const purge=confirm('¿Borrar también sus partidas y sus mensajes?\n\nAceptar = borrarlo todo · Cancelar = conservar el historial');
-      if(prompt('Escribe el nombre exacto para confirmar:')!==name)return alert('Nombre distinto: no se ha borrado nada.');
-      await api('adminDeleteUser',{target:name,purge:purge?'1':'0'});$('modal').close();return afterChange();}
-    const mergeGroup=hit('data-merge-group');
-    if(mergeGroup){const list=mergeGroup.dataset.mergeGroup.split('|');return openMerge(list[0],list[1]);}
-    const mergePair=hit('data-merge-into');
-    if(mergePair)return openMerge(mergePair.dataset.mergeFrom,mergePair.dataset.mergeInto);
+    if(drop){
+      const name=drop.dataset.deleteUser;
+      const answer=await ask({title:'Borrar la cuenta de '+name,
+        bodyHtml:'<p>La cuenta desaparece y no se puede recuperar. Exporta antes una copia si quieres conservarla.</p>',
+        fields:[
+          {name:'purge',type:'checkbox',label:'Borrar también sus partidas y sus mensajes',
+           hint:'Sin marcar, el historial se queda con un nombre que ya no existe.'},
+          {name:'confirm',type:'text',label:'Escribe «'+name+'» para confirmar',match:name,required:true}],
+        confirmLabel:'Borrar la cuenta',danger:true});
+      if(!answer)return;
+      await api('adminDeleteUser',{target:name,purge:answer.purge?'1':'0'});$('modal').close();return afterChange();}
     const fbReply=hit('data-feedback-reply');
     if(fbReply){
       const item=state.feedback.find(x=>String(x.id)===fbReply.dataset.feedbackReply);
-      if(item&&item.replyTo){
-        const body=prompt('Respuesta para '+item.replyTo+':','');
-        if(body===null)return;
-        const copy=FB_REPLY[item.lang]||FB_REPLY.es;
-        await api('adminReplyFeedback',{id:item.id,target:String(item.id),subject:copy.subject,body});
-        return afterChange();
-      }
-      return;
+      if(!item||!item.replyTo)return;
+      const copy=FB_REPLY[item.lang]||FB_REPLY.es;
+      const answer=await ask({title:'Responder a '+item.replyTo,
+        bodyHtml:'<p>Se envía desde el buzón del juego, en '+esc(item.lang)+'.</p><pre>'+esc(item.message)+'</pre>',
+        fields:[{name:'body',type:'textarea',label:'Tu respuesta',required:true,placeholder:copy.hello}],
+        confirmLabel:'Enviar'});
+      if(!answer)return;
+      await api('adminReplyFeedback',{id:item.id,target:String(item.id),subject:copy.subject,body:answer.body});
+      return afterChange();
     }
     const fbNote=hit('data-feedback-note');
-    if(fbNote){const note=prompt('Nota interna para este mensaje:','');
-      if(note===null)return;
-      await api('adminUpdateFeedback',{id:fbNote.dataset.feedbackNote,target:fbNote.dataset.feedbackNote,adminNote:note});return afterChange();}
+    if(fbNote){
+      const answer=await ask({title:'Nota interna',
+        body:'Solo se ve en este panel: quien escribió el mensaje nunca la lee.',
+        fields:[{name:'note',type:'textarea',label:'Nota'}],confirmLabel:'Guardar'});
+      if(!answer)return;
+      await api('adminUpdateFeedback',{id:fbNote.dataset.feedbackNote,target:fbNote.dataset.feedbackNote,adminNote:answer.note});return afterChange();}
     const fbDelete=hit('data-feedback-delete');
-    if(fbDelete){if(!confirm('¿Borrar este mensaje del buzón? No hay vuelta atrás.'))return;
+    if(fbDelete){
+      const go=await confirmAsk('Borrar este mensaje del buzón',{
+        body:'Desaparece del buzón para siempre, con su contacto y su nota.',
+        confirmLabel:'Borrar',danger:true});
+      if(!go)return;
       await api('adminDeleteFeedback',{id:fbDelete.dataset.feedbackDelete,target:fbDelete.dataset.feedbackDelete});return afterChange();}
     const recipe=hit('data-recipe');
     if(recipe){$('sql').value=RECIPES[Number(recipe.dataset.recipe)][1];return runSql(false);}
@@ -523,7 +675,6 @@ document.addEventListener('change',async e=>{
   try{await api('adminUpdateFeedback',{id:select.dataset.feedbackStatus,target:select.dataset.feedbackStatus,status:select.value});
     loaded.delete('resumen');await loadFeedback();}catch(err){reportFailure(err)}
 });
-$('mergeOpen').onclick=()=>openMerge('','');
 $('sqlRun').onclick=()=>runSql(false);
 $('refresh').onclick=reload;
 $('purgeCount').onclick=async()=>{
@@ -532,7 +683,10 @@ $('purgeCount').onclick=async()=>{
     const r=await api('adminPurgeGames',filters);
     if(!r.matched){$('purgeInfo').textContent='Ninguna partida coincide.';return}
     $('purgeInfo').innerHTML=`Coinciden <b>${r.matched}</b> partidas.`;
-    if(!confirm(`Se borrarán ${r.matched} partidas y su chat. ¿Continuar?`))return;
+    const go=await confirmAsk('Borrar partidas',{
+      body:`Se van a borrar ${r.matched} partidas y todo el chat que colgaba de ellas.\n\nNo hay vuelta atrás: exporta antes una copia si te importa el historial.`,
+      confirmLabel:'Borrar',danger:true});
+    if(!go)return;
     const done=await api('adminPurgeGames',{...filters,confirm:1});
     $('purgeInfo').innerHTML=`<span class="ok">${done.deleted} partidas borradas.</span>`;loaded.clear();
   }catch(e){$('purgeInfo').innerHTML=`<span class="error">${esc(e.message)}</span>`}
@@ -547,8 +701,6 @@ $('logout').onclick=()=>{signOut();location.reload()};
 // El toro azul hace las dos cosas de una vez: cierra el panel en este navegador
 // y devuelve a la persona al juego, que tiene su propia sesión aparte.
 $('backToGame').onclick=()=>{signOut();location.href='/'};
-$('username').addEventListener('keydown',submitLoginOnEnter);$('pin').addEventListener('keydown',submitLoginOnEnter);
-function submitLoginOnEnter(e){if(e.key!=='Enter'||e.isComposing||e.repeat)return;e.preventDefault();$('loginButton').click()}
-$('loginButton').onclick=login;
-if(token){$('login').classList.add('hidden');$('dashboard').classList.remove('hidden');openTab('resumen');}
+$('loginForm').addEventListener('submit',e=>{e.preventDefault();login()});
+if(token){$('login').classList.add('hidden');$('dashboard').classList.remove('hidden');openTab('resumen');checkOwnRecovery();}
 </script></main></body></html>

@@ -6,7 +6,7 @@ Este es el único documento de referencia del proyecto. Está pensado para perso
 
 Picas y Fijas es un juego multijugador web en español, inglés y francés. La versión vigente funciona íntegramente en Cloudflare; la implementación anterior de Google Sheets y Apps Script fue retirada del árbol actual después de completar la migración. Sigue disponible en el historial de Git si alguna vez se necesita consultar.
 
-Versión actual: **2.5.0**.
+Versión actual: **3.0.0**. Sube la mayor porque desaparece un endpoint —`adminMergeUsers`— y porque `loginUser` cambia de contrato: ya no crea cuentas y ya no devuelve `registered`.
 
 - Juego: https://picasyfijas.fans/ (también https://www.picasyfijas.fans/)
 - Dirección anterior, sigue activa: https://picas-y-fijas.picas-y-fijas.workers.dev/
@@ -46,13 +46,16 @@ Por ejemplo, si el secreto es `1234` y el intento es `1356`, el resultado es **1
 
 ### Entrar y proteger el usuario
 
-La entrada tiene **dos pasos**, y la razón es un problema observado: una sola pantalla decía a la vez «regístrate» y «vuelve a entrar», y mucha gente tecleaba cuatro dígitos cualquiera creyendo que era un código de partida.
+La pantalla de acceso tiene tres caras que nunca se ven a la vez —entrar, crear cuenta y recuperar el PIN— y entra por la primera, porque es lo que hace casi todo el mundo casi siempre.
 
-1. Se escribe un nombre de al menos 2 caracteres y se pulsa **Continuar**.
-2. La app pregunta al servidor si ese nombre ya tiene dueño y la segunda mitad cambia de palabras: a quien vuelve le pide *su* contraseña; a quien es nuevo le dice que el nombre está libre, le pide crear una contraseña de 4 a 8 dígitos, se la hace **repetir** y le avisa de que hoy no se puede recuperar sola.
-3. Al registrarse, el lobby enseña una vez el recordatorio de que esa misma contraseña hará falta la próxima vez.
-4. Si la contraseña no es la del nombre, el mensaje ofrece las dos salidas reales: probar otra vez o usar el enlace **¿Olvidaste tu contraseña?**, que abre el buzón con el mensaje ya escrito para que un administrador la reponga desde `/admin`.
-5. Después de 5 intentos fallidos, el acceso a ese nombre se bloquea durante 15 minutos.
+1. **Entrar** pide el nombre *o* el correo y el PIN. Cinco PIN incorrectos seguidos bloquean ese identificador durante 15 minutos.
+2. **Crear cuenta** pide correo, nombre visible y PIN repetido. La cuenta nace inactiva: hasta que no se abre el enlace que llega por correo —válido 30 días— no se puede entrar con ella.
+3. **¿Olvidaste tu PIN?** pide el correo y manda un enlace de un solo uso que caduca en 15 minutos. La respuesta es siempre la misma, exista o no la cuenta, para no delatar qué direcciones están registradas.
+4. La primera entrada de verdad —la que sigue a la activación— enseña una vez en el lobby el recordatorio de que ese PIN hará falta la próxima vez.
+
+**Entrar nunca crea una cuenta.** Es una regla, no un detalle de implementación: una cuenta creada al vuelo con un nombre suelto nacería sin correo y, por tanto, sin ninguna forma de recuperar su PIN. `loginUser` con un nombre o un correo desconocido responde con un error que invita a crear la cuenta; el alta pasa siempre por `registerUser`, que exige correo. Las cuentas antiguas sin correo siguen entrando con nombre y PIN, y se les pide el correo desde **Mi cuenta**.
+
+Los tres paneles son `<form>` de verdad, con `autocomplete` correcto en cada campo: Enter envía sin código propio y el gestor de contraseñas ofrece guardar la pareja. Lo mismo vale para **Mi cuenta**, donde el correo y el cambio de PIN son dos formularios separados con su propio mensaje, y para el acceso de `/admin`.
 
 En toda la interfaz se le llama **contraseña**, no PIN: la palabra «PIN» invitaba a confundirla con el código de la partida. No se debe compartir; para invitar a alguien se comparte únicamente el código de partida.
 
@@ -377,13 +380,15 @@ Junto a la marca vive `#lang-cycle`, un botón cuadrado que muestra el idioma ac
 
 `syncLangBtn()` lo esconde en las dos pantallas que ya llevan su propio selector con los tres nombres escritos —el registro y el buzón, que enumera `LANG_BTN_HIDDEN_ON`— y lo actualiza desde `show()` y `applyI18n()`. El botón nace con la clase `hidden` en el HTML porque la primera vista es el registro. Se eligió la cabecera y no un botón flotante porque la esquina inferior derecha ya es del chat.
 
-### El registro en dos pasos
+### Los tres paneles del acceso
 
-`submitName()` pregunta por el nombre con la acción pública **`checkUsername`**, que responde `{ok, known, username}`. Es una sola lectura por el índice único `username_key`, sin escrituras, para no gastar el presupuesto de D1 en cada tecleo, y no revela nada que no fuese ya público: el ranking publica los nombres y el propio `loginUser` distinguía el nombre libre del ocupado en su mensaje de error. Devuelve el nombre **tal y como se guardó**, no como lo escribió quien pregunta, así que el saludo respeta las mayúsculas del dueño.
+`setAuthMode('login'|'register'|'forgot')` enseña uno de los tres formularios y esconde los otros dos; `defaultAuthMode()` abre por «crear cuenta» solo cuando alguien llega con una invitación y nunca ha entrado en ese navegador. `resetLoginSteps()` se llama desde `show('login')`, así que cualquier vuelta al acceso —sesión caducada, cambio de usuario, salida del buzón— empieza limpia.
 
-`applyLoginPinStep()` es el interruptor del segundo paso: título, subtítulo, etiqueta del campo, `autocomplete` (`current-password` frente a `new-password`), campo de confirmación, texto del botón y enlace de «olvidaste» cambian según `loginKnown`. `resetLoginSteps()` se llama desde `show('login')`, así que cualquier vuelta al registro —sesión caducada, cambio de usuario, salida del buzón— empieza otra vez por el nombre. `openForgotPin()` abre el buzón con el tipo «Pregunta» y el mensaje redactado, que es la única recuperación disponible mientras no se decida una de las opciones pendientes.
+Tres parámetros de la URL entran directamente en un modo: `?verify_email=` activa la cuenta, `?reset_pin=` abre el formulario del PIN nuevo y `?forgot=1` abre la petición del enlace. El último existe para `/admin`, que no tiene recuperación propia porque usa la misma cuenta del juego.
 
-Enter envía el paso donde esté puesto: `uname` dispara `btn-name`; `upin` y `upin2`, `btn-login`. `test/login-two-steps.test.js` fija el endpoint y la forma de su respuesta, la confirmación obligatoria del alta, las doce claves nuevas en los tres idiomas y el aviso del lobby.
+La acción pública **`checkUsername`** responde `{ok, known, username}` con una sola lectura por el índice único `username_key`, sin escrituras. Devuelve el nombre **tal y como se guardó**, no como lo escribió quien pregunta.
+
+`test/login-two-steps.test.js` fija que entrar no crea cuentas —ni por nombre ni por correo, y sin dejar filas a medias—, que los tres paneles y los dos de «Mi cuenta» son `<form>`, y que el aviso del lobby cuelga de `firstLogin`, la bandera que devuelve `loginUser` cuando la cuenta no tenía ninguna entrada anterior.
 
 ## Modelo de datos
 
@@ -415,7 +420,7 @@ El toro azul de la esquina superior cierra el panel en ese navegador y devuelve 
 | Pestaña | Qué resuelve |
 | --- | --- |
 | Resumen | Usuarios, gente en línea, altas y activos de la semana, partidas y mensajes del día, moderación pendiente y los países de donde entra la gente. |
-| Usuarios | La lista completa con un punto verde/gris de presencia junto al nombre, país, última IP, partidas y mensajes. Bloquear, cambiar el PIN, dar o quitar el rol `admin`, cerrar sesiones, reactivar el chat, borrar y fusionar. Arriba, las cuentas que parecen repetidas. |
+| Usuarios | La lista completa con un punto verde/gris de presencia junto al nombre, país, última IP, partidas y mensajes. Bloquear, cambiar el PIN, dar o quitar el rol `admin`, cerrar sesiones, reactivar el chat y borrar. Arriba, las cuentas que parecen repetidas. |
 | Partidas | Las últimas 200, con filtro, y el cierre de las que siguen abiertas. |
 | Conversaciones | Una fila por chat, no un río de mensajes: quiénes hablan, cuántos mensajes, cuántos zumbidos y cuántos reportes. El histórico se abre aparte, en su propia ventana. |
 | Moderación | Los reportes del chat, con borrar y silenciar a mano. |
@@ -425,11 +430,21 @@ El toro azul de la esquina superior cierra el panel en ese navegador y devuelve 
 
 El punto de cada fila reutiliza la tabla `presence` y el mismo umbral del contador general: verde significa actividad autenticada en los últimos 2 minutos y gris, desconectado. El texto accesible y el título del punto expresan también el estado, de modo que la información no depende únicamente del color. La consulta es parte de `adminUsers`, no genera escrituras adicionales y no cambia la versión de la aplicación.
 
-### Cuentas repetidas y fusión
+### Cuentas repetidas
 
-Quien olvida su PIN no escribe a nadie: vuelve a entrar con el mismo nombre y un número detrás. Por eso el panel agrupa las cuentas por dos pistas independientes —la misma última IP y la misma raíz del nombre, que ignora acentos, dígitos y signos— y las enseña con su motivo. Ninguna de las dos es una prueba: una IP compartida puede ser una casa o un móvil, y dos nombres parecidos pueden ser dos personas.
+El panel agrupa las cuentas por dos pistas independientes —la misma última IP y la misma raíz del nombre, que ignora acentos, dígitos y signos— y las enseña con su motivo. Ninguna de las dos es una prueba: una IP compartida puede ser una casa o un móvil, y dos nombres parecidos pueden ser dos personas. Es información para abrir la ficha, nada más.
 
-Fusionar arrastra a la cuenta de destino las partidas, los mensajes, los reportes y las conversaciones de la de origen, y borra la de origen. El PIN que sobrevive es el del destino. La parte delicada son los hilos: `chat_threads` solo admite un hilo por pareja, así que cuando la fusión crea una pareja que ya existe los mensajes se mudan al hilo superviviente y el vacío se retira; un hilo de la cuenta consigo misma desaparece. No se puede absorber al administrador principal ni a una cuenta con rol `admin`, y no hay vuelta atrás: conviene exportar una copia antes.
+**La fusión de cuentas se retiró** al llegar la recuperación por correo. Existía para un problema concreto: quien olvidaba su PIN volvía a entrar con el mismo nombre y un número detrás, y alguien tenía que unir después los dos rastros. Ahora esa persona recupera su cuenta con un enlace y no crea una segunda, así que la operación más delicada del panel —la que reescribía partidas, mensajes, reportes e hilos sin vuelta atrás— ya no tiene motivo para existir. Si alguna vez hiciera falta unir dos cuentas, se hace a mano por la consola SQL, que deja rastro en la auditoría.
+
+### Confirmar lo que borra
+
+Ninguna acción del panel usa `confirm()`, `prompt()` ni `alert()` del navegador. Todas pasan por `ask()`, un `<dialog>` propio que devuelve una promesa: `null` si se cancela y un objeto con los campos si se acepta. Cabe explicar qué va a pasar antes de que pase —a quién afecta, qué se pierde, qué no—, y el botón de aceptar se queda apagado mientras falte algo obligatorio o no coincida el texto exacto que se pide escribir. Borrar una cuenta es el caso extremo: una sola ventana con la casilla de arrastrar también partidas y mensajes y el nombre escrito a mano para confirmar.
+
+Las tablas del panel llevan `data-label` en cada celda y viven dentro de un `.scroll.stack`. Por debajo de 760px cada fila se convierte en una ficha con su etiqueta delante: nueve columnas no caben en un teléfono y el scroll horizontal era la única forma de leerlas.
+
+### El acceso al propio panel
+
+`/admin` entra con la cuenta del juego, así que su recuperación es la del juego: el pie del formulario enlaza a `/?forgot=1`. Para que ese camino exista de verdad, el panel comprueba al abrirse el correo de quien ha entrado y enseña un aviso cuando no hay ninguno verificado, con enlace a **Mi cuenta**. Sin correo, un PIN olvidado dejaría el portal sin más puerta que el SQL.
 
 ### La consola SQL
 
@@ -576,7 +591,7 @@ El proyecto sigue versionado semántico `vMAYOR.MENOR.PARCHE`:
 - **MENOR (Y)**: funcionalidad nueva compatible hacia atrás —una pantalla, un modo de juego, un ajuste como el cuadrado de idioma.
 - **PARCHE (Z)**: correcciones compatibles hacia atrás, retoques de texto, estilos y rendimiento.
 
-El número vive en dos sitios y los dos se cambian en el mismo commit: `version` en `package.json` conserva el SemVer canónico (`2.6.0`), porque npm y pnpm lo requieren, y `APP_VERSION` en `public/index.html` publica `v2.6.0`. De ahí sale lo que ve el jugador en los créditos y lo que viaja con cada mensaje del buzón (`appVersion`), así que un número desfasado hace que un informe apunte a una versión que no es. La versión sube en el commit que introduce el cambio, no al desplegar.
+El número vive en dos sitios y los dos se cambian en el mismo commit: `version` en `package.json` conserva el SemVer canónico (`3.0.0`), porque npm y pnpm lo requieren, y `APP_VERSION` en `public/index.html` publica `v3.0.0`. De ahí sale lo que ve el jugador en los créditos y lo que viaja con cada mensaje del buzón (`appVersion`), así que un número desfasado hace que un informe apunte a una versión que no es. La versión sube en el commit que introduce el cambio, no al desplegar.
 
 ## Procedimiento para futuras modificaciones
 
@@ -601,13 +616,10 @@ Para recuperar D1 se debe usar una exportación confiable o Time Travel de Cloud
 
 La aplicación fue concebida inicialmente para menos de 20 conexiones simultáneas y preparada para crecer aproximadamente a 100 después de medir consumo. Actualmente usa consultas periódicas; si el tráfico aumenta, una evolución posible es WebSockets o coordinación con Durable Objects. Esa decisión requiere mediciones reales y no debe introducirse solo por anticipación.
 
-### Recuperación del PIN — opciones pendientes
+### Recuperación del PIN — cómo quedó
 
-Hoy el PIN no se puede recuperar: se guarda como hash con sal y solo un administrador puede reemplazarlo (`adminResetPin`). La tabla `users` no tiene correo y el binding `FEEDBACK_MAIL` es de Email Routing, que solo entrega a direcciones verificadas del propietario, así que **no puede escribir a los jugadores**. Cualquiera de estos caminos exige limitar los intentos por IP y por nombre, al estilo de `login_attempts`; si no, la recuperación acaba siendo una puerta más débil que el propio PIN. Ninguno está decidido:
+El camino elegido fue el del correo, y ya está en producción: columna `email` con índice único parcial, `email_verifications` y `pin_resets` con el token guardado como hash, caducidad corta y un solo uso. La petición del enlace pasa por Turnstile y se corta a tres por IP y hora; responda lo que responda la base, la respuesta al navegador es siempre la misma, para no delatar qué direcciones están registradas. Reponer el PIN cierra todas las sesiones de esa cuenta.
 
-- **Código de secreto de un solo uso (preferido).** Al registrarse se enseña una vez un código tipo `PYF-7K2M-QX9`, guardado con hash como el PIN. «¿Olvidaste tu PIN?» pide nombre y código, deja poner un PIN nuevo y emite otro código. No añade infraestructura ni datos personales.
-- **Aviso al buzón como red de seguridad.** El enlace abre el buzón con el asunto y el nombre ya puestos; el reinicio se hace desde `/admin`, que ya sabe hacerlo. Barato, pero manual y con prueba de identidad floja.
-- **Correo y enlace de reinicio.** Columna `email` opcional, tabla `pin_resets` con token hasheado, caducidad corta y un solo uso, y una respuesta siempre igual —«si la dirección existe, se envió»— para no delatar qué nombres están registrados. Obliga a contratar un emisor real (Cloudflare Email Sending o equivalente) y a guardar datos personales, con lo que eso implica.
-- **Identidad externa (GitHub, Google).** Quita el secreto de encima del jugador, pero es lo más pesado: flujo OAuth, secretos y ruta de retorno.
+`adminResetPin` sigue existiendo para el caso en que alguien pierda también el acceso a su correo, pero ya no es la única vía. Lo que queda pendiente es menor: las cuentas antiguas sin correo no pueden recuperarse hasta que su dueño lo añada desde **Mi cuenta**, y la pantalla se lo dice con todas las letras en lugar de dejarlo en gris.
 
 Toda nueva tarea debe tratar este archivo como fuente principal de contexto. Cuando el código y este documento discrepen, se debe verificar el comportamiento con pruebas y corregir la documentación en el mismo cambio.

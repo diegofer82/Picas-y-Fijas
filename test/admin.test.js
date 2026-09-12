@@ -4,6 +4,10 @@ import { readFile } from 'node:fs/promises';
 import { Miniflare } from 'miniflare';
 import { aliasRoot, classifySql, duplicateGroups } from '../src/admin.js';
 import { requestOrigin } from '../src/security.js';
+import { seedAccount } from './accounts.js';
+
+const adminHtml = await readFile(new URL('../public/admin.html', import.meta.url), 'utf8');
+const publicHtml = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
 
 let mf;
 
@@ -39,7 +43,8 @@ async function api(action, payload = {}, token = '', headers = {}) {
 }
 
 async function player(username, ip = '203.0.113.7') {
-  const result = await api('loginUser', { username, pin:'2468' }, '', { 'cf-connecting-ip':ip, 'cf-ipcountry':'CO' });
+  await seedAccount(await mf.getD1Database('DB'), username, { ip, country:'co' });
+  const result = await api('loginUser', { identifier:username, pin:'2468' }, '', { 'cf-connecting-ip':ip, 'cf-ipcountry':'CO' });
   assert.equal(result.ok, true, result.error);
   return { username:result.username, token:result.sessionToken };
 }
@@ -77,7 +82,6 @@ test('entrar deja registrado el pais y la ultima IP de cada cuenta', async () =>
   // comprueba que llega y se guarda; su procedencia la fija la prueba de
   // `requestOrigin`.
   assert.match(carlos.last_country, /^[a-z]{2}$/);
-  assert.equal(carlos.last_country, carlos.signup_country);
   assert.equal(carlos.last_ip, '198.51.100.20');
   assert.equal(carlos.signup_ip, '198.51.100.20');
   assert.equal(carlos.login_count, 1);
@@ -136,37 +140,42 @@ test('la administracion ve conversaciones, no un rio de mensajes sueltos', async
   assert.equal(lobby.messages.some((m) => m.body === 'Hola a todos'), true);
 });
 
-test('fusionar dos cuentas arrastra partidas y mensajes y deja una sola', async () => {
+test('la fusion de cuentas ya no existe en ninguna capa', async () => {
   const boss = await admin();
-  const viejo = await player('Nube', '198.51.100.55');
-  const nuevo = await player('Nube7', '198.51.100.55');
-  const rival = await player('Rival');
-  const gameA = await duel(viejo, rival, '123', '456');
-  const gameB = await duel(nuevo, rival, '321', '654');
-  await api('chatSend', { roomType:'game', gameId:gameA, body:'primera cuenta' }, viejo.token);
-  await api('chatSend', { roomType:'game', gameId:gameB, body:'segunda cuenta' }, nuevo.token);
-
-  const merged = await api('adminMergeUsers', { from:'Nube7', into:'Nube' }, boss.token);
-  assert.equal(merged.ok, true, merged.error);
-
-  const users = await api('adminUsers', {}, boss.token);
-  assert.equal(users.users.some((u) => u.username === 'Nube7'), false, 'la cuenta absorbida desaparece');
-  const survivor = users.users.find((u) => u.username === 'Nube');
-  assert.equal(survivor.games, 2, 'las partidas de las dos cuentas quedan bajo el mismo nombre');
-
-  const detail = await api('adminUserDetail', { target:'Nube' }, boss.token);
-  assert.equal(detail.stats.messages, 2, 'los mensajes tambien cambian de dueño');
-  assert.equal(detail.threads.length, 1, 'los dos hilos con el mismo rival se unifican en uno');
+  const gone = await api('adminMergeUsers', { from:'Ana', into:'Beto' }, boss.token);
+  assert.equal(gone.ok, false);
+  assert.match(gone.error, /desconocida/);
+  const source = await readFile(new URL('../src/admin.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(source, /adminMergeUsers/);
+  assert.doesNotMatch(adminHtml, /data-merge|openMerge/);
 });
 
-test('la fusion protege al administrador principal y a las cuentas admin', async () => {
-  const boss = await admin();
-  await player('Diego');
-  const refused = await api('adminMergeUsers', { from:'Diego', into:'Jefa' }, boss.token);
-  assert.equal(refused.ok, false);
-  assert.match(refused.error, /administrador principal/);
-  const itself = await api('adminMergeUsers', { from:'Jefa', into:'Jefa' }, boss.token);
-  assert.equal(itself.ok, false);
+test('el panel confirma en su propia ventana, nunca con la del navegador', () => {
+  // confirm/prompt/alert no caben en un movil, no se pueden explicar y no
+  // distinguen entre cerrar una partida y borrar una cuenta.
+  for (const banned of [/[^.\w]confirm\(/, /[^.\w]prompt\(/, /[^.\w]alert\(/])
+    assert.doesNotMatch(adminHtml, banned, `sigue habiendo ${banned}`);
+  assert.match(adminHtml, /<dialog id="ask"/);
+  assert.match(adminHtml, /function ask\(options\)/);
+  // Borrar una cuenta pide escribir el nombre exacto y ofrece el arrastre.
+  assert.match(adminHtml, /name:'confirm',type:'text',label:'Escribe «'\+name\+'» para confirmar',match:name/);
+  assert.match(adminHtml, /name:'purge',type:'checkbox'/);
+});
+
+test('las tablas del panel se leen en un telefono', () => {
+  assert.match(adminHtml, /@media \(max-width:760px\)/);
+  assert.match(adminHtml, /\.stack td::before\{content:attr\(data-label\)/);
+  // Cada celda de Usuarios lleva su etiqueta; si no, la ficha del movil sale muda.
+  for (const label of ['Usuario','País','Última IP','Partidas','Mensajes','Rol','Último acceso','Estado','Acciones'])
+    assert.ok(adminHtml.includes(`data-label="${label}"`), `falta data-label="${label}"`);
+});
+
+test('el panel no se queda sin puerta: recuperacion y aviso de correo', () => {
+  assert.match(adminHtml, /href="\/\?forgot=1"/);
+  assert.match(adminHtml, /async function checkOwnRecovery\(\)/);
+  assert.match(adminHtml, /id="adminEmailWarn"/);
+  // Y el juego sabe abrir ese modo desde la URL.
+  assert.match(publicHtml, /const forgotRequested=new URLSearchParams\(location\.search\)\.get\('forgot'\)==='1'/);
 });
 
 test('la consola SQL para lo que rompe: dos instrucciones, DDL y borrados sin filtro', () => {
@@ -221,7 +230,7 @@ test('limpiar partidas cuenta antes de borrar', async () => {
 
 test('ninguna herramienta nueva responde sin rol de administrador', async () => {
   const intruder = await player('Curioso');
-  for (const action of ['adminUserDetail','adminMergeUsers','adminDeleteUser','adminPurgeGames','adminSql','adminChatThreads','adminChatThread','adminCloseSessions']) {
+  for (const action of ['adminUserDetail','adminDeleteUser','adminPurgeGames','adminSql','adminChatThreads','adminChatThread','adminCloseSessions']) {
     const denied = await api(action, { target:'Jefa', sql:'SELECT 1' }, intruder.token);
     assert.equal(denied.ok, false, `${action} deberia rechazar a un jugador`);
     assert.match(denied.error, /administrador/);
