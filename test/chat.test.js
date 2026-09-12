@@ -34,3 +34,10 @@ test('the chat close control stays available while opening remains state-gated',
   assert.match(publicHtml, /function closeChat\(\)\{\s*\$\('chat-panel'\)\.classList\.add\('hidden'\);/);
   assert.match(publicHtml, /if\(!panel\.classList\.contains\('hidden'\)\)\{closeChat\(\);return;\}\s*if\(!chatEnabled\)return;/);
 });
+
+test('new chat activity forces the message list to its latest entry',()=>{
+  assert.match(publicHtml, /function renderChat\(scrollToLatest=false\)/);
+  assert.match(publicHtml, /box\.scrollTop=\(scrollToLatest\|\|firstRender\|\|nearBottom\)\?box\.scrollHeight:previousTop/);
+  assert.match(publicHtml, /renderChat\(scrollToLatest\|\|incoming\.length>0\)/);
+  assert.match(publicHtml, /input\.value='';await pollChat\(true\)/);
+});

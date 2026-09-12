@@ -1013,7 +1013,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v3.3.1';
+const APP_VERSION = 'v3.3.2';
 /* Enlace de invitación: ...?game=SZ93 */
 let pendingJoinCode = '';
 (function(){
@@ -2002,7 +2002,7 @@ function toggleChat(){
 function updateChatBadge(){const badge=$('chat-badge');badge.textContent=chatUnread>99?'99+':String(chatUnread);badge.classList.toggle('hidden',chatUnread<=0);}
 function systemChatText(body){const [event,name='']=String(body||'').split('|');const keys={joined:'chat_joined',paused:'chat_paused',resumed:'chat_resumed',abandoned:'chat_abandoned',rematch:'chat_rematch',finished:'chat_finished'};return t(keys[event]||event,{name});}
 function chatTime(iso){try{return new Intl.DateTimeFormat(lang,{hour:'2-digit',minute:'2-digit'}).format(new Date(iso));}catch(e){return'';}}
-function renderChat(){
+function renderChat(scrollToLatest=false){
   const box=$('chat-messages'),muted=chatMutedUsers(),visible=chatItems.filter(m=>m.kind==='system'||!muted.has(chatUserKey(m.sender)));
   if(!visible.length){box.innerHTML=`<div class="chat-empty">${t('chat_empty')}</div>`;return;}
   const firstRender=box.dataset.rendered!=='true',previousTop=box.scrollTop,nearBottom=box.scrollHeight-box.scrollTop-box.clientHeight<40;
@@ -2012,9 +2012,9 @@ function renderChat(){
     const mine=chatUserKey(m.sender)===chatUserKey(user),body=m.deleted?t('chat_deleted'):m.body;
     const actions=!mine&&!m.deleted?`<span class="chat-actions"><button type="button" title="${esc(t('chat_mute'))}" onclick="muteChatUser('${encodeURIComponent(m.sender)}')">${ico('mudo',14)}</button><button type="button" title="${esc(t('chat_report'))}" onclick="reportChatMessage(${m.id})">${ico('bandera',14)}</button></span>`:'';
     return`<div class="chat-msg${mine?' mine':''}"><div class="chat-meta"><b>${esc(m.sender)}</b><span>${chatTime(m.createdAt)}</span>${actions}</div><div class="chat-body">${esc(body)}</div></div>`;
-  }).join('');box.dataset.rendered='true';box.scrollTop=(firstRender||nearBottom)?box.scrollHeight:previousTop;
+  }).join('');box.dataset.rendered='true';box.scrollTop=(scrollToLatest||firstRender||nearBottom)?box.scrollHeight:previousTop;
 }
-async function pollChat(){
+async function pollChat(scrollToLatest=false){
   if(!chatEnabled||!sessionToken)return;const room=currentChatRoom();
   try{const res=await api('chatList',{...room,after:chatLastId});if(!res.ok)return;const previous=chatLastId,received=res.messages||[],merged=new Map(chatItems.map(m=>[Number(m.id),m]));received.forEach(m=>merged.set(Number(m.id),m));chatItems=[...merged.values()].sort((a,b)=>Number(a.id)-Number(b.id)).slice(-100);chatLastId=received.reduce((max,m)=>Math.max(max,Number(m.id)||0),previous);
     const incoming=received.filter(m=>Number(m.id)>previous&&previous>0&&chatUserKey(m.sender)!==chatUserKey(user));
@@ -2024,14 +2024,14 @@ async function pollChat(){
     if(nudge&&chatNudgesOn){const target=$('chat-panel').classList.contains('hidden')?$('chat-launch'):$('chat-panel');target.classList.remove('chat-shake');void target.offsetWidth;target.classList.add('chat-shake');playChatAudio(wizzAudio);try{navigator.vibrate&&navigator.vibrate([100,50,180]);}catch(e){}}
     if(room.roomType==='private'&&!$('chat-panel').classList.contains('hidden')){localStorage.setItem('pf_chat_read_'+room.threadId,String(chatLastId));renderPrivateThreads();}
     if($('s-lobby')&&!$('s-lobby').classList.contains('hidden'))refreshPrivateThreads();
-    renderChat();
+    renderChat(scrollToLatest||incoming.length>0);
   }catch(e){}
 }
 function startChatPoll(){stopChatPoll();if(!chatEnabled)return;const generation=chatPollGeneration;const run=async()=>{await pollChat();if(chatEnabled&&generation===chatPollGeneration)chatTimer=setTimeout(run,$('chat-panel').classList.contains('hidden')?(currentChatRoom().roomType==='private'?3000:10000):2500);};run();}
 function stopChatPoll(){chatPollGeneration++;if(chatTimer){clearTimeout(chatTimer);chatTimer=null;}}
-async function sendChatMessage(){const input=$('chat-input'),body=input.value.trim();if(!body)return;$('chat-send').disabled=true;try{const res=await api('chatSend',{...currentChatRoom(),body});if(!res.ok){toast(te(res.error),true);return;}input.value='';await pollChat();}catch(e){toast(t('net_error'),true);}finally{$('chat-send').disabled=false;}}
+async function sendChatMessage(){const input=$('chat-input'),body=input.value.trim();if(!body)return;$('chat-send').disabled=true;try{const res=await api('chatSend',{...currentChatRoom(),body});if(!res.ok){toast(te(res.error),true);return;}input.value='';await pollChat(true);}catch(e){toast(t('net_error'),true);}finally{$('chat-send').disabled=false;}}
 $('chat-form').addEventListener('submit',e=>{e.preventDefault();sendChatMessage();});
-async function sendChatNudge(){try{const res=await api('chatNudge',currentChatRoom());if(!res.ok){toast(te(res.error),true);return;}playChatAudio(wizzAudio);const target=$('chat-panel');target.classList.remove('chat-shake');void target.offsetWidth;target.classList.add('chat-shake');await pollChat();}catch(e){toast(t('net_error'),true);}}
+async function sendChatNudge(){try{const res=await api('chatNudge',currentChatRoom());if(!res.ok){toast(te(res.error),true);return;}playChatAudio(wizzAudio);const target=$('chat-panel');target.classList.remove('chat-shake');void target.offsetWidth;target.classList.add('chat-shake');await pollChat(true);}catch(e){toast(t('net_error'),true);}}
 function toggleNudges(){chatNudgesOn=!chatNudgesOn;localStorage.setItem('pf_chat_nudges',chatNudgesOn?'1':'0');updateChatLabels();toast(t(chatNudgesOn?'chat_nudges_on':'chat_nudges_off'));}
 function toggleMutedPanel(){const panel=$('chat-muted-panel'),opening=panel.classList.contains('hidden');panel.classList.toggle('hidden',!opening);if(opening)renderMutedPanel();}
 function renderMutedPanel(){const panel=$('chat-muted-panel');if(!panel)return;const users=[...chatMutedUsers()].sort((a,b)=>a.localeCompare(b));if(!users.length){panel.innerHTML=`<div class="chat-muted-title">${esc(t('chat_muted_title'))}</div><div class="chat-empty">${esc(t('chat_muted_empty'))}</div>`;return;}panel.innerHTML=`<div class="chat-muted-title">${esc(t('chat_muted_title'))}</div>`+users.map(name=>`<div class="chat-muted-row"><span>${esc(name)}</span><button type="button" onclick="unmuteChatUser('${encodeURIComponent(name)}')">${esc(t('chat_unmute'))}</button></div>`).join('')+`<button class="chat-unmute-all" type="button" onclick="unmuteAllChatUsers()">${esc(t('chat_unmute_all'))}</button>`;}

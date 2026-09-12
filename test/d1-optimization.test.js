@@ -257,7 +257,8 @@ test("el cliente conserva mensajes y envía el cursor en cada polling", async ()
   const html = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
   assert.match(html, /api\('chatList',\{\.\.\.room,after:chatLastId\}\)/);
   assert.match(html, /merged=new Map\(chatItems\.map/);
-  assert.match(html, /box\.dataset\.rendered='true';box\.scrollTop=\(firstRender\|\|nearBottom\)\?box\.scrollHeight:previousTop/);
+  assert.match(html, /box\.dataset\.rendered='true';box\.scrollTop=\(scrollToLatest\|\|firstRender\|\|nearBottom\)\?box\.scrollHeight:previousTop/);
+  assert.match(html, /renderChat\(scrollToLatest\|\|incoming\.length>0\)/);
   assert.match(html, /privateThreadsFetchedAt<15000/);
   assert.match(html, /chatThreadId:gState\?\.chatThreadId\|\|0/);
 });
