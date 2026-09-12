@@ -4,6 +4,7 @@ import { LIMITS } from "./game.js";
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const RECEIPT_RETENTION_MS = 7 * DAY_MS;
 export const PRESENCE_RETENTION_MS = DAY_MS;
+export const ACTIVATION_RETENTION_MS = 30 * DAY_MS;
 
 // El mantenimiento no pertenece al camino critico de ninguna partida. Se
 // ejecuta una vez por hora mediante Cron, en vez de repetir DELETE/UPDATE en
@@ -14,6 +15,7 @@ export async function cleanupDatabase(db, at = Date.now()) {
   const activeCutoff = new Date(at - LIMITS.activeTtlMs).toISOString();
   const receiptCutoff = new Date(at - RECEIPT_RETENTION_MS).toISOString();
   const presenceCutoff = new Date(at - PRESENCE_RETENTION_MS).toISOString();
+  const activationCutoff = new Date(at - ACTIVATION_RETENTION_MS).toISOString();
 
   await cleanupChat(db, at);
   await db.batch([
@@ -26,5 +28,8 @@ export async function cleanupDatabase(db, at = Date.now()) {
     db.prepare("DELETE FROM request_receipts WHERE created_at<?").bind(receiptCutoff),
     db.prepare("DELETE FROM sessions WHERE expires_at<=?").bind(stamp),
     db.prepare("DELETE FROM presence WHERE last_seen_at<?").bind(presenceCutoff),
+    // Solo caducan las altas con correo que nunca se activaron: una cuenta
+    // historica sin correo no esta "pendiente", y borrarla seria perder datos.
+    db.prepare("DELETE FROM users WHERE email<>'' AND email_verified_at IS NULL AND created_at<?").bind(activationCutoff),
   ]);
 }

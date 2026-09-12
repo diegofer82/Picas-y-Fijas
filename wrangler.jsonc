@@ -28,7 +28,10 @@
       "/api/*", "/admin", "/admin/*"
     ]
   },
-  "send_email": [{ "name": "FEEDBACK_MAIL" }],
+  "send_email": [
+    { "name": "FEEDBACK_MAIL" },
+    { "name": "EMAIL", "allowed_sender_addresses": ["noreply@mail.picasyfijas.fans"] }
+  ],
   "d1_databases": [
     {
       "binding": "DB",
@@ -40,6 +43,8 @@
   "vars": {
     "SESSION_TTL_HOURS": "168",
     "ADMIN_PATH": "/admin",
-    "DEBUG_ERRORS": "0"
+    "DEBUG_ERRORS": "0",
+    "TURNSTILE_ENABLED": "1",
+    "TURNSTILE_HOSTNAMES": "picasyfijas.fans,www.picasyfijas.fans"
   }
 }

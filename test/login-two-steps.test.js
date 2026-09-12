@@ -18,7 +18,7 @@ before(async () => {
     bindings: { SESSION_TTL_HOURS:'168', ADMIN_PATH:'/admin', DEBUG_ERRORS:'1' },
   });
   const db = await mf.getD1Database('DB');
-  for (const file of ['0001_initial.sql','0002_chat.sql','0003_private_threads.sql','0004_admin_insight.sql','0005_feedback.sql','0006_time_bank.sql','0007_d1_free_optimization.sql']) {
+  for (const file of ['0001_initial.sql','0002_chat.sql','0003_private_threads.sql','0004_admin_insight.sql','0005_feedback.sql','0006_time_bank.sql','0007_d1_free_optimization.sql','0008_email_recovery.sql']) {
     const migration = await readFile(new URL('../migrations/'+file, import.meta.url), 'utf8');
     for (const statement of migration.split(';').map((sql) => sql.trim()).filter(Boolean)) {
       await db.prepare(statement).run();
@@ -62,11 +62,26 @@ test('the first step refuses a name too short and never reveals the PIN', async 
   assert.deepEqual(Object.keys(known).sort(), ['known','ok','username']);
 });
 
-test('a returning name does not have to confirm the password, a new one does', () => {
-  assert.match(html, /function applyLoginPinStep\(\)/);
-  assert.match(html, /\$\('login-pin2-row'\)\.classList\.toggle\('hidden',loginKnown\)/);
-  assert.match(html, /\$\('upin2'\)\.value\.trim\(\)!==pin\) return loginStepError\('upin-val',t\('login_pin_mismatch'\)\)/);
-  assert.match(html, /\$\('upin'\)\.setAttribute\('autocomplete',loginKnown\?'current-password':'new-password'\)/);
+test('crear cuenta pide el PIN dos veces, entrar lo pide una sola', () => {
+  const register = html.slice(html.indexOf('<div id="auth-register-panel"'), html.indexOf('<div id="auth-login-panel"'));
+  const login = html.slice(html.indexOf('<div id="auth-login-panel"'), html.indexOf('<div id="auth-forgot-panel"'));
+  assert.match(register, /id="upin"[^>]*autocomplete="new-password"/);
+  assert.match(register, /id="upin2"[^>]*autocomplete="new-password"/);
+  assert.match(login, /id="login-pin"[^>]*autocomplete="current-password"/);
+  assert.doesNotMatch(login, /id="upin2"/);
+  assert.match(html, /if\(pin!==repeat\) return authError\('auth-register-val',t\('login_pin_mismatch'\)\)/);
+});
+
+test('la entrada es la pantalla por defecto y el alta vive en un enlace', () => {
+  const login = html.slice(html.indexOf('<section id="s-login"'), html.indexOf('<section id="s-feedback"'));
+  // Ya no hay conmutador de pestanas: se entra directo.
+  assert.doesNotMatch(login, /auth-switch/);
+  assert.match(login, /<div id="auth-register-panel" class="hidden">/);
+  assert.match(login, /<div id="auth-login-panel">/);
+  // Y el enlace de alta queda debajo del formulario de entrada.
+  const loginPanel = login.slice(login.indexOf('<div id="auth-login-panel">'), login.indexOf('<div id="auth-forgot-panel"'));
+  assert.match(loginPanel, /class="auth-alt"[\s\S]*setAuthMode\('register'\)/);
+  assert.match(html, /function defaultAuthMode\(\)/);
 });
 
 test('the login copy speaks of a password and warns it cannot be recovered', () => {
@@ -77,7 +92,7 @@ test('the login copy speaks of a password and warns it cannot be recovered', () 
 });
 
 test('a fresh account is told once that the password will be needed again', () => {
-  assert.match(html, /if\(res\.registered\) pendingWelcome=res\.username\|\|v;/);
+  assert.match(html, /if\(res\.registered\) pendingWelcome=res\.username\|\|fallback;/);
   assert.match(html, /function showWelcomeNote\(\)/);
   assert.match(html, /id="lobby-welcome"/);
 });

@@ -221,6 +221,31 @@ export async function adminDeleteFeedback(db, params) {
   return { ok: true, id };
 }
 
+export async function adminReplyFeedback(db, env, params, admin) {
+  const id = Number.parseInt(params.id, 10);
+  const body = cleanText(params.body, 5000);
+  if (!Number.isFinite(id) || !body) return { ok: false, error: "Faltan el mensaje o su identificador." };
+  const row = await db.prepare("SELECT contact,lang FROM feedback WHERE id=?").bind(id).first();
+  const to = replyAddress(row?.contact);
+  if (!to) return { ok: false, error: "Este mensaje no tiene un correo válido." };
+  const subject = cleanText(params.subject, 180) || "Picas y Fijas — respuesta a tu mensaje";
+  try {
+    await env.EMAIL.send({
+      to,
+      from: { email: "noreply@mail.picasyfijas.fans", name: "Picas y Fijas" },
+      subject,
+      text: body,
+      html: `<p>${body.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/\n/g,"<br>")}</p>`,
+    });
+  } catch { return { ok: false, error: "No se pudo enviar el correo." }; }
+  const created = now();
+  await db.batch([
+    db.prepare("INSERT INTO feedback_replies(feedback_id,admin_user_id,recipient,subject,body,created_at) VALUES(?,?,?,?,?,?)").bind(id, admin.id, to, subject, body, created),
+    db.prepare("UPDATE feedback SET status='done',updated_at=? WHERE id=?").bind(created, id),
+  ]);
+  return { ok: true, id };
+}
+
 // --- El aviso por correo -----------------------------------------------------
 // Cloudflare Email Routing entrega a una direccion ya verificada sin API key ni
 // secreto, pero a cambio exige un mensaje MIME completo. Se arma a mano —son

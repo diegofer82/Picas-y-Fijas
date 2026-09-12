@@ -570,13 +570,13 @@ La IP y el país de cada cuenta son datos personales. Se guardan porque sin ello
 
 ## Versionado
 
-El proyecto sigue versionado semántico `MAYOR.MENOR.PARCHE`:
+El proyecto sigue versionado semántico `vMAYOR.MENOR.PARCHE`:
 
 - **MAYOR (X)**: cambios incompatibles del API o del contrato de datos —una respuesta que cambia de forma, un endpoint que desaparece, una migración que obliga a rehacer clientes.
 - **MENOR (Y)**: funcionalidad nueva compatible hacia atrás —una pantalla, un modo de juego, un ajuste como el cuadrado de idioma.
 - **PARCHE (Z)**: correcciones compatibles hacia atrás, retoques de texto, estilos y rendimiento.
 
-El número vive en dos sitios y los dos se cambian en el mismo commit: `version` en `package.json` y `APP_VERSION` en `public/index.html`. De ahí sale lo que ve el jugador en los créditos y lo que viaja con cada mensaje del buzón (`appVersion`), así que un número desfasado hace que un informe apunte a una versión que no es. La versión sube en el commit que introduce el cambio, no al desplegar.
+El número vive en dos sitios y los dos se cambian en el mismo commit: `version` en `package.json` conserva el SemVer canónico (`2.6.0`), porque npm y pnpm lo requieren, y `APP_VERSION` en `public/index.html` publica `v2.6.0`. De ahí sale lo que ve el jugador en los créditos y lo que viaja con cada mensaje del buzón (`appVersion`), así que un número desfasado hace que un informe apunte a una versión que no es. La versión sube en el commit que introduce el cambio, no al desplegar.
 
 ## Procedimiento para futuras modificaciones
 

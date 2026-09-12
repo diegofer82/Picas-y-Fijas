@@ -19,7 +19,7 @@ before(async () => {
     bindings: { SESSION_TTL_HOURS:'168', ADMIN_PATH:'/admin', DEBUG_ERRORS:'1' },
   });
   db = await mf.getD1Database('DB');
-  for (const file of ['0001_initial.sql','0002_chat.sql','0003_private_threads.sql','0004_admin_insight.sql','0005_feedback.sql','0006_time_bank.sql','0007_d1_free_optimization.sql']) {
+  for (const file of ['0001_initial.sql','0002_chat.sql','0003_private_threads.sql','0004_admin_insight.sql','0005_feedback.sql','0006_time_bank.sql','0007_d1_free_optimization.sql','0008_email_recovery.sql']) {
     const migration = await readFile(new URL('../migrations/'+file, import.meta.url), 'utf8');
     for (const statement of migration.split(';').map((sql) => sql.trim()).filter(Boolean)) {
       await db.prepare(statement).run();
@@ -389,7 +389,7 @@ test('la pantalla del buzón existe, lleva su propio selector de idioma y se abr
   // El campo trampa no se ve, pero esta.
   assert.match(html, /id="fb-website"[^>]*aria-hidden="true"/);
   // Y la pantalla entra en el conmutador de vistas.
-  assert.match(html, /\['login','lobby','feedback',/);
+  assert.match(html, /\['login','lobby','account','feedback',/);
 });
 
 test('la marca devuelve desde el buzón al sitio del que se entró', async () => {
@@ -472,16 +472,16 @@ test('el panel marca cada mensaje con la dirección a la que se puede responder'
   if (soloName) assert.equal(soloName.replyTo, '');
 });
 
-test('el botón Responder se apaga cuando no hay correo, y redacta en el idioma del mensaje', async () => {
+test('el botón Responder se apaga cuando no hay correo y envía la respuesta en el idioma del mensaje', async () => {
   const html = await readFile(new URL('../public/admin.html', import.meta.url), 'utf8');
   assert.match(html, /data-feedback-reply="\$\{x\.id\}"/);
   assert.match(html, /<button class="tiny" disabled title=/);
   assert.match(html, /function feedbackMailto\(item\)/);
   // Andamio en los tres idiomas, porque quien escribe no tiene por que leer español.
   for (const lang of ['es','en','fr']) assert.ok(html.includes(lang + ":{subject:"), lang);
-  // Responder no cambia nada en la base, asi que no puede recargar el panel.
   const action = html.slice(html.indexOf("const fbReply=hit('data-feedback-reply')"), html.indexOf("const fbNote=hit("));
-  assert.doesNotMatch(action, /afterChange|api\(/);
+  assert.match(action, /api\('adminReplyFeedback'/);
+  assert.match(action, /afterChange\(\)/);
 });
 
 test('el panel de administración tiene su pestaña de feedback', async () => {

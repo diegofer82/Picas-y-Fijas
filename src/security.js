@@ -1,4 +1,5 @@
 import { cleanCountry, cleanName, usernameKey } from './game.js';
+import { sendEmailVerification } from './recovery.js';
 
 // El pais y la IP no los declara el navegador: los pone Cloudflare delante del
 // Worker. Se guardan solo al entrar —una escritura por sesion, no por
@@ -33,10 +34,63 @@ export function validPin(pin) {
   return /^\d{4,8}$/.test(String(pin || ''));
 }
 
+export function cleanEmail(value) {
+  return String(value || '').trim().toLowerCase().slice(0, 254);
+}
+
+export function validEmail(value) {
+  return /^[^\s@,;<>"']+@[^\s@,;<>"']+\.[^\s@,;<>"'.]{2,}$/.test(cleanEmail(value));
+}
+
 export function randomToken(bytes = 32) {
   const data = new Uint8Array(bytes);
   crypto.getRandomValues(data);
   return [...data].map((value) => value.toString(16).padStart(2, '0')).join('');
+}
+
+// Turnstile is always verified by the Worker, never by the browser alone.
+// Local tests deliberately leave TURNSTILE_ENABLED unset; production sets it
+// to "1", which makes a missing secret fail closed.
+export async function verifyTurnstile(env, token, action, origin) {
+  if (String(env?.TURNSTILE_ENABLED || "") !== "1") return { ok: true };
+  const secret = String(env?.TURNSTILE_SECRET || "");
+  const allowed = new Set(
+    String(env?.TURNSTILE_HOSTNAMES || "")
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean),
+  );
+  if (
+    typeof token !== "string" ||
+    !token ||
+    token.length > 2048 ||
+    !secret ||
+    !allowed.size
+  ) return { ok: false };
+  try {
+    const response = await fetch(
+      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        signal: AbortSignal.timeout(10_000),
+        body: new URLSearchParams({
+          secret,
+          response: token,
+          remoteip: String(origin?.ip || ""),
+        }),
+      },
+    );
+    if (!response.ok) return { ok: false };
+    const result = await response.json();
+    return {
+      ok: result?.success === true &&
+        result.action === action &&
+        allowed.has(result.hostname),
+    };
+  } catch {
+    return { ok: false };
+  }
 }
 
 export async function createSession(db, user, ttlHours = 168, origin = {}) {
@@ -54,7 +108,7 @@ export async function authenticate(db, request, params) {
   const token = authorization.startsWith('Bearer ') ? authorization.slice(7).trim() : String(params.sessionToken || '');
   if (!token) return { error: 'Sesión inválida. Vuelve a entrar con tu nombre y PIN.' };
   const tokenHash = await sha256(token);
-  const user = await db.prepare(`SELECT u.id,u.username,u.username_key,u.role,u.blocked_at,s.expires_at,s.last_seen_at
+  const user = await db.prepare(`SELECT u.id,u.username,u.username_key,u.role,u.blocked_at,u.email,u.email_verified_at,s.expires_at,s.last_seen_at
     FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=?`).bind(tokenHash).first();
   if (!user || Date.parse(user.expires_at) <= Date.now()) return { error: 'La sesión ha expirado. Vuelve a entrar.' };
   if (user.blocked_at) return { error: 'Este usuario está bloqueado.' };
@@ -86,20 +140,25 @@ export async function lookupName(db, params) {
 }
 
 export async function login(db, params, ttlHours, origin = {}) {
-  const username = cleanName(params.username);
-  const key = usernameKey(username);
+  const identifier = String(params.identifier || params.username || '').trim();
+  const isEmail = validEmail(identifier);
+  const username = cleanName(identifier);
+  const key = isEmail ? cleanEmail(identifier) : usernameKey(username);
   const pin = String(params.pin || '');
-  if (username.length < 2) return { ok:false, error:'El nombre debe tener al menos 2 caracteres.' };
+  if (!isEmail && username.length < 2) return { ok:false, error:'Introduce tu nombre de usuario o correo electrónico.' };
   if (!validPin(pin)) return { ok:false, error:'El PIN debe tener entre 4 y 8 dígitos.' };
   const attempt = await db.prepare('SELECT failures,locked_until FROM login_attempts WHERE throttle_key=?').bind(key).first();
   if (attempt?.locked_until && Date.parse(attempt.locked_until) > Date.now()) {
     return { ok:false, error:'Demasiados PIN incorrectos. Inténtalo de nuevo en 15 minutos.' };
   }
-  let user = await db.prepare('SELECT * FROM users WHERE username_key=?').bind(key).first();
+  let user = await db.prepare(isEmail ? 'SELECT * FROM users WHERE email=?' : 'SELECT * FROM users WHERE username_key=?').bind(key).first();
   let registered = false;
   const stamp = new Date().toISOString();
   if (user) {
     if (user.blocked_at) return { ok:false, error:'Este usuario está bloqueado.' };
+    // Solo se exige activacion a las cuentas que declararon un correo. Las
+    // cuentas historicas (sin correo) siguen entrando con nombre y PIN.
+    if (user.email && !user.email_verified_at) return { ok:false, error:'Activa tu cuenta desde el enlace enviado a tu correo.' };
     if (!await verifyPin(pin, user.pin_salt, user.pin_hash)) {
       const failures = (Number(attempt?.failures) || 0) + 1;
       const lockedUntil = failures >= 5 ? new Date(Date.now() + 15 * 60000).toISOString() : null;
@@ -116,16 +175,67 @@ export async function login(db, params, ttlHours, origin = {}) {
         .bind(stamp, origin.ip || '', origin.ip || '', origin.country || '', origin.country || '', user.id),
     ]);
   } else {
+    // El alta se hace explícitamente con `register`; un correo desconocido
+    // nunca debe crear una cuenta incompleta por accidente.
+    if (isEmail) return { ok:false, error:'No existe una cuenta con ese correo.' };
     const salt = crypto.randomUUID();
     const pinHash = await hashPin(pin, salt);
     await db.prepare(`INSERT INTO users(username,username_key,pin_salt,pin_hash,role,created_at,last_login_at,
       login_count,signup_ip,signup_country,last_ip,last_country)
       VALUES(?,?,?,?,?,?,?,1,?,?,?,?)`)
-      .bind(username, key, salt, pinHash, key === 'diego' ? 'admin' : 'player', stamp, stamp,
+      .bind(username, key, salt, pinHash, 'player', stamp, stamp,
         origin.ip || '', origin.country || '', origin.ip || '', origin.country || '').run();
     user = await db.prepare('SELECT * FROM users WHERE username_key=?').bind(key).first();
     registered = true;
   }
   const session = await createSession(db, user, ttlHours, origin);
   return { ok:true, username:user.username, registered, role:user.role, sessionToken:session.token, sessionExpiresAt:session.expiresAt };
+}
+
+export async function register(db, env, params, ttlHours, origin = {}) {
+  const username = cleanName(params.username);
+  const key = usernameKey(username);
+  const email = cleanEmail(params.email);
+  const pin = String(params.pin || '');
+  if (username.length < 2) return { ok:false, error:'El nombre debe tener al menos 2 caracteres.' };
+  if (!validEmail(email)) return { ok:false, error:'Introduce un correo válido.' };
+  if (!validPin(pin)) return { ok:false, error:'El PIN debe tener entre 4 y 8 dígitos.' };
+  const [sameName, sameEmail] = await db.batch([
+    db.prepare('SELECT id FROM users WHERE username_key=?').bind(key),
+    db.prepare('SELECT id FROM users WHERE email=?').bind(email),
+  ]);
+  if (sameName?.results?.[0]) return { ok:false, error:'Ese nombre de usuario ya está en uso.' };
+  if (sameEmail?.results?.[0]) return { ok:false, error:'Ese correo ya está asociado a una cuenta.' };
+  const stamp = new Date().toISOString();
+  const salt = crypto.randomUUID();
+  const pinHash = await hashPin(pin, salt);
+  await db.prepare(`INSERT INTO users(username,username_key,email,email_verified_at,pin_salt,pin_hash,role,created_at,last_login_at,
+    login_count,signup_ip,signup_country,last_ip,last_country)
+    VALUES(?,?,?,?,?,?,?, ?,?,1,?,?,?,?)`)
+    .bind(username, key, email, null, salt, pinHash, 'player', stamp, stamp,
+      origin.ip || '', origin.country || '', origin.ip || '', origin.country || '').run();
+  const user = await db.prepare('SELECT * FROM users WHERE username_key=?').bind(key).first();
+  const sent = await sendEmailVerification(db, env, user, email, origin.origin || '', true);
+  if (!sent.ok) {
+    await db.prepare('DELETE FROM users WHERE id=?').bind(user.id).run();
+    return sent;
+  }
+  return { ok:true, username:user.username, registered:true, activationRequired:true };
+}
+
+export async function accountProfile(db, user) {
+  const row = await db.prepare('SELECT username,email,email_verified_at,created_at FROM users WHERE id=?').bind(user.id).first();
+  return { ok:true, username:row.username, email:row.email, emailVerifiedAt:row.email_verified_at, createdAt:row.created_at };
+}
+
+export async function changePin(db, user, tokenHash, currentPin, newPin) {
+  if (!validPin(newPin)) return { ok:false, error:'El PIN debe tener entre 4 y 8 dígitos.' };
+  const row = await db.prepare('SELECT pin_salt,pin_hash FROM users WHERE id=?').bind(user.id).first();
+  if (!row || !await verifyPin(currentPin, row.pin_salt, row.pin_hash)) return { ok:false, error:'El PIN actual no es correcto.' };
+  const salt = crypto.randomUUID();
+  await db.batch([
+    db.prepare('UPDATE users SET pin_salt=?,pin_hash=? WHERE id=?').bind(salt, await hashPin(newPin, salt), user.id),
+    db.prepare('DELETE FROM sessions WHERE user_id=? AND token_hash<>?').bind(user.id, tokenHash),
+  ]);
+  return { ok:true };
 }

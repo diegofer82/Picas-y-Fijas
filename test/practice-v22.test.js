@@ -66,17 +66,18 @@ test('practice resume labels exist in the three languages and the shown version 
   // La version que se muestra en la app debe seguir a la de package.json.
   // Antes esto fijaba '2.3' literal, asi que fallaba en cada version nueva en
   // vez de detectar lo que de verdad importa: que las dos se desincronicen.
-  // Desde 2.6.0 las dos llevan el semantico completo MAYOR.MENOR.PARCHE, asi
-  // que la comparacion es exacta y ademas se comprueba la forma del numero.
+  // La app publica el prefijo v y package.json conserva el SemVer canónico,
+  // que exigen npm y pnpm.
   const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
   const shown = html.match(/const APP_VERSION = '([^']+)'/);
   assert.ok(shown, 'no se encontro APP_VERSION en public/index.html');
-  assert.match(shown[1], /^\d+\.\d+\.\d+$/, 'APP_VERSION debe ser MAYOR.MENOR.PARCHE');
+  assert.match(shown[1], /^v\d+\.\d+\.\d+$/, 'APP_VERSION debe ser vMAYOR.MENOR.PARCHE');
   assert.equal(
     shown[1],
-    pkg.version,
-    `la app muestra v${shown[1]} pero package.json dice ${pkg.version}`,
+    `v${pkg.version}`,
+    `la app muestra ${shown[1]} pero package.json dice ${pkg.version}`,
   );
+  assert.match(html, /2026 · \$\{APP_VERSION\}/, 'los créditos no deben añadir otra v a APP_VERSION');
 });
 
 test('practice secrets and suggestions use cryptographic randomness', () => {

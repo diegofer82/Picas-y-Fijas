@@ -26,6 +26,7 @@ before(async () => {
     "0005_feedback.sql",
     "0006_time_bank.sql",
     "0007_d1_free_optimization.sql",
+    "0008_email_recovery.sql",
   ]) {
     const migration = await readFile(new URL(`../migrations/${file}`, import.meta.url), "utf8");
     for (const statement of migration.split(";").map((sql) => sql.trim()).filter(Boolean))
@@ -254,6 +255,16 @@ test("el cliente conserva mensajes y envía el cursor en cada polling", async ()
   const html = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
   assert.match(html, /api\('chatList',\{\.\.\.room,after:chatLastId\}\)/);
   assert.match(html, /merged=new Map\(chatItems\.map/);
+  assert.match(html, /box\.dataset\.rendered='true';box\.scrollTop=\(firstRender\|\|nearBottom\)\?box\.scrollHeight:previousTop/);
   assert.match(html, /privateThreadsFetchedAt<15000/);
   assert.match(html, /chatThreadId:gState\?\.chatThreadId\|\|0/);
+});
+
+test("el lobby reúne la lista pública, las partidas propias y presencia en una petición", async () => {
+  const user = await player("Lobby-Snapshot");
+  const snapshot = await api("lobbyState", {}, user.token);
+  assert.equal(snapshot.ok, true);
+  assert.ok(Array.isArray(snapshot.games));
+  assert.ok(Array.isArray(snapshot.myGames));
+  assert.ok(snapshot.onlineCount >= 1);
 });

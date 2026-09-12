@@ -115,7 +115,7 @@
 
   label{display:block;font-size:12px;color:var(--muted);margin:14px 0 7px;letter-spacing:.03em}
   label:first-of-type{margin-top:0}
-  input[type=text],input[type=password]{width:100%;background:#0D0B07;border:1px solid var(--edge);color:var(--text);
+  input[type=text],input[type=email],input[type=password]{width:100%;background:#0D0B07;border:1px solid var(--edge);color:var(--text);
     border-radius:12px;padding:14px 15px;font-size:16px;outline:none;
     font-family:'Archivo',system-ui,sans-serif;transition:border-color .15s,box-shadow .15s;}
   input[type=text].code{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:26px;letter-spacing:12px;text-align:center;font-weight:700}
@@ -136,6 +136,11 @@
   .btn.pink{background:#1B1610;border:1px solid #4A3E30;color:var(--text)}
   .btn.green{background:var(--fija);color:#06210F}
   .btn.sm{width:auto;padding:9px 16px;font-size:13px;border-radius:10px}
+  .auth-alt{display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;gap:7px;margin-top:18px;
+    color:var(--muted);font-size:13px;letter-spacing:0;line-height:1.5}
+  .auth-alt .linkbtn{font-weight:600}
+  .auth-note{display:flex;gap:9px;align-items:flex-start;margin:13px 0;color:var(--muted);font-size:12px;line-height:1.45}
+  .auth-note span{color:var(--fija);font-weight:800}
   .row{display:flex;gap:10px}
   .row .btn{flex:1}
   .secret-label-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px}
@@ -387,39 +392,46 @@
   <!-- LOGIN -->
   <section id="s-login" class="card">
     <div class="invite-banner hidden" id="login-invite"></div>
-    <!-- Paso 1: solo el nombre. La pantalla decia a la vez «registrate» y
-         «vuelve a entrar», y el jugador no sabia en cual estaba. -->
-    <div id="login-step-name">
-      <h2 data-i18n="login_title">Elige tu nombre de jugador</h2>
-      <p class="hint" data-i18n="login_hint">Tu nombre aparecerá en las partidas y el ranking. En el paso siguiente eliges la contraseña que lo protege.</p>
+    <h2 data-i18n="auth_title">À vous de jouer</h2>
+    <p class="hint" id="auth-hint" data-i18n="auth_hint_login">Entrez avec votre nom ou votre e-mail et votre PIN.</p>
+    <div id="auth-register-panel" class="hidden">
       <label data-i18n="login_lang">Idioma</label>
       <div class="seg" id="seg-lang">
         <button data-lang="es">Español</button>
         <button data-lang="en">English</button>
         <button data-lang="fr">Français</button>
       </div>
-      <label for="uname" data-i18n="login_name">Nombre de usuario</label>
-      <input type="text" id="uname" maxlength="24" data-i18n-ph="login_name_ph" placeholder="p.ej. Diego" autocomplete="off">
-      <div class="val" id="uname-val"></div>
-      <button class="btn" id="btn-name" onclick="submitName()" data-i18n="login_continue">Continuar</button>
+      <label for="reg-email" data-i18n="auth_email">E-mail</label>
+      <input type="email" id="reg-email" maxlength="254" autocomplete="email" data-i18n-ph="auth_email_ph" placeholder="vous@exemple.com">
+      <label for="uname" data-i18n="auth_display_name">Nom affiché dans le jeu</label>
+      <input type="text" id="uname" maxlength="24" data-i18n-ph="login_name_ph" placeholder="ex. Diego" autocomplete="username">
+      <label for="upin" data-i18n="auth_pin">PIN · 4–8 chiffres</label>
+      <input type="password" id="upin" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" data-i18n-ph="login_pin_ph" placeholder="4–8 chiffres" autocomplete="new-password">
+      <label for="upin2" data-i18n="auth_pin_repeat">Confirmer le PIN</label>
+      <input type="password" id="upin2" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" data-i18n-ph="login_pin_ph" placeholder="4–8 chiffres" autocomplete="new-password">
+      <p class="auth-note"><span>✦</span><span data-i18n="auth_recovery_note">Votre e-mail permet de récupérer votre PIN.</span></p>
+      <div class="val" id="auth-register-val"></div>
+      <button class="btn" id="auth-register-btn" onclick="registerAccount()" data-i18n="auth_register_cta">Créer mon compte</button>
+      <div class="auth-alt"><span data-i18n="auth_have_account">Vous avez déjà un compte&nbsp;?</span><button type="button" class="linkbtn" onclick="setAuthMode('login')" data-i18n="auth_go_login">Se connecter</button></div>
     </div>
-
-    <!-- Paso 2: la contrasena, con las palabras del caso. -->
-    <div id="login-step-pin" class="hidden">
-      <h2 id="login-pin-title"></h2>
-      <p class="hint" id="login-pin-hint"></p>
-      <p class="whoami"><b id="login-who"></b><button type="button" class="linkbtn" onclick="backToName()" data-i18n="login_change_name">Cambiar</button></p>
-      <label for="upin" id="login-pin-label"></label>
-      <p class="fieldnote" data-i18n="login_pin_note">🔒 Es tu contraseña para entrar en la app. No es el código secreto del juego ni el código de la partida.</p>
-      <input type="password" id="upin" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" data-i18n-ph="login_pin_ph" placeholder="4–8 dígitos" autocomplete="current-password">
-      <div id="login-pin2-row" class="hidden">
-        <label for="upin2" data-i18n="login_pin2">Repite tu contraseña</label>
-        <input type="password" id="upin2" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" data-i18n-ph="login_pin_ph" placeholder="4–8 dígitos" autocomplete="new-password">
-        <p class="fieldnote warn" data-i18n="login_pin_warn">📝 Apúntala donde no se pierda: hoy no se puede recuperar sola.</p>
-      </div>
-      <div class="val" id="upin-val"></div>
-      <button class="btn" id="btn-login" onclick="doLogin()" data-i18n="login_enter">Entrar</button>
-      <div class="foot"><button type="button" class="linkbtn hidden" id="login-forgot" onclick="openForgotPin()" data-i18n="login_forgot">¿Olvidaste tu contraseña?</button></div>
+    <div id="auth-login-panel">
+      <label for="login-id" data-i18n="auth_identifier">Nom d’utilisateur ou e-mail</label>
+      <input type="text" id="login-id" maxlength="254" autocomplete="username" data-i18n-ph="auth_identifier_ph" placeholder="Diego ou vous@exemple.com">
+      <label for="login-pin" data-i18n="auth_pin">PIN · 4–8 chiffres</label>
+      <input type="password" id="login-pin" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" data-i18n-ph="login_pin_ph" placeholder="4–8 chiffres" autocomplete="current-password">
+      <div class="val" id="auth-login-val"></div>
+      <button class="btn" id="auth-login-btn" onclick="loginAccount()" data-i18n="auth_login_cta">Entrer dans le jeu</button>
+      <div class="foot"><button type="button" class="linkbtn" onclick="setAuthMode('forgot')" data-i18n="auth_forgot">PIN oublié ?</button></div>
+      <div class="auth-alt"><span data-i18n="auth_no_account">Pas encore de compte&nbsp;?</span><button type="button" class="linkbtn" onclick="setAuthMode('register')" data-i18n="auth_go_register">Créer un compte</button></div>
+    </div>
+    <div id="auth-forgot-panel" class="hidden">
+      <h3 id="auth-forgot-title" data-i18n="auth_forgot_title">Récupérer mon PIN</h3>
+      <p class="hint" id="auth-forgot-hint" data-i18n="auth_forgot_hint">Indiquez l’e-mail de votre compte : nous vous enverrons un lien sécurisé.</p>
+      <div id="forgot-email-fields"><label for="forgot-email" data-i18n="auth_email">E-mail</label><input type="email" id="forgot-email" maxlength="254" autocomplete="email" data-i18n-ph="auth_email_ph" placeholder="vous@exemple.com"><div id="pin-reset-turnstile" aria-label="Vérification anti-spam"></div></div>
+      <div id="reset-pin-fields" class="hidden"><label for="reset-pin" data-i18n="auth_pin_new">Nouveau PIN · 4–8 chiffres</label><input type="password" id="reset-pin" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" autocomplete="new-password" data-i18n-ph="login_pin_ph" placeholder="4–8 chiffres"><label for="reset-pin-repeat" data-i18n="auth_pin_repeat">Confirmer votre PIN</label><input type="password" id="reset-pin-repeat" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" autocomplete="new-password" data-i18n-ph="login_pin_ph" placeholder="4–8 chiffres"></div>
+      <div class="val" id="auth-forgot-val"></div>
+      <button class="btn" id="auth-recovery-btn" onclick="requestPinRecovery()" data-i18n="auth_recover_cta">Envoyer le lien</button>
+      <div class="foot"><button type="button" class="linkbtn" onclick="setAuthMode('login')" data-i18n="auth_back_login">Retour à la connexion</button></div>
     </div>
     <div class="foot"><a class="link" data-rules-link href="/como-se-juega" onclick="openRules();return false" data-i18n="rules_link">¿Cómo se juega?</a><span id="login-install" class="hidden"> · <a class="link" data-install-link id="login-install-link" href="/instalar"></a></span></div>
     <div class="foot credits"></div>
@@ -454,6 +466,7 @@
       <label for="fb-contact" data-i18n="feedback_contact">Cómo responderte (opcional)</label>
       <input type="text" id="fb-contact" maxlength="120" data-i18n-ph="feedback_contact_ph" autocomplete="off">
       <p class="fieldnote" data-i18n="feedback_contact_note">Solo se usa para responderte. Si lo dejas vacío, el mensaje llega igual.</p>
+      <div id="fb-turnstile" aria-label="Verificación anti-spam"></div>
       <!-- Campo trampa: invisible para una persona, irresistible para un bot. -->
       <input type="text" id="fb-website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
 
@@ -553,7 +566,31 @@
       </div>
     </div>
 
-    <div class="foot"><span class="link" id="sound-link" onclick="toggleSound()"></span> · <a class="link" data-rules-link href="/como-se-juega" onclick="openRules();return false" data-i18n="rules_link">¿Cómo se juega?</a> · <span class="link" onclick="openFeedback()" data-i18n="feedback_link">Sugerencias y errores</span> · <span class="link" onclick="logout()" data-i18n="lobby_changeuser">Cambiar de usuario</span></div>
+    <div class="foot"><span class="link" id="sound-link" onclick="toggleSound()"></span> · <a class="link" data-rules-link href="/como-se-juega" onclick="openRules();return false" data-i18n="rules_link">¿Cómo se juega?</a> · <span class="link" onclick="openAccount()" data-i18n="account_link">Mon compte</span> · <span class="link" onclick="openFeedback()" data-i18n="feedback_link">Sugerencias y errores</span> · <span class="link" onclick="logout()" data-i18n="lobby_changeuser">Cambiar de usuario</span></div>
+  </section>
+
+  <section id="s-account" class="hidden">
+    <div class="card">
+      <h2 data-i18n="account_title">Mon compte</h2>
+      <p class="hint" data-i18n="account_hint">Gérez votre e-mail et votre PIN de connexion.</p>
+      <div class="whoami"><b id="account-name">—</b></div>
+      <label data-i18n="account_email">E-mail de connexion</label>
+      <input id="account-email" type="email" maxlength="254" autocomplete="email">
+      <p class="fieldnote" id="account-email-status"></p>
+      <button class="btn ghost" id="account-email-btn" onclick="saveAccountEmail()" data-i18n="account_save_email">Vérifier ce nouvel e-mail</button>
+      <div style="height:22px"></div>
+      <h3 data-i18n="account_pin_title">Modifier mon PIN</h3>
+      <p class="hint" data-i18n="account_pin_hint">Votre PIN doit contenir de 4 à 8 chiffres.</p>
+      <label for="account-current-pin" data-i18n="account_current_pin">PIN actuel</label>
+      <input id="account-current-pin" type="password" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" autocomplete="current-password">
+      <label for="account-new-pin" data-i18n="account_new_pin">Nouveau PIN</label>
+      <input id="account-new-pin" type="password" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" autocomplete="new-password">
+      <label for="account-repeat-pin" data-i18n="auth_pin_repeat">Confirmer votre PIN</label>
+      <input id="account-repeat-pin" type="password" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" autocomplete="new-password">
+      <div class="val" id="account-val"></div>
+      <button class="btn" onclick="saveAccountPin()" data-i18n="account_save_pin">Enregistrer mon nouveau PIN</button>
+      <div class="foot"><button type="button" class="linkbtn" onclick="enterLobby()" data-i18n="back">Retour</button></div>
+    </div>
   </section>
 
   <!-- PRACTICA: CONFIGURACION -->
@@ -918,7 +955,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = '2.6.0';
+const APP_VERSION = 'v2.6.0';
 /* Enlace de invitación: ...?game=SZ93 */
 let pendingJoinCode = '';
 (function(){
@@ -953,7 +990,7 @@ const I18N = {
     lobby_greeting:"Hola, {name} 👋",
     lobby_hint:"Crea una partida y comparte el código, o únete a una pública abierta.",
     lobby_create:"Crear partida", lobby_practice:"Practicar", lobby_ranking:"Ranking", lobby_refresh:"Actualizar lista",
-    lobby_mine:"Tus partidas activas", lobby_open:"Partidas públicas abiertas", lobby_changeuser:"Cambiar de usuario",
+    lobby_mine:"Tus partidas activas", lobby_open:"Partidas públicas abiertas", lobby_changeuser:"Cambiar de usuario", lobby_sync_later:"última actualización hace {seconds} s",
     available_title:"Partidas disponibles", private_games_title:"Tus partidas privadas", private_games_hint:"Por privacidad, solo se muestran las partidas privadas en las que participas.",
     private_empty:"No tienes partidas privadas abiertas o en curso.", private_now:"🔒 {n} privadas abiertas o en curso", public_now:"🟢 {active} públicas en curso · {open} abiertas",
     loading:"Cargando…", load_error:"No se pudo cargar", open_empty:"No hay partidas públicas abiertas. ¡Crea una!",
@@ -1033,7 +1070,7 @@ const I18N = {
     lobby_greeting:"Hi, {name} 👋",
     lobby_hint:"Create a game and share the code, or join an open public one.",
     lobby_create:"Create game", lobby_practice:"Practice", lobby_ranking:"Ranking", lobby_refresh:"Refresh list",
-    lobby_mine:"Your active games", lobby_open:"Open public games", lobby_changeuser:"Change user",
+    lobby_mine:"Your active games", lobby_open:"Open public games", lobby_changeuser:"Change user", lobby_sync_later:"last updated {seconds}s ago",
     available_title:"Available games", private_games_title:"Your private games", private_games_hint:"For privacy, only private games you participate in are shown.",
     private_empty:"You have no open or active private games.", private_now:"🔒 {n} private open or in progress", public_now:"🟢 {active} public in progress · {open} open",
     loading:"Loading…", load_error:"Couldn't load", open_empty:"No open public games. Create one!",
@@ -1113,7 +1150,7 @@ const I18N = {
     lobby_greeting:"Salut, {name} 👋",
     lobby_hint:"Crée une partie et partage le code, ou rejoins une partie publique ouverte.",
     lobby_create:"Créer une partie", lobby_practice:"S'entraîner", lobby_ranking:"Classement", lobby_refresh:"Actualiser la liste",
-    lobby_mine:"Tes parties en cours", lobby_open:"Parties publiques ouvertes", lobby_changeuser:"Changer d'utilisateur",
+    lobby_mine:"Tes parties en cours", lobby_open:"Parties publiques ouvertes", lobby_changeuser:"Changer d'utilisateur", lobby_sync_later:"dernière mise à jour il y a {seconds} s",
     available_title:"Parties disponibles", private_games_title:"Tes parties privées", private_games_hint:"Pour préserver la confidentialité, seules les parties privées auxquelles tu participes sont affichées.",
     private_empty:"Tu n'as aucune partie privée ouverte ou en cours.", private_now:"🔒 {n} privées ouvertes ou en cours", public_now:"🟢 {active} publiques en cours · {open} ouvertes",
     loading:"Chargement…", load_error:"Échec du chargement", open_empty:"Aucune partie publique ouverte. Crées-en une !",
@@ -1459,6 +1496,44 @@ const RULES = {
 
 const URL_LANG = {'/es':'es','/en':'en','/fr':'fr'}[location.pathname] || null;
 const RULES_PAGE_PATH = {es:'/como-se-juega', en:'/en/how-to-play', fr:'/fr/comment-jouer'};
+Object.assign(I18N.es,{
+  auth_title:"Tu próxima partida empieza aquí",auth_hint:"Crea tu perfil para jugar, o vuelve a tu cuenta.",auth_register:"Crear cuenta",auth_login:"Entrar",
+  auth_hint_login:"Entra con tu nombre o tu correo y tu PIN.",auth_hint_register:"Crea tu perfil en menos de un minuto.",
+  auth_no_account:"¿Todavía no tienes cuenta?",auth_go_register:"Crear una cuenta",auth_have_account:"¿Ya tienes cuenta?",auth_go_login:"Entrar",
+  auth_email_ph:"tu@ejemplo.com",auth_identifier_ph:"Diego o tu@ejemplo.com",
+  auth_email:"Correo electrónico",auth_display_name:"Nombre que se verá en el juego",auth_pin:"PIN · 4–8 dígitos",auth_pin_repeat:"Confirma tu PIN",
+  auth_recovery_note:"Tu correo sirve para recuperar el PIN.",auth_register_cta:"Crear mi cuenta",auth_identifier:"Nombre de usuario o correo electrónico",auth_login_cta:"Entrar a jugar",
+  auth_forgot:"¿Olvidaste tu PIN?",auth_forgot_title:"Recupera tu PIN",auth_forgot_hint:"Escribe el correo de tu cuenta. Te enviaremos un enlace seguro.",auth_recover_cta:"Enviar enlace",auth_back_login:"Volver a entrar",
+  auth_email_invalid:"Introduce un correo válido.",auth_identifier_invalid:"Introduce tu nombre de usuario o correo.",auth_recovery_sent:"Si existe una cuenta con ese correo, te hemos enviado un enlace.",auth_activation_sent:"Cuenta creada. Revisa tu correo: tienes 30 días para activar tu cuenta.",auth_email_verified:"E-mail verificado. Ya puedes conectarte."
+  ,auth_pin_new:"Nuevo PIN · 4–8 dígitos",auth_reset_title:"Elige un nuevo PIN",auth_reset_hint:"Tu nuevo PIN protegerá tu cuenta.",auth_reset_cta:"Guardar mi nuevo PIN",auth_reset_done:"PIN actualizado. Ya puedes entrar."
+});
+Object.assign(I18N.en,{
+  auth_title:"Your next game starts here",auth_hint:"Create your profile to play, or return to your account.",auth_register:"Create account",auth_login:"Sign in",
+  auth_hint_login:"Sign in with your name or email and your PIN.",auth_hint_register:"Create your profile in under a minute.",
+  auth_no_account:"No account yet?",auth_go_register:"Create one",auth_have_account:"Already have an account?",auth_go_login:"Sign in",
+  auth_email_ph:"you@example.com",auth_identifier_ph:"Diego or you@example.com",
+  auth_email:"Email address",auth_display_name:"Name shown in the game",auth_pin:"PIN · 4–8 digits",auth_pin_repeat:"Confirm your PIN",
+  auth_recovery_note:"Your email lets you recover your PIN.",auth_register_cta:"Create my account",auth_identifier:"Username or email address",auth_login_cta:"Enter the game",
+  auth_forgot:"Forgot your PIN?",auth_forgot_title:"Recover your PIN",auth_forgot_hint:"Enter your account email and we'll send a secure link.",auth_recover_cta:"Send link",auth_back_login:"Back to sign in",
+  auth_email_invalid:"Enter a valid email address.",auth_identifier_invalid:"Enter your username or email address.",auth_recovery_sent:"If an account uses that email, we sent a recovery link.",auth_activation_sent:"Account created. Check your email: you have 30 days to activate it.",auth_email_verified:"Email verified. You can now sign in."
+  ,auth_pin_new:"New PIN · 4–8 digits",auth_reset_title:"Choose a new PIN",auth_reset_hint:"Your new PIN will protect your account.",auth_reset_cta:"Save my new PIN",auth_reset_done:"PIN updated. You can now sign in."
+});
+Object.assign(I18N.fr,{
+  auth_title:"Votre prochaine partie commence ici",auth_hint:"Créez votre profil pour jouer, ou retrouvez votre compte.",auth_register:"Créer un compte",auth_login:"Se connecter",
+  auth_hint_login:"Entrez avec votre nom ou votre e-mail et votre PIN.",auth_hint_register:"Créez votre profil en moins d’une minute.",
+  auth_no_account:"Pas encore de compte ?",auth_go_register:"En créer un",auth_have_account:"Vous avez déjà un compte ?",auth_go_login:"Se connecter",
+  auth_email_ph:"vous@exemple.com",auth_identifier_ph:"Diego ou vous@exemple.com",
+  auth_email:"E-mail",auth_display_name:"Nom affiché dans le jeu",auth_pin:"PIN · 4–8 chiffres",auth_pin_repeat:"Confirmer votre PIN",
+  auth_recovery_note:"Votre e-mail permet de récupérer votre PIN.",auth_register_cta:"Créer mon compte",auth_identifier:"Nom d’utilisateur ou e-mail",auth_login_cta:"Entrer dans le jeu",
+  auth_forgot:"PIN oublié ?",auth_forgot_title:"Récupérer mon PIN",auth_forgot_hint:"Indiquez l’e-mail de votre compte : nous vous enverrons un lien sécurisé.",auth_recover_cta:"Envoyer le lien",auth_back_login:"Retour à la connexion",
+  auth_email_invalid:"Saisissez un e-mail valide.",auth_identifier_invalid:"Saisissez votre nom d’utilisateur ou e-mail.",auth_recovery_sent:"Si un compte utilise cet e-mail, nous avons envoyé un lien de récupération.",auth_activation_sent:"Compte créé. Consultez votre e-mail : vous avez 30 jours pour l’activer.",auth_email_verified:"E-mail vérifié. Vous pouvez maintenant vous connecter."
+  ,auth_pin_new:"Nouveau PIN · 4–8 chiffres",auth_reset_title:"Choisissez un nouveau PIN",auth_reset_hint:"Votre nouveau PIN protégera votre compte.",auth_reset_cta:"Enregistrer mon nouveau PIN",auth_reset_done:"PIN mis à jour. Vous pouvez vous connecter."
+});
+
+Object.assign(I18N.es,{account_link:"Mi cuenta",account_title:"Mi cuenta",account_hint:"Gestiona tu correo y tu PIN de acceso.",account_email:"Correo de acceso",account_save_email:"Verificar este nuevo correo",account_pin_title:"Cambiar mi PIN",account_pin_hint:"Tu PIN debe tener entre 4 y 8 dígitos.",account_current_pin:"PIN actual",account_new_pin:"Nuevo PIN",account_save_pin:"Guardar mi nuevo PIN",account_email_verified:"✓ Correo verificado",account_email_pending:"Revisa tu correo y abre el enlace para verificarlo.",account_email_sent:"Te enviamos un enlace de verificación.",account_pin_saved:"PIN actualizado. Tus otras sesiones se cerraron."});
+Object.assign(I18N.en,{account_link:"My account",account_title:"My account",account_hint:"Manage your email and sign-in PIN.",account_email:"Sign-in email",account_save_email:"Verify this new email",account_pin_title:"Change my PIN",account_pin_hint:"Your PIN must be 4 to 8 digits.",account_current_pin:"Current PIN",account_new_pin:"New PIN",account_save_pin:"Save my new PIN",account_email_verified:"✓ Email verified",account_email_pending:"Check your email and open the link to verify it.",account_email_sent:"We sent you a verification link.",account_pin_saved:"PIN updated. Your other sessions were signed out."});
+Object.assign(I18N.fr,{account_link:"Mon compte",account_title:"Mon compte",account_hint:"Gérez votre e-mail et votre PIN de connexion.",account_email:"E-mail de connexion",account_save_email:"Vérifier ce nouvel e-mail",account_pin_title:"Modifier mon PIN",account_pin_hint:"Votre PIN doit contenir de 4 à 8 chiffres.",account_current_pin:"PIN actuel",account_new_pin:"Nouveau PIN",account_save_pin:"Enregistrer mon nouveau PIN",account_email_verified:"✓ E-mail vérifié",account_email_pending:"Consultez votre e-mail et ouvrez le lien de vérification.",account_email_sent:"Nous vous avons envoyé un lien de vérification.",account_pin_saved:"PIN mis à jour. Vos autres sessions ont été fermées."});
+
 let lang = URL_LANG || localStorage.getItem('pf_lang') || 'es';
 if(URL_LANG) localStorage.setItem('pf_lang', URL_LANG);
 function t(key, p){
@@ -1536,7 +1611,7 @@ function ruleSVG(width){
   return `<svg class="rule" width="${width}" height="${Math.round(width*13/112)}" viewBox="0 0 112 13" aria-hidden="true"><path class="dl" style="stroke-width:1.8" d="M3 5c22-3.4 58-4.2 106-2.6"></path><path class="dl" style="stroke-width:1.8" d="M7 9.6c20-2.6 50-3.4 96-2.4"></path></svg>`;
 }
 function creditsHTML(){
-  return `${t('credits_by')} <a href="https://www.linkedin.com/in/diego-olaya-857bb6105" target="_blank" rel="noopener">Diego OLAYA</a> · powered by Claude/ChatGTP · 2026 · v${APP_VERSION}`;
+  return `${t('credits_by')} <a href="https://www.linkedin.com/in/diego-olaya-857bb6105" target="_blank" rel="noopener">Diego OLAYA</a> · powered by Claude/ChatGTP · 2026 · ${APP_VERSION}`;
 }
 function setCredits(){ document.querySelectorAll('.credits').forEach(el=>{ el.innerHTML=creditsHTML(); }); }
 function applyI18n(){
@@ -1556,7 +1631,6 @@ function applyI18n(){
   if(typeof updateSoundLabel==='function') updateSoundLabel();
   syncBrandHome();
   if(typeof renderLoginInvite==='function') renderLoginInvite();
-  if(typeof applyLoginPinStep==='function'&&!$('login-step-pin').classList.contains('hidden')) applyLoginPinStep();
   if(typeof updateChatLabels==='function') updateChatLabels();
   if(typeof renderMutedPanel==='function') renderMutedPanel();
   if(typeof updateExperiencePrompt==='function') updateExperiencePrompt();
@@ -1669,7 +1743,7 @@ function brandHome(){
 function show(name){
   currentView = name;
   if(name!=='game') gameViewEpoch++;
-  ['login','lobby','feedback','rank','history','rules','practice','practice-game','create','wait','join','rematch','game'].forEach(s=>{
+  ['login','lobby','account','feedback','rank','history','rules','practice','practice-game','create','wait','join','rematch','game'].forEach(s=>{
     $('s-'+s).classList.toggle('hidden', s!==name);
   });
   if(name!=='game') stopTick();
@@ -1696,12 +1770,12 @@ async function api(action, payload={}, options={}){
   const timeout=setTimeout(()=>controller.abort(),options.timeoutMs||20000);
   try{
     const headers={'Content-Type':'application/json;charset=utf-8'};
-    if(sessionToken && action!=='loginUser') headers.Authorization='Bearer '+sessionToken;
+    if(sessionToken && !['loginUser','registerUser'].includes(action)) headers.Authorization='Bearer '+sessionToken;
     const requestPayload=Object.assign({action},payload);
     if(action==='loginUser') requestPayload.pin=userPin;
     const res = await fetch(API,{ method:'POST', cache:'no-store', signal:controller.signal,
       headers, body: JSON.stringify(requestPayload) });
-    if(res.status===401&&action!=='loginUser'){
+    if(res.status===401&&!['loginUser','registerUser'].includes(action)){
       handleSessionExpired();
       throw new Error('SESSION_EXPIRED');
     }
@@ -1752,13 +1826,14 @@ function chatTime(iso){try{return new Intl.DateTimeFormat(lang,{hour:'2-digit',m
 function renderChat(){
   const box=$('chat-messages'),muted=chatMutedUsers(),visible=chatItems.filter(m=>m.kind==='system'||!muted.has(chatUserKey(m.sender)));
   if(!visible.length){box.innerHTML=`<div class="chat-empty">${t('chat_empty')}</div>`;return;}
+  const firstRender=box.dataset.rendered!=='true',previousTop=box.scrollTop,nearBottom=box.scrollHeight-box.scrollTop-box.clientHeight<40;
   box.innerHTML=visible.map(m=>{
     if(m.kind==='system')return`<div class="chat-msg system">${esc(systemChatText(m.body))}</div>`;
     if(m.kind==='nudge')return`<div class="chat-msg nudge">${esc(t('chat_nudged',{name:m.sender}))}</div>`;
     const mine=chatUserKey(m.sender)===chatUserKey(user),body=m.deleted?t('chat_deleted'):m.body;
     const actions=!mine&&!m.deleted?`<span class="chat-actions"><button type="button" title="${esc(t('chat_mute'))}" onclick="muteChatUser('${encodeURIComponent(m.sender)}')">${ico('mudo',14)}</button><button type="button" title="${esc(t('chat_report'))}" onclick="reportChatMessage(${m.id})">${ico('bandera',14)}</button></span>`:'';
     return`<div class="chat-msg${mine?' mine':''}"><div class="chat-meta"><b>${esc(m.sender)}</b><span>${chatTime(m.createdAt)}</span>${actions}</div><div class="chat-body">${esc(body)}</div></div>`;
-  }).join('');box.scrollTop=box.scrollHeight;
+  }).join('');box.dataset.rendered='true';box.scrollTop=(firstRender||nearBottom)?box.scrollHeight:previousTop;
 }
 async function pollChat(){
   if(!chatEnabled||!sessionToken)return;const room=currentChatRoom();
@@ -2114,7 +2189,16 @@ $('seg-lang').addEventListener('click', e=>{ const b=e.target.closest('button');
 $('fb-seg-lang').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; pickLang(b.dataset.lang); });
 
 /* -------------------- buzon de sugerencias -------------------- */
-let feedbackKind='idea', feedbackSending=false;
+let feedbackKind='idea', feedbackSending=false, feedbackTurnstileId, pinResetTurnstileId;
+function renderFeedbackTurnstile(){
+  if(feedbackTurnstileId!==undefined||!window.turnstile)return;
+  feedbackTurnstileId=window.turnstile.render('#fb-turnstile',{sitekey:'0x4AAAAAAEwzoAyc8BkdsFMo',action:'feedback'});
+}
+window.onFeedbackTurnstileLoad=renderFeedbackTurnstile;
+function renderPinResetTurnstile(){
+  if(pinResetTurnstileId!==undefined||!window.turnstile||!$('pin-reset-turnstile'))return;
+  pinResetTurnstileId=window.turnstile.render('#pin-reset-turnstile',{sitekey:'0x4AAAAAAEwzoAyc8BkdsFMo',action:'pin_reset'});
+}
 $('fb-seg-kind').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
   feedbackKind=b.dataset.k; segPick($('fb-seg-kind'),b); });
 $('fb-message').addEventListener('input', ()=>{
@@ -2127,6 +2211,7 @@ function openFeedback(){
   feedbackReturn = currentView==='lobby' ? 'lobby' : 'login';
   resetFeedbackForm();
   show('feedback');
+  renderFeedbackTurnstile();
 }
 function closeFeedback(){ show(feedbackReturn); }
 function resetFeedbackForm(){
@@ -2143,118 +2228,126 @@ async function sendFeedback(){
   feedbackSending=true;
   const button=$('fb-send'); button.disabled=true; button.textContent=t('feedback_sending');
   try{
+    const turnstileToken=feedbackTurnstileId===undefined?'':window.turnstile.getResponse(feedbackTurnstileId);
     const res=await api('sendFeedback',{ kind:feedbackKind, message, contact:$('fb-contact').value.trim(),
-      website:$('fb-website').value, lang, appVersion:APP_VERSION, userAgent:navigator.userAgent });
+      website:$('fb-website').value, lang, appVersion:APP_VERSION, userAgent:navigator.userAgent,
+      'cf-turnstile-response':turnstileToken });
     if(!res.ok){ $('fb-val').textContent=te(res.error); $('fb-val').className='val err'; return; }
     $('fb-message').closest('.card').classList.add('hidden');
     $('fb-done').classList.remove('hidden');
     toast(t('feedback_thanks'));
     window.scrollTo(0,0);
   }catch(e){ toast(t('net_error'),true); }
-  finally{ feedbackSending=false; button.disabled=false; button.textContent=t('feedback_send'); }
+  finally{ if(feedbackTurnstileId!==undefined)window.turnstile.reset(feedbackTurnstileId);feedbackSending=false; button.disabled=false; button.textContent=t('feedback_send'); }
 }
 
-/* -------------------- login en dos pasos --------------------
-   Antes una sola pantalla queria decir dos cosas —«registrate» y «vuelve a
-   entrar»— y el jugador tecleaba cuatro digitos cualquiera creyendo que era
-   un codigo de partida. Ahora se pregunta primero el nombre: con la respuesta
-   del servidor la segunda mitad ya sabe a quien le habla. */
-let loginName='', loginKnown=false;
-/* Se guarda del login al lobby para poder decir, una vez, que esa
-   contrasena hara falta manana. */
+/* -------------------- accès au compte -------------------- */
 let pendingWelcome='';
+const resetToken=new URLSearchParams(location.search).get('reset_pin')||'';
 function resetLoginSteps(){
-  loginName=''; loginKnown=false;
-  $('login-step-pin').classList.add('hidden');
-  $('login-step-name').classList.remove('hidden');
-  $('upin').value=''; $('upin2').value='';
-  $('upin-val').className='val'; $('upin-val').textContent='';
+  ['reg-email','uname','upin','upin2','login-id','login-pin','forgot-email'].forEach(id=>{if($(id)) $(id).value='';});
+  ['auth-register-val','auth-login-val','auth-forgot-val'].forEach(id=>{if($(id)){ $(id).className='val'; $(id).textContent=''; }});
+  setAuthMode(defaultAuthMode());
 }
-function loginStepError(box,msg){ const el=$(box); el.className='val err'; el.textContent=msg; }
-async function submitName(){
-  const v=$('uname').value.trim();
-  if(v.length<2) return loginStepError('uname-val',t('login_min'));
-  $('uname-val').className='val'; $('uname-val').textContent=t('loading');
-  let res;
-  try{ res=await api('checkUsername',{username:v}); }
-  catch(e){ return loginStepError('uname-val',t('net_error')); }
-  if(!res.ok) return loginStepError('uname-val',te(res.error));
-  $('uname-val').className='val'; $('uname-val').textContent='';
-  loginName=res.username||v; loginKnown=!!res.known;
-  applyLoginPinStep();
-  $('login-step-name').classList.add('hidden');
-  $('login-step-pin').classList.remove('hidden');
-  try{ $('upin').focus(); }catch(e){}
+function authError(id,msg){ const el=$(id); el.className='val err'; el.textContent=msg; }
+/* Sin cuenta y con invitacion: el recien llegado empieza por crear la suya. */
+function defaultAuthMode(){
+  return (pendingJoinCode && !localStorage.getItem('pf_user')) ? 'register' : 'login';
 }
-/* El paso 2 cambia de palabras, de botones y de campos segun el nombre sea
-   conocido o nuevo: es la mitad del arreglo. */
-function applyLoginPinStep(){
-  $('login-who').textContent=loginName;
-  $('login-pin-title').textContent=loginKnown?t('login_back_title',{name:loginName}):t('login_new_title');
-  $('login-pin-hint').textContent=loginKnown?t('login_back_hint'):t('login_new_hint');
-  $('login-pin-label').textContent=loginKnown?t('login_pin'):t('login_pin_new');
-  $('upin').setAttribute('autocomplete',loginKnown?'current-password':'new-password');
-  $('login-pin2-row').classList.toggle('hidden',loginKnown);
-  $('btn-login').textContent=loginKnown?t('login_enter'):t('login_create');
-  $('login-forgot').classList.toggle('hidden',!loginKnown);
+function setAuthMode(mode){
+  ['register','login','forgot'].forEach(name=>$('auth-'+name+'-panel').classList.toggle('hidden',name!==mode));
+  const hint=$('auth-hint');
+  if(hint){
+    hint.classList.toggle('hidden', mode==='forgot');
+    if(mode!=='forgot'){ hint.dataset.i18n='auth_hint_'+mode; hint.textContent=t('auth_hint_'+mode); }
+  }
+  if(mode==='forgot'){
+    renderPinResetTurnstile();
+    const resetting=!!resetToken;
+    $('forgot-email-fields').classList.toggle('hidden',resetting); $('reset-pin-fields').classList.toggle('hidden',!resetting);
+    $('auth-forgot-title').textContent=t(resetting?'auth_reset_title':'auth_forgot_title');
+    $('auth-forgot-hint').textContent=t(resetting?'auth_reset_hint':'auth_forgot_hint');
+    $('auth-recovery-btn').textContent=t(resetting?'auth_reset_cta':'auth_recover_cta');
+  }
 }
-function backToName(){
-  resetLoginSteps();
-  $('uname-val').className='val'; $('uname-val').textContent='';
-  try{ $('uname').focus(); }catch(e){}
+function completeAccess(res, fallback){
+  if(res.registered) pendingWelcome=res.username||fallback;
+  const previousUser=localStorage.getItem('pf_user')||'';
+  user=res.username; sessionToken=res.sessionToken||''; sessionExpiryHandled=false;
+  if(previousUser&&previousUser.toLocaleLowerCase()!==user.toLocaleLowerCase()) localStorage.removeItem('pf_current_game');
+  localStorage.setItem('pf_user',user); localStorage.setItem('pf_session',sessionToken); localStorage.removeItem('pf_pin'); userPin='';
+  unlockAudio(); const deepLinkPending=!!pendingJoinCode; enterLobby(); if(!deepLinkPending) resumeStoredGame();
 }
-/* Sin recuperacion automatica todavia, la salida honesta es el buzon: llega
-   al panel con el nombre ya escrito y el PIN se repone desde ahi. */
-function openForgotPin(){
-  const name=loginName||$('uname').value.trim();
-  openFeedback();
-  feedbackKind='question'; segPick($('fb-seg-kind'), $('fb-seg-kind').querySelector('[data-k="question"]'));
-  $('fb-message').value=t('login_forgot_msg',{name});
-  $('fb-message').dispatchEvent(new Event('input'));
-  try{ $('fb-contact').focus(); }catch(e){}
-}
-async function doLogin(){
-  const v=loginName||$('uname').value.trim();
-  const pin=$('upin').value.trim();
-  if(v.length<2){ backToName(); return loginStepError('uname-val',t('login_min')); }
-  if(!/^\d{4,8}$/.test(pin)) return loginStepError('upin-val',t('login_pin_invalid'));
-  if(!loginKnown && $('upin2').value.trim()!==pin) return loginStepError('upin-val',t('login_pin_mismatch'));
-  $('upin-val').className='val'; $('upin-val').textContent=t('loading');
+async function registerAccount(){
+  const email=$('reg-email').value.trim(), name=$('uname').value.trim(), pin=$('upin').value.trim(), repeat=$('upin2').value.trim();
+  if(!/^\S+@\S+\.\S+$/.test(email)) return authError('auth-register-val',t('auth_email_invalid'));
+  if(name.length<2) return authError('auth-register-val',t('login_min'));
+  if(!/^\d{4,8}$/.test(pin)) return authError('auth-register-val',t('login_pin_invalid'));
+  if(pin!==repeat) return authError('auth-register-val',t('login_pin_mismatch'));
+  $('auth-register-val').className='val'; $('auth-register-val').textContent=t('loading');
   try{
-    userPin=pin;
-    const res=await api('loginUser',{username:v});
-    if(!res.ok){
-      userPin='';
-      // Si el nombre ya tenia dueno, el mensaje del servidor es correcto pero
-      // seco: aqui se acompana de las dos salidas reales.
-      loginStepError('upin-val', /PIN/.test(res.error||'') && loginKnown ? t('login_wrong_pin',{name:v}) : te(res.error));
-      $('login-forgot').classList.remove('hidden');
-      return;
-    }
-    if(res.registered) pendingWelcome=res.username||v;
-    const previousUser=localStorage.getItem('pf_user')||'';
-    user=res.username; sessionToken=res.sessionToken||'';sessionExpiryHandled=false;
-    if(previousUser&&previousUser.toLocaleLowerCase()!==user.toLocaleLowerCase())localStorage.removeItem('pf_current_game');
-    localStorage.setItem('pf_user',user); localStorage.setItem('pf_session',sessionToken); localStorage.removeItem('pf_pin'); userPin='';
-  }catch(e){ userPin=''; return loginStepError('upin-val',t('net_error')); }
-  unlockAudio();
-  const deepLinkPending=!!pendingJoinCode;
-  enterLobby();
-  if(!deepLinkPending)resumeStoredGame();
+    const res=await api('registerUser',{username:name,email,pin});
+    if(!res.ok) return authError('auth-register-val',te(res.error));
+    $('auth-register-val').className='val ok'; $('auth-register-val').textContent=t('auth_activation_sent');
+    setAuthMode('login'); $('login-id').value=email;
+  }catch(e){ return authError('auth-register-val',t('net_error')); }
+}
+async function loginAccount(){
+  const identifier=$('login-id').value.trim(), pin=$('login-pin').value.trim();
+  if(identifier.length<2) return authError('auth-login-val',t('auth_identifier_invalid'));
+  if(!/^\d{4,8}$/.test(pin)) return authError('auth-login-val',t('login_pin_invalid'));
+  $('auth-login-val').className='val'; $('auth-login-val').textContent=t('loading');
+  try{ userPin=pin; const res=await api('loginUser',{identifier}); if(!res.ok){userPin='';return authError('auth-login-val',te(res.error));} completeAccess(res,identifier); }
+  catch(e){userPin='';return authError('auth-login-val',t('net_error'));}
+}
+async function requestPinRecovery(){
+  if(resetToken){
+    const pin=$('reset-pin').value.trim(), repeat=$('reset-pin-repeat').value.trim();
+    if(!/^\d{4,8}$/.test(pin)) return authError('auth-forgot-val',t('login_pin_invalid'));
+    if(pin!==repeat) return authError('auth-forgot-val',t('login_pin_mismatch'));
+    $('auth-forgot-val').className='val'; $('auth-forgot-val').textContent=t('loading');
+    try{const res=await api('resetPin',{token:resetToken,pin});if(!res.ok)return authError('auth-forgot-val',te(res.error)); history.replaceState({},'',location.pathname); $('auth-forgot-val').className='val ok';$('auth-forgot-val').textContent=t('auth_reset_done'); setTimeout(()=>setAuthMode('login'),900);}
+    catch(e){authError('auth-forgot-val',t('net_error'));} return;
+  }
+  const email=$('forgot-email').value.trim();
+  if(!/^\S+@\S+\.\S+$/.test(email)) return authError('auth-forgot-val',t('auth_email_invalid'));
+  $('auth-forgot-val').className='val'; $('auth-forgot-val').textContent=t('loading');
+  try{const token=pinResetTurnstileId===undefined?'':window.turnstile.getResponse(pinResetTurnstileId);const res=await api('requestPinReset',{email,'cf-turnstile-response':token}); if(!res.ok)return authError('auth-forgot-val',te(res.error)); $('auth-forgot-val').className='val ok';$('auth-forgot-val').textContent=t('auth_recovery_sent'); if(pinResetTurnstileId!==undefined)window.turnstile.reset(pinResetTurnstileId);}
+  catch(e){authError('auth-forgot-val',t('net_error'));}
+}
+async function openAccount(){
+  show('account'); $('account-val').className='val'; $('account-val').textContent=t('loading');
+  try{const res=await api('accountProfile');if(!res.ok)throw new Error(); $('account-name').textContent=res.username; $('account-email').value=res.email||''; $('account-email-status').textContent=res.emailVerifiedAt?t('account_email_verified'):t('account_email_pending'); $('account-val').textContent='';}
+  catch(e){authError('account-val',t('net_error'));}
+}
+async function saveAccountEmail(){
+  const email=$('account-email').value.trim();
+  if(!/^\S+@\S+\.\S+$/.test(email))return authError('account-val',t('auth_email_invalid'));
+  $('account-val').className='val';$('account-val').textContent=t('loading');
+  try{const res=await api('requestEmailVerification',{email});if(!res.ok)return authError('account-val',te(res.error));$('account-val').className='val ok';$('account-val').textContent=t('account_email_sent');$('account-email-status').textContent=t('account_email_pending');}
+  catch(e){authError('account-val',t('net_error'));}
+}
+async function saveAccountPin(){
+  const currentPin=$('account-current-pin').value.trim(),newPin=$('account-new-pin').value.trim(),repeat=$('account-repeat-pin').value.trim();
+  if(!/^\d{4,8}$/.test(newPin))return authError('account-val',t('login_pin_invalid'));
+  if(newPin!==repeat)return authError('account-val',t('login_pin_mismatch'));
+  $('account-val').className='val';$('account-val').textContent=t('loading');
+  try{const res=await api('changePin',{currentPin,newPin});if(!res.ok)return authError('account-val',te(res.error));['account-current-pin','account-new-pin','account-repeat-pin'].forEach(id=>$(id).value='');$('account-val').className='val ok';$('account-val').textContent=t('account_pin_saved');}
+  catch(e){authError('account-val',t('net_error'));}
 }
 function handleSessionExpired(){
   if(sessionExpiryHandled)return;sessionExpiryHandled=true;
   localStorage.removeItem('pf_session');sessionToken='';
   stopPoll();stopLobbyPoll();stopChatPoll();stopTick();
   chatEnabled=false;$('chat-panel').classList.add('hidden');$('chat-launch').classList.add('hidden');
-  show('login');$('uname').value=user||localStorage.getItem('pf_user')||'';
-  $('uname-val').className='val err';$('uname-val').textContent=t('session_expired');
+  show('login'); setAuthMode('login'); $('login-id').value=user||localStorage.getItem('pf_user')||'';
+  authError('auth-login-val',t('session_expired'));
 }
 async function logout(){
   try{ if(user&&sessionToken) await api('leavePresence',{username:user}); }catch(e){}
   localStorage.removeItem('pf_user'); localStorage.removeItem('pf_pin'); localStorage.removeItem('pf_session'); localStorage.removeItem('pf_current_game'); user=''; userPin=''; sessionToken='';sessionExpiryHandled=false;
   chatEnabled=false;stopChatPoll();$('chat-panel').classList.add('hidden');$('chat-launch').classList.add('hidden');
-  show('login'); $('uname').value='';
+  show('login');
 }
 function enterLobby(){ showWelcomeNote(); $('lobby-greet').textContent=t('lobby_greeting',{name:user}); $('lobby-rule').innerHTML=ruleSVG(112); $('lobby-toro').innerHTML=toroSVG('calm',54); updateSoundLabel(); show('lobby'); renderPracticeResumeCard(); refreshLobby(); handleDeepLink(); }
 
@@ -2268,6 +2361,7 @@ function showWelcomeNote(){
 let myWaitingIds = new Set();
 let myTurnIds = new Set();
 let lobbyRefreshBusy = false;
+let lastLobbySnapshot = null;
 async function lobbyRefresh(detect){
   if(lobbyRefreshBusy) return;
   lobbyRefreshBusy=true;
@@ -2276,14 +2370,10 @@ async function lobbyRefresh(detect){
     $('private-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
   }
   try{
-    // listGames ya incluye el total en línea y myGames actualiza la presencia al autenticar.
-    // Evitamos una tercera petición redundante en cada actualización del lobby.
-    const settled=await Promise.allSettled([ api('listGames'), api('myGames',{username:user}) ]);
-    const openOk=settled[0].status==='fulfilled'&&settled[0].value&&settled[0].value.ok;
-    const mineOk=settled[1].status==='fulfilled'&&settled[1].value&&settled[1].value.ok;
-    const open=openOk?settled[0].value:{games:[],activeCount:0,privateCount:0,publicActiveCount:0,publicOpenCount:0,onlineCount:0};
-    const mine=mineOk?settled[1].value:{games:[]};
-    const games = mine.games||[];
+    const snapshot=await api('lobbyState');
+    if(!snapshot.ok)throw new Error('LOBBY_UNAVAILABLE');
+    lastLobbySnapshot=snapshot;
+    const games = snapshot.myGames||[];
     const nowWaiting = new Set(games.filter(g=>g.status==='waiting').map(g=>g.gameId));
     const nowTurn = new Set(games.filter(g=>g.status==='active' && g.yourTurn).map(g=>g.gameId));
     if(detect){
@@ -2295,21 +2385,23 @@ async function lobbyRefresh(detect){
     myWaitingIds = nowWaiting; myTurnIds = nowTurn;
     const privateGames = games.filter(g=>!g.isPublic);
     const publicMine = games.filter(g=>g.isPublic);
-    const privateCount = (typeof open.privateCount==='number') ? open.privateCount : privateGames.length;
-    const publicActive = (typeof open.publicActiveCount==='number') ? open.publicActiveCount : ((typeof open.activeCount==='number')?open.activeCount:0);
-    const publicOpen = (typeof open.publicOpenCount==='number') ? open.publicOpenCount : (open.games||[]).length;
-    const pc = (typeof mine.onlineCount==='number') ? mine.onlineCount : (open.onlineCount||0);
+    const privateCount = (typeof snapshot.privateCount==='number') ? snapshot.privateCount : privateGames.length;
+    const publicActive = (typeof snapshot.publicActiveCount==='number') ? snapshot.publicActiveCount : (snapshot.activeCount||0);
+    const publicOpen = (typeof snapshot.publicOpenCount==='number') ? snapshot.publicOpenCount : (snapshot.games||[]).length;
+    const pc = snapshot.onlineCount||0;
     $('players-online').textContent=t(pc===1?'online_players_one':'online_players_many',{n:pc});
     $('private-now').textContent=t('private_now',{n:privateCount});
     $('public-now').textContent=t('public_now',{active:publicActive,open:publicOpen});
-    if(openOk) renderOpen(open.games||[]);
-    else if(!detect) $('open-list').innerHTML=`<div class="empty">${t('load_error')}</div>`;
-    if(mineOk){ renderPrivate(privateGames); renderMine(publicMine); }
-    else if(!detect){
-      $('private-list').innerHTML=`<div class="empty">${t('load_error')}</div>`;
-      $('mine-card').classList.add('hidden');
-    }
+    renderOpen(snapshot.games||[]);
+    renderPrivate(privateGames); renderMine(publicMine);
   }catch(e){
+    // En caso de corte, la última lista sigue visible: poner los contadores a
+    // cero haría pensar que los jugadores y las partidas desaparecieron.
+    if(lastLobbySnapshot){
+      const age=Math.max(1,Math.round((Date.now()-(lastLobbySnapshot.clientReceivedAt||Date.now()))/1000));
+      $('players-online').textContent=`${t('online_players_many',{n:lastLobbySnapshot.onlineCount||0})} · ${t('lobby_sync_later',{seconds:age})}`;
+      return;
+    }
     if(!detect){
       $('open-list').innerHTML=`<div class="empty">${t('load_error')}</div>`;
       $('private-list').innerHTML=`<div class="empty">${t('load_error')}</div>`;
@@ -3079,9 +3171,9 @@ async function refreshGame(expectedEpoch=gameViewEpoch, expectedGameId=game.id){
 }
 $('g-guess').addEventListener('input', e=>setVal('g-guess-val', e.target.value, game.digits, game.allowRepeats));
 
-bindEnterToButton('uname','btn-name');
-bindEnterToButton('upin','btn-login');
-bindEnterToButton('upin2','btn-login');
+bindEnterToButton('upin2','auth-register-btn');
+bindEnterToButton('login-pin','auth-login-btn');
+bindEnterToButton('forgot-email','auth-recovery-btn');
 bindEnterToButton('join-code-inp','btn-join-code');
 bindEnterToButton('secret-c','btn-create');
 bindEnterToButton('secret-j','btn-join');
@@ -3424,11 +3516,17 @@ document.addEventListener('visibilitychange',()=>{
 applyI18n();
 detectCountry();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').then(reg=>{serviceWorkerRegistration=reg;}).catch(()=>{});
-if(user&&sessionToken){
-  const deepLinkPending=!!pendingJoinCode;
-  enterLobby();
-  if(!deepLinkPending)resumeStoredGame();
-} else { if(user) $('uname').value=user; show('login'); }
+const emailVerificationToken=new URLSearchParams(location.search).get('verify_email')||'';
+async function boot(){
+  if(emailVerificationToken){
+    try{const res=await api('verifyEmail',{token:emailVerificationToken});history.replaceState({},'',location.pathname);if(!res.ok){show('login');setAuthMode('login');return authError('auth-login-val',te(res.error));}show('login');setAuthMode('login');$('auth-login-val').className='val ok';$('auth-login-val').textContent=t('auth_email_verified');return;}
+    catch(e){show('login');setAuthMode('login');return authError('auth-login-val',t('net_error'));}
+  }
+  if(user&&sessionToken){const deepLinkPending=!!pendingJoinCode;enterLobby();if(!deepLinkPending)resumeStoredGame();}
+  else {show('login');setAuthMode(resetToken?'forgot':defaultAuthMode());}
+}
+boot();
 </script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onFeedbackTurnstileLoad&render=explicit" async defer></script>
 </body>
 </html>

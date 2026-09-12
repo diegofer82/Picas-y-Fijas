@@ -19,6 +19,8 @@
     .toro .t-dot{fill:#08203a}
     .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;margin:16px 0}
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    @media (min-width:561px){.login-row input{flex:1 1 200px;min-width:0}}
+    @media (max-width:560px){.login-row{flex-direction:column;align-items:stretch}.login-row input,.login-row button{flex:0 0 auto;width:100%}}
     input,button,select,textarea{border-radius:10px;border:1px solid var(--line);padding:9px 12px;background:#0c1627;color:var(--text);font:inherit}
     textarea{width:100%;min-height:120px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;resize:vertical}
     button{cursor:pointer;background:#17314a}button:hover{border-color:var(--blue)}
@@ -74,7 +76,8 @@
 
   <section id="login" class="panel">
     <h2>Acceso</h2>
-    <div class="row"><input id="username" placeholder="Usuario" autocomplete="username"><input id="pin" type="password" inputmode="numeric" placeholder="PIN" autocomplete="current-password"><button class="primary" id="loginButton">Entrar</button></div>
+    <p class="muted small">Solo para cuentas con rol de administrador. Se entra con el mismo usuario (o correo) y PIN del juego.</p>
+    <div class="row login-row"><input id="username" placeholder="Usuario o correo" aria-label="Usuario o correo" autocomplete="username" autofocus><input id="pin" type="password" inputmode="numeric" placeholder="PIN" aria-label="PIN" autocomplete="current-password"><button class="primary" id="loginButton">Entrar</button></div>
     <p id="loginError" class="error"></p>
   </section>
 
@@ -482,13 +485,16 @@ async function handleAction(e){
     if(mergeGroup){const list=mergeGroup.dataset.mergeGroup.split('|');return openMerge(list[0],list[1]);}
     const mergePair=hit('data-merge-into');
     if(mergePair)return openMerge(mergePair.dataset.mergeFrom,mergePair.dataset.mergeInto);
-    // Responder no toca la base: entrega el borrador al cliente de correo para
-    // que la respuesta salga de la direccion de verdad y el hilo quede en su
-    // bandeja. Por eso no llama a afterChange().
     const fbReply=hit('data-feedback-reply');
     if(fbReply){
       const item=state.feedback.find(x=>String(x.id)===fbReply.dataset.feedbackReply);
-      if(item&&item.replyTo) location.href=feedbackMailto(item);
+      if(item&&item.replyTo){
+        const body=prompt('Respuesta para '+item.replyTo+':','');
+        if(body===null)return;
+        const copy=FB_REPLY[item.lang]||FB_REPLY.es;
+        await api('adminReplyFeedback',{id:item.id,target:String(item.id),subject:copy.subject,body});
+        return afterChange();
+      }
       return;
     }
     const fbNote=hit('data-feedback-note');

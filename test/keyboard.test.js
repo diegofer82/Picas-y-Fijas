@@ -7,11 +7,11 @@ const adminHtml = await readFile(new URL('../public/admin.html', import.meta.url
 
 test('every typed game action can be submitted with Enter', () => {
   const bindings = [
-    // El registro tiene dos pasos: el nombre envia el primero, la contrasena
-    // y su confirmacion envian el segundo.
-    ['uname', 'btn-name'],
-    ['upin', 'btn-login'],
-    ['upin2', 'btn-login'],
+    // El acceso tiene tres paneles: alta, entrada y recuperacion del PIN.
+    // El ultimo campo de cada uno envia su propio boton.
+    ['upin2', 'auth-register-btn'],
+    ['login-pin', 'auth-login-btn'],
+    ['forgot-email', 'auth-recovery-btn'],
     ['join-code-inp', 'btn-join-code'],
     ['secret-c', 'btn-create'],
     ['secret-j', 'btn-join'],
@@ -73,7 +73,7 @@ test('iOS audio is primed without the muted flag',()=>{
 });
 
 test('expired sessions and stale finished games recover without a hard refresh',()=>{
-  assert.match(publicHtml,/if\(res\.status===401&&action!=='loginUser'\)/);
+  assert.match(publicHtml,/if\(res\.status===401&&!\['loginUser','registerUser'\]\.includes\(action\)\)/);
   assert.match(publicHtml,/function handleSessionExpired\(\)/);
   assert.match(publicHtml,/async function resumeStoredGame\(\)/);
   assert.match(publicHtml,/if\(!reviewingHistory\)localStorage\.removeItem\('pf_current_game'\)/);

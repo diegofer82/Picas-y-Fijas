@@ -19,7 +19,7 @@ import {
   usernameKey,
   validateCode,
 } from "./game.js";
-import { authenticate, hashPin, login, lookupName, requestOrigin, validPin } from "./security.js";
+import { accountProfile, authenticate, changePin, hashPin, login, lookupName, register, requestOrigin, validPin, verifyTurnstile } from "./security.js";
 import {
   adminDeleteUser,
   adminMergeUsers,
@@ -32,6 +32,7 @@ import {
 import {
   adminDeleteFeedback,
   adminFeedback,
+  adminReplyFeedback,
   adminUpdateFeedback,
   notifyFeedback,
   submitFeedback,
@@ -48,6 +49,7 @@ import {
   threadForGame,
 } from "./chat.js";
 import { cleanupDatabase } from "./maintenance.js";
+import { requestEmailVerification, requestPinReset, resetPin, verifyEmail } from "./recovery.js";
 
 const PROTECTED = new Set([
   "createGame",
@@ -56,6 +58,7 @@ const PROTECTED = new Set([
   "guess",
   "passTurn",
   "togglePause",
+  "lobbyState",
   "myGames",
   "history",
   "historyGame",
@@ -69,6 +72,9 @@ const PROTECTED = new Set([
   "chatSend",
   "chatReport",
   "chatNudge",
+  "requestEmailVerification",
+  "accountProfile",
+  "changePin",
 ]);
 const ADMIN_ACTIONS = new Set([
   "adminSummary",
@@ -96,6 +102,7 @@ const ADMIN_ACTIONS = new Set([
   "adminSql",
   "adminFeedback",
   "adminUpdateFeedback",
+  "adminReplyFeedback",
   "adminDeleteFeedback",
 ]);
 const PASSIVE_PRESENCE_ACTIONS = new Set([
@@ -431,7 +438,7 @@ async function createGame(db, params, user, source = null) {
   return { ok: true, gameId: id };
 }
 
-async function listGames(db) {
+async function listGames(db, includeOnlineCount = true) {
   const cutoff = new Date(Date.now() - LIMITS.waitingTtlMs).toISOString();
   const inactiveCutoff = new Date(Date.now() - LIMITS.activeTtlMs).toISOString();
   const { results } = await db
@@ -455,7 +462,7 @@ async function listGames(db) {
       (g) => g.status === "active" && truthy(g.is_public),
     ).length,
     publicOpenCount: games.length,
-    onlineCount: await onlineCount(db),
+    ...(includeOnlineCount ? { onlineCount: await onlineCount(db) } : {}),
   };
 }
 
@@ -602,7 +609,7 @@ async function state(db, params, user) {
   });
 }
 
-async function myGames(db, user) {
+async function myGames(db, user, includeOnlineCount = true) {
   const { results } = await db
     .prepare(
       `WITH candidates(game_id) AS (
@@ -641,7 +648,23 @@ async function myGames(db, user) {
       Number(Boolean(b.rematchInvite)) - Number(Boolean(a.rematchInvite)) ||
       String(b.updatedAt).localeCompare(String(a.updatedAt)),
   );
-  return { ok: true, games: out, onlineCount: await onlineCount(db) };
+  return {
+    ok: true,
+    games: out,
+    ...(includeOnlineCount ? { onlineCount: await onlineCount(db) } : {}),
+  };
+}
+
+// El lobby se actualiza con una sola petición autenticada. Así se mantiene
+// coherente el contador en línea y se evita ejecutar dos veces el mismo
+// conteo de presencia en cada actualización del navegador.
+async function lobbyState(db, user) {
+  const [open, mine, count] = await Promise.all([
+    listGames(db, false),
+    myGames(db, user, false),
+    onlineCount(db),
+  ]);
+  return { ...open, myGames: mine.games, onlineCount: count };
 }
 
 async function makeGuess(db, params, user) {
@@ -1151,7 +1174,7 @@ async function rematch(db, params, user) {
   });
 }
 
-async function adminAction(db, action, params, user) {
+async function adminAction(db, action, params, user, env) {
   if (user.role !== "admin")
     return { ok: false, error: "Acceso de administrador requerido." };
   if (
@@ -1165,6 +1188,7 @@ async function adminAction(db, action, params, user) {
   if (action === "adminUsers") return adminUsers(db);
   if (action === "adminUserDetail") return adminUserDetail(db, params.target);
   if (action === "adminFeedback") return adminFeedback(db, params);
+  if (action === "adminReplyFeedback") return adminReplyFeedback(db, env, params, user);
   if (action === "adminGames") {
     const { results } = await db
       .prepare(
@@ -1334,13 +1358,33 @@ async function routeApi(request, env, ctx) {
     return json(
       await login(env.DB, params, env.SESSION_TTL_HOURS, requestOrigin(request)),
     );
+  if (action === "registerUser")
+    return json(
+      await register(env.DB, env, params, env.SESSION_TTL_HOURS, { ...requestOrigin(request), origin: new URL(request.url).origin }),
+    );
   // Paso previo del registro: publico como `loginUser`, porque se responde
   // antes de que exista ninguna sesion.
   if (action === "checkUsername") return json(await lookupName(env.DB, params));
+  if (action === "verifyEmail") return json(await verifyEmail(env.DB, String(params.token || "")));
+  if (action === "requestPinReset") {
+    const origin = requestOrigin(request);
+    const turnstile = await verifyTurnstile(env, params["cf-turnstile-response"], "pin_reset", origin);
+    if (!turnstile.ok) return error("No se pudo verificar que eres una persona. Inténtalo otra vez.", 403);
+    return json(await requestPinReset(env.DB, env, params, request.url, origin));
+  }
+  if (action === "resetPin") return json(await resetPin(env.DB, String(params.token || ""), String(params.pin || "")));
   // El buzon se abre desde la pantalla de inicio, donde todavia no hay sesion,
   // asi que es el unico endpoint que escribe sin autenticar. Si de todas formas
   // llega una sesion valida, el nombre se guarda para poder responder.
   if (action === "sendFeedback") {
+    const origin = requestOrigin(request);
+    const turnstile = await verifyTurnstile(
+      env,
+      params["cf-turnstile-response"],
+      "feedback",
+      origin,
+    );
+    if (!turnstile.ok) return error("No se pudo verificar que eres una persona. Inténtalo otra vez.", 403);
     let author = "";
     try {
       const signed = await authenticate(env.DB, request, params);
@@ -1351,7 +1395,7 @@ async function routeApi(request, env, ctx) {
     const result = await submitFeedback(
       env.DB,
       params,
-      requestOrigin(request),
+      origin,
       author,
     );
     if (result.ok && result.entry) {
@@ -1379,6 +1423,10 @@ async function routeApi(request, env, ctx) {
         params.gameId ? "game" : "lobby",
       );
   }
+  if (action === "requestEmailVerification")
+    return json(await requestEmailVerification(env.DB, env, auth.user, params.email, new URL(request.url).origin));
+  if (action === "accountProfile") return json(await accountProfile(env.DB, auth.user));
+  if (action === "changePin") return json(await changePin(env.DB, auth.user, auth.tokenHash, String(params.currentPin || ''), String(params.newPin || '')));
   let result;
   switch (action) {
     case "createGame":
@@ -1386,6 +1434,9 @@ async function routeApi(request, env, ctx) {
       break;
     case "listGames":
       result = await listGames(env.DB);
+      break;
+    case "lobbyState":
+      result = await lobbyState(env.DB, auth.user);
       break;
     case "joinGame":
       result = await joinGame(env.DB, params, auth.user);
@@ -1451,7 +1502,7 @@ async function routeApi(request, env, ctx) {
       break;
     default:
       if (ADMIN_ACTIONS.has(action))
-        result = await adminAction(env.DB, action, params, auth.user);
+        result = await adminAction(env.DB, action, params, auth.user, env);
       else result = { ok: false, error: `Acción desconocida: ${action}` };
   }
   return json(result);
