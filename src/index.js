@@ -1435,7 +1435,7 @@ async function routeApi(request, env, ctx) {
       );
   }
   if (action === "requestEmailVerification")
-    return json(await requestEmailVerification(env.DB, env, auth.user, params.email, new URL(request.url).origin));
+    return json(await requestEmailVerification(env.DB, env, auth.user, params.email, new URL(request.url).origin, params.lang));
   if (action === "accountProfile") return json(await accountProfile(env.DB, auth.user));
   if (action === "changePin") return json(await changePin(env.DB, auth.user, auth.tokenHash, String(params.currentPin || ''), String(params.newPin || '')));
   let result;

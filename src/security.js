@@ -213,7 +213,7 @@ export async function register(db, env, params, ttlHours, origin = {}) {
     .bind(username, key, email, null, salt, pinHash, 'player', stamp, null,
       origin.ip || '', origin.country || '', origin.ip || '', origin.country || '').run();
   const user = await db.prepare('SELECT * FROM users WHERE username_key=?').bind(key).first();
-  const sent = await sendEmailVerification(db, env, user, email, origin.origin || '', true);
+  const sent = await sendEmailVerification(db, env, user, email, origin.origin || '', true, params.lang);
   if (!sent.ok) {
     await db.prepare('DELETE FROM users WHERE id=?').bind(user.id).run();
     return sent;
