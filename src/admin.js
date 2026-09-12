@@ -1,56 +1,12 @@
 // Herramientas de administracion que van mas alla de consultar y bloquear:
-// ficha de usuario, deteccion de cuentas repetidas, fusion de cuentas, limpieza
-// de partidas y una consola SQL con barandillas. Viven aparte de `index.js`
-// porque son operaciones de mantenimiento, no del juego, y porque cada una
-// necesita mas cuidado que una consulta suelta.
+// ficha de usuario, borrado de cuentas, limpieza de partidas y una consola SQL
+// con barandillas. Viven aparte de `index.js` porque son operaciones de
+// mantenimiento, no del juego, y porque cada una necesita mas cuidado que una
+// consulta suelta.
 import { LIMITS, usernameKey } from "./game.js";
 
 const now = () => new Date().toISOString();
 const KEY_DIEGO = "diego";
-
-// Quien olvida su PIN vuelve a entrar con el mismo nombre y un numero detras:
-// "carlos" pasa a ser "carlos46". Esta raiz ignora acentos, digitos y signos
-// para que las dos cuentas caigan en el mismo grupo.
-export function aliasRoot(name) {
-  return String(name ?? "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z]/g, "");
-}
-
-// Dos pistas independientes de que dos cuentas son la misma persona: comparten
-// la ultima IP, o comparten la raiz del nombre. Ninguna es una prueba; las dos
-// juntas casi siempre lo son, y por eso cada grupo muestra su motivo.
-export function duplicateGroups(users) {
-  const groups = [];
-  const collect = (reason, keyOf) => {
-    const buckets = new Map();
-    for (const user of users) {
-      const value = keyOf(user);
-      if (!value) continue;
-      buckets.set(value, [...(buckets.get(value) || []), user]);
-    }
-    for (const [value, members] of buckets)
-      if (members.length > 1)
-        groups.push({
-          reason,
-          value,
-          members: members.map((u) => ({
-            username: u.username,
-            lastLoginAt: u.last_login_at || "",
-            country: u.last_country || "",
-            games: Number(u.games) || 0,
-          })),
-        });
-  };
-  collect("ip", (u) => u.last_ip || "");
-  collect("nombre", (u) => {
-    const root = aliasRoot(u.username);
-    return root.length >= 3 ? root : "";
-  });
-  return groups.sort((a, b) => b.members.length - a.members.length).slice(0, 40);
-}
 
 const USER_COLUMNS = `u.id,u.username,u.username_key,u.role,u.blocked_at,u.created_at,u.last_login_at,
   u.last_ip,u.last_country,u.signup_ip,u.signup_country,u.login_count`;
@@ -70,12 +26,12 @@ export async function adminUsers(db) {
     )
     .bind(now(), presenceCutoff)
     .all();
-  return { ok: true, users: results, duplicates: duplicateGroups(results) };
+  return { ok: true, users: results };
 }
 
 // La ficha reune en una sola respuesta todo lo que hace falta para decidir si
-// una cuenta se bloquea, se fusiona o se borra: de donde entra, con quien
-// juega, cuanto habla y que cuentas se le parecen.
+// una cuenta se bloquea o se borra: de donde entra, con quien juega y cuanto
+// habla.
 export async function adminUserDetail(db, target) {
   const key = usernameKey(String(target || ""));
   const user = await db
@@ -83,7 +39,7 @@ export async function adminUserDetail(db, target) {
     .bind(key)
     .first();
   if (!user) return { ok: false, error: "Usuario no encontrado." };
-  const [games, sessions, threads, mute, presence, stats, sameIp, everyone] =
+  const [games, sessions, threads, mute, presence, stats] =
     await Promise.all([
       db
         .prepare(
@@ -132,30 +88,7 @@ export async function adminUserDetail(db, target) {
         )
         .bind(user.username, key)
         .first(),
-      db
-        .prepare(
-          `SELECT username,last_ip,last_country,last_login_at FROM users
-           WHERE username_key<>? AND last_ip<>'' AND last_ip=? LIMIT 20`,
-        )
-        .bind(key, user.last_ip || "\u0000")
-        .all(),
-      db
-        .prepare(
-          "SELECT username,last_ip,last_country,last_login_at FROM users WHERE username_key<>? LIMIT 500",
-        )
-        .bind(key)
-        .all(),
     ]);
-  const root = aliasRoot(user.username);
-  const related = [
-    ...sameIp.results.map((u) => ({ ...u, reason: "ip" })),
-    ...everyone.results
-      .filter((u) => root.length >= 3 && aliasRoot(u.username) === root)
-      .map((u) => ({ ...u, reason: "nombre" })),
-  ].filter(
-    (item, index, list) =>
-      list.findIndex((other) => other.username === item.username) === index,
-  );
   return {
     ok: true,
     user,
@@ -173,7 +106,6 @@ export async function adminUserDetail(db, target) {
     })),
     mute: mute || null,
     presence: presence || null,
-    related,
   };
 }
 

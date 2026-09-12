@@ -6,7 +6,7 @@ Este es el único documento de referencia del proyecto. Está pensado para perso
 
 Picas y Fijas es un juego multijugador web en español, inglés y francés. La versión vigente funciona íntegramente en Cloudflare; la implementación anterior de Google Sheets y Apps Script fue retirada del árbol actual después de completar la migración. Sigue disponible en el historial de Git si alguna vez se necesita consultar.
 
-Versión actual: **3.1.0**. La 3.0.0 subió la mayor porque desapareció un endpoint —`adminMergeUsers`— y porque `loginUser` cambió de contrato: ya no crea cuentas y ya no devuelve `registered`. La 3.1.0 añade la puerta del correo: **no hay cuenta que valga sin correo verificado**.
+Versión actual: **3.1.1**. La 3.0.0 subió la mayor porque desapareció un endpoint —`adminMergeUsers`— y porque `loginUser` cambió de contrato: ya no crea cuentas y ya no devuelve `registered`. La 3.1.0 añade la puerta del correo: **no hay cuenta que valga sin correo verificado**.
 
 El 12 de septiembre de 2026 la base de producción se vació a propósito: quedó una sola cuenta, `Diego`, y se borraron partidas, chat, presencia, buzón y todas las sesiones. El motivo es el mismo: arrancar sin ninguna cuenta que no cumpla la regla nueva.
 
@@ -436,7 +436,7 @@ El toro azul de la esquina superior cierra el panel en ese navegador y devuelve 
 | Pestaña | Qué resuelve |
 | --- | --- |
 | Resumen | Usuarios, gente en línea, altas y activos de la semana, partidas y mensajes del día, moderación pendiente y los países de donde entra la gente. |
-| Usuarios | La lista completa con un punto verde/gris de presencia junto al nombre, país, última IP, partidas y mensajes. Bloquear, cambiar el PIN, dar o quitar el rol `admin`, cerrar sesiones, reactivar el chat y borrar. Arriba, las cuentas que parecen repetidas. |
+| Usuarios | La lista completa con un punto verde/gris de presencia junto al nombre, país, última IP, partidas y mensajes. Bloquear, cambiar el PIN, dar o quitar el rol `admin`, cerrar sesiones, reactivar el chat y borrar. |
 | Partidas | Las últimas 200, con filtro, y el cierre de las que siguen abiertas. |
 | Conversaciones | Una fila por chat, no un río de mensajes: quiénes hablan, cuántos mensajes, cuántos zumbidos y cuántos reportes. El histórico se abre aparte, en su propia ventana. |
 | Moderación | Los reportes del chat, con borrar y silenciar a mano. |
@@ -446,11 +446,13 @@ El toro azul de la esquina superior cierra el panel en ese navegador y devuelve 
 
 El punto de cada fila reutiliza la tabla `presence` y el mismo umbral del contador general: verde significa actividad autenticada en los últimos 2 minutos y gris, desconectado. El texto accesible y el título del punto expresan también el estado, de modo que la información no depende únicamente del color. La consulta es parte de `adminUsers`, no genera escrituras adicionales y no cambia la versión de la aplicación.
 
-### Cuentas repetidas
+### Lo que el correo dejó sin trabajo
 
-El panel agrupa las cuentas por dos pistas independientes —la misma última IP y la misma raíz del nombre, que ignora acentos, dígitos y signos— y las enseña con su motivo. Ninguna de las dos es una prueba: una IP compartida puede ser una casa o un móvil, y dos nombres parecidos pueden ser dos personas. Es información para abrir la ficha, nada más.
+**La fusión de cuentas y el buscador de cuentas repetidas se retiraron enteros.** Los dos resolvían el mismo problema, que ya no existe: quien olvidaba su PIN volvía a entrar con el mismo nombre y un número detrás —«carlos» pasaba a ser «carlos46»—, así que el panel agrupaba las cuentas por la última IP y por la raíz del nombre para que alguien uniera después los dos rastros a mano.
 
-**La fusión de cuentas se retiró** al llegar la recuperación por correo. Existía para un problema concreto: quien olvidaba su PIN volvía a entrar con el mismo nombre y un número detrás, y alguien tenía que unir después los dos rastros. Ahora esa persona recupera su cuenta con un enlace y no crea una segunda, así que la operación más delicada del panel —la que reescribía partidas, mensajes, reportes e hilos sin vuelta atrás— ya no tiene motivo para existir. Si alguna vez hiciera falta unir dos cuentas, se hace a mano por la consola SQL, que deja rastro en la auditoría.
+Con el correo verificado como identificador único, esa segunda cuenta no llega a nacer: quien olvida su PIN recibe un enlace y vuelve a la suya. Quedaba entonces un panel que señalaba coincidencias sin poder probar nada —una IP compartida es una casa o un móvil— y que no llevaba a ninguna acción, y la operación más delicada del panel, la que reescribía partidas, mensajes, reportes e hilos sin vuelta atrás. Si alguna vez hiciera falta unir dos cuentas, se hace por la consola SQL, que deja rastro en la auditoría.
+
+`adminUsers` ya no devuelve `duplicates` y `adminUserDetail` ya no devuelve `related`; con ellos se fueron `aliasRoot`, `duplicateGroups` y las dos consultas que barrían la tabla `users` entera en cada ficha.
 
 ### Confirmar lo que borra
 
@@ -597,7 +599,7 @@ Estas exclusiones están definidas en `.gitignore`. Los PIN se almacenan con has
 
 El contacto que alguien deja en el buzón de sugerencias es un dato personal y recibe el mismo trato que la IP: se guarda para poder responder, solo se ve dentro de `/admin`, no aparece en ninguna respuesta del juego y sí va en la exportación, que pasó a `schemaVersion: 3` al incluir el buzón.
 
-La IP y el país de cada cuenta son datos personales. Se guardan porque sin ellos no hay forma de reconocer a quien vuelve con otro nombre tras olvidar su PIN, y por eso solo se ven dentro de `/admin`: no aparecen en ninguna respuesta del juego, no viajan al navegador de ningún jugador y no se escriben en logs. Sí van en la exportación, que por lo tanto es un archivo con datos personales y nunca debe subirse al repositorio.
+La IP y el país de cada cuenta son datos personales. Se guardan para poder investigar un abuso —quién creó una partida, desde dónde entró una cuenta bloqueada— y por eso solo se ven dentro de `/admin`: no aparecen en ninguna respuesta del juego, no viajan al navegador de ningún jugador y no se escriben en logs. Sí van en la exportación, que por lo tanto es un archivo con datos personales y nunca debe subirse al repositorio.
 
 ## Versionado
 
@@ -607,7 +609,7 @@ El proyecto sigue versionado semántico `vMAYOR.MENOR.PARCHE`:
 - **MENOR (Y)**: funcionalidad nueva compatible hacia atrás —una pantalla, un modo de juego, un ajuste como el cuadrado de idioma.
 - **PARCHE (Z)**: correcciones compatibles hacia atrás, retoques de texto, estilos y rendimiento.
 
-El número vive en dos sitios y los dos se cambian en el mismo commit: `version` en `package.json` conserva el SemVer canónico (`3.1.0`), porque npm y pnpm lo requieren, y `APP_VERSION` en `public/index.html` publica `v3.1.0`. De ahí sale lo que ve el jugador en los créditos y lo que viaja con cada mensaje del buzón (`appVersion`), así que un número desfasado hace que un informe apunte a una versión que no es. La versión sube en el commit que introduce el cambio, no al desplegar.
+El número vive en dos sitios y los dos se cambian en el mismo commit: `version` en `package.json` conserva el SemVer canónico (`3.1.1`), porque npm y pnpm lo requieren, y `APP_VERSION` en `public/index.html` publica `v3.1.1`. De ahí sale lo que ve el jugador en los créditos y lo que viaja con cada mensaje del buzón (`appVersion`), así que un número desfasado hace que un informe apunte a una versión que no es. La versión sube en el commit que introduce el cambio, no al desplegar.
 
 ## Procedimiento para futuras modificaciones
 

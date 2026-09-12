@@ -40,7 +40,7 @@
     .card.warn b{color:var(--warn)}
     .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;background:#0c1627;border:1px solid var(--line)}
     .tag.admin{color:var(--accent);border-color:#0e7490}.tag.blocked{color:var(--danger);border-color:#7f1d1d}
-    .tag.dup{color:var(--warn);border-color:#78350f}
+    .tag.alert{color:var(--warn);border-color:#78350f}
     .presence-dot{display:inline-block;width:7px;height:7px;margin-right:8px;border-radius:50%;background:#64748b;vertical-align:middle}
     .presence-dot.online{background:var(--ok);box-shadow:0 0 0 2px #34d3991f}
     a.user{color:var(--blue);text-decoration:none;border-bottom:1px dotted currentColor;cursor:pointer}
@@ -140,11 +140,6 @@
     </div>
 
     <div id="tab-usuarios" class="hidden">
-      <div class="panel" id="dupPanel">
-        <h2>Posibles cuentas repetidas</h2>
-        <p class="muted small">Se agrupan por la última IP y por la raíz del nombre. Es una pista, no una prueba: abre la ficha antes de decidir nada.</p>
-        <div id="duplicates"></div>
-      </div>
       <div class="panel">
         <div class="row"><h2 class="grow">Usuarios</h2><input id="userFilter" placeholder="Filtrar por nombre, país o IP"></div>
         <div class="scroll stack"><table><thead><tr>
@@ -294,19 +289,14 @@ async function loadSummary(){
 
 /* ---- usuarios ---- */
 async function loadUsers(){
-  const u=await api('adminUsers');
-  state.users=u.users;
-  $('duplicates').innerHTML=(u.duplicates||[]).length?u.duplicates.map(g=>`<div class="row" style="margin:8px 0">
-    <span class="tag dup">${g.reason==='ip'?'misma IP':'mismo nombre'}</span><code>${esc(g.value)}</code>
-    ${g.members.map(m=>`<a class="user" data-detail="${esc(m.username)}">${flag(m.country)} ${esc(m.username)}</a> <span class="muted small">(${m.games} partidas, ${when(m.lastLoginAt)})</span>`).join(' · ')}
-    </div>`).join(''):'<div class="muted">Ninguna coincidencia por ahora.</div>';
+  state.users=(await api('adminUsers')).users;
   renderUsers();
 }
 function renderUsers(){
   const needle=$('userFilter').value.trim().toLowerCase();
   const rows=state.users.filter(x=>!needle||[x.username,x.last_country,x.last_ip].join(' ').toLowerCase().includes(needle));
   $('users').innerHTML=rows.map(x=>`<tr>
-    <td data-label="Usuario"><span><span class="presence-dot${x.online?' online':''}" role="img" aria-label="${x.online?'En línea':'Desconectado'}" title="${x.online?'En línea':'Desconectado'}"></span><a class="user" data-detail="${esc(x.username)}">${esc(x.username)}</a>${x.muted?' <span class="tag dup">chat</span>':''}</span></td>
+    <td data-label="Usuario"><span><span class="presence-dot${x.online?' online':''}" role="img" aria-label="${x.online?'En línea':'Desconectado'}" title="${x.online?'En línea':'Desconectado'}"></span><a class="user" data-detail="${esc(x.username)}">${esc(x.username)}</a>${x.muted?' <span class="tag alert">chat</span>':''}</span></td>
     <td data-label="País" class="nowrap"><span>${flag(x.last_country)} ${esc(String(x.last_country||'').toUpperCase()||'—')}</span></td>
     <td data-label="Última IP" class="nowrap"><code>${esc(x.last_ip||'—')}</code></td>
     <td data-label="Partidas"><span>${x.games||0}${x.wins?` <span class="muted small">(${x.wins} G)</span>`:''}</span></td>
@@ -344,7 +334,7 @@ function renderThreads(){
   const rows=state.threads.filter(t=>!needle||`${t.user1} ${t.user2}`.toLowerCase().includes(needle));
   $('threads').innerHTML=head+rows.map(t=>`<tr>
     <td data-label="Conversación"><span><a class="user" data-detail="${esc(t.user1)}">${esc(t.user1)}</a> · <a class="user" data-detail="${esc(t.user2)}">${esc(t.user2)}</a>${t.gameId?` <span class="muted small">${esc(t.gameId)}</span>`:''}</span></td>
-    <td data-label="Mensajes">${t.written}</td><td data-label="Zumbidos">${t.nudges}</td><td data-label="Borrados">${t.deleted}</td><td data-label="Reportes">${t.reports?`<span class="tag dup">${t.reports}</span>`:'0'}</td>
+    <td data-label="Mensajes">${t.written}</td><td data-label="Zumbidos">${t.nudges}</td><td data-label="Borrados">${t.deleted}</td><td data-label="Reportes">${t.reports?`<span class="tag alert">${t.reports}</span>`:'0'}</td>
     <td data-label="Última actividad" class="nowrap">${when(t.lastActivity)}</td><td class="acts"><button class="tiny" data-thread="${t.id}">Ver</button></td></tr>`).join('');
   if(!$('threads').innerHTML)$('threads').innerHTML='<tr><td colspan="7" class="muted empty">Sin conversaciones.</td></tr>';
 }
@@ -352,7 +342,7 @@ async function openThread(id){
   const r=await api('adminChatThread',{threadId:id});
   openModal(r.title+(r.gameId?' · '+r.gameId:''),r.messages.map(m=>`<div class="msg ${m.kind==='system'?'system':''} ${m.deleted?'gone':''}">
     <div class="row"><span class="who">${esc(m.sender||'sistema')}</span><span class="muted small">${when(m.createdAt)}</span>
-    ${m.reportCount?`<span class="tag dup">${m.reportCount} reporte(s)</span>`:''}<span class="grow"></span>
+    ${m.reportCount?`<span class="tag alert">${m.reportCount} reporte(s)</span>`:''}<span class="grow"></span>
     ${!m.deleted&&m.kind==='user'?`<button class="tiny danger" data-delete-message="${m.id}">Borrar</button> <button class="tiny" data-mute-user="${esc(m.sender)}">Silenciar</button>`:''}</div>
     <div>${m.deleted?'[mensaje eliminado'+(m.deletedBy?' por '+esc(m.deletedBy):'')+']':m.kind==='nudge'?'<i>zumbido</i>':esc(m.body)}</div></div>`).join('')||'<div class="muted">Esta conversación no tiene mensajes.</div>');
 }
@@ -438,9 +428,6 @@ async function openUser(name){
       <button class="tiny" data-sessions="${esc(u.username)}">Cerrar sus sesiones</button>
       <button class="tiny danger" data-delete-user="${esc(u.username)}">Borrar cuenta</button>
     </div>
-    ${d.related.length?`<h3>Cuentas parecidas</h3>${d.related.map(r=>`<div class="row"><span class="tag dup">${r.reason==='ip'?'misma IP':'mismo nombre'}</span>
-      <a class="user" data-detail="${esc(r.username)}">${flag(r.last_country)} ${esc(r.username)}</a>
-      <code>${esc(r.last_ip||'—')}</code><span class="muted small">${when(r.last_login_at)}</span></div>`).join('')}`:''}
     <h3>Sesiones (${d.sessions.length})</h3>
     ${d.sessions.length?`<div class="scroll"><table><thead><tr><th>Creada</th><th>Vista</th><th>Caduca</th><th>IP</th><th>País</th></tr></thead><tbody>
       ${d.sessions.map(x=>`<tr><td class="nowrap">${when(x.created_at)}</td><td class="nowrap">${when(x.last_seen_at)}</td><td class="nowrap">${when(x.expires_at)}</td><td><code>${esc(x.ip||'—')}</code></td><td>${flag(x.country)} ${esc(String(x.country||'').toUpperCase())}</td></tr>`).join('')}

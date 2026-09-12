@@ -2,7 +2,7 @@ import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { Miniflare } from 'miniflare';
-import { aliasRoot, classifySql, duplicateGroups } from '../src/admin.js';
+import { classifySql } from '../src/admin.js';
 import { requestOrigin } from '../src/security.js';
 import { seedAccount } from './accounts.js';
 
@@ -104,22 +104,6 @@ test('el listado administrativo distingue jugadores conectados y desconectados',
   assert.equal(Number(list.users.find((u) => u.username === 'Desconectada').online), 0);
 });
 
-test('la raiz del nombre ignora acentos, digitos y signos', () => {
-  assert.equal(aliasRoot('Carlos46'), 'carlos');
-  assert.equal(aliasRoot('Nuboso_2'), 'nuboso');
-  assert.equal(aliasRoot('Andrés'), 'andres');
-});
-
-test('las cuentas repetidas se agrupan por IP y por nombre, con su motivo', () => {
-  const groups = duplicateGroups([
-    { username:'Carlos', last_ip:'1.1.1.1', last_country:'co', games:3 },
-    { username:'Carlos46', last_ip:'1.1.1.1', last_country:'co', games:1 },
-    { username:'Otra', last_ip:'', last_country:'fr', games:0 },
-  ]);
-  assert.deepEqual(groups.map((g) => g.reason).sort(), ['ip','nombre']);
-  for (const group of groups) assert.deepEqual(group.members.map((m) => m.username), ['Carlos','Carlos46']);
-});
-
 test('la administracion ve conversaciones, no un rio de mensajes sueltos', async () => {
   const boss = await admin();
   const ana = await player('Ana'), beto = await player('Beto');
@@ -148,6 +132,17 @@ test('la fusion de cuentas ya no existe en ninguna capa', async () => {
   const source = await readFile(new URL('../src/admin.js', import.meta.url), 'utf8');
   assert.doesNotMatch(source, /adminMergeUsers/);
   assert.doesNotMatch(adminHtml, /data-merge|openMerge/);
+});
+
+test('tampoco queda el buscador de cuentas repetidas, que solo servia para fusionar', async () => {
+  const boss = await admin();
+  const list = await api('adminUsers', {}, boss.token);
+  assert.equal(list.duplicates, undefined, 'el listado ya no agrupa por IP ni por raiz del nombre');
+  const detail = await api('adminUserDetail', { target:'Jefa' }, boss.token);
+  assert.equal(detail.related, undefined, 'ni la ficha propone cuentas parecidas');
+  const source = await readFile(new URL('../src/admin.js', import.meta.url), 'utf8');
+  for (const gone of [/aliasRoot/, /duplicateGroups/]) assert.doesNotMatch(source, gone);
+  assert.doesNotMatch(adminHtml, /dupPanel|Posibles cuentas repetidas|Cuentas parecidas/);
 });
 
 test('el panel confirma en su propia ventana, nunca con la del navegador', () => {
