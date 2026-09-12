@@ -58,7 +58,9 @@ test('the first step refuses a name too short and never reveals the PIN', async 
   assert.equal(short.ok, false);
   const known = await api('checkUsername', { username:'Mafalda' });
   assert.equal(JSON.stringify(known).includes('2468'), false, 'la respuesta no puede llevar rastro del PIN');
-  assert.deepEqual(Object.keys(known).sort(), ['known','ok','username']);
+  // `appVersion` viaja en toda respuesta: es el aviso que hace recargar a una
+  // pestana vieja. Lo demas sigue siendo lo minimo.
+  assert.deepEqual(Object.keys(known).filter((key) => key !== 'appVersion').sort(), ['known','ok','username']);
 });
 
 test('entrar nunca crea una cuenta: el alta pasa por el registro con correo', async () => {

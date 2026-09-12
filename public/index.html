@@ -986,7 +986,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v3.1.1';
+const APP_VERSION = 'v3.2.0';
 /* Enlace de invitación: ...?game=SZ93 */
 let pendingJoinCode = '';
 (function(){
@@ -1075,6 +1075,7 @@ const I18N = {
     toast_score:"{f} fijas · {p} picas",
     invalid_guess:"Intento inválido", check_secret:"Revisa tu código secreto", check_code:"Revisa tu código",
     net_error:"Error de red", retrying_guess:"La conexión tardó. Reintentando el envío…", not_available:"No disponible", api_not_set:"Configura la URL de Apps Script en index.html",
+    lobby_offline:"Sin conexión con el servidor. Reintentando…", outdated_reload:"Hay una versión nueva del juego. Recargando…", outdated_manual:"Hay una versión nueva del juego. Recarga la página para seguir jugando.",
     val_digits:"Solo dígitos 0-9", val_repeats:"Hay repetidos", val_valid:"¡Válido!",
     rl_colors:"{n} colores", rl_numbers:"números", rl_pos:"{n} pos", rl_norepeat:"sin repetir", rl_repeat:"repetidos ✓",
     rl_attempts:"{n} intentos", rl_turn:"{n}s/turno", rl_reveal:"revela códigos al final", rl_noreveal:"códigos ocultos al final"
@@ -1155,6 +1156,7 @@ const I18N = {
     toast_score:"{f} F · {p} P",
     invalid_guess:"Invalid guess", check_secret:"Check your secret code", check_code:"Check your code",
     net_error:"Network error", retrying_guess:"The connection is slow. Retrying your guess…", not_available:"Not available", api_not_set:"Set the Apps Script URL in index.html",
+    lobby_offline:"No connection to the server. Retrying…", outdated_reload:"A new version of the game is out. Reloading…", outdated_manual:"A new version of the game is out. Reload the page to keep playing.",
     val_digits:"Digits 0-9 only", val_repeats:"Repeated digits", val_valid:"Valid!",
     rl_colors:"{n} colors", rl_numbers:"numbers", rl_pos:"{n} pos", rl_norepeat:"no repeats", rl_repeat:"repeats ✓",
     rl_attempts:"{n} tries", rl_turn:"{n}s/turn", rl_reveal:"reveals codes at the end", rl_noreveal:"codes hidden at the end"
@@ -1235,6 +1237,7 @@ const I18N = {
     toast_score:"{f} F · {p} P",
     invalid_guess:"Essai invalide", check_secret:"Vérifie ton code secret", check_code:"Vérifie ton code",
     net_error:"Erreur réseau", retrying_guess:"La connexion est lente. Nouvel envoi de ton essai…", not_available:"Indisponible", api_not_set:"Configure l'URL Apps Script dans index.html",
+    lobby_offline:"Pas de connexion au serveur. Nouvelle tentative…", outdated_reload:"Une nouvelle version du jeu est disponible. Rechargement…", outdated_manual:"Une nouvelle version du jeu est disponible. Recharge la page pour continuer à jouer.",
     val_digits:"Chiffres 0-9 uniquement", val_repeats:"Chiffres répétés", val_valid:"Valide !",
     rl_colors:"{n} couleurs", rl_numbers:"chiffres", rl_pos:"{n} pos", rl_norepeat:"sans répétition", rl_repeat:"répétitions ✓",
     rl_attempts:"{n} essais", rl_turn:"{n}s/tour", rl_reveal:"codes révélés à la fin", rl_noreveal:"codes masqués à la fin"
@@ -1421,7 +1424,27 @@ const ERR = {
     "No pudimos enviar el correo. Inténtalo más tarde.":"We couldn't send the email. Please try again later.",
     "El enlace no es válido o ya caducó.":"That link is invalid or has expired.",
     "El PIN actual no es correcto.":"Your current PIN is not correct.",
-    "Valida tu correo electrónico para continuar.":"Verify your email address to continue."
+    "Valida tu correo electrónico para continuar.":"Verify your email address to continue.",
+    "Sesión inválida. Vuelve a entrar con tu nombre y PIN.":"Invalid session. Sign in again with your name and PIN.",
+    "La sesión ha expirado. Vuelve a entrar.":"Your session has expired. Sign in again.",
+    "No se pudo verificar que eres una persona. Inténtalo otra vez.":"We couldn't verify that you are a person. Please try again.",
+    "La partida todavía no ha comenzado.":"The game hasn't started yet.",
+    "La partida ya está cerrada.":"The game is already closed.",
+    "Solo el creador puede cancelar esta partida.":"Only the player who created this game can cancel it.",
+    "Partida terminada no encontrada.":"Finished game not found.",
+    "Conversación no encontrada.":"Conversation not found.",
+    "Este chat es privado.":"This chat is private.",
+    "Esta conversación está archivada.":"This conversation is archived.",
+    "Espera un momento antes de enviar otro mensaje.":"Wait a moment before sending another message.",
+    "Has enviado demasiados mensajes. Espera unos segundos.":"You have sent too many messages. Wait a few seconds.",
+    "No repitas el mismo mensaje.":"Don't repeat the same message.",
+    "Los zumbidos solo están disponibles en conversaciones privadas.":"Nudges are only available in private conversations.",
+    "El rival no está conectado.":"Your opponent is not online.",
+    "Espera 30 segundos antes de enviar otro zumbido.":"Wait 30 seconds before sending another nudge.",
+    "Mensaje no encontrado.":"Message not found.",
+    "No puedes reportar tu propio mensaje.":"You can't report your own message.",
+    "La partida recibió dos acciones simultáneas. Inténtalo de nuevo.":"The game received two actions at once. Please try again.",
+    "Error temporal del servidor.":"Temporary server error."
   },
   fr:{
     "Falta el nombre de usuario.":"Nom d'utilisateur manquant.",
@@ -1479,7 +1502,27 @@ const ERR = {
     "No pudimos enviar el correo. Inténtalo más tarde.":"Nous n'avons pas pu envoyer l'e-mail. Réessaie plus tard.",
     "El enlace no es válido o ya caducó.":"Ce lien est invalide ou a expiré.",
     "El PIN actual no es correcto.":"Ton PIN actuel n'est pas correct.",
-    "Valida tu correo electrónico para continuar.":"Valide ton adresse e-mail pour continuer."
+    "Valida tu correo electrónico para continuar.":"Valide ton adresse e-mail pour continuer.",
+    "Sesión inválida. Vuelve a entrar con tu nombre y PIN.":"Session invalide. Reconnecte-toi avec ton nom et ton PIN.",
+    "La sesión ha expirado. Vuelve a entrar.":"Ta session a expiré. Reconnecte-toi.",
+    "No se pudo verificar que eres una persona. Inténtalo otra vez.":"Nous n'avons pas pu vérifier que tu es une personne. Réessaie.",
+    "La partida todavía no ha comenzado.":"La partie n'a pas encore commencé.",
+    "La partida ya está cerrada.":"La partie est déjà fermée.",
+    "Solo el creador puede cancelar esta partida.":"Seul le créateur peut annuler cette partie.",
+    "Partida terminada no encontrada.":"Partie terminée introuvable.",
+    "Conversación no encontrada.":"Conversation introuvable.",
+    "Este chat es privado.":"Ce chat est privé.",
+    "Esta conversación está archivada.":"Cette conversation est archivée.",
+    "Espera un momento antes de enviar otro mensaje.":"Attends un instant avant d'envoyer un autre message.",
+    "Has enviado demasiados mensajes. Espera unos segundos.":"Tu as envoyé trop de messages. Attends quelques secondes.",
+    "No repitas el mismo mensaje.":"Ne répète pas le même message.",
+    "Los zumbidos solo están disponibles en conversaciones privadas.":"Les wizz ne sont disponibles que dans les conversations privées.",
+    "El rival no está conectado.":"Ton adversaire n'est pas connecté.",
+    "Espera 30 segundos antes de enviar otro zumbido.":"Attends 30 secondes avant d'envoyer un autre wizz.",
+    "Mensaje no encontrado.":"Message introuvable.",
+    "No puedes reportar tu propio mensaje.":"Tu ne peux pas signaler ton propre message.",
+    "La partida recibió dos acciones simultáneas. Inténtalo de nuevo.":"La partie a reçu deux actions en même temps. Réessaie.",
+    "Error temporal del servidor.":"Erreur temporaire du serveur."
   }
 };
 
@@ -1858,10 +1901,29 @@ async function api(action, payload={}, options={}){
     }
     if(!res.ok) throw new Error('HTTP '+res.status);
     const data=await res.json(), clientReceivedAt=Date.now();
+    if(data.appVersion&&data.appVersion!==APP_VERSION) handleOutdatedClient(data.appVersion);
     data.clientReceivedAt=clientReceivedAt;
     if(data.state) data.state.clientReceivedAt=clientReceivedAt;
     return data;
   }finally{ clearTimeout(timeout); }
+}
+/* Una pestana que lleva dias abierta —o un acceso directo del movil, que casi
+   nunca se recarga— sigue hablando con el servidor despues de un despliegue.
+   El servidor le responde cosas que esa version no sabe leer: rechazos que se
+   traga en silencio y mensajes que su diccionario no tiene. El resultado no es
+   un error visible, sino una pantalla que miente. Cuando las versiones no
+   coinciden, se recarga: el HTML se sirve sin cache, asi que una sola recarga
+   basta. La marca en `sessionStorage` evita el bucle si por lo que sea la
+   recarga no trae la version nueva; entonces se pide a mano. */
+let outdatedHandled=false;
+function handleOutdatedClient(serverVersion){
+  if(outdatedHandled)return; outdatedHandled=true;
+  let reloaded=false;
+  try{ reloaded=sessionStorage.getItem('pf_reloaded_for')===serverVersion; }catch(e){}
+  if(reloaded){ toast(t('outdated_manual'),true); return; }
+  try{ sessionStorage.setItem('pf_reloaded_for',serverVersion); }catch(e){}
+  toast(t('outdated_reload'));
+  setTimeout(()=>location.reload(),900);
 }
 function esc(s){ return String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
 
@@ -2437,7 +2499,11 @@ async function loginAccount(){
   if(identifier.length<2) return authError('auth-login-val',t('auth_identifier_invalid'));
   if(!/^\d{4,8}$/.test(pin)) return authError('auth-login-val',t('login_pin_invalid'));
   $('auth-login-val').className='val'; $('auth-login-val').textContent=t('loading');
-  try{ userPin=pin; const res=await api('loginUser',{identifier}); if(!res.ok){userPin='';return authError('auth-login-val',te(res.error));} completeAccess(res,identifier); }
+  try{ userPin=pin; const res=await api('loginUser',{identifier});
+    // Entrar con el correo sin validar no es entrar: el servidor responde que
+    // no, pero manda sesion para que esta pantalla pueda pedir el enlace.
+    if(!res.ok&&!res.emailPending){userPin='';return authError('auth-login-val',te(res.error));}
+    completeAccess(res,identifier); }
   catch(e){userPin='';return authError('auth-login-val',t('net_error'));}
 }
 async function requestPinRecovery(){
@@ -2560,11 +2626,20 @@ async function lobbyRefresh(detect){
   }catch(e){
     // En caso de corte, la última lista sigue visible: poner los contadores a
     // cero haría pensar que los jugadores y las partidas desaparecieron.
+    // La sesion caducada y la puerta del correo ya han cambiado de pantalla:
+    // repintar el vestibulo solo escribiria encima de lo que hay que leer.
+    if(e&&(e.message==='EMAIL_PENDING'||e.message==='SESSION_EXPIRED')) return;
     if(lastLobbySnapshot){
       const age=Math.max(1,Math.round((Date.now()-(lastLobbySnapshot.clientReceivedAt||Date.now()))/1000));
-      $('players-online').textContent=`${t('online_players_many',{n:lastLobbySnapshot.onlineCount||0})} · ${t('lobby_sync_later',{seconds:age})}`;
-      return;
+      // Pasado un minuto, el ultimo recuento ya no informa de nada: decir
+      // «3 jugadores, hace 5729 s» es peor que reconocer que no hay linea.
+      $('players-online').textContent=age>60
+        ? t('lobby_offline')
+        : `${t('online_players_many',{n:lastLobbySnapshot.onlineCount||0})} · ${t('lobby_sync_later',{seconds:age})}`;
     }
+    // Una recarga a mano vacio las listas para poner «Cargando…». Si la
+    // peticion falla, ese cartel se queda girando para siempre: hay que
+    // decirlo.
     if(!detect){
       $('open-list').innerHTML=`<div class="empty">${t('load_error')}</div>`;
       $('private-list').innerHTML=`<div class="empty">${t('load_error')}</div>`;

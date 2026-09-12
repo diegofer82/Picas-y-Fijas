@@ -241,11 +241,13 @@ async function login(){
   $('loginGate').classList.add('hidden');
   try{
     const r=await api('loginUser',{identifier:$('username').value.trim(),pin:$('pin').value.trim()});
-    if(r.role!=='admin')throw Error('Este usuario no es administrador.');
     // El panel corre sobre la misma sesion del juego, y una sesion sin correo
     // verificado no puede hacer nada: mas vale decirlo aqui que dejar entrar a
-    // un panel donde cada pestana responderia con un error.
+    // un panel donde cada pestana responderia con un error. Va antes que el
+    // rol porque una entrada rechazada no dice de quien es la cuenta.
     if(r.emailPending)return showGate(r.email);
+    if(!r.ok)throw Error(r.error||'No se pudo entrar.');
+    if(r.role!=='admin')throw Error('Este usuario no es administrador.');
     token=r.sessionToken;localStorage.setItem('pf_admin_session',token);
     $('pin').value='';
     $('login').classList.add('hidden');$('dashboard').classList.remove('hidden');$('loginError').textContent='';

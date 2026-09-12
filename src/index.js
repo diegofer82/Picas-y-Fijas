@@ -48,6 +48,7 @@ import {
   threadForGame,
 } from "./chat.js";
 import { cleanupDatabase } from "./maintenance.js";
+import { APP_VERSION } from "./version.js";
 import { requestEmailVerification, requestPinReset, resetPin, verifyEmail } from "./recovery.js";
 
 const PROTECTED = new Set([
@@ -147,7 +148,11 @@ class ConflictError extends Error {}
 const PRESENCE_TOUCH_MS = 60 * 1000;
 
 const json = (body, status = 200, extra = {}) =>
-  new Response(JSON.stringify(body), {
+  new Response(JSON.stringify(
+    body && typeof body === "object" && !Array.isArray(body)
+      ? { ...body, appVersion: APP_VERSION }
+      : body,
+  ), {
     status,
     headers: {
       "content-type": "application/json;charset=UTF-8",

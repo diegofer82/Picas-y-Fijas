@@ -49,9 +49,9 @@ async function legacyAccount(username) {
   return entered;
 }
 
-test('sin correo validado se entra, pero no se llega a ninguna parte', async () => {
+test('sin correo validado no se entra, y aun así hay sesión', async () => {
   const entered = await legacyAccount('Antigua');
-  assert.equal(entered.body.ok, true, entered.body.error);
+  assert.equal(entered.body.ok, false, 'entrar con el correo sin validar es que no');
   assert.equal(entered.body.emailPending, true, 'la sesión nace a medias');
   assert.ok(entered.body.sessionToken, 'y aun así hay sesión: sin ella no podría pedir el enlace');
   const token = entered.body.sessionToken;

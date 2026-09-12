@@ -178,13 +178,21 @@ export async function login(db, params, ttlHours, origin = {}) {
       .bind(stamp, origin.ip || '', origin.ip || '', origin.country || '', origin.country || '', user.id),
   ]);
   const session = await createSession(db, user, ttlHours, origin);
-  // Sin correo verificado la sesion nace a medias: sirve para validar el
-  // correo y para nada mas. Entrar no se rechaza —haria falta una sesion para
-  // poder pedir el enlace, y quien nunca declaro correo no tendria por donde
-  // empezar—, pero `emailPending` manda al jugador a la pantalla que bloquea
-  // todo lo demas hasta que el enlace este abierto.
+  // Sin correo verificado la respuesta es que no: `ok:false`. La sesion viaja
+  // igual —haria falta una para pedir el enlace, y quien nunca declaro correo
+  // no tendria por donde empezar— y `emailPending` manda al jugador a la
+  // pantalla que desbloquea la cuenta. Decir que no en lugar de decir que si a
+  // medias importa: un cliente antiguo, que no sabe nada de esta puerta, leia
+  // el `ok:true` y pintaba el vestibulo de un jugador que el servidor rechaza
+  // en todas las acciones siguientes. Con un `no` se queda donde debe, en la
+  // pantalla de acceso, con el motivo escrito.
+  if (!user.email_verified_at)
+    return { ok:false, code:'email_pending', emailPending:true,
+      error:'Valida tu correo electrónico para continuar.',
+      username:user.username, email:user.email || '',
+      sessionToken:session.token, sessionExpiresAt:session.expiresAt };
   return { ok:true, username:user.username, firstLogin, role:user.role,
-    emailPending:!user.email_verified_at, email:user.email || '',
+    emailPending:false, email:user.email || '',
     sessionToken:session.token, sessionExpiresAt:session.expiresAt };
 }
 
