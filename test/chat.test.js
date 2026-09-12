@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { CHAT, messageError } from '../src/chat.js';
+
+const publicHtml = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
 
 test('chat accepts short multilingual text and keyboard emoji',()=>{
   assert.equal(messageError('¡Bien joué! 😄'), '');
@@ -24,4 +27,10 @@ test('nudge and retention policies match the 2.1 contract',()=>{
   assert.equal(CHAT.lobbyRetentionMs,24*60*60*1000);
   assert.equal(CHAT.gameRetentionMs,7*24*60*60*1000);
   assert.equal(CHAT.gameOpenAfterFinishMs,24*60*60*1000);
+});
+
+test('the chat close control stays available while opening remains state-gated',()=>{
+  assert.match(publicHtml, /onclick="closeChat\(\)"/);
+  assert.match(publicHtml, /function closeChat\(\)\{\s*\$\('chat-panel'\)\.classList\.add\('hidden'\);/);
+  assert.match(publicHtml, /if\(!panel\.classList\.contains\('hidden'\)\)\{closeChat\(\);return;\}\s*if\(!chatEnabled\)return;/);
 });

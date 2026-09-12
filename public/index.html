@@ -999,7 +999,7 @@
 <button class="chat-launch hidden" id="chat-launch" type="button" onclick="openPrimaryChat()" aria-label="Chat"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.4 12c0-3.7 3.5-6.7 7.7-6.7s7.6 3 7.5 6.7c-.1 3.7-3.4 6.6-7.6 6.6-.9 0-1.8-.1-2.6-.4-1.3.9-2.7 1.5-4 1.9.6-1.2 1-2.4 1.2-3.5-1.4-1.2-2.2-2.8-2.2-4.6Z"></path></svg><span class="chat-badge hidden" id="chat-badge">0</span></button>
 <div class="private-chat-bubbles hidden" id="private-chat-bubbles"></div><div class="private-chat-menu hidden" id="private-chat-menu"></div>
 <aside class="chat-panel hidden" id="chat-panel" aria-label="Chat">
-  <div class="chat-head"><strong id="chat-title">Chat</strong><button class="chat-icon-btn hidden" id="chat-nudge" type="button" onclick="sendChatNudge()" data-ico="rayo"></button><button class="chat-icon-btn hidden" id="chat-nudge-toggle" type="button" onclick="toggleNudges()"></button><button class="chat-icon-btn" id="chat-muted-btn" type="button" onclick="toggleMutedPanel()" data-ico="mudo"></button><button class="chat-icon-btn" type="button" onclick="toggleChat()" data-ico="cerrar" data-ico-size="18"></button></div>
+  <div class="chat-head"><strong id="chat-title">Chat</strong><button class="chat-icon-btn hidden" id="chat-nudge" type="button" onclick="sendChatNudge()" data-ico="rayo"></button><button class="chat-icon-btn hidden" id="chat-nudge-toggle" type="button" onclick="toggleNudges()"></button><button class="chat-icon-btn" id="chat-muted-btn" type="button" onclick="toggleMutedPanel()" data-ico="mudo"></button><button class="chat-icon-btn" type="button" onclick="closeChat()" data-ico="cerrar" data-ico-size="18"></button></div>
   <div class="chat-muted-panel hidden" id="chat-muted-panel"></div>
   <div class="chat-messages" id="chat-messages"><div class="chat-empty">Cargando…</div></div>
   <form class="chat-compose" id="chat-form"><input type="text" id="chat-input" maxlength="300" autocomplete="off"><button class="btn chat-send" id="chat-send" type="submit" data-ico="enviar" data-ico-size="18"></button></form>
@@ -1013,7 +1013,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v3.3.0';
+const APP_VERSION = 'v3.3.1';
 /* Enlace de invitación: ...?game=SZ93 */
 let pendingJoinCode = '';
 (function(){
@@ -1989,10 +1989,15 @@ function updateChatLabels(){
   $('chat-nudge').classList.toggle('hidden',room.roomType!=='private');$('chat-nudge-toggle').classList.toggle('hidden',room.roomType!=='private');
   const mutedCount=chatMutedUsers().size;$('chat-muted-btn').innerHTML=ico('mudo',16)+(mutedCount?`<span class="chat-muted-count">${mutedCount}</span>`:'');$('chat-muted-btn').title=t('chat_manage_muted');$('chat-muted-btn').setAttribute('aria-label',t('chat_manage_muted'));
 }
+function closeChat(){
+  $('chat-panel').classList.add('hidden');
+  $('chat-muted-panel').classList.add('hidden');
+}
 function toggleChat(){
-  if(!chatEnabled)return;const panel=$('chat-panel'),opening=panel.classList.contains('hidden');panel.classList.toggle('hidden',!opening);
-  if(!opening)$('chat-muted-panel').classList.add('hidden');
-  if(opening){chatUnread=0;updateChatBadge();pollChat();setTimeout(()=>$('chat-input').focus(),50);}startChatPoll();
+  const panel=$('chat-panel');
+  if(!panel.classList.contains('hidden')){closeChat();return;}
+  if(!chatEnabled)return;
+  chatUnread=0;updateChatBadge();panel.classList.remove('hidden');pollChat();setTimeout(()=>$('chat-input').focus(),50);startChatPoll();
 }
 function updateChatBadge(){const badge=$('chat-badge');badge.textContent=chatUnread>99?'99+':String(chatUnread);badge.classList.toggle('hidden',chatUnread<=0);}
 function systemChatText(body){const [event,name='']=String(body||'').split('|');const keys={joined:'chat_joined',paused:'chat_paused',resumed:'chat_resumed',abandoned:'chat_abandoned',rematch:'chat_rematch',finished:'chat_finished'};return t(keys[event]||event,{name});}
