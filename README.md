@@ -6,7 +6,7 @@ Este es el único documento de referencia del proyecto. Está pensado para perso
 
 Picas y Fijas es un juego multijugador web en español, inglés y francés. La versión vigente funciona íntegramente en Cloudflare; la implementación anterior de Google Sheets y Apps Script fue retirada del árbol actual después de completar la migración. Sigue disponible en el historial de Git si alguna vez se necesita consultar.
 
-Versión actual: **3.2.0**. La 3.2.0 añade el acuerdo de versión entre página y servidor: cada respuesta lleva `appVersion` y una pestaña desfasada se recarga sola, porque una pestaña vieja hablando con el servidor nuevo era la causa de que una cuenta sin validar viera el vestíbulo, de los mensajes en español dentro de un juego en francés y de un contador parado hora y media. En ella `loginUser` responde `ok:false` cuando el correo no está validado.  La 3.0.0 subió la mayor porque desapareció un endpoint —`adminMergeUsers`— y porque `loginUser` cambió de contrato: ya no crea cuentas y ya no devuelve `registered`. La 3.1.0 añade la puerta del correo: **no hay cuenta que valga sin correo verificado**.
+Versión actual: **3.3.3**. En Solo, el cronómetro se reinicia para cada intento: llegar a cero consume un intento, lo deja visible en el registro y solo termina la práctica cuando se agota el límite elegido. La 3.2.0 añadió el acuerdo de versión entre página y servidor: cada respuesta lleva `appVersion` y una pestaña desfasada se recarga sola, porque una pestaña vieja hablando con el servidor nuevo era la causa de que una cuenta sin validar viera el vestíbulo, de los mensajes en español dentro de un juego en francés y de un contador parado hora y media. En ella `loginUser` responde `ok:false` cuando el correo no está validado. La 3.0.0 subió la mayor porque desapareció un endpoint —`adminMergeUsers`— y porque `loginUser` cambió de contrato: ya no crea cuentas y ya no devuelve `registered`. La 3.1.0 añade la puerta del correo: **no hay cuenta que valga sin correo verificado**.
 
 El 12 de septiembre de 2026 la base de producción se vació a propósito: quedó una sola cuenta, `Diego`, y se borraron partidas, chat, presencia, buzón y todas las sesiones. El motivo es el mismo: arrancar sin ninguna cuenta que no cumpla la regla nueva.
 
@@ -125,7 +125,7 @@ La aritmética es la misma del cronómetro por turno, con dos diferencias: la re
 
 En pantalla son dos relojes tipo ajedrez sobre la fila de jugadores. El activo descuenta y pasa a ámbar bajo 30 segundos y a rojo bajo 10. Una victoria por tiempo no cuenta para las métricas de eficiencia del historial, igual que una victoria por abandono.
 
-La práctica **contra el computador** también admite bolsa. Ahí solo corre la del jugador: el computador responde al instante y no gasta reloj. En **Solo** no aparece la opción porque su «Tiempo total» ya era exactamente eso.
+La práctica **contra el computador** también admite bolsa. Ahí solo corre la del jugador: el computador responde al instante y no gasta reloj. En **Solo** no aparece la bolsa: su reloj es siempre tiempo por intento y se reinicia después de cada propuesta o intento perdido.
 
 ### Cancelar, abandonar y caducidad
 
@@ -148,6 +148,7 @@ Desde el lobby se puede abrir **Practicar** y escoger entre **Solo** o **Contra 
 - El secreto se genera con Web Crypto, permanece oculto durante la partida y siempre se revela al terminar.
 - Las partidas de práctica no se envían a la API, no crean filas en D1 y no afectan el historial ni el ranking competitivo.
 - El dispositivo conserva localmente el total de prácticas, las resueltas y la racha actual.
+- En Solo, el tiempo elegido corresponde a cada intento. Si llega a cero, se registra un intento perdido y empieza un cronómetro nuevo; la práctica solo termina al agotar el límite de intentos. En una partida real con tiempo por turno se aplica la misma regla, pero el turno pasa además al rival. La bolsa de tiempo sigue siendo distinta: agotarla hace perder la partida.
 - Una práctica sin terminar se guarda automáticamente en el dispositivo. Al volver al lobby aparece **Continuar práctica**; el cronómetro queda pausado mientras la pantalla de práctica no está visible y el guardado se elimina al terminar o descartarlo.
 - Durante la práctica se puede **Cancelar** para borrar el progreso sin registrar un resultado, o **Rendirse** para terminar, revelar el código y conservar los intentos visibles para analizarlos.
 - En los formularios de crear, unirse y revancha, el botón **🔄** propone un secreto válido según las reglas escogidas.
@@ -611,7 +612,7 @@ El proyecto sigue versionado semántico `vMAYOR.MENOR.PARCHE`:
 - **MENOR (Y)**: funcionalidad nueva compatible hacia atrás —una pantalla, un modo de juego, un ajuste como el cuadrado de idioma.
 - **PARCHE (Z)**: correcciones compatibles hacia atrás, retoques de texto, estilos y rendimiento.
 
-El número vive en dos sitios y los dos se cambian en el mismo commit: `version` en `package.json` conserva el SemVer canónico (`3.2.0`), porque npm y pnpm lo requieren, y `APP_VERSION` en `public/index.html` publica `v3.2.0`. El Worker lleva el mismo número en `src/version.js` y lo firma en todas sus respuestas; `test/client-server-sync.test.js` comprueba que los tres coinciden. De ahí sale lo que ve el jugador en los créditos y lo que viaja con cada mensaje del buzón (`appVersion`), así que un número desfasado hace que un informe apunte a una versión que no es. La versión sube en el commit que introduce el cambio, no al desplegar.
+El número vive en tres sitios y los tres se cambian en el mismo commit: `version` en `package.json` conserva el SemVer canónico (`3.3.3`), porque npm y pnpm lo requieren, y `APP_VERSION` en `public/index.html` y `src/version.js` publica `v3.3.3`. El Worker lo firma en todas sus respuestas; `test/client-server-sync.test.js` comprueba que los tres coinciden. De ahí sale lo que ve el jugador en los créditos y lo que viaja con cada mensaje del buzón (`appVersion`), así que un número desfasado hace que un informe apunte a una versión que no es. La versión sube en el commit que introduce el cambio, no al desplegar.
 
 ## Procedimiento para futuras modificaciones
 

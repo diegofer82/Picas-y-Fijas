@@ -97,6 +97,17 @@ test('Solo practice supports every approved rule family and reveals at the end',
   assert.match(practiceSource, /practice_reveal/);
 });
 
+test('Solo timeout consumes one attempt, records it and starts a fresh clock', () => {
+  assert.equal((html.match(/practice_missed_timeout:/g)||[]).length, 3);
+  assert.equal((html.match(/rl_attempt:/g)||[]).length, 3);
+  assert.match(practiceSource, /function expireSoloAttempt\(\)[\s\S]*guesses\.push\(\{missed:true,reason:'timeout'\}\)/);
+  assert.match(practiceSource, /function expireSoloAttempt\(\)[\s\S]*maxAttempts&&practice\.guesses\.length>=practiceCfg\.maxAttempts[\s\S]*finishPractice\(false,'attempts'\)/);
+  assert.match(practiceSource, /function expireSoloAttempt\(\)[\s\S]*deadline=Date\.now\(\)\+practiceCfg\.turnSeconds\*1000[\s\S]*saveActivePractice\(\)/);
+  assert.match(practiceSource, /else\{if\(practiceCfg\.turnSeconds\)practice\.deadline=Date\.now\(\)\+practiceCfg\.turnSeconds\*1000;renderPracticeStatus\(\);saveActivePractice\(\);\}/);
+  assert.match(practiceSource, /rulesLabel\(\{\.\.\.practiceCfg,revealSecrets:true,practiceSolo:practiceCfg\.type==='solo'\}\)/);
+  assert.doesNotMatch(practiceSource, /else finishPractice\(false,'time'\)/);
+});
+
 test('starting from practice settings uses the rules that are visibly selected', () => {
   assert.match(practiceSource, /function readPracticeControls\(\)/);
   assert.match(practiceSource, /practiceCfg\.allowRepeats=selected\('p-seg-repeat','r'\)==='1'/);

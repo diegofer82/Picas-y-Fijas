@@ -690,7 +690,7 @@
         <div class="seg" id="p-seg-clock"><button data-c="none" class="on" data-i18n="nolimit">Sin límite</button><button data-c="turn" data-i18n="clock_turn">Por turno</button><button data-c="bank" data-i18n="clock_bank">Bolsa de tiempo</button></div>
       </div>
       <div id="p-time-wrap">
-        <label id="practice-time-label" data-i18n="practice_time">Tiempo total</label>
+        <label id="practice-time-label" data-i18n="practice_time">Tiempo por intento</label>
         <div class="seg mono" id="p-seg-time"><button data-t="0" class="on" data-i18n="nolimit">Sin límite</button><button data-t="60">60s</button><button data-t="120">2min</button><button data-t="300">5min</button></div>
       </div>
       <div id="p-bank-wrap" class="hidden">
@@ -1013,7 +1013,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v3.3.2';
+const APP_VERSION = 'v3.3.3';
 /* Enlace de invitación: ...?game=SZ93 */
 let pendingJoinCode = '';
 (function(){
@@ -1270,6 +1270,9 @@ const I18N = {
     rl_attempts:"{n} essais", rl_turn:"{n}s/tour", rl_reveal:"codes révélés à la fin", rl_noreveal:"codes masqués à la fin"
   }
 };
+Object.assign(I18N.es,{practice_time:"Tiempo por intento",practice_missed_timeout:"⏱ Intento perdido por tiempo",rl_attempt:"{n}s/intento"});
+Object.assign(I18N.en,{practice_time:"Time per attempt",practice_missed_timeout:"⏱ Attempt lost on time",rl_attempt:"{n}s/try"});
+Object.assign(I18N.fr,{practice_time:"Temps par essai",practice_missed_timeout:"⏱ Essai perdu au temps",rl_attempt:"{n}s/essai"});
 Object.assign(I18N.es,{
   chat_lobby:"Chat del lobby",chat_game:"Chat de la partida",chat_placeholder:"Escribe un mensaje…",chat_empty:"Todavía no hay mensajes.",chat_deleted:"Mensaje eliminado",chat_mute:"Silenciar usuario",chat_mute_confirm:"¿Silenciar a {name}? Sus mensajes y zumbidos quedarán ocultos hasta que lo reactives desde el botón 🔇.",chat_manage_muted:"Gestionar usuarios silenciados",chat_muted_title:"Usuarios silenciados",chat_muted_empty:"No has silenciado a ningún usuario.",chat_unmute:"Reactivar",chat_unmute_all:"Reactivar a todos",chat_unmuted:"{name} fue reactivado.",chat_all_unmuted:"Todos los usuarios fueron reactivados.",chat_report:"Reportar mensaje",chat_muted:"Usuario silenciado en este dispositivo.",chat_reported:"Mensaje reportado.",chat_nudge:"Enviar zumbido",chat_nudges_on:"Zumbidos activados",chat_nudges_off:"Zumbidos desactivados",chat_joined:"{name} entró en la partida.",chat_paused:"{name} pausó la partida.",chat_resumed:"{name} reanudó la partida.",chat_abandoned:"{name} abandonó la partida.",chat_rematch:"{name} propuso una revancha.",chat_finished:"La partida terminó.",chat_nudged:"{name} te ha enviado un zumbido ⚡",chat_report_reason:"Motivo: 1 spam, 2 insultos/acoso, 3 contenido inapropiado"
 });
@@ -2051,7 +2054,7 @@ function rulesLabel(m){
   const parts=[ (m.mode==='colors'?t('rl_colors',{n:m.numColors||6}):t('rl_numbers')), t('rl_pos',{n:m.digits}),
     (m.allowRepeats?t('rl_repeat'):t('rl_norepeat')) ];
   if(m.maxAttempts>0) parts.push(t('rl_attempts',{n:m.maxAttempts}));
-  if(m.turnSeconds>0) parts.push(t('rl_turn',{n:m.turnSeconds}));
+  if(m.turnSeconds>0) parts.push(t(m.practiceSolo?'rl_attempt':'rl_turn',{n:m.turnSeconds}));
   if(m.timeMode==='bank'&&m.bankSeconds>0){
     parts.push(t('rl_bank',{n:t('min_short',{n:Math.round(m.bankSeconds/60)})}));
     if(m.bankIncrement>0) parts.push(t('rl_bank_inc',{n:m.bankIncrement}));
@@ -2883,7 +2886,7 @@ function renderPracticeResumeCard(){
   const card=$('practice-resume-card');if(!card)return;
   const saved=readSavedPractice();card.classList.toggle('hidden',!saved);if(!saved)return;
   const cfg=saved.cfg,state=saved.state;
-  $('practice-resume-summary').textContent=`${t(cfg.type==='computer'?'computer_title':'practice_title')} · ${rulesLabel({...cfg,revealSecrets:true})}`;
+  $('practice-resume-summary').textContent=`${t(cfg.type==='computer'?'computer_title':'practice_title')} · ${rulesLabel({...cfg,revealSecrets:true,practiceSolo:cfg.type==='solo'})}`;
   $('practice-resume-progress').textContent=cfg.type==='computer'?t('practice_resume_progress',{yours:(state.guesses||[]).length+(state.missedTurns||0),computer:(state.computerGuesses||[]).length}):t('practice_resume_solo_progress',{n:(state.guesses||[]).length});
 }
 function discardSavedPractice(){
@@ -2950,8 +2953,8 @@ function syncPracticeControls(){
   const computer=practiceCfg.type==='computer';
   $('p-computer-options').classList.toggle('hidden',!computer); $('p-secret-wrap').classList.toggle('hidden',!computer);
   $('practice-hint').textContent=t(computer?'computer_hint':'practice_hint'); $('practice-time-label').textContent=t(computer?'practice_turn_time':'practice_time');
-  // En Solo el unico reloj posible ya es un tiempo total, asi que la eleccion
-  // de tres formas solo aparece contra el computador, donde hay turnos.
+  // En Solo el unico reloj posible es por intento, asi que la eleccion de tres
+  // formas solo aparece contra el computador, donde tambien existe la bolsa.
   $('p-clock-wrap').classList.toggle('hidden',!computer);
   if(!computer){ practiceClock='legacy'; practiceCfg.timeMode='turn'; practiceCfg.bankSeconds=0; practiceCfg.bankIncrement=0; }
   else if(practiceClock==='legacy'){ practiceClock = practiceCfg.turnSeconds>0 ? 'turn' : 'none';
@@ -2991,8 +2994,8 @@ function readPracticeControls(){
   if(practiceCfg.type==='computer') syncPracticeClock();
   else { practiceCfg.timeMode='turn'; practiceCfg.bankSeconds=0; practiceCfg.bankIncrement=0; }
 }
-/* La bolsa solo existe contra el computador: en Solo el reloj ya era un
-   tiempo total. Solo corre la bolsa del jugador; el computador responde al
+/* La bolsa solo existe contra el computador: en Solo el reloj se reinicia en
+   cada intento. Solo corre la bolsa del jugador; el computador responde al
    instante y no gasta reloj. */
 const isPracticeBank=()=>practiceCfg.type==='computer'&&practiceCfg.timeMode==='bank'&&practiceCfg.bankSeconds>0;
 function settlePracticeBank(){
@@ -3028,7 +3031,7 @@ function displayPracticeGame(restored){
   renderPracticeLog();renderComputerLog();$('practice-computer-log-card').classList.toggle('hidden',practiceCfg.type!=='computer'); $('practice-turn').classList.toggle('hidden',practiceCfg.type!=='computer');
   $('practice-game-title').textContent=t(practiceCfg.type==='computer'?'computer_title':'practice_title');
   $('practice-secret').className=practiceCfg.type==='computer'?'':'n'; $('practice-secret').innerHTML=practiceCfg.type==='computer'?codeViewHTML(practice.playerSecret,practiceCfg.mode):'•'.repeat(practiceCfg.digits);
-  $('practice-rules').textContent=rulesLabel({...practiceCfg,revealSecrets:true});
+  $('practice-rules').textContent=rulesLabel({...practiceCfg,revealSecrets:true,practiceSolo:practiceCfg.type==='solo'});
   $('practice-lobby-btn').textContent=t('practice_save_lobby');$('practice-lobby-btn').dataset.i18n='practice_save_lobby';
   if(restored&&practiceCfg.type==='computer'&&practice.turn==='computer')$('practice-guessarea').classList.add('hidden');
   show('practice-game'); renderPracticeStatus();
@@ -3048,7 +3051,7 @@ function renderPracticeStatus(){
     const remaining=practice.deadline?practice.deadline-Date.now():Math.max(0,practice.bankMs);
     timer.innerHTML=ico('reloj',14)+'<span>'+formatPracticeTime(remaining)+'</span>';
     timer.className='chip'+(remaining<=10000?' hot':(bank&&remaining<=30000?' warn':''));
-    if(practice.deadline&&remaining<=0){if(computer)expireComputerPlayerTurn();else finishPractice(false,'time');}
+    if(practice.deadline&&remaining<=0){if(computer)expireComputerPlayerTurn();else expireSoloAttempt();}
   }
   if(computer&&practice.turn==='player'){$('practice-turn').className='turnbar mine';$('practice-turn-txt').textContent=t(practice.pendingWinner==='computer'?'computer_last_turn':'computer_your_turn');}
 }
@@ -3067,10 +3070,15 @@ function submitPracticeGuess(){
   if(practiceCfg.type==='computer'){handlePlayerComputerScore(score);return;}
   if(score.fijas===practiceCfg.digits) finishPractice(true,'solved');
   else if(practiceCfg.maxAttempts&&practice.guesses.length>=practiceCfg.maxAttempts) finishPractice(false,'attempts');
-  else{renderPracticeStatus();saveActivePractice();}
+  else{if(practiceCfg.turnSeconds)practice.deadline=Date.now()+practiceCfg.turnSeconds*1000;renderPracticeStatus();saveActivePractice();}
 }
 function renderPracticeLog(){
-  $('practice-log').innerHTML=practice.guesses.length?practice.guesses.slice().reverse().map(g=>{let p='';for(let i=0;i<g.fijas;i++)p+='<span class="pip f"></span>';for(let i=0;i<g.picas;i++)p+='<span class="pip p"></span>';if(!p)p=`<span class="scoretxt">${t('log_nada')}</span>`;return `<div class="g">${codeViewHTML(g.guess,practiceCfg.mode)}<span class="scoretxt">${g.fijas}F · ${g.picas}P</span><span class="pips">${p}</span></div>`;}).join(''):`<div class="empty">${t('log_empty_mine')}</div>`;
+  $('practice-log').innerHTML=practice.guesses.length?practice.guesses.slice().reverse().map(g=>{if(g.missed)return `<div class="g"><span class="scoretxt">${t('practice_missed_timeout')}</span></div>`;let p='';for(let i=0;i<g.fijas;i++)p+='<span class="pip f"></span>';for(let i=0;i<g.picas;i++)p+='<span class="pip p"></span>';if(!p)p=`<span class="scoretxt">${t('log_nada')}</span>`;return `<div class="g">${codeViewHTML(g.guess,practiceCfg.mode)}<span class="scoretxt">${g.fijas}F · ${g.picas}P</span><span class="pips">${p}</span></div>`;}).join(''):`<div class="empty">${t('log_empty_mine')}</div>`;
+}
+function expireSoloAttempt(){if(!practice||practice.finished||practiceCfg.type!=='solo')return;
+  practice.deadline=0;practice.guesses.push({missed:true,reason:'timeout'});renderPracticeLog();
+  if(practiceCfg.maxAttempts&&practice.guesses.length>=practiceCfg.maxAttempts){finishPractice(false,'attempts');return;}
+  toast(t('practice_missed_timeout'));practice.deadline=Date.now()+practiceCfg.turnSeconds*1000;renderPracticeStatus();saveActivePractice();
 }
 function cryptoRandom(){const bytes=new Uint32Array(1);crypto.getRandomValues(bytes);return bytes[0]/4294967296;}
 function renderComputerLog(){
@@ -3130,8 +3138,8 @@ $('p-seg-time').addEventListener('click',e=>{const b=e.target.closest('button');
 let practiceClock='legacy';
 function syncPracticeClock(){
   const bank=practiceClock==='bank';
-  // En Solo ('legacy') el control de tiempo es el unico que hay y siempre se
-  // ve; contra el computador solo aparece si se eligio cronometro por turno.
+  // En Solo ('legacy') el tiempo por intento es el unico reloj y siempre se ve;
+  // contra el computador solo aparece si se eligio cronometro por turno.
   $('p-time-wrap').classList.toggle('hidden', practiceClock==='bank'||practiceClock==='none');
   $('p-bank-wrap').classList.toggle('hidden', !bank);
   if(bank){

@@ -32,6 +32,27 @@ test('an expired 30 second turn advances even with five repeated digits', () => 
   }]);
 });
 
+test('a real 120 second game stays active after the fifth of ten attempts times out', () => {
+  const guesses = [];
+  for (let i = 0; i < 4; i++) {
+    guesses.push({ by:'Ana', guess:'01234' }, { by:'Luis', guess:'56780' });
+  }
+  const game = {
+    status:'active', turn:1, turn_seconds:120, turn_remaining:120, timer_paused:0,
+    turn_started_at:'2026-01-01T00:00:00.000Z', lobby_paused_by:'', manual_paused_by:'',
+    pending_winner:'', digits:5, allow_repeats:1, p1:'Ana', p2:'Luis', guesses:JSON.stringify(guesses), max_attempts:10,
+  };
+  const changes = expiredTurnChanges(game, Date.parse('2026-01-01T00:02:00.000Z'));
+  const after = JSON.parse(changes.guesses);
+  assert.equal(changes.status, undefined, 'la partie doit rester active');
+  assert.equal(changes.turn, 2, 'le tour passe au rival');
+  assert.equal(changes.turn_remaining, 120, 'le rival reçoit un chrono complet');
+  assert.equal(after.filter((entry) => entry.by === 'Ana').length, 5, 'le temps écoulé consomme un essai');
+  assert.deepEqual(after.at(-1), {
+    by:'Ana', missed:true, reason:'timeout', ts:'2026-01-01T00:02:00.000Z',
+  });
+});
+
 test('a timed-out turn consumes the last attempt and can finish a draw', () => {
   const game = {
     status:'active', turn:1, turn_seconds:30, turn_remaining:30, timer_paused:0,
