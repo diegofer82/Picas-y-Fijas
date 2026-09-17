@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { Miniflare } from 'miniflare';
 import { seedAccount } from './accounts.js';
+import { changeUsername } from '../src/rename.js';
+import { register } from '../src/security.js';
 
 const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
 
@@ -118,6 +120,38 @@ test('una vez cada 90 días, salvo corregir mayúsculas', async () => {
   await db.prepare("UPDATE users SET username_changed_at=? WHERE username_key='leonardo'")
     .bind(new Date(Date.now() - 91 * 86400000).toISOString()).run();
   assert.equal((await api('changeUsername', { newUsername:'Leon', pin:'2468' }, leo.token)).ok, true, 'pasados 90 días, sí');
+});
+
+// Dos personas piden el mismo nombre a la vez: las dos pasan la lectura previa
+// y solo el indice unico las separa. Se reproduce escondiendo esa lectura.
+// `verifyPin` usa `timingSafeEqual`, que solo existe en el runtime de Workers.
+crypto.subtle.timingSafeEqual ??= (a, b) => a.byteLength === b.byteLength && a.every((byte, i) => byte === b[i]);
+
+function blindToName(database, name) {
+  return new Proxy(database, { get(target, prop) {
+    if (prop !== 'prepare') { const value = target[prop]; return typeof value === 'function' ? value.bind(target) : value; }
+    return (sql) => {
+      const statement = target.prepare(sql);
+      if (!/^SELECT id FROM users WHERE username_key=\?$/.test(sql)) return statement;
+      return { bind: (...args) => statement.bind(...(args[0] === name ? ['(nadie)'] : args)) };
+    };
+  } });
+}
+
+test('si dos piden el mismo nombre a la vez, el segundo recibe «ya está en uso» y nada cambia', async () => {
+  await player('Rita');
+  await seedAccount(db, 'Rival');
+  const rita = await db.prepare("SELECT * FROM users WHERE username_key='rita'").first();
+  await finishedGame('RC01', 'Rita', 'Ana', 'Rita');
+  const late = await changeUsername(blindToName(db, 'rival'), rita, { newUsername:'Rival', pin:'2468' });
+  assert.deepEqual(late, { ok:false, error:'Ese nombre de usuario ya está en uso.' });
+  const after = await db.prepare("SELECT username,username_changed_at FROM users WHERE id=?").bind(rita.id).first();
+  assert.deepEqual(after, { username:'Rita', username_changed_at:null }, 'el lote entero se deshace y no gasta el cupo');
+  const game = await db.prepare("SELECT p1,winner FROM games WHERE game_id='RC01'").first();
+  assert.deepEqual(game, { p1:'Rita', winner:'Rita' }, 'ninguna partida queda a medias');
+
+  const signup = await register(blindToName(db, 'rival'), {}, { username:'Rival', email:'otra@ejemplo.test', pin:'2468' }, 168);
+  assert.deepEqual(signup, { ok:false, error:'Ese nombre de usuario ya está en uso.' }, 'el alta tampoco revienta con un 500');
 });
 
 test('con una partida abierta no se renombra', async () => {

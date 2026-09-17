@@ -1,5 +1,5 @@
 import { cleanName, usernameKey } from "./game.js";
-import { RENAME_COOLDOWN_MS, nextUsernameChange, verifyPin } from "./security.js";
+import { RENAME_COOLDOWN_MS, isUniqueViolation, nextUsernameChange, verifyPin } from "./security.js";
 
 /* Cambiar el nombre visible sin tocar el correo, que es el identificador de
    verdad de la cuenta.
@@ -48,7 +48,7 @@ export async function changeUsername(db, user, params, at = Date.now()) {
 
   const stamp = new Date(at).toISOString();
   const byOld = `"by":${JSON.stringify(oldName)}`, byNew = `"by":${JSON.stringify(username)}`;
-  await db.batch([
+  const statements = [
     db.prepare(`UPDATE users SET username=?,username_key=?,
       username_changed_at=CASE WHEN ? THEN username_changed_at ELSE ? END WHERE id=?`)
       .bind(username, key, sameKey ? 1 : 0, stamp, row.id),
@@ -79,7 +79,15 @@ export async function changeUsername(db, user, params, at = Date.now()) {
     db.prepare("DELETE FROM login_attempts WHERE throttle_key=?").bind(oldKey),
     db.prepare("UPDATE feedback SET username=? WHERE username=?").bind(username, oldName),
     db.prepare("UPDATE audit_log SET target=? WHERE target=?").bind(username, oldName),
-  ]);
+  ];
+  // Si alguien toma el mismo nombre entre la comprobacion y este batch, el
+  // indice unico rechaza la primera instruccion y D1 deshace el lote entero.
+  try {
+    await db.batch(statements);
+  } catch (cause) {
+    if (!isUniqueViolation(cause)) throw cause;
+    return { ok: false, error: "Ese nombre de usuario ya está en uso." };
+  }
   return { ok: true, username,
     usernameNextChangeAt: nextUsernameChange(sameKey ? row.username_changed_at : stamp) };
 }

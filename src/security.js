@@ -215,11 +215,17 @@ export async function register(db, env, params, ttlHours, origin = {}) {
   const pinHash = await hashPin(pin, salt);
   // Crear la cuenta no es entrar: el contador y la fecha de acceso se quedan
   // vacios hasta que alguien entre de verdad con el PIN.
-  await db.prepare(`INSERT INTO users(username,username_key,email,email_verified_at,pin_salt,pin_hash,role,created_at,last_login_at,
-    login_count,signup_ip,signup_country,last_ip,last_country)
-    VALUES(?,?,?,?,?,?,?, ?,?,0,?,?,?,?)`)
-    .bind(username, key, email, null, salt, pinHash, 'player', stamp, null,
-      origin.ip || '', origin.country || '', origin.ip || '', origin.country || '').run();
+  try {
+    await db.prepare(`INSERT INTO users(username,username_key,email,email_verified_at,pin_salt,pin_hash,role,created_at,last_login_at,
+      login_count,signup_ip,signup_country,last_ip,last_country)
+      VALUES(?,?,?,?,?,?,?, ?,?,0,?,?,?,?)`)
+      .bind(username, key, email, null, salt, pinHash, 'player', stamp, null,
+        origin.ip || '', origin.country || '', origin.ip || '', origin.country || '').run();
+  } catch (cause) {
+    if (!isUniqueViolation(cause)) throw cause;
+    return { ok:false, error:/email/i.test(String(cause?.message || cause))
+      ? 'Ese correo ya está asociado a una cuenta.' : 'Ese nombre de usuario ya está en uso.' };
+  }
   const user = await db.prepare('SELECT * FROM users WHERE username_key=?').bind(key).first();
   const sent = await sendEmailVerification(db, env, user, email, origin.origin || '', true, params.lang);
   if (!sent.ok) {
@@ -236,6 +242,12 @@ export function nextUsernameChange(changedAt) {
   const last = Date.parse(changedAt || '');
   return Number.isFinite(last) ? new Date(last + RENAME_COOLDOWN_MS).toISOString() : null;
 }
+
+/* La lectura previa no basta: dos personas pueden pedir el mismo nombre en
+   el mismo instante y pasar las dos la comprobacion. El indice unico de
+   `username_key` impide el doble, y esto convierte su rechazo en el mismo
+   mensaje que ve quien llega tarde, en lugar de un error 500. */
+export const isUniqueViolation = (cause) => /UNIQUE constraint failed/i.test(String(cause?.message || cause));
 
 export async function accountProfile(db, user) {
   const row = await db.prepare('SELECT username,email,email_verified_at,created_at,username_changed_at FROM users WHERE id=?').bind(user.id).first();
