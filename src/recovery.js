@@ -98,13 +98,24 @@ export async function sendEmailVerification(db, env, user, email, origin, activa
   return delivered ? { ok: true } : { ok: false, error: "No pudimos enviar el correo. Inténtalo más tarde." };
 }
 
-export const requestEmailVerification = (db, env, user, email, origin, lang) =>
-  sendEmailVerification(db, env, user, email, origin, false, lang);
+/* El correo verificado es el identificador de la cuenta y no se cambia: es la
+   unica llave para recuperar el PIN, y cambiarlo seria la forma de quedarse
+   con una cuenta ajena desde una sesion abierta. Solo una cuenta que aun no lo
+   ha verificado puede pedir el enlace, y con ello corregir una errata. */
+export const EMAIL_LOCKED = "Tu correo ya está verificado y no se puede cambiar.";
+
+export function requestEmailVerification(db, env, user, email, origin, lang) {
+  if (user.email_verified_at) return { ok: false, error: EMAIL_LOCKED };
+  return sendEmailVerification(db, env, user, email, origin, false, lang);
+}
 
 export async function verifyEmail(db, token) {
   const at = stamp();
   const row = await db.prepare("SELECT * FROM email_verifications WHERE token_hash=? AND used_at IS NULL AND expires_at>? ").bind(await sha256(token), at).first();
   if (!row) return { ok: false, error: "El enlace no es válido o ya caducó." };
+  // Un enlace pedido antes de verificar otra direccion no puede sustituirla.
+  const owner = await db.prepare("SELECT email,email_verified_at FROM users WHERE id=?").bind(row.user_id).first();
+  if (owner?.email_verified_at && owner.email !== row.email) return { ok: false, error: EMAIL_LOCKED };
   await db.batch([
     db.prepare("UPDATE email_verifications SET used_at=? WHERE token_hash=?").bind(at, row.token_hash),
     db.prepare("UPDATE users SET email=?,email_verified_at=? WHERE id=?").bind(row.email, at, row.user_id),

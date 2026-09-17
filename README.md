@@ -6,7 +6,7 @@ Este es el único documento de referencia del proyecto. Está pensado para perso
 
 Picas y Fijas es un juego multijugador web en español, inglés y francés. La versión vigente funciona íntegramente en Cloudflare; la implementación anterior de Google Sheets y Apps Script fue retirada del árbol actual después de completar la migración. Sigue disponible en el historial de Git si alguna vez se necesita consultar.
 
-Versión actual: **3.4.1**. Desde **Mi cuenta** cada jugador puede cambiar su nombre de usuario —no su correo— una vez cada 90 días, y su historial y su ranking lo siguen. En la 3.3.3, en Solo, el cronómetro se reinicia para cada intento: llegar a cero consume un intento, lo deja visible en el registro y solo termina la práctica cuando se agota el límite elegido. La 3.2.0 añadió el acuerdo de versión entre página y servidor: cada respuesta lleva `appVersion` y una pestaña desfasada se recarga sola, porque una pestaña vieja hablando con el servidor nuevo era la causa de que una cuenta sin validar viera el vestíbulo, de los mensajes en español dentro de un juego en francés y de un contador parado hora y media. En ella `loginUser` responde `ok:false` cuando el correo no está validado. La 3.0.0 subió la mayor porque desapareció un endpoint —`adminMergeUsers`— y porque `loginUser` cambió de contrato: ya no crea cuentas y ya no devuelve `registered`. La 3.1.0 añade la puerta del correo: **no hay cuenta que valga sin correo verificado**.
+Versión actual: **3.4.2**. Desde **Mi cuenta** cada jugador puede cambiar su nombre de usuario —su correo verificado, nunca— una vez cada 90 días, y su historial y su ranking lo siguen. En la 3.3.3, en Solo, el cronómetro se reinicia para cada intento: llegar a cero consume un intento, lo deja visible en el registro y solo termina la práctica cuando se agota el límite elegido. La 3.2.0 añadió el acuerdo de versión entre página y servidor: cada respuesta lleva `appVersion` y una pestaña desfasada se recarga sola, porque una pestaña vieja hablando con el servidor nuevo era la causa de que una cuenta sin validar viera el vestíbulo, de los mensajes en español dentro de un juego en francés y de un contador parado hora y media. En ella `loginUser` responde `ok:false` cuando el correo no está validado. La 3.0.0 subió la mayor porque desapareció un endpoint —`adminMergeUsers`— y porque `loginUser` cambió de contrato: ya no crea cuentas y ya no devuelve `registered`. La 3.1.0 añade la puerta del correo: **no hay cuenta que valga sin correo verificado**.
 
 El 12 de septiembre de 2026 la base de producción se vació a propósito: quedó una sola cuenta, `Diego`, y se borraron partidas, chat, presencia, buzón y todas las sesiones. El motivo es el mismo: arrancar sin ninguna cuenta que no cumpla la regla nueva.
 
@@ -61,7 +61,7 @@ La pantalla de acceso tiene tres caras que nunca se ven a la vez —entrar, crea
 
 Entrar no se rechaza, y la razón es práctica: para pedir el enlace hace falta una sesión, y quien nunca declaró un correo no tendría por dónde empezar. Lo que se corta es lo que viene después.
 
-Los tres paneles son `<form>` de verdad, con `autocomplete` correcto en cada campo: Enter envía sin código propio y el gestor de contraseñas ofrece guardar la pareja. Lo mismo vale para **Mi cuenta**, donde el correo y el cambio de PIN son dos formularios separados con su propio mensaje, y para el acceso de `/admin`.
+Los tres paneles son `<form>` de verdad, con `autocomplete` correcto en cada campo: Enter envía sin código propio y el gestor de contraseñas ofrece guardar la pareja. Lo mismo vale para **Mi cuenta**, donde el nombre, el correo —solo lectura una vez verificado— y el cambio de PIN son formularios separados con su propio mensaje, y para el acceso de `/admin`.
 
 En toda la interfaz se le llama **contraseña**, no PIN: la palabra «PIN» invitaba a confundirla con el código de la partida. No se debe compartir; para invitar a alguien se comparte únicamente el código de partida.
 
@@ -410,7 +410,9 @@ La acción pública **`checkUsername`** responde `{ok, known, username}` con una
 
 ### Cambiar el nombre de usuario
 
-**Mi cuenta** tiene un tercer formulario: nombre nuevo y PIN actual. El correo no se puede cambiar desde ahí de la misma forma —es el identificador de verdad de la cuenta y solo se sustituye verificando uno nuevo—; el nombre sí, porque es solo la cara visible.
+**Mi cuenta** tiene un tercer formulario: nombre nuevo y PIN actual. El nombre se puede cambiar porque es solo la cara visible; **el correo verificado, no**.
+
+**Un correo verificado es definitivo.** Es la única llave para recuperar el PIN, y poder cambiarlo desde una sesión abierta sería la forma de quedarse con una cuenta ajena. En **Mi cuenta** se enseña en solo lectura, sin botón y con una nota que lo dice. El servidor lo hace cumplir por su cuenta: `requestEmailVerification` responde «Tu correo ya está verificado y no se puede cambiar.» a toda cuenta con `email_verified_at`, y `verifyEmail` rechaza un enlace antiguo que apunte a otra dirección. Solo una cuenta que todavía no ha verificado su correo —la pantalla `s-verify`— puede pedir un enlace a otra dirección, para corregir una errata del alta. Si alguien pierde de verdad su buzón, el cambio lo hace la administración por la consola SQL, que deja rastro en la auditoría.
 
 El nombre no vive solo en `users`. Partidas (`p1`, `p2`, `winner`, `pending_winner`), jugadas (`guesses[].by`), chat (`sender`, `deleted_by`), hilos privados (`user1`, `user2`, `pair_key`), reportes, silencios, recibos, buzón y el objetivo de `audit_log` lo guardan escrito, para que el polling no cruce con `users` en cada consulta. `changeUsername`, en `src/rename.js`, lo reescribe en todas esas tablas en un único `batch` —una transacción en D1—: o cambia en todas partes o en ninguna, y el historial y el ranking siguen siendo del mismo jugador. Los textos ya escritos en mensajes de sistema del chat se quedan como estaban: son historia.
 
@@ -629,7 +631,7 @@ El proyecto sigue versionado semántico `vMAYOR.MENOR.PARCHE`:
 - **MENOR (Y)**: funcionalidad nueva compatible hacia atrás —una pantalla, un modo de juego, un ajuste como el cuadrado de idioma.
 - **PARCHE (Z)**: correcciones compatibles hacia atrás, retoques de texto, estilos y rendimiento.
 
-El número vive en tres sitios y los tres se cambian en el mismo commit: `version` en `package.json` conserva el SemVer canónico (`3.4.1`), porque npm y pnpm lo requieren, y `APP_VERSION` en `public/index.html` y `src/version.js` publica `v3.4.1`. El Worker lo firma en todas sus respuestas; `test/client-server-sync.test.js` comprueba que los tres coinciden. De ahí sale lo que ve el jugador en los créditos y lo que viaja con cada mensaje del buzón (`appVersion`), así que un número desfasado hace que un informe apunte a una versión que no es. La versión sube en el commit que introduce el cambio, no al desplegar.
+El número vive en tres sitios y los tres se cambian en el mismo commit: `version` en `package.json` conserva el SemVer canónico (`3.4.2`), porque npm y pnpm lo requieren, y `APP_VERSION` en `public/index.html` y `src/version.js` publica `v3.4.2`. El Worker lo firma en todas sus respuestas; `test/client-server-sync.test.js` comprueba que los tres coinciden. De ahí sale lo que ve el jugador en los créditos y lo que viaja con cada mensaje del buzón (`appVersion`), así que un número desfasado hace que un informe apunte a una versión que no es. La versión sube en el commit que introduce el cambio, no al desplegar.
 
 ## Procedimiento para futuras modificaciones
 

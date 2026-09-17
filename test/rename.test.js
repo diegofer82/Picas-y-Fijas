@@ -173,3 +173,25 @@ test('«Mi cuenta» ofrece el cambio de nombre en los tres idiomas', () => {
   for (const message of ['Solo puedes cambiar tu nombre una vez cada 90 días.','Termina o cancela tus partidas abiertas antes de cambiar tu nombre.'])
     assert.equal(html.split(`"${message}":`).length - 1, 2, `falta traducir «${message}»`);
 });
+
+test('el correo verificado no se cambia, ni desde la pantalla ni desde la API', async () => {
+  const mia = await player('Mia');
+  const asked = await api('requestEmailVerification', { email:'otra-mia@ejemplo.test' }, mia.token);
+  assert.deepEqual([asked.ok, asked.error], [false, 'Tu correo ya está verificado y no se puede cambiar.']);
+
+  // Un enlace que quedara de antes tampoco sustituye la dirección verificada.
+  const { sha256 } = await import('../src/security.js');
+  const user = await db.prepare("SELECT id FROM users WHERE username_key='mia'").first();
+  const expires = new Date(Date.now() + 3600000).toISOString();
+  await db.prepare('INSERT INTO email_verifications(token_hash,user_id,email,expires_at,created_at) VALUES(?,?,?,?,?)')
+    .bind(await sha256('enlace-viejo'), user.id, 'otra-mia@ejemplo.test', expires, new Date().toISOString()).run();
+  const opened = await api('verifyEmail', { token:'enlace-viejo' });
+  assert.equal(opened.ok, false);
+  const profile = await api('accountProfile', {}, mia.token);
+  assert.equal(profile.email, 'mia@ejemplo.test');
+
+  assert.match(html, /\$\('account-email'\)\.readOnly=locked;/);
+  assert.match(html, /\$\('account-email-btn'\)\.classList\.toggle\('hidden',locked\);/);
+  assert.equal((html.match(/account_email_locked:/g) || []).length, 3);
+  assert.equal(html.split('"Tu correo ya está verificado y no se puede cambiar.":').length - 1, 2);
+});
