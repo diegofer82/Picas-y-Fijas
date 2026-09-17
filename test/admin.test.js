@@ -145,6 +145,19 @@ test('tampoco queda el buscador de cuentas repetidas, que solo servia para fusio
   assert.doesNotMatch(adminHtml, /dupPanel|Posibles cuentas repetidas|Cuentas parecidas/);
 });
 
+test('la ficha de usuario enseña el nombre y el correo', async () => {
+  const boss = await admin();
+  const detail = await api('adminUserDetail', { target:'Jefa' }, boss.token);
+  assert.equal(detail.user.username, 'Jefa');
+  assert.equal(detail.user.email, 'jefa@ejemplo.test');
+  assert.ok(detail.user.email_verified_at, 'con su estado de verificación');
+  assert.ok('username_changed_at' in detail.user, 'y la fecha del último cambio de nombre');
+  const list = await api('adminUsers', {}, boss.token);
+  assert.equal(list.users?.[0]?.email, undefined, 'la lista no carga los correos');
+  assert.match(adminHtml, /\$\{line\('Usuario',/);
+  assert.match(adminHtml, /\$\{line\('Email',/);
+});
+
 test('el panel confirma en su propia ventana, nunca con la del navegador', () => {
   // confirm/prompt/alert no caben en un movil, no se pueden explicar y no
   // distinguen entre cerrar una partida y borrar una cuenta.
