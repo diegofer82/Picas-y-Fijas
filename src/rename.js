@@ -49,9 +49,11 @@ export async function changeUsername(db, user, params, at = Date.now()) {
   const stamp = new Date(at).toISOString();
   const byOld = `"by":${JSON.stringify(oldName)}`, byNew = `"by":${JSON.stringify(username)}`;
   const statements = [
-    db.prepare(`UPDATE users SET username=?,username_key=?,
+    // `previous_username` guarda el nombre de antes para la ficha de /admin;
+    // una correccion de mayusculas tambien lo cuenta, sin gastar el cupo.
+    db.prepare(`UPDATE users SET username=?,username_key=?,previous_username=?,
       username_changed_at=CASE WHEN ? THEN username_changed_at ELSE ? END WHERE id=?`)
-      .bind(username, key, sameKey ? 1 : 0, stamp, row.id),
+      .bind(username, key, oldName, sameKey ? 1 : 0, stamp, row.id),
     // Historial y ranking: los dos salen de estas columnas.
     db.prepare("UPDATE games SET p1=? WHERE p1=?").bind(username, oldName),
     db.prepare("UPDATE games SET p2=? WHERE p2=?").bind(username, oldName),

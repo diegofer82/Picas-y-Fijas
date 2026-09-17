@@ -22,7 +22,7 @@ before(async () => {
     bindings: { SESSION_TTL_HOURS:'168', ADMIN_PATH:'/admin', DEBUG_ERRORS:'1' },
   });
   const db = await mf.getD1Database('DB');
-  for (const file of ['0001_initial.sql','0002_chat.sql','0003_private_threads.sql','0004_admin_insight.sql','0005_feedback.sql','0006_time_bank.sql','0007_d1_free_optimization.sql','0008_email_recovery.sql','0009_username_change.sql']) {
+  for (const file of ['0001_initial.sql','0002_chat.sql','0003_private_threads.sql','0004_admin_insight.sql','0005_feedback.sql','0006_time_bank.sql','0007_d1_free_optimization.sql','0008_email_recovery.sql','0009_username_change.sql','0010_previous_username.sql']) {
     const migration = await readFile(new URL('../migrations/'+file, import.meta.url), 'utf8');
     for (const statement of migration.split(';').map((sql) => sql.trim()).filter(Boolean)) {
       await db.prepare(statement).run();
@@ -151,11 +151,21 @@ test('la ficha de usuario enseña el nombre y el correo', async () => {
   assert.equal(detail.user.username, 'Jefa');
   assert.equal(detail.user.email, 'jefa@ejemplo.test');
   assert.ok(detail.user.email_verified_at, 'con su estado de verificación');
-  assert.ok('username_changed_at' in detail.user, 'y la fecha del último cambio de nombre');
+  assert.equal(detail.user.username_changed_at, null, 'nunca cambió de nombre');
+  assert.equal(detail.user.previous_username, null);
+  const renamed = await api('changeUsername', { newUsername:'Jefatura', pin:'2468' }, boss.token);
+  assert.equal(renamed.ok, true, renamed.error);
+  const after = await api('adminUserDetail', { target:'Jefatura' }, boss.token);
+  assert.equal(after.user.previous_username, 'Jefa', 'la ficha recuerda el nombre anterior');
+  assert.ok(after.user.username_changed_at, 'y cuándo cambió');
+  const db = await mf.getD1Database('DB');
+  await db.prepare("UPDATE users SET username='Jefa',username_key='jefa',username_changed_at=NULL,previous_username=NULL WHERE username_key='jefatura'").run();
   const list = await api('adminUsers', {}, boss.token);
   assert.equal(list.users?.[0]?.email, undefined, 'la lista no carga los correos');
   assert.match(adminHtml, /\$\{line\('Usuario',/);
   assert.match(adminHtml, /\$\{line\('Email',/);
+  assert.match(adminHtml, /\$\{line\('Nombre anterior',/);
+  assert.match(adminHtml, /\$\{line\('Último cambio de nombre',/);
 });
 
 test('el panel confirma en su propia ventana, nunca con la del navegador', () => {

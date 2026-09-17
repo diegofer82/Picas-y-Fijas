@@ -411,7 +411,9 @@ async function openUser(name){
   const line=(k,v)=>`<div>${k}</div><div>${v}</div>`;
   openModal(u.username,`
     <div class="kv">
-      ${line('Usuario',`${esc(u.username)}${u.username_changed_at?` <span class="muted small">· cambiado el ${when(u.username_changed_at)}</span>`:''}`)}
+      ${line('Usuario',esc(u.username))}
+      ${line('Nombre anterior',u.previous_username?esc(u.previous_username):'<span class="muted">—</span>')}
+      ${line('Último cambio de nombre',u.username_changed_at?when(u.username_changed_at):'<span class="muted">nunca</span>')}
       ${line('Email',u.email?`${esc(u.email)} ${u.email_verified_at?'<span class="tag">verificado</span>':'<span class="tag blocked">sin verificar</span>'}`:'<span class="muted">—</span>')}
       ${line('Rol',`<span class="tag${u.role==='admin'?' admin':''}">${esc(u.role)}</span>`)}
       ${line('Estado',u.blocked_at?'<span class="tag blocked">Bloqueado</span>':'Activo')}
