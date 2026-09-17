@@ -6,7 +6,7 @@ Este es el único documento de referencia del proyecto. Está pensado para perso
 
 Picas y Fijas es un juego multijugador web en español, inglés y francés. La versión vigente funciona íntegramente en Cloudflare; la implementación anterior de Google Sheets y Apps Script fue retirada del árbol actual después de completar la migración. Sigue disponible en el historial de Git si alguna vez se necesita consultar.
 
-Versión actual: **3.3.3**. En Solo, el cronómetro se reinicia para cada intento: llegar a cero consume un intento, lo deja visible en el registro y solo termina la práctica cuando se agota el límite elegido. La 3.2.0 añadió el acuerdo de versión entre página y servidor: cada respuesta lleva `appVersion` y una pestaña desfasada se recarga sola, porque una pestaña vieja hablando con el servidor nuevo era la causa de que una cuenta sin validar viera el vestíbulo, de los mensajes en español dentro de un juego en francés y de un contador parado hora y media. En ella `loginUser` responde `ok:false` cuando el correo no está validado. La 3.0.0 subió la mayor porque desapareció un endpoint —`adminMergeUsers`— y porque `loginUser` cambió de contrato: ya no crea cuentas y ya no devuelve `registered`. La 3.1.0 añade la puerta del correo: **no hay cuenta que valga sin correo verificado**.
+Versión actual: **3.4.0**. Desde **Mi cuenta** cada jugador puede cambiar su nombre de usuario —no su correo— una vez cada 90 días, y su historial y su ranking lo siguen. En la 3.3.3, en Solo, el cronómetro se reinicia para cada intento: llegar a cero consume un intento, lo deja visible en el registro y solo termina la práctica cuando se agota el límite elegido. La 3.2.0 añadió el acuerdo de versión entre página y servidor: cada respuesta lleva `appVersion` y una pestaña desfasada se recarga sola, porque una pestaña vieja hablando con el servidor nuevo era la causa de que una cuenta sin validar viera el vestíbulo, de los mensajes en español dentro de un juego en francés y de un contador parado hora y media. En ella `loginUser` responde `ok:false` cuando el correo no está validado. La 3.0.0 subió la mayor porque desapareció un endpoint —`adminMergeUsers`— y porque `loginUser` cambió de contrato: ya no crea cuentas y ya no devuelve `registered`. La 3.1.0 añade la puerta del correo: **no hay cuenta que valga sin correo verificado**.
 
 El 12 de septiembre de 2026 la base de producción se vació a propósito: quedó una sola cuenta, `Diego`, y se borraron partidas, chat, presencia, buzón y todas las sesiones. El motivo es el mismo: arrancar sin ninguna cuenta que no cumpla la regla nueva.
 
@@ -224,8 +224,9 @@ Antes hay que activar **Email Routing** en `picasyfijas.fans` y verificar la dir
 - `src/chat.js`: permisos, hilos privados, mensajes incrementales y retención del chat.
 - `src/maintenance.js`: mantenimiento horario fuera del camino crítico de las peticiones.
 - `src/admin.js`: herramientas de mantenimiento del panel: ficha de usuario, detección de cuentas repetidas, fusión, borrado, limpieza de partidas y consola SQL.
+- `src/rename.js`: el cambio de nombre de usuario y su reescritura en todas las tablas que guardan el nombre.
 - `src/feedback.js`: el buzón de sugerencias y errores: validación, barandillas del endpoint público, consultas del panel y el aviso por correo.
-- `migrations/0001_initial.sql`: esquema reproducible de D1. No es un residuo de la migración desde Google y no debe eliminarse. Las migraciones siguientes añaden o ajustan: `0002` el chat, `0003` los hilos privados, `0004` el origen de cada cuenta, `0005` el buzón de sugerencias, `0006` la bolsa de tiempo y `0007` los índices necesarios para permanecer dentro de D1 Free.
+- `migrations/0001_initial.sql`: esquema reproducible de D1. No es un residuo de la migración desde Google y no debe eliminarse. Las migraciones siguientes añaden o ajustan: `0002` el chat, `0003` los hilos privados, `0004` el origen de cada cuenta, `0005` el buzón de sugerencias, `0006` la bolsa de tiempo, `0007` los índices necesarios para permanecer dentro de D1 Free, `0008` el correo y la recuperación del PIN y `0009` la fecha del último cambio de nombre.
 - `test/`: pruebas automáticas de reglas, rutas, teclado y regresiones.
 - `tools/make-icons.mjs`: genera los cuatro PNG de la aplicación instalada. Se ejecuta con `npm run icons`.
 - `tools/make-rules-pages.py`: convierte `RULES` en las tres páginas públicas de reglas. El texto no se duplica: la única fuente sigue siendo el juego.
@@ -406,6 +407,20 @@ Tres parámetros de la URL entran directamente en un modo: `?verify_email=` acti
 La acción pública **`checkUsername`** responde `{ok, known, username}` con una sola lectura por el índice único `username_key`, sin escrituras. Devuelve el nombre **tal y como se guardó**, no como lo escribió quien pregunta.
 
 `test/login-two-steps.test.js` fija que entrar no crea cuentas —ni por nombre ni por correo, y sin dejar filas a medias—, que los tres paneles y los dos de «Mi cuenta» son `<form>`, y que el aviso del lobby cuelga de `firstLogin`, la bandera que devuelve `loginUser` cuando la cuenta no tenía ninguna entrada anterior.
+
+### Cambiar el nombre de usuario
+
+**Mi cuenta** tiene un tercer formulario: nombre nuevo y PIN actual. El correo no se puede cambiar desde ahí de la misma forma —es el identificador de verdad de la cuenta y solo se sustituye verificando uno nuevo—; el nombre sí, porque es solo la cara visible.
+
+El nombre no vive solo en `users`. Partidas (`p1`, `p2`, `winner`, `pending_winner`), jugadas (`guesses[].by`), chat (`sender`, `deleted_by`), hilos privados (`user1`, `user2`, `pair_key`), reportes, silencios, recibos, buzón y el objetivo de `audit_log` lo guardan escrito, para que el polling no cruce con `users` en cada consulta. `changeUsername`, en `src/rename.js`, lo reescribe en todas esas tablas en un único `batch` —una transacción en D1—: o cambia en todas partes o en ninguna, y el historial y el ranking siguen siendo del mismo jugador. Los textos ya escritos en mensajes de sistema del chat se quedan como estaban: son historia.
+
+Tres barandillas:
+
+- **el PIN actual**, como para cambiar el PIN;
+- **una vez cada 90 días** (`users.username_changed_at`, migración `0009`), para que el ranking no sea un desfile de disfraces. Corregir solo mayúsculas no cambia la clave y no consume el cupo; la ficha devuelve `usernameNextChangeAt` y la pantalla dice desde cuándo se podrá volver a cambiar;
+- **ninguna partida en espera o en juego**: el rival la tiene abierta con el nombre anterior y una jugada en vuelo llegaría con el nombre viejo.
+
+El nombre nuevo viaja como `newUsername`, no como `username`, porque `authenticate` pisa `params.username` con el de la sesión. La sesión no se cierra: sigue apuntando al mismo `user_id` y la siguiente respuesta ya lleva el nombre nuevo, que el navegador guarda en `pf_user`. `test/rename.test.js` fija todo esto.
 
 ## Modelo de datos
 
@@ -612,7 +627,7 @@ El proyecto sigue versionado semántico `vMAYOR.MENOR.PARCHE`:
 - **MENOR (Y)**: funcionalidad nueva compatible hacia atrás —una pantalla, un modo de juego, un ajuste como el cuadrado de idioma.
 - **PARCHE (Z)**: correcciones compatibles hacia atrás, retoques de texto, estilos y rendimiento.
 
-El número vive en tres sitios y los tres se cambian en el mismo commit: `version` en `package.json` conserva el SemVer canónico (`3.3.3`), porque npm y pnpm lo requieren, y `APP_VERSION` en `public/index.html` y `src/version.js` publica `v3.3.3`. El Worker lo firma en todas sus respuestas; `test/client-server-sync.test.js` comprueba que los tres coinciden. De ahí sale lo que ve el jugador en los créditos y lo que viaja con cada mensaje del buzón (`appVersion`), así que un número desfasado hace que un informe apunte a una versión que no es. La versión sube en el commit que introduce el cambio, no al desplegar.
+El número vive en tres sitios y los tres se cambian en el mismo commit: `version` en `package.json` conserva el SemVer canónico (`3.4.0`), porque npm y pnpm lo requieren, y `APP_VERSION` en `public/index.html` y `src/version.js` publica `v3.4.0`. El Worker lo firma en todas sus respuestas; `test/client-server-sync.test.js` comprueba que los tres coinciden. De ahí sale lo que ve el jugador en los créditos y lo que viaja con cada mensaje del buzón (`appVersion`), así que un número desfasado hace que un informe apunte a una versión que no es. La versión sube en el commit que introduce el cambio, no al desplegar.
 
 ## Procedimiento para futuras modificaciones
 

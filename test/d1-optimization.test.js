@@ -28,6 +28,7 @@ before(async () => {
     "0006_time_bank.sql",
     "0007_d1_free_optimization.sql",
     "0008_email_recovery.sql",
+    "0009_username_change.sql",
   ]) {
     const migration = await readFile(new URL(`../migrations/${file}`, import.meta.url), "utf8");
     for (const statement of migration.split(";").map((sql) => sql.trim()).filter(Boolean))

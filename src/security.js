@@ -229,9 +229,18 @@ export async function register(db, env, params, ttlHours, origin = {}) {
   return { ok:true, username:user.username, registered:true, activationRequired:true };
 }
 
+// Un cambio de nombre cada 90 dias: `changeUsername` lo hace cumplir y la
+// ficha dice desde cuando vuelve a estar permitido.
+export const RENAME_COOLDOWN_MS = 90 * 24 * 60 * 60 * 1000;
+export function nextUsernameChange(changedAt) {
+  const last = Date.parse(changedAt || '');
+  return Number.isFinite(last) ? new Date(last + RENAME_COOLDOWN_MS).toISOString() : null;
+}
+
 export async function accountProfile(db, user) {
-  const row = await db.prepare('SELECT username,email,email_verified_at,created_at FROM users WHERE id=?').bind(user.id).first();
-  return { ok:true, username:row.username, email:row.email, emailVerifiedAt:row.email_verified_at, createdAt:row.created_at };
+  const row = await db.prepare('SELECT username,email,email_verified_at,created_at,username_changed_at FROM users WHERE id=?').bind(user.id).first();
+  return { ok:true, username:row.username, email:row.email, emailVerifiedAt:row.email_verified_at, createdAt:row.created_at,
+    usernameNextChangeAt:nextUsernameChange(row.username_changed_at) };
 }
 
 export async function changePin(db, user, tokenHash, currentPin, newPin) {

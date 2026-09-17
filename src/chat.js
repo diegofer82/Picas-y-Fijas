@@ -64,9 +64,9 @@ function pairData(a, b) {
     : { pairKey: `${b.username_key}|${a.username_key}`, u1: b, u2: a };
 }
 function gameUsers(game) {
-  // Los nombres de una partida proceden de `users` y son inmutables. Derivar
-  // aqui la misma clave normalizada evita dos lecturas de `users` por cada
-  // polling de estado/chat.
+  // Los nombres de una partida proceden de `users`; si alguien se renombra,
+  // `changeUsername` los reescribe aqui tambien. Derivar la misma clave
+  // normalizada evita dos lecturas de `users` por cada polling de estado/chat.
   const a = { username: game.p1, username_key: key(game.p1) },
     b = { username: game.p2, username_key: key(game.p2) };
   return a.username_key && b.username_key ? pairData(a, b) : null;

@@ -19,6 +19,7 @@ import {
   usernameKey,
   validateCode,
 } from "./game.js";
+import { changeUsername } from "./rename.js";
 import { accountProfile, authenticate, changePin, hashPin, login, lookupName, register, requestOrigin, validPin, verifyTurnstile } from "./security.js";
 import {
   adminDeleteUser,
@@ -75,6 +76,7 @@ const PROTECTED = new Set([
   "requestEmailVerification",
   "accountProfile",
   "changePin",
+  "changeUsername",
 ]);
 const ADMIN_ACTIONS = new Set([
   "adminSummary",
@@ -1443,6 +1445,7 @@ async function routeApi(request, env, ctx) {
     return json(await requestEmailVerification(env.DB, env, auth.user, params.email, new URL(request.url).origin, params.lang));
   if (action === "accountProfile") return json(await accountProfile(env.DB, auth.user));
   if (action === "changePin") return json(await changePin(env.DB, auth.user, auth.tokenHash, String(params.currentPin || ''), String(params.newPin || '')));
+  if (action === "changeUsername") return json(await changeUsername(env.DB, auth.user, params));
   let result;
   switch (action) {
     case "createGame":
