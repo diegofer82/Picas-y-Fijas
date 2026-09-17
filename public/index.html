@@ -1042,7 +1042,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v3.4.5';
+const APP_VERSION = 'v3.5.0';
 /* Enlace de invitación: ...?game=SZ93 */
 let pendingJoinCode = '';
 (function(){
@@ -1942,6 +1942,7 @@ function toast(msg, isErr){
   clearTimeout(t._h); t._h=setTimeout(()=>t.className='toast',2600);
 }
 function hideToast(){ const el=$('toast'); clearTimeout(el._h); el.className='toast'; el.textContent=''; }
+const CLIENT_TIME_ZONE=(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'';}catch(e){return'';}})();
 async function api(action, payload={}, options={}){
   if(API.indexOf('PEGA_AQUI')===0){ toast(t('api_not_set'),true); throw new Error('API sin configurar'); }
   // Apps Script puede dejar ocasionalmente una conexión pendiente. Sin límite,
@@ -1957,6 +1958,9 @@ async function api(action, payload={}, options={}){
     // la pantalla tiene puesto ahora mismo, asi que viaja en cada peticion para
     // que los correos salgan en la lengua que el jugador esta leyendo.
     if(requestPayload.lang===undefined) requestPayload.lang=lang;
+    // La zona horaria del aparato, para que /admin sepa la hora local del
+    // jugador. El servidor solo la escribe al entrar o si la cuenta no tenia.
+    if(requestPayload.timeZone===undefined&&CLIENT_TIME_ZONE) requestPayload.timeZone=CLIENT_TIME_ZONE;
     if(action==='loginUser') requestPayload.pin=userPin;
     const res = await fetch(API,{ method:'POST', cache:'no-store', signal:controller.signal,
       headers, body: JSON.stringify(requestPayload) });

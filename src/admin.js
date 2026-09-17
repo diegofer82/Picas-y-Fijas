@@ -36,7 +36,7 @@ export async function adminUserDetail(db, target) {
   const key = usernameKey(String(target || ""));
   const user = await db
     // La ficha, y solo ella, ensena el correo: la lista no lo necesita.
-    .prepare(`SELECT ${USER_COLUMNS},u.email,u.email_verified_at,u.username_changed_at,u.previous_username FROM users u WHERE u.username_key=?`)
+    .prepare(`SELECT ${USER_COLUMNS},u.email,u.email_verified_at,u.username_changed_at,u.previous_username,u.timezone FROM users u WHERE u.username_key=?`)
     .bind(key)
     .first();
   if (!user) return { ok: false, error: "Usuario no encontrado." };

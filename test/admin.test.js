@@ -22,7 +22,7 @@ before(async () => {
     bindings: { SESSION_TTL_HOURS:'168', ADMIN_PATH:'/admin', DEBUG_ERRORS:'1' },
   });
   const db = await mf.getD1Database('DB');
-  for (const file of ['0001_initial.sql','0002_chat.sql','0003_private_threads.sql','0004_admin_insight.sql','0005_feedback.sql','0006_time_bank.sql','0007_d1_free_optimization.sql','0008_email_recovery.sql','0009_username_change.sql','0010_previous_username.sql']) {
+  for (const file of ['0001_initial.sql','0002_chat.sql','0003_private_threads.sql','0004_admin_insight.sql','0005_feedback.sql','0006_time_bank.sql','0007_d1_free_optimization.sql','0008_email_recovery.sql','0009_username_change.sql','0010_previous_username.sql','0011_user_timezone.sql']) {
     const migration = await readFile(new URL('../migrations/'+file, import.meta.url), 'utf8');
     for (const statement of migration.split(';').map((sql) => sql.trim()).filter(Boolean)) {
       await db.prepare(statement).run();
@@ -69,8 +69,8 @@ test('la IP y el pais los pone la red, no el navegador', () => {
   const request = new Request('https://picasyfijas.fans/api', {
     headers:{ 'cf-connecting-ip':'198.51.100.4, 10.0.0.1', 'cf-ipcountry':'FR' },
   });
-  assert.deepEqual(requestOrigin(request), { ip:'198.51.100.4', country:'fr' });
-  assert.deepEqual(requestOrigin(new Request('https://picasyfijas.fans/api')), { ip:'', country:'' });
+  assert.deepEqual(requestOrigin(request), { ip:'198.51.100.4', country:'fr', timezone:'' });
+  assert.deepEqual(requestOrigin(new Request('https://picasyfijas.fans/api')), { ip:'', country:'', timezone:'' });
 });
 
 test('entrar deja registrado el pais y la ultima IP de cada cuenta', async () => {

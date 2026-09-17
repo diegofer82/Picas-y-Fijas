@@ -6,7 +6,7 @@ Este es el único documento de referencia del proyecto. Está pensado para perso
 
 Picas y Fijas es un juego multijugador web en español, inglés y francés. La versión vigente funciona íntegramente en Cloudflare; la implementación anterior de Google Sheets y Apps Script fue retirada del árbol actual después de completar la migración. Sigue disponible en el historial de Git si alguna vez se necesita consultar.
 
-Versión actual: **3.4.5**. Desde **Mi cuenta** cada jugador puede cambiar su nombre de usuario —su correo verificado, nunca— una vez cada 90 días, y su historial y su ranking lo siguen. En la 3.3.3, en Solo, el cronómetro se reinicia para cada intento: llegar a cero consume un intento, lo deja visible en el registro y solo termina la práctica cuando se agota el límite elegido. La 3.2.0 añadió el acuerdo de versión entre página y servidor: cada respuesta lleva `appVersion` y una pestaña desfasada se recarga sola, porque una pestaña vieja hablando con el servidor nuevo era la causa de que una cuenta sin validar viera el vestíbulo, de los mensajes en español dentro de un juego en francés y de un contador parado hora y media. En ella `loginUser` responde `ok:false` cuando el correo no está validado. La 3.0.0 subió la mayor porque desapareció un endpoint —`adminMergeUsers`— y porque `loginUser` cambió de contrato: ya no crea cuentas y ya no devuelve `registered`. La 3.1.0 añade la puerta del correo: **no hay cuenta que valga sin correo verificado**.
+Versión actual: **3.5.0**. `/admin` enseña las horas en la zona horaria de quien lo mira y la ficha de cada jugador dice en qué zona vive y qué hora es allí; la base sigue guardando todo en UTC (ver «Las horas y las zonas horarias»). Desde **Mi cuenta** cada jugador puede cambiar su nombre de usuario —su correo verificado, nunca— una vez cada 90 días, y su historial y su ranking lo siguen. En la 3.3.3, en Solo, el cronómetro se reinicia para cada intento: llegar a cero consume un intento, lo deja visible en el registro y solo termina la práctica cuando se agota el límite elegido. La 3.2.0 añadió el acuerdo de versión entre página y servidor: cada respuesta lleva `appVersion` y una pestaña desfasada se recarga sola, porque una pestaña vieja hablando con el servidor nuevo era la causa de que una cuenta sin validar viera el vestíbulo, de los mensajes en español dentro de un juego en francés y de un contador parado hora y media. En ella `loginUser` responde `ok:false` cuando el correo no está validado. La 3.0.0 subió la mayor porque desapareció un endpoint —`adminMergeUsers`— y porque `loginUser` cambió de contrato: ya no crea cuentas y ya no devuelve `registered`. La 3.1.0 añade la puerta del correo: **no hay cuenta que valga sin correo verificado**.
 
 El 12 de septiembre de 2026 la base de producción se vació a propósito: quedó una sola cuenta, `Diego`, y se borraron partidas, chat, presencia, buzón y todas las sesiones. El motivo es el mismo: arrancar sin ninguna cuenta que no cumpla la regla nueva.
 
@@ -226,7 +226,7 @@ Antes hay que activar **Email Routing** en `picasyfijas.fans` y verificar la dir
 - `src/admin.js`: herramientas de mantenimiento del panel: ficha de usuario, detección de cuentas repetidas, fusión, borrado, limpieza de partidas y consola SQL.
 - `src/rename.js`: el cambio de nombre de usuario y su reescritura en todas las tablas que guardan el nombre.
 - `src/feedback.js`: el buzón de sugerencias y errores: validación, barandillas del endpoint público, consultas del panel y el aviso por correo.
-- `migrations/0001_initial.sql`: esquema reproducible de D1. No es un residuo de la migración desde Google y no debe eliminarse. Las migraciones siguientes añaden o ajustan: `0002` el chat, `0003` los hilos privados, `0004` el origen de cada cuenta, `0005` el buzón de sugerencias, `0006` la bolsa de tiempo, `0007` los índices necesarios para permanecer dentro de D1 Free, `0008` el correo y la recuperación del PIN y `0009` la fecha del último cambio de nombre y `0010` el nombre anterior.
+- `migrations/0001_initial.sql`: esquema reproducible de D1. No es un residuo de la migración desde Google y no debe eliminarse. Las migraciones siguientes añaden o ajustan: `0002` el chat, `0003` los hilos privados, `0004` el origen de cada cuenta, `0005` el buzón de sugerencias, `0006` la bolsa de tiempo, `0007` los índices necesarios para permanecer dentro de D1 Free, `0008` el correo y la recuperación del PIN y `0009` la fecha del último cambio de nombre, `0010` el nombre anterior y `0011` la zona horaria de cada cuenta.
 - `test/`: pruebas automáticas de reglas, rutas, teclado y regresiones.
 - `tools/make-icons.mjs`: genera los cuatro PNG de la aplicación instalada. Se ejecuta con `npm run icons`.
 - `tools/make-rules-pages.py`: convierte `RULES` en las tres páginas públicas de reglas. El texto no se duplica: la única fuente sigue siendo el juego.
@@ -470,6 +470,20 @@ Al pulsar un nombre se abre su ficha, que empieza por el **usuario**, su **nombr
 
 El punto de cada fila reutiliza la tabla `presence` y el mismo umbral del contador general: verde significa actividad autenticada en los últimos 2 minutos y gris, desconectado. El texto accesible y el título del punto expresan también el estado, de modo que la información no depende únicamente del color. La consulta es parte de `adminUsers`, no genera escrituras adicionales y no cambia la versión de la aplicación.
 
+### Las horas y las zonas horarias
+
+**La base guarda y compara todo en UTC**, con `toISOString()`: caducidades, bloqueos, presencia, relojes y el Cron. Ninguna regla depende de la zona de nadie. La conversión se hace solo al pintar:
+
+- **El juego** usa `toLocaleDateString` e `Intl.DateTimeFormat`, así que cada jugador ve sus fechas en la zona de su aparato.
+- **`/admin`** pinta con `when` (texto plano, también para el borrador de correo) y `at` (un `<time>` cuyo título lleva la hora UTC exacta), los dos en la zona del navegador del administrador. La cabecera dice cuál es: «horas en Pacific/Noumea (UTC+11)».
+- **La ficha de un jugador** enseña su zona y la hora que es allí ahora: «Australia/Sydney · allí son las 21:53 (UTC+10)».
+
+La zona de cada cuenta vive en `users.timezone` (migración `0011`). **Se guarda el nombre IANA, nunca un desfase**: Sídney pasa de UTC+10 a UTC+11 en octubre y Numea no cambia nunca, así que un «+11» fijo mentiría medio año. **Tampoco se deduce del país**: Australia, Estados Unidos o Brasil tienen varias zonas, y una VPN engaña. Manda la que declara el navegador (`timeZone`, que el juego envía en cada petición y `/admin` al entrar); `request.cf.timezone`, que Cloudflare deduce de la IP, solo es el respaldo. `cleanTimeZone` descarta cualquier nombre que el motor no reconozca.
+
+Se escribe al entrar (`login` y `register`) y, una sola vez, en la primera petición de una sesión cuya cuenta todavía no tenía zona. No se escribe en cada petición a propósito: dos aparatos de la misma cuenta con zonas distintas se la quitarían el uno al otro en cada polling. Quien viaja la actualiza en su siguiente entrada. `test/timezone.test.js` fija todo esto.
+
+La consola SQL no convierte nada: lo que devuelve está en UTC.
+
 ### Lo que el correo dejó sin trabajo
 
 **La fusión de cuentas y el buscador de cuentas repetidas se retiraron enteros.** Los dos resolvían el mismo problema, que ya no existe: quien olvidaba su PIN volvía a entrar con el mismo nombre y un número detrás —«carlos» pasaba a ser «carlos46»—, así que el panel agrupaba las cuentas por la última IP y por la raíz del nombre para que alguien uniera después los dos rastros a mano.
@@ -635,7 +649,7 @@ El proyecto sigue versionado semántico `vMAYOR.MENOR.PARCHE`:
 - **MENOR (Y)**: funcionalidad nueva compatible hacia atrás —una pantalla, un modo de juego, un ajuste como el cuadrado de idioma.
 - **PARCHE (Z)**: correcciones compatibles hacia atrás, retoques de texto, estilos y rendimiento.
 
-El número vive en tres sitios y los tres se cambian en el mismo commit: `version` en `package.json` conserva el SemVer canónico (`3.4.5`), porque npm y pnpm lo requieren, y `APP_VERSION` en `public/index.html` y `src/version.js` publica `v3.4.5`. El Worker lo firma en todas sus respuestas; `test/client-server-sync.test.js` comprueba que los tres coinciden. De ahí sale lo que ve el jugador en los créditos y lo que viaja con cada mensaje del buzón (`appVersion`), así que un número desfasado hace que un informe apunte a una versión que no es. La versión sube en el commit que introduce el cambio, no al desplegar.
+El número vive en tres sitios y los tres se cambian en el mismo commit: `version` en `package.json` conserva el SemVer canónico (`3.5.0`), porque npm y pnpm lo requieren, y `APP_VERSION` en `public/index.html` y `src/version.js` publica `v3.5.0`. El Worker lo firma en todas sus respuestas; `test/client-server-sync.test.js` comprueba que los tres coinciden. De ahí sale lo que ve el jugador en los créditos y lo que viaja con cada mensaje del buzón (`appVersion`), así que un número desfasado hace que un informe apunte a una versión que no es. La versión sube en el commit que introduce el cambio, no al desplegar.
 
 ## Procedimiento para futuras modificaciones
 

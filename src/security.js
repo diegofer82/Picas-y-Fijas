@@ -10,7 +10,21 @@ export function requestOrigin(request) {
   return {
     ip: forwarded.split(',')[0].trim().slice(0, 45),
     country: cleanCountry(request.cf?.country || request.headers.get('cf-ipcountry') || ''),
+    timezone: cleanTimeZone(request.cf?.timezone),
   };
+}
+
+/* La zona horaria de la cuenta, para que /admin ensene la hora local de la
+   persona. El navegador la conoce mejor que la IP —un pais puede tener varias
+   y una VPN miente—, asi que manda el `timeZone` que envia la pagina y
+   `request.cf.timezone` solo es el respaldo. Se guarda el nombre IANA, nunca
+   un desfase fijo: Sidney cambia de hora en verano y Numea no. Un nombre que
+   el motor no reconoce se descarta. */
+export function cleanTimeZone(value) {
+  const zone = String(value || '').trim();
+  if (!zone || zone.length > 64 || !/^[A-Za-z][A-Za-z0-9_+\-\/]*$/.test(zone)) return '';
+  try { return new Intl.DateTimeFormat('en', { timeZone: zone }).resolvedOptions().timeZone; }
+  catch { return ''; }
 }
 
 const encoder = new TextEncoder();
@@ -108,7 +122,7 @@ export async function authenticate(db, request, params) {
   const token = authorization.startsWith('Bearer ') ? authorization.slice(7).trim() : String(params.sessionToken || '');
   if (!token) return { error: 'Sesión inválida. Vuelve a entrar con tu nombre y PIN.' };
   const tokenHash = await sha256(token);
-  const user = await db.prepare(`SELECT u.id,u.username,u.username_key,u.role,u.blocked_at,u.email,u.email_verified_at,s.expires_at,s.last_seen_at
+  const user = await db.prepare(`SELECT u.id,u.username,u.username_key,u.role,u.blocked_at,u.email,u.email_verified_at,u.timezone,s.expires_at,s.last_seen_at
     FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=?`).bind(tokenHash).first();
   if (!user || Date.parse(user.expires_at) <= Date.now()) return { error: 'La sesión ha expirado. Vuelve a entrar.' };
   if (user.blocked_at) return { error: 'Este usuario está bloqueado.' };
@@ -121,6 +135,15 @@ export async function authenticate(db, request, params) {
   if (!Number.isFinite(seenAt) || Date.now() - seenAt >= SESSION_TOUCH_MS)
     await db.prepare('UPDATE sessions SET last_seen_at=? WHERE token_hash=?')
       .bind(new Date().toISOString(), tokenHash).run();
+  // Una sesion abierta antes de que existiera la columna la rellena en su
+  // primera peticion. Despues solo la cambia `login`: si se escribiera en cada
+  // peticion, dos aparatos con zonas distintas se la quitarian el uno al otro
+  // en cada polling.
+  const zone = user.timezone ? '' : cleanTimeZone(params.timeZone) || cleanTimeZone(request.cf?.timezone);
+  if (zone) {
+    await db.prepare('UPDATE users SET timezone=? WHERE id=?').bind(zone, user.id).run();
+    user.timezone = zone;
+  }
   return { user, tokenHash };
 }
 
@@ -170,12 +193,14 @@ export async function login(db, params, ttlHours, origin = {}) {
   // `register` deja la cuenta sin ninguna entrada, asi que esta es la primera
   // de verdad: la que merece el aviso de bienvenida.
   const firstLogin = !user.last_login_at;
+  const zone = cleanTimeZone(params.timeZone) || origin.timezone || '';
   await db.batch([
     db.prepare('DELETE FROM login_attempts WHERE throttle_key=?').bind(key),
     db.prepare(`UPDATE users SET last_login_at=?,login_count=login_count+1,
       last_ip=CASE WHEN ?<>'' THEN ? ELSE last_ip END,
-      last_country=CASE WHEN ?<>'' THEN ? ELSE last_country END WHERE id=?`)
-      .bind(stamp, origin.ip || '', origin.ip || '', origin.country || '', origin.country || '', user.id),
+      last_country=CASE WHEN ?<>'' THEN ? ELSE last_country END,
+      timezone=CASE WHEN ?<>'' THEN ? ELSE timezone END WHERE id=?`)
+      .bind(stamp, origin.ip || '', origin.ip || '', origin.country || '', origin.country || '', zone, zone, user.id),
   ]);
   const session = await createSession(db, user, ttlHours, origin);
   // Sin correo verificado la respuesta es que no: `ok:false`. La sesion viaja
@@ -213,14 +238,15 @@ export async function register(db, env, params, ttlHours, origin = {}) {
   const stamp = new Date().toISOString();
   const salt = crypto.randomUUID();
   const pinHash = await hashPin(pin, salt);
+  const zone = cleanTimeZone(params.timeZone) || origin.timezone || null;
   // Crear la cuenta no es entrar: el contador y la fecha de acceso se quedan
   // vacios hasta que alguien entre de verdad con el PIN.
   try {
     await db.prepare(`INSERT INTO users(username,username_key,email,email_verified_at,pin_salt,pin_hash,role,created_at,last_login_at,
-      login_count,signup_ip,signup_country,last_ip,last_country)
-      VALUES(?,?,?,?,?,?,?, ?,?,0,?,?,?,?)`)
+      login_count,signup_ip,signup_country,last_ip,last_country,timezone)
+      VALUES(?,?,?,?,?,?,?, ?,?,0,?,?,?,?,?)`)
       .bind(username, key, email, null, salt, pinHash, 'player', stamp, null,
-        origin.ip || '', origin.country || '', origin.ip || '', origin.country || '').run();
+        origin.ip || '', origin.country || '', origin.ip || '', origin.country || '', zone).run();
   } catch (cause) {
     if (!isUniqueViolation(cause)) throw cause;
     return { ok:false, error:/email/i.test(String(cause?.message || cause))

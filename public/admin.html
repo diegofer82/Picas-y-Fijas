@@ -95,7 +95,7 @@
   <div class="topbar">
     <div class="brand">
       <svg class="toro" width="42" height="36" viewBox="-8 -16 104 90" aria-hidden="true"><path class="t-fill" d="M19 21C12.5 16.5 4.5 11 -2 5c0 9.5 4.5 18.5 12.5 25C13 27.5 16 24 19 21Z"></path><path class="t-fill" d="M69 21C75.5 16.5 83.5 11 90 5c0 9.5-4.5 18.5-12.5 25C75 27.5 72 24 69 21Z"></path><path class="t-fill" d="M15 32c0-11.6 13-20.6 29-20.6s29 9 29 20.6c0 7-1.6 12.8-4.8 17.6C64.6 57 55.4 61.6 44 61.6S23.4 57 19.8 49.6C16.6 44.8 15 39 15 32Z"></path><path class="t-line" d="M32.5 54c0-3.4 5.2-5.6 11.5-5.6s11.5 2.2 11.5 5.6-5.2 5.6-11.5 5.6-11.5-2.2-11.5-5.6Z"></path><circle class="t-dot" cx="40" cy="53.6" r="1.8"></circle><circle class="t-dot" cx="48" cy="53.6" r="1.8"></circle><circle class="t-dot" cx="32" cy="34" r="3.4"></circle><circle class="t-dot" cx="56" cy="34" r="3.4"></circle></svg>
-      <div><h1>Administración</h1><div class="muted small">Picas y Fijas · acceso separado y reservado</div></div>
+      <div><h1>Administración</h1><div class="muted small">Picas y Fijas · acceso separado y reservado · <span id="adminZone" title="Pasa el ratón por una fecha para ver su hora UTC">horas locales</span></div></div>
     </div>
     <div class="grow"></div>
     <button class="back" id="backToGame" title="Cierra el panel y vuelve al juego">
@@ -226,8 +226,25 @@
 let token=localStorage.getItem('pf_admin_session')||'';
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
-const when=v=>v?String(v).replace('T',' ').slice(0,16):'—';
+// La base guarda UTC; el panel lo ensena en la zona de este navegador. `when`
+// da texto plano (sirve tambien para el borrador de correo) y `at` lo envuelve
+// en <time> con la hora UTC en el titulo, para cuando hace falta la exacta.
+const ADMIN_TZ=(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC';}catch(e){return'UTC';}})();
+const pad2=n=>String(n).padStart(2,'0');
+function zoned(v,zone){
+  const d=new Date(v);if(!v||isNaN(d))return null;
+  try{const p=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(d).map(x=>[x.type,x.value]));
+    return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}`;}
+  catch(e){return `${d.getUTCFullYear()}-${pad2(d.getUTCMonth()+1)}-${pad2(d.getUTCDate())} ${pad2(d.getUTCHours())}:${pad2(d.getUTCMinutes())}`;}
+}
+function utcOffset(zone,at=new Date()){
+  try{return new Intl.DateTimeFormat('en',{timeZone:zone,timeZoneName:'shortOffset'}).formatToParts(at).find(x=>x.type==='timeZoneName').value.replace('GMT','UTC');}
+  catch(e){return'';}
+}
+const when=v=>zoned(v,ADMIN_TZ)||(v?String(v):'—');
+const at=v=>{const local=zoned(v,ADMIN_TZ);return local?`<time datetime="${esc(v)}" title="${esc(zoned(v,'UTC'))} UTC">${local}</time>`:'—';};
 const flag=cc=>/^[a-z]{2}$/i.test(String(cc||''))?String(cc).toUpperCase().replace(/./g,c=>String.fromCodePoint(0x1F1E6+c.charCodeAt(0)-65)):'';
+$('adminZone').textContent=`horas en ${ADMIN_TZ} (${utcOffset(ADMIN_TZ)})`;
 const loaded=new Set();
 const state={users:[],games:[],threads:[],lobby:null,feedback:[]};
 
@@ -240,7 +257,7 @@ function showLogin(message){signOut();$('login').classList.remove('hidden');$('d
 async function login(){
   $('loginGate').classList.add('hidden');
   try{
-    const r=await api('loginUser',{identifier:$('username').value.trim(),pin:$('pin').value.trim()});
+    const r=await api('loginUser',{identifier:$('username').value.trim(),pin:$('pin').value.trim(),timeZone:ADMIN_TZ});
     // El panel corre sobre la misma sesion del juego, y una sesion sin correo
     // verificado no puede hacer nada: mas vale decirlo aqui que dejar entrar a
     // un panel donde cada pestana responderia con un error. Va antes que el
@@ -304,7 +321,7 @@ function renderUsers(){
     <td data-label="Partidas"><span>${x.games||0}${x.wins?` <span class="muted small">(${x.wins} G)</span>`:''}</span></td>
     <td data-label="Mensajes">${x.messages||0}</td>
     <td data-label="Rol"><span class="tag${x.role==='admin'?' admin':''}">${esc(x.role)}</span></td>
-    <td data-label="Último acceso" class="nowrap">${when(x.last_login_at)}</td>
+    <td data-label="Último acceso" class="nowrap">${at(x.last_login_at)}</td>
     <td data-label="Estado">${x.blocked_at?'<span class="tag blocked">Bloqueado</span>':'Activo'}</td>
     <td data-label="Acciones" class="acts nowrap">
       <button class="tiny" data-user="${esc(x.username)}" data-block="${x.blocked_at?'0':'1'}">${x.blocked_at?'Desbloquear':'Bloquear'}</button>
@@ -321,7 +338,7 @@ function renderGames(){
   const needle=$('gameFilter').value.trim().toLowerCase();
   const rows=state.games.filter(x=>!needle||[x.game_id,x.p1,x.p2].join(' ').toLowerCase().includes(needle));
   $('games').innerHTML=rows.map(x=>`<tr><td data-label="Código" class="nowrap"><code>${esc(x.game_id)}</code></td><td data-label="Estado">${esc(x.status)}</td>
-    <td data-label="Jugadores">${esc(x.p1)} / ${esc(x.p2||'—')}</td><td data-label="Ganador">${esc(x.winner||'—')}</td><td data-label="Actualizada" class="nowrap">${when(x.updated_at)}</td>
+    <td data-label="Jugadores">${esc(x.p1)} / ${esc(x.p2||'—')}</td><td data-label="Ganador">${esc(x.winner||'—')}</td><td data-label="Actualizada" class="nowrap">${at(x.updated_at)}</td>
     <td data-label="Acción" class="acts nowrap">${['waiting','active'].includes(x.status)?`<button class="tiny danger" data-game="${esc(x.game_id)}">Cerrar</button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="muted empty">Sin resultados.</td></tr>';
 }
 
@@ -331,19 +348,19 @@ function renderThreads(){
   const needle=$('threadFilter').value.trim().toLowerCase();
   const lobby=state.lobby;
   const head=lobby&&!needle?`<tr><td data-label="Conversación"><b>Chat del lobby</b> <span class="muted small">· ${lobby.people} personas</span></td>
-    <td data-label="Mensajes">${lobby.messages}</td><td data-label="Zumbidos">—</td><td data-label="Borrados">${lobby.deleted}</td><td data-label="Reportes">—</td><td data-label="Última actividad" class="nowrap">${when(lobby.lastActivity)}</td>
+    <td data-label="Mensajes">${lobby.messages}</td><td data-label="Zumbidos">—</td><td data-label="Borrados">${lobby.deleted}</td><td data-label="Reportes">—</td><td data-label="Última actividad" class="nowrap">${at(lobby.lastActivity)}</td>
     <td class="acts"><button class="tiny" data-thread="0">Ver</button></td></tr>`:'';
   const rows=state.threads.filter(t=>!needle||`${t.user1} ${t.user2}`.toLowerCase().includes(needle));
   $('threads').innerHTML=head+rows.map(t=>`<tr>
     <td data-label="Conversación"><span><a class="user" data-detail="${esc(t.user1)}">${esc(t.user1)}</a> · <a class="user" data-detail="${esc(t.user2)}">${esc(t.user2)}</a>${t.gameId?` <span class="muted small">${esc(t.gameId)}</span>`:''}</span></td>
     <td data-label="Mensajes">${t.written}</td><td data-label="Zumbidos">${t.nudges}</td><td data-label="Borrados">${t.deleted}</td><td data-label="Reportes">${t.reports?`<span class="tag alert">${t.reports}</span>`:'0'}</td>
-    <td data-label="Última actividad" class="nowrap">${when(t.lastActivity)}</td><td class="acts"><button class="tiny" data-thread="${t.id}">Ver</button></td></tr>`).join('');
+    <td data-label="Última actividad" class="nowrap">${at(t.lastActivity)}</td><td class="acts"><button class="tiny" data-thread="${t.id}">Ver</button></td></tr>`).join('');
   if(!$('threads').innerHTML)$('threads').innerHTML='<tr><td colspan="7" class="muted empty">Sin conversaciones.</td></tr>';
 }
 async function openThread(id){
   const r=await api('adminChatThread',{threadId:id});
   openModal(r.title+(r.gameId?' · '+r.gameId:''),r.messages.map(m=>`<div class="msg ${m.kind==='system'?'system':''} ${m.deleted?'gone':''}">
-    <div class="row"><span class="who">${esc(m.sender||'sistema')}</span><span class="muted small">${when(m.createdAt)}</span>
+    <div class="row"><span class="who">${esc(m.sender||'sistema')}</span><span class="muted small">${at(m.createdAt)}</span>
     ${m.reportCount?`<span class="tag alert">${m.reportCount} reporte(s)</span>`:''}<span class="grow"></span>
     ${!m.deleted&&m.kind==='user'?`<button class="tiny danger" data-delete-message="${m.id}">Borrar</button> <button class="tiny" data-mute-user="${esc(m.sender)}">Silenciar</button>`:''}</div>
     <div>${m.deleted?'[mensaje eliminado'+(m.deletedBy?' por '+esc(m.deletedBy):'')+']':m.kind==='nudge'?'<i>zumbido</i>':esc(m.body)}</div></div>`).join('')||'<div class="muted">Esta conversación no tiene mensajes.</div>');
@@ -374,7 +391,7 @@ async function loadFeedback(){
   $('fbCounts').innerHTML=Object.entries(FB_STATUS)
     .map(([key,label])=>`<div class="card${key==='new'&&r.counts[key]?' warn':''}">${label}<b>${r.counts[key]||0}</b></div>`).join('');
   $('feedback').innerHTML=r.items.map(x=>`<tr>
-    <td data-label="Fecha" class="nowrap">${when(x.createdAt)}</td>
+    <td data-label="Fecha" class="nowrap">${at(x.createdAt)}</td>
     <td data-label="Tipo" class="nowrap">${esc(FB_KIND[x.kind]||x.kind)}</td>
     <td data-label="Mensaje" style="max-width:420px"><span style="white-space:pre-wrap">${esc(x.message)}${x.adminNote?`<div class="muted small">Nota: ${esc(x.adminNote)}</div>`:''}</span></td>
     <td data-label="De"><span>${esc(x.username||x.contact||'—')}${x.username&&x.contact?`<div class="muted small">${esc(x.contact)}</div>`:''}
@@ -400,7 +417,7 @@ async function loadReports(){
 /* ---- auditoría ---- */
 async function loadAudit(){
   const r=await api('adminAudit');
-  $('audit').innerHTML=r.audit.map(x=>`<tr><td data-label="Fecha" class="nowrap">${when(x.created_at)}</td><td data-label="Acción">${esc(x.action)}</td><td data-label="Objetivo">${esc(x.target||'—')}</td>
+  $('audit').innerHTML=r.audit.map(x=>`<tr><td data-label="Fecha" class="nowrap">${at(x.created_at)}</td><td data-label="Acción">${esc(x.action)}</td><td data-label="Objetivo">${esc(x.target||'—')}</td>
     <td data-label="Detalle" class="small muted">${esc(String(x.details_json||'').slice(0,220))}</td></tr>`).join('')||'<tr><td colspan="4" class="muted empty">Sin registros.</td></tr>';
 }
 
@@ -413,17 +430,18 @@ async function openUser(name){
     <div class="kv">
       ${line('Usuario',esc(u.username))}
       ${line('Nombre anterior',u.previous_username?esc(u.previous_username):'<span class="muted">—</span>')}
-      ${line('Último cambio de nombre',u.username_changed_at?when(u.username_changed_at):'<span class="muted">nunca</span>')}
+      ${line('Último cambio de nombre',u.username_changed_at?at(u.username_changed_at):'<span class="muted">nunca</span>')}
       ${line('Email',u.email?`${esc(u.email)} ${u.email_verified_at?'<span class="tag">verificado</span>':'<span class="tag blocked">sin verificar</span>'}`:'<span class="muted">—</span>')}
       ${line('Rol',`<span class="tag${u.role==='admin'?' admin':''}">${esc(u.role)}</span>`)}
       ${line('Estado',u.blocked_at?'<span class="tag blocked">Bloqueado</span>':'Activo')}
       ${line('País',`${flag(u.last_country)} ${esc(String(u.last_country||'—').toUpperCase())}${u.signup_country&&u.signup_country!==u.last_country?` <span class="muted small">(alta: ${esc(u.signup_country.toUpperCase())})</span>`:''}`)}
+      ${line('Zona horaria',u.timezone?`${esc(u.timezone)} <span class="muted small">· allí son las ${esc(zoned(new Date().toISOString(),u.timezone).slice(11))} (${esc(utcOffset(u.timezone))})</span>`:'<span class="muted">desconocida</span>')}
       ${line('Última IP',`<code>${esc(u.last_ip||'—')}</code>`)}
       ${line('IP del alta',`<code>${esc(u.signup_ip||'—')}</code>`)}
-      ${line('Alta',when(u.created_at))}
-      ${line('Último acceso',`${when(u.last_login_at)} <span class="muted small">· ${u.login_count||0} entradas</span>`)}
-      ${line('Presencia',d.presence?`${esc(d.presence.location)}${d.presence.game_id?' · '+esc(d.presence.game_id):''} <span class="muted small">${when(d.presence.last_seen_at)}</span>`:'—')}
-      ${line('Chat',d.mute?`silenciado ${d.mute.muted_until?'hasta '+when(d.mute.muted_until):'de forma permanente'} por ${esc(d.mute.created_by)}`:'sin restricciones')}
+      ${line('Alta',at(u.created_at))}
+      ${line('Último acceso',`${at(u.last_login_at)} <span class="muted small">· ${u.login_count||0} entradas</span>`)}
+      ${line('Presencia',d.presence?`${esc(d.presence.location)}${d.presence.game_id?' · '+esc(d.presence.game_id):''} <span class="muted small">${at(d.presence.last_seen_at)}</span>`:'—')}
+      ${line('Chat',d.mute?`silenciado ${d.mute.muted_until?'hasta '+at(d.mute.muted_until):'de forma permanente'} por ${esc(d.mute.created_by)}`:'sin restricciones')}
       ${line('Juego',`${s.played||0} partidas · ${s.wins||0} ganadas · ${s.draws||0} empates`)}
       ${line('Mensajes',`${s.messages||0} enviados · ${s.reportsGot||0} reportados · ${s.reportsMade||0} reportes hechos`)}
     </div>
@@ -436,14 +454,14 @@ async function openUser(name){
     </div>
     <h3>Sesiones (${d.sessions.length})</h3>
     ${d.sessions.length?`<div class="scroll"><table><thead><tr><th>Creada</th><th>Vista</th><th>Caduca</th><th>IP</th><th>País</th></tr></thead><tbody>
-      ${d.sessions.map(x=>`<tr><td class="nowrap">${when(x.created_at)}</td><td class="nowrap">${when(x.last_seen_at)}</td><td class="nowrap">${when(x.expires_at)}</td><td><code>${esc(x.ip||'—')}</code></td><td>${flag(x.country)} ${esc(String(x.country||'').toUpperCase())}</td></tr>`).join('')}
+      ${d.sessions.map(x=>`<tr><td class="nowrap">${at(x.created_at)}</td><td class="nowrap">${at(x.last_seen_at)}</td><td class="nowrap">${at(x.expires_at)}</td><td><code>${esc(x.ip||'—')}</code></td><td>${flag(x.country)} ${esc(String(x.country||'').toUpperCase())}</td></tr>`).join('')}
     </tbody></table></div>`:'<div class="muted">Sin sesiones.</div>'}
     <h3>Conversaciones (${d.threads.length})</h3>
     ${d.threads.length?d.threads.map(t=>`<div class="row"><a class="user" data-detail="${esc(t.opponent)}">${esc(t.opponent)}</a>
-      <span class="muted small">${t.messages} mensajes · ${when(t.lastActivity)}</span><button class="tiny" data-thread="${t.id}">Ver</button></div>`).join(''):'<div class="muted">Ninguna.</div>'}
+      <span class="muted small">${t.messages} mensajes · ${at(t.lastActivity)}</span><button class="tiny" data-thread="${t.id}">Ver</button></div>`).join(''):'<div class="muted">Ninguna.</div>'}
     <h3>Últimas partidas</h3>
     ${d.games.length?`<div class="scroll"><table><thead><tr><th>Código</th><th>Estado</th><th>Rivales</th><th>Ganador</th><th>Actualizada</th></tr></thead><tbody>
-      ${d.games.map(g=>`<tr><td class="nowrap"><code>${esc(g.game_id)}</code></td><td>${esc(g.status)}</td><td>${esc(g.p1)} / ${esc(g.p2||'—')}</td><td>${esc(g.winner||'—')}</td><td class="nowrap">${when(g.updated_at)}</td></tr>`).join('')}
+      ${d.games.map(g=>`<tr><td class="nowrap"><code>${esc(g.game_id)}</code></td><td>${esc(g.status)}</td><td>${esc(g.p1)} / ${esc(g.p2||'—')}</td><td>${esc(g.winner||'—')}</td><td class="nowrap">${at(g.updated_at)}</td></tr>`).join('')}
     </tbody></table></div>`:'<div class="muted">Ninguna.</div>'}`);
 }
 
