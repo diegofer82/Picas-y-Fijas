@@ -4,6 +4,7 @@
 // mantenimiento, no del juego, y porque cada una necesita mas cuidado que una
 // consulta suelta.
 import { LIMITS, usernameKey } from "./game.js";
+import { pinThrottleKey } from "./security.js";
 
 const now = () => new Date().toISOString();
 const KEY_DIEGO = "diego";
@@ -139,9 +140,11 @@ export async function adminDeleteUser(db, params, admin) {
     db.prepare("DELETE FROM sessions WHERE user_id=?").bind(user.id),
     db.prepare("DELETE FROM presence WHERE username_key=?").bind(user.username_key),
     db.prepare("DELETE FROM chat_mutes WHERE username_key=?").bind(user.username_key),
+    // El contador de PIN es de la cuenta; las claves por nombre y por correo
+    // son las de antes de la 3.5.1 y pueden seguir ahi.
     db
-      .prepare("DELETE FROM login_attempts WHERE throttle_key=?")
-      .bind(user.username_key),
+      .prepare("DELETE FROM login_attempts WHERE throttle_key IN (?,?,?)")
+      .bind(pinThrottleKey(user.id), user.username_key, user.email || ""),
     db.prepare("DELETE FROM request_receipts WHERE username_key=? OR game_id IN (SELECT game_id FROM games WHERE p1=? OR p2=?)")
       .bind(user.username_key, user.username, user.username),
     db.prepare("DELETE FROM chat_reports WHERE reporter_key=?").bind(user.username_key),
@@ -166,6 +169,9 @@ export async function adminDeleteUser(db, params, admin) {
       .prepare("DELETE FROM audit_log WHERE admin_user_id=? OR target=? OR details_json LIKE ? OR (? IS NOT NULL AND details_json LIKE ?)")
       .bind(user.id, user.username, auditNeedle, emailNeedle, emailNeedle),
   ];
+  // Quien fue administrador pudo responder mensajes del buzon; esa fila apunta
+  // a su id sin cascada y haria fallar el borrado entero.
+  statements.push(db.prepare("DELETE FROM feedback_replies WHERE admin_user_id=?").bind(user.id));
   statements.push(db.prepare("DELETE FROM users WHERE id=?").bind(user.id));
   await db.batch(statements);
   return { ok: true, deleted: user.username, purged: true };

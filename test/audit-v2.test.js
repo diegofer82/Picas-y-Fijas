@@ -354,7 +354,7 @@ test('public listing excludes private games and immediate rematch keeps the old 
   const waitingPublic=await player('Waiting-P'),waitingPrivate=await player('Waiting-X');
   const publicWaitingResult=await api('createGame',{...common,isPublic:true,username:waitingPublic.username},waitingPublic.token);
   const privateWaitingResult=await api('createGame',{...common,isPublic:false,username:waitingPrivate.username},waitingPrivate.token);
-  const listing=await api('listGames');
+  const listing=await api('listGames',{},waitingPublic.token);
   assert.equal(listing.games.some((game)=>game.gameId===publicWaitingResult.gameId),true);
   assert.equal(listing.games.some((game)=>game.gameId===privateWaitingResult.gameId),false);
   const state=await api('state',{gameId:publicId},publicA.token);

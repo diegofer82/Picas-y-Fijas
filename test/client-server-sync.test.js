@@ -133,7 +133,10 @@ const ADMIN_ONLY = new Set([
 
 function serverMessages(source) {
   const found = new Set();
-  for (const pattern of [/error:\s*'([^']+)'/g, /error:\s*"([^"]+)"/g, /\berror\(\s*'([^']+)'/g, /\berror\(\s*"([^"]+)"/g])
+  // Tambien las validaciones que devuelven la frase suelta (`return "…"`),
+  // que llegan al jugador como `error` sin pasar por un literal `error:`.
+  for (const pattern of [/error:\s*'([^']+)'/g, /error:\s*"([^"]+)"/g, /\berror\(\s*'([^']+)'/g, /\berror\(\s*"([^"]+)"/g,
+    /\breturn\s+'([A-Z¿¡][^'`$]*\.)'/g, /\breturn\s+"([A-Z¿¡][^"`$]*\.)"/g, /\?\s*"([A-Z][^"`$]*\.)"\s*:/g])
     for (const match of source.matchAll(pattern)) found.add(match[1]);
   return found;
 }
@@ -143,7 +146,7 @@ test('todo mensaje que puede leer un jugador existe en los tres idiomas', async 
     html.slice(html.indexOf('const ERR = {'), html.indexOf('/* Instrucciones del juego')).replace('const ERR', 'var ERR') + ';return ERR;',
   )();
   const messages = new Set();
-  for (const file of ['index.js','security.js','recovery.js','game.js','chat.js','feedback.js','admin.js','maintenance.js'])
+  for (const file of ['index.js','security.js','recovery.js','rename.js','game.js','chat.js','feedback.js','admin.js','maintenance.js'])
     for (const message of serverMessages(await readFile(new URL('../src/'+file, import.meta.url), 'utf8')))
       messages.add(message);
   const untranslated = [...messages]

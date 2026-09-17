@@ -1,5 +1,5 @@
 import { cleanName, usernameKey } from "./game.js";
-import { cleanEmail, hashPin, randomToken, sha256, validEmail, validPin } from "./security.js";
+import { cleanEmail, hashPin, isUniqueViolation, randomToken, sha256, validEmail, validPin } from "./security.js";
 
 const stamp = () => new Date().toISOString();
 const expiry = () => new Date(Date.now() + 15 * 60_000).toISOString();
@@ -106,7 +106,9 @@ export const EMAIL_LOCKED = "Tu correo ya está verificado y no se puede cambiar
 
 export function requestEmailVerification(db, env, user, email, origin, lang) {
   if (user.email_verified_at) return { ok: false, error: EMAIL_LOCKED };
-  return sendEmailVerification(db, env, user, email, origin, false, lang);
+  // Solo llega aqui una cuenta que aun no ha verificado: su enlace vale lo
+  // mismo que el del alta, 3 dias, que es lo que promete la pantalla.
+  return sendEmailVerification(db, env, user, email, origin, true, lang);
 }
 
 export async function verifyEmail(db, token) {
@@ -116,10 +118,17 @@ export async function verifyEmail(db, token) {
   // Un enlace pedido antes de verificar otra direccion no puede sustituirla.
   const owner = await db.prepare("SELECT email,email_verified_at FROM users WHERE id=?").bind(row.user_id).first();
   if (owner?.email_verified_at && owner.email !== row.email) return { ok: false, error: EMAIL_LOCKED };
-  await db.batch([
-    db.prepare("UPDATE email_verifications SET used_at=? WHERE token_hash=?").bind(at, row.token_hash),
-    db.prepare("UPDATE users SET email=?,email_verified_at=? WHERE id=?").bind(row.email, at, row.user_id),
-  ]);
+  try {
+    await db.batch([
+      db.prepare("UPDATE email_verifications SET used_at=? WHERE token_hash=?").bind(at, row.token_hash),
+      db.prepare("UPDATE users SET email=?,email_verified_at=? WHERE id=?").bind(row.email, at, row.user_id),
+    ]);
+  } catch (cause) {
+    // Entre la peticion del enlace y su apertura otra cuenta pudo quedarse con
+    // esa direccion. El indice unico lo impide; esto lo dice sin un error 500.
+    if (!isUniqueViolation(cause)) throw cause;
+    return { ok: false, error: "Ese correo ya está asociado a otra cuenta." };
+  }
   return { ok: true };
 }
 

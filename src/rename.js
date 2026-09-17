@@ -1,5 +1,5 @@
 import { cleanName, usernameKey } from "./game.js";
-import { RENAME_COOLDOWN_MS, isUniqueViolation, nextUsernameChange, verifyPin } from "./security.js";
+import { NAME_CHARS_ERROR, PIN_LOCKED, RENAME_COOLDOWN_MS, checkPin, isUniqueViolation, nameCharsError, nextUsernameChange } from "./security.js";
 
 /* Cambiar el nombre visible sin tocar el correo, que es el identificador de
    verdad de la cuenta.
@@ -25,9 +25,11 @@ export async function changeUsername(db, user, params, at = Date.now()) {
   const key = usernameKey(username);
   const pin = String(params.pin || "");
   if (username.length < 2) return { ok: false, error: "El nombre debe tener al menos 2 caracteres." };
+  if (nameCharsError(username)) return { ok: false, error: NAME_CHARS_ERROR };
   const row = await db.prepare("SELECT * FROM users WHERE id=?").bind(user.id).first();
-  if (!row || !(await verifyPin(pin, row.pin_salt, row.pin_hash)))
-    return { ok: false, error: "El PIN actual no es correcto." };
+  if (!row) return { ok: false, error: "El PIN actual no es correcto." };
+  const pinCheck = await checkPin(db, row, pin);
+  if (!pinCheck.ok) return { ok: false, error: pinCheck.locked ? PIN_LOCKED : "El PIN actual no es correcto." };
   if (username === row.username)
     return { ok: true, username, usernameNextChangeAt: nextUsernameChange(row.username_changed_at) };
   const oldName = row.username, oldKey = row.username_key;
@@ -78,7 +80,6 @@ export async function changeUsername(db, user, params, at = Date.now()) {
     db.prepare("UPDATE chat_threads SET pair_key=user1_key||'|'||user2_key WHERE user1_key=?1 OR user2_key=?1").bind(key),
     db.prepare("UPDATE request_receipts SET username_key=? WHERE username_key=?").bind(key, oldKey),
     db.prepare("DELETE FROM presence WHERE username_key=?").bind(oldKey),
-    db.prepare("DELETE FROM login_attempts WHERE throttle_key=?").bind(oldKey),
     db.prepare("UPDATE feedback SET username=? WHERE username=?").bind(username, oldName),
     db.prepare("UPDATE audit_log SET target=? WHERE target=?").bind(username, oldName),
   ];

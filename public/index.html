@@ -1042,7 +1042,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v3.5.0';
+const APP_VERSION = 'v3.5.1';
 /* Enlace de invitación: ...?game=SZ93 */
 let pendingJoinCode = '';
 (function(){
@@ -1506,6 +1506,17 @@ const ERR = {
     "Mensaje no encontrado.":"Message not found.",
     "No puedes reportar tu propio mensaje.":"You can't report your own message.",
     "La partida recibió dos acciones simultáneas. Inténtalo de nuevo.":"The game received two actions at once. Please try again.",
+    "El nombre no puede contener comillas, < > & ni barras invertidas.":"Names cannot contain quotes, < > & or backslashes.",
+    "No hay suficientes colores distintos para esa longitud. Permite repetidos o elige más colores.":"There aren't enough different colors for that length. Allow repeats or choose more colors.",
+    "El tiempo del turno terminó.":"The turn time ran out.",
+    "No se pudo generar un código de partida.":"A game code could not be generated.",
+    "Escribe un mensaje.":"Write a message.",
+    "No se permiten enlaces.":"Links are not allowed.",
+    "El mensaje contiene una palabra no permitida.":"The message contains a word that is not allowed.",
+    "El mensaje no puede superar 300 caracteres.":"The message cannot be longer than 300 characters.",
+    "Tu acceso al chat fue silenciado permanentemente por un administrador.":"An administrator has muted your chat access permanently.",
+    "Tu acceso al chat está silenciado temporalmente por un administrador.":"An administrator has muted your chat access for a while.",
+    "Solicitud demasiado grande.":"Request too large.",
     "Error temporal del servidor.":"Temporary server error."
   },
   fr:{
@@ -1587,6 +1598,17 @@ const ERR = {
     "Mensaje no encontrado.":"Message introuvable.",
     "No puedes reportar tu propio mensaje.":"Tu ne peux pas signaler ton propre message.",
     "La partida recibió dos acciones simultáneas. Inténtalo de nuevo.":"La partie a reçu deux actions en même temps. Réessaie.",
+    "El nombre no puede contener comillas, < > & ni barras invertidas.":"Le nom ne peut pas contenir de guillemets, < > & ni de barres obliques inverses.",
+    "No hay suficientes colores distintos para esa longitud. Permite repetidos o elige más colores.":"Il n'y a pas assez de couleurs différentes pour cette longueur. Autorise les répétitions ou choisis plus de couleurs.",
+    "El tiempo del turno terminó.":"Le temps du tour est écoulé.",
+    "No se pudo generar un código de partida.":"Impossible de générer un code de partie.",
+    "Escribe un mensaje.":"Écris un message.",
+    "No se permiten enlaces.":"Les liens ne sont pas autorisés.",
+    "El mensaje contiene una palabra no permitida.":"Le message contient un mot interdit.",
+    "El mensaje no puede superar 300 caracteres.":"Le message ne peut pas dépasser 300 caractères.",
+    "Tu acceso al chat fue silenciado permanentemente por un administrador.":"Un administrateur t'a retiré définitivement l'accès au chat.",
+    "Tu acceso al chat está silenciado temporalmente por un administrador.":"Un administrateur t'a retiré temporairement l'accès au chat.",
+    "Solicitud demasiado grande.":"Requête trop volumineuse.",
     "Error temporal del servidor.":"Erreur temporaire du serveur."
   }
 };
@@ -1717,7 +1739,15 @@ function t(key, p){
   if(p) for(const k in p) s = s.split('{'+k+'}').join(p[k]);
   return s;
 }
-function te(msg){ return (ERR[lang] && ERR[lang][msg]) || msg; }
+const ERR_PATTERNS = {
+  en:[[/^El código debe tener (\d+) posiciones\.$/, 'The code must have $1 positions.']],
+  fr:[[/^El código debe tener (\d+) posiciones\.$/, 'Le code doit avoir $1 positions.']]
+};
+function te(msg){
+  if(ERR[lang] && ERR[lang][msg]) return ERR[lang][msg];
+  for(const [pattern, text] of ERR_PATTERNS[lang]||[]) if(pattern.test(String(msg||''))) return String(msg).replace(pattern, text);
+  return msg;
+}
 /* -------------------- la mascota: El Toro, por "Bulls and Cows" --------------------
    Se dibuja desde JS para poder inyectarla en los sitios que se pintan con
    innerHTML (banner de fin de partida) y desde el marcado en los estaticos.
@@ -2002,7 +2032,12 @@ function handleOutdatedClient(serverVersion){
   toast(t('outdated_reload'));
   setTimeout(()=>location.reload(),900);
 }
-function esc(s){ return String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
+/* Tambien las comillas: los nombres acaban dentro de atributos (title="…") y
+   una comilla sin escapar abre la puerta a inyectar un manejador. */
+function esc(s){ return String(s).replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c])); }
+/* Un texto que viaja como argumento de un onclick='fn("…")'. encodeURIComponent
+   deja pasar el apostrofo, que cerraria la cadena de JavaScript. */
+function jsArg(s){ return encodeURIComponent(String(s)).replace(/'/g,'%27'); }
 
 /* -------------------- chat 2.1 -------------------- */
 function chatMutedUsers(){try{return new Set(JSON.parse(localStorage.getItem('pf_chat_muted')||'[]'));}catch(e){return new Set();}}
@@ -2052,7 +2087,7 @@ function renderChat(scrollToLatest=false){
     if(m.kind==='system')return`<div class="chat-msg system">${esc(systemChatText(m.body))}</div>`;
     if(m.kind==='nudge')return`<div class="chat-msg nudge">${esc(t('chat_nudged',{name:m.sender}))}</div>`;
     const mine=chatUserKey(m.sender)===chatUserKey(user),body=m.deleted?t('chat_deleted'):m.body;
-    const actions=!mine&&!m.deleted?`<span class="chat-actions"><button type="button" title="${esc(t('chat_mute'))}" onclick="muteChatUser('${encodeURIComponent(m.sender)}')">${ico('mudo',14)}</button><button type="button" title="${esc(t('chat_report'))}" onclick="reportChatMessage(${m.id})">${ico('bandera',14)}</button></span>`:'';
+    const actions=!mine&&!m.deleted?`<span class="chat-actions"><button type="button" title="${esc(t('chat_mute'))}" onclick="muteChatUser('${jsArg(m.sender)}')">${ico('mudo',14)}</button><button type="button" title="${esc(t('chat_report'))}" onclick="reportChatMessage(${m.id})">${ico('bandera',14)}</button></span>`:'';
     return`<div class="chat-msg${mine?' mine':''}"><div class="chat-meta"><b>${esc(m.sender)}</b><span>${chatTime(m.createdAt)}</span>${actions}</div><div class="chat-body">${esc(body)}</div></div>`;
   }).join('');box.dataset.rendered='true';box.scrollTop=(scrollToLatest||firstRender||nearBottom)?box.scrollHeight:previousTop;
 }
@@ -2076,7 +2111,7 @@ $('chat-form').addEventListener('submit',e=>{e.preventDefault();sendChatMessage(
 async function sendChatNudge(){try{const res=await api('chatNudge',currentChatRoom());if(!res.ok){toast(te(res.error),true);return;}playChatAudio(wizzAudio);const target=$('chat-panel');target.classList.remove('chat-shake');void target.offsetWidth;target.classList.add('chat-shake');await pollChat(true);}catch(e){toast(t('net_error'),true);}}
 function toggleNudges(){chatNudgesOn=!chatNudgesOn;localStorage.setItem('pf_chat_nudges',chatNudgesOn?'1':'0');updateChatLabels();toast(t(chatNudgesOn?'chat_nudges_on':'chat_nudges_off'));}
 function toggleMutedPanel(){const panel=$('chat-muted-panel'),opening=panel.classList.contains('hidden');panel.classList.toggle('hidden',!opening);if(opening)renderMutedPanel();}
-function renderMutedPanel(){const panel=$('chat-muted-panel');if(!panel)return;const users=[...chatMutedUsers()].sort((a,b)=>a.localeCompare(b));if(!users.length){panel.innerHTML=`<div class="chat-muted-title">${esc(t('chat_muted_title'))}</div><div class="chat-empty">${esc(t('chat_muted_empty'))}</div>`;return;}panel.innerHTML=`<div class="chat-muted-title">${esc(t('chat_muted_title'))}</div>`+users.map(name=>`<div class="chat-muted-row"><span>${esc(name)}</span><button type="button" onclick="unmuteChatUser('${encodeURIComponent(name)}')">${esc(t('chat_unmute'))}</button></div>`).join('')+`<button class="chat-unmute-all" type="button" onclick="unmuteAllChatUsers()">${esc(t('chat_unmute_all'))}</button>`;}
+function renderMutedPanel(){const panel=$('chat-muted-panel');if(!panel)return;const users=[...chatMutedUsers()].sort((a,b)=>a.localeCompare(b));if(!users.length){panel.innerHTML=`<div class="chat-muted-title">${esc(t('chat_muted_title'))}</div><div class="chat-empty">${esc(t('chat_muted_empty'))}</div>`;return;}panel.innerHTML=`<div class="chat-muted-title">${esc(t('chat_muted_title'))}</div>`+users.map(name=>`<div class="chat-muted-row"><span>${esc(name)}</span><button type="button" onclick="unmuteChatUser('${jsArg(name)}')">${esc(t('chat_unmute'))}</button></div>`).join('')+`<button class="chat-unmute-all" type="button" onclick="unmuteAllChatUsers()">${esc(t('chat_unmute_all'))}</button>`;}
 function muteChatUser(encoded){const name=decodeURIComponent(encoded);if(!confirm(t('chat_mute_confirm',{name})))return;const set=chatMutedUsers();set.add(chatUserKey(name));localStorage.setItem('pf_chat_muted',JSON.stringify([...set]));renderChat();renderMutedPanel();updateChatLabels();toast(t('chat_muted'));}
 function unmuteChatUser(encoded){const name=decodeURIComponent(encoded),set=chatMutedUsers();set.delete(chatUserKey(name));localStorage.setItem('pf_chat_muted',JSON.stringify([...set]));renderChat();renderMutedPanel();updateChatLabels();toast(t('chat_unmuted',{name}));}
 function unmuteAllChatUsers(){localStorage.removeItem('pf_chat_muted');renderChat();renderMutedPanel();updateChatLabels();toast(t('chat_all_unmuted'));}
@@ -2860,7 +2895,8 @@ function renderGameItems(box, games){
       <span class="${cntCls}" style="margin-right:2px">${cnt}</span>`;
     const b=document.createElement('button'); b.className='btn sm'+(invite?' green':'');
     b.textContent= invite ? t('join_btn') : (g.status==='waiting'?t('see_btn'):t('continue_btn'));
-    b.onclick=()=>{ const meta={id:g.gameId,digits:g.digits,mode:g.mode,numColors:g.numColors,allowRepeats:g.allowRepeats,maxAttempts:g.maxAttempts,turnSeconds:g.turnSeconds,revealSecrets:g.revealSecrets};
+    b.onclick=()=>{ const meta={id:g.gameId,digits:g.digits,mode:g.mode,numColors:g.numColors,allowRepeats:g.allowRepeats,maxAttempts:g.maxAttempts,turnSeconds:g.turnSeconds,
+      timeMode:g.timeMode,bankSeconds:g.bankSeconds,bankIncrement:g.bankIncrement,revealSecrets:g.revealSecrets};
       if(invite){ goToRematch(g.gameId); }
       else if(g.status==='waiting'||!complete){ enterWait(meta); } else { enterGame(meta); } };
     el.appendChild(b); box.appendChild(el);

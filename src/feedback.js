@@ -235,7 +235,7 @@ export async function adminReplyFeedback(db, env, params, admin) {
       from: { email: "noreply@mail.picasyfijas.fans", name: "Picas y Fijas" },
       subject,
       text: body,
-      html: `<p>${body.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/\n/g,"<br>")}</p>`,
+      html: `<p>${body.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>")}</p>`,
     });
   } catch { return { ok: false, error: "No se pudo enviar el correo." }; }
   const created = now();

@@ -60,6 +60,8 @@ const PROTECTED = new Set([
   "passTurn",
   "togglePause",
   "lobbyState",
+  "listGames",
+  "leaderboard",
   "myGames",
   "history",
   "historyGame",
@@ -501,7 +503,11 @@ async function joinGame(db, params, user) {
       maxSymbolFor(game.mode, game.num_colors),
     );
     if (validation) return { ok: false, error: validation };
-    const timed = toInt(game.turn_seconds) > 0;
+    // Con cualquier reloj —por turno o bolsa— la cuenta no arranca aqui: espera
+    // a que las dos pantallas pidan el estado (`timer_ready_by`). Antes la bolsa
+    // empezaba a gastarse en cuanto el rival se unia, antes de que quien tenia
+    // el primer turno viera siquiera la partida.
+    const timed = hasClock(game);
     const updated = await saveGame(db, game, {
       p2: user.username,
       secret2: String(params.secret).trim(),
@@ -1178,7 +1184,16 @@ async function rematch(db, params, user) {
     }
     const created = await createGame(db, params, user, old);
     if (!created.ok) return created;
-    await saveGame(db, old, { rematch_id: created.gameId, updated_at: now() });
+    try {
+      await saveGame(db, old, { rematch_id: created.gameId, updated_at: now() });
+    } catch (cause) {
+      // Si los dos jugadores piden la revancha a la vez, uno pierde la carrera.
+      // Su partida nueva no la enlaza nadie: se borra antes de reintentar, que
+      // es cuando descubre la del rival y se une a ella. Sin esto quedaba una
+      // partida privada en espera ocupando uno de sus tres huecos.
+      await db.prepare("DELETE FROM games WHERE game_id=? AND status='waiting'").bind(created.gameId).run();
+      throw cause;
+    }
     await systemChat(
       db,
       old.game_id,
@@ -1197,13 +1212,25 @@ async function adminAction(db, action, params, user, env) {
     action === "adminDeleteChatMessage" ||
     action === "adminMuteChatUser" ||
     action === "adminUnmuteChatUser"
-  )
-    return adminChat(db, action, params, user);
+  ) {
+    const result = await adminChat(db, action, params, user);
+    // Leer el chat no cambia nada; borrar un mensaje o silenciar a alguien si,
+    // y toda accion que cambia algo queda en la auditoria.
+    if (result.ok && !action.startsWith("adminChat"))
+      await logAudit(db, user, action, String(params.target || params.messageId || ""), params);
+    return result;
+  }
   if (action === "adminSummary") return adminSummary(db, onlineCount);
   if (action === "adminUsers") return adminUsers(db);
   if (action === "adminUserDetail") return adminUserDetail(db, params.target);
   if (action === "adminFeedback") return adminFeedback(db, params);
-  if (action === "adminReplyFeedback") return adminReplyFeedback(db, env, params, user);
+  if (action === "adminReplyFeedback") {
+    const result = await adminReplyFeedback(db, env, params, user);
+    // El cuerpo de la respuesta ya se guarda en `feedback_replies`.
+    if (result.ok)
+      await logAudit(db, user, action, String(params.id || ""), { id: params.id, subject: params.subject });
+    return result;
+  }
   if (action === "adminGames") {
     const { results } = await db
       .prepare(
@@ -1223,8 +1250,8 @@ async function adminAction(db, action, params, user, env) {
       await Promise.all([
         db
           .prepare(
-            `SELECT username,username_key,pin_salt,pin_hash,role,blocked_at,created_at,last_login_at,
-              last_ip,last_country,signup_ip,signup_country,login_count FROM users`,
+            `SELECT username,username_key,email,email_verified_at,pin_salt,pin_hash,role,blocked_at,created_at,last_login_at,
+              last_ip,last_country,signup_ip,signup_country,login_count,username_changed_at,previous_username,timezone FROM users`,
           )
           .all(),
         db.prepare("SELECT * FROM games").all(),
@@ -1237,7 +1264,7 @@ async function adminAction(db, action, params, user, env) {
     return {
       ok: true,
       exportedAt: now(),
-      schemaVersion: 3,
+      schemaVersion: 4,
       users: users.results,
       games: games.results,
       audit: audit.results,
@@ -1283,10 +1310,16 @@ async function adminAction(db, action, params, user, env) {
     if (!targetUser) return { ok: false, error: "Usuario no encontrado." };
     await db.prepare("DELETE FROM sessions WHERE user_id=?").bind(targetUser.id).run();
   } else if (action === "adminSetBlocked") {
-    await db
+    const blocked = truthy(params.blocked);
+    const changed = await db
       .prepare("UPDATE users SET blocked_at=? WHERE username_key=?")
-      .bind(truthy(params.blocked) ? now() : null, usernameKey(target))
+      .bind(blocked ? now() : null, usernameKey(target))
       .run();
+    if (!changed.meta?.changes) return { ok: false, error: "Usuario no encontrado." };
+    // Bloquear tambien corta lo que ya estaba abierto: `authenticate` rechaza
+    // la sesion, pero asi la cuenta desaparece al instante del contador.
+    if (blocked)
+      await db.prepare("DELETE FROM presence WHERE username_key=?").bind(usernameKey(target)).run();
   } else if (action === "adminSetRole") {
     const role = params.role === "admin" ? "admin" : "player";
     if (usernameKey(target) === "diego" && role !== "admin")
@@ -1294,10 +1327,11 @@ async function adminAction(db, action, params, user, env) {
         ok: false,
         error: "No se puede retirar el administrador principal.",
       };
-    await db
+    const changed = await db
       .prepare("UPDATE users SET role=? WHERE username_key=?")
       .bind(role, usernameKey(target))
       .run();
+    if (!changed.meta?.changes) return { ok: false, error: "Usuario no encontrado." };
   } else if (action === "adminResetPin") {
     if (!validPin(params.newPin))
       return { ok: false, error: "El PIN debe tener entre 4 y 8 dígitos." };
@@ -1505,7 +1539,7 @@ async function routeApi(request, env, ctx) {
       result = await gamePresence(env.DB, params, auth.user);
       break;
     case "leaderboard":
-      result = await leaderboard(env.DB, params.username);
+      result = await leaderboard(env.DB, auth.user.username);
       break;
     case "chatList":
       result = await listChat(env.DB, params, auth.user);

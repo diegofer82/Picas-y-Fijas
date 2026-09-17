@@ -6,7 +6,7 @@ Este es el único documento de referencia del proyecto. Está pensado para perso
 
 Picas y Fijas es un juego multijugador web en español, inglés y francés. La versión vigente funciona íntegramente en Cloudflare; la implementación anterior de Google Sheets y Apps Script fue retirada del árbol actual después de completar la migración. Sigue disponible en el historial de Git si alguna vez se necesita consultar.
 
-Versión actual: **3.5.0**. `/admin` enseña las horas en la zona horaria de quien lo mira y la ficha de cada jugador dice en qué zona vive y qué hora es allí; la base sigue guardando todo en UTC (ver «Las horas y las zonas horarias»). Desde **Mi cuenta** cada jugador puede cambiar su nombre de usuario —su correo verificado, nunca— una vez cada 90 días, y su historial y su ranking lo siguen. En la 3.3.3, en Solo, el cronómetro se reinicia para cada intento: llegar a cero consume un intento, lo deja visible en el registro y solo termina la práctica cuando se agota el límite elegido. La 3.2.0 añadió el acuerdo de versión entre página y servidor: cada respuesta lleva `appVersion` y una pestaña desfasada se recarga sola, porque una pestaña vieja hablando con el servidor nuevo era la causa de que una cuenta sin validar viera el vestíbulo, de los mensajes en español dentro de un juego en francés y de un contador parado hora y media. En ella `loginUser` responde `ok:false` cuando el correo no está validado. La 3.0.0 subió la mayor porque desapareció un endpoint —`adminMergeUsers`— y porque `loginUser` cambió de contrato: ya no crea cuentas y ya no devuelve `registered`. La 3.1.0 añade la puerta del correo: **no hay cuenta que valga sin correo verificado**.
+Versión actual: **3.5.1**. Es una versión de correcciones salida de una auditoría completa: los nombres ya no pueden llevar comillas ni ángulos —un nombre con apóstrofo podía inyectar código en el chat de los demás—, el contador de PIN es de la cuenta y cubre también «Mi cuenta», la bolsa de tiempo espera a que las dos pantallas estén listas, el ranking y la lista pública quedan detrás de la puerta del correo, dos revanchas simultáneas ya no dejan una partida huérfana y la moderación del chat y las respuestas del buzón quedan en la auditoría (ver «La auditoría de la 3.5.1»). En la 3.5.0, `/admin` enseña las horas en la zona horaria de quien lo mira y la ficha de cada jugador dice en qué zona vive y qué hora es allí; la base sigue guardando todo en UTC (ver «Las horas y las zonas horarias»). Desde **Mi cuenta** cada jugador puede cambiar su nombre de usuario —su correo verificado, nunca— una vez cada 90 días, y su historial y su ranking lo siguen. En la 3.3.3, en Solo, el cronómetro se reinicia para cada intento: llegar a cero consume un intento, lo deja visible en el registro y solo termina la práctica cuando se agota el límite elegido. La 3.2.0 añadió el acuerdo de versión entre página y servidor: cada respuesta lleva `appVersion` y una pestaña desfasada se recarga sola, porque una pestaña vieja hablando con el servidor nuevo era la causa de que una cuenta sin validar viera el vestíbulo, de los mensajes en español dentro de un juego en francés y de un contador parado hora y media. En ella `loginUser` responde `ok:false` cuando el correo no está validado. La 3.0.0 subió la mayor porque desapareció un endpoint —`adminMergeUsers`— y porque `loginUser` cambió de contrato: ya no crea cuentas y ya no devuelve `registered`. La 3.1.0 añade la puerta del correo: **no hay cuenta que valga sin correo verificado**.
 
 El 12 de septiembre de 2026 la base de producción se vació a propósito: quedó una sola cuenta, `Diego`, y se borraron partidas, chat, presencia, buzón y todas las sesiones. El motivo es el mismo: arrancar sin ninguna cuenta que no cumpla la regla nueva.
 
@@ -50,14 +50,14 @@ Por ejemplo, si el secreto es `1234` y el intento es `1356`, el resultado es **1
 
 La pantalla de acceso tiene tres caras que nunca se ven a la vez —entrar, crear cuenta y recuperar el PIN— y entra por la primera, porque es lo que hace casi todo el mundo casi siempre.
 
-1. **Entrar** pide el nombre *o* el correo y el PIN. Cinco PIN incorrectos seguidos bloquean ese identificador durante 15 minutos.
-2. **Crear cuenta** pide correo, nombre visible y PIN repetido. La cuenta nace inactiva: hasta que no se abre el enlace que llega por correo —válido 30 días— no se puede entrar con ella.
+1. **Entrar** pide el nombre *o* el correo y el PIN. Cinco PIN incorrectos seguidos bloquean **la cuenta** durante 15 minutos, se haya escrito el nombre o el correo: los dos comparten un mismo contador (`login_attempts`, clave `user:<id>`). Los formularios de **Mi cuenta** que piden el PIN actual —cambiar el PIN o el nombre— cuentan en ese mismo contador, para que una sesión robada no pueda probar PIN sin límite.
+2. **Crear cuenta** pide correo, nombre visible y PIN repetido. El nombre no puede llevar comillas, `<`, `>`, `&` ni barras invertidas. La cuenta nace inactiva: hasta que no se abre el enlace que llega por correo —válido 3 días— no se puede entrar con ella. Una cuenta que no se activa en 30 días la borra el mantenimiento horario.
 3. **¿Olvidaste tu PIN?** pide el correo y manda un enlace de un solo uso que caduca en 15 minutos. La respuesta es siempre la misma, exista o no la cuenta, para no delatar qué direcciones están registradas.
 4. La primera entrada de verdad —la que sigue a la activación— enseña una vez en el lobby el recordatorio de que ese PIN hará falta la próxima vez.
 
 **Entrar nunca crea una cuenta.** Es una regla, no un detalle de implementación: una cuenta creada al vuelo con un nombre suelto nacería sin correo y, por tanto, sin ninguna forma de recuperar su PIN. `loginUser` con un nombre o un correo desconocido responde con un error que invita a crear la cuenta; el alta pasa siempre por `registerUser`, que exige correo.
 
-**Y ninguna cuenta juega sin correo verificado.** No hay excepción para las cuentas antiguas: si `email_verified_at` está vacío, la sesión nace a medias y lo único que se puede hacer con ella es mirar la propia ficha y pedir el enlace de verificación. Todo lo demás —crear una partida, unirse, el chat, el ranking, `/admin`— responde `403` con el código `email_pending`.
+**Y ninguna cuenta juega sin correo verificado.** No hay excepción para las cuentas antiguas: si `email_verified_at` está vacío, la sesión nace a medias y lo único que se puede hacer con ella es mirar la propia ficha y pedir el enlace de verificación. Todo lo demás —crear una partida, unirse, el chat, el ranking, la lista de partidas públicas, `/admin`— responde `403` con el código `email_pending`. Sin sesión, el ranking y la lista responden `401`: hasta la 3.5.0 se servían a cualquiera, porque no figuraban en `PROTECTED`.
 
 Entrar no se rechaza, y la razón es práctica: para pedir el enlace hace falta una sesión, y quien nunca declaró un correo no tendría por dónde empezar. Lo que se corta es lo que viene después.
 
@@ -171,9 +171,9 @@ Se elige un tipo —idea, error, pregunta u otro—, se escribe un mensaje de 10
 
 **No se envía a un correo y ya está: se guarda en D1 y se tría en `/admin`.** Un correo suelto no tiene estado ni filtro, y cualquier «envío directo» habría metido en el proyecto una API externa y un secreto. La fila es la fuente de verdad; el correo es solo un aviso, y si falla no se pierde nada.
 
-**Responder es manual, y a propósito.** El panel no envía nada: el botón **Responder** de cada fila abre el cliente de correo con el borrador hecho —asunto, un hueco para escribir, la firma y el mensaje original citado con su fecha—, redactado en el idioma en el que escribió la persona. Así la respuesta sale de una dirección de verdad y el hilo queda en la bandeja de quien responde. Cambiar el estado de un mensaje no envía nada nunca; el único correo que el sistema manda en toda su vida es el aviso de llegada.
+**Responder se hace desde el panel.** El botón **Responder** de cada fila abre un diálogo con el borrador hecho —asunto, un hueco para escribir, la firma y el mensaje original citado con su fecha—, redactado en el idioma en el que escribió la persona. Al aceptarlo, `adminReplyFeedback` lo envía con **Cloudflare Email Sending** (binding `EMAIL`, remitente `noreply@mail.picasyfijas.fans`, el mismo de los correos de verificación), guarda el texto en `feedback_replies`, marca el mensaje como hecho y deja una línea en la auditoría. Cambiar el estado de un mensaje, en cambio, no envía nada nunca.
 
-No podía ser de otra forma con lo que hay: **Email Routing solo entrega a direcciones ya verificadas de la cuenta**, así que sirve para avisar al administrador pero no para escribir a un jugador cualquiera. Contestar desde el servidor exigiría un servicio de envío con su API key, que es justo la dependencia que este proyecto no tiene.
+Hay dos mecanismos de correo y no se mezclan: **Email Routing** (`FEEDBACK_MAIL`) solo entrega a direcciones ya verificadas de la cuenta y sirve para el aviso al administrador; **Email Sending** (`EMAIL`) escribe a cualquier dirección y lleva los enlaces de verificación, de recuperación y las respuestas del buzón.
 
 El contacto es texto libre a propósito —mucha gente deja su nombre de jugador en vez de un correo—, así que el botón se apaga cuando no hay a dónde escribir y su título dice por qué. Quién tiene dirección y quién no lo decide `replyAddress` en `src/feedback.js`, no el marcado del panel, para poder probarlo.
 
@@ -426,11 +426,15 @@ Tres barandillas:
 
 **Dos personas que piden el mismo nombre a la vez** pasan las dos la lectura previa; lo que las separa es el índice único de `username_key`. El `batch` de la segunda falla entero —D1 lo deshace, no gasta su cupo de 90 días y ninguna partida queda a medias— e `isUniqueViolation` (`src/security.js`) convierte ese rechazo en «Ese nombre de usuario ya está en uso.» en lugar de un 500. El alta (`register`) hace lo mismo con el nombre y con el correo.
 
+El nombre nuevo sigue la misma regla que el alta: sin comillas, `<`, `>`, `&` ni barras invertidas (`nameCharsError`, `src/security.js`). Las cuentas antiguas que ya tuvieran uno de esos caracteres siguen entrando; solo no pueden estrenar otro así.
+
 El nombre nuevo viaja como `newUsername`, no como `username`, porque `authenticate` pisa `params.username` con el de la sesión. La sesión no se cierra: sigue apuntando al mismo `user_id` y la siguiente respuesta ya lleva el nombre nuevo, que el navegador guarda en `pf_user`. `test/rename.test.js` fija todo esto.
 
 ## Modelo de datos
 
 - `users`: identidad, hash y sal del PIN, rol, bloqueo y el origen de la cuenta: país e IP del alta, país e IP de la última entrada y número de entradas.
+- `login_attempts`: el contador de PIN incorrectos de cada cuenta (`user:<id>`) y su bloqueo. El mantenimiento borra las filas sin bloqueo vigente que llevan un día quietas.
+- `email_verifications` y `pin_resets`: los enlaces de un solo uso, guardados como hash.
 - `sessions`: sesiones temporales; el PIN no viaja durante las consultas periódicas. Cada sesión guarda la IP y el país desde los que se abrió. `last_seen_at` se muestrea como máximo una vez cada 15 minutos por sesión; la caducidad es fija y no depende de ese campo.
 - `games`: estado completo, opciones, cronómetro y versión de concurrencia.
 - `presence`: usuario conectado y ubicación en lobby o partida. Una ubicación estable se toca como máximo una vez por minuto; un cambio entre lobby y partida se escribe inmediatamente.
@@ -440,6 +444,8 @@ El nombre nuevo viaja como `newUsername`, no como `username`, porque `authentica
 - `chat_reports`: reportes de moderación, únicos por mensaje y usuario.
 - `chat_mutes`: silencios temporales o permanentes impuestos por administración.
 - `feedback`: el buzón de sugerencias y errores, con su estado de triaje y la nota interna de administración.
+- `feedback_replies`: las respuestas enviadas desde el panel. Apunta al administrador que respondió sin cascada, así que borrar a quien fue administrador borra antes sus respuestas.
+- `chat_threads`: los hilos privados, uno por pareja de jugadores.
 
 Las columnas de la bolsa de tiempo viven en `games` y conviven con el cronómetro por turno de siempre: `time_mode` (`turn` o `bank`) decide cuál manda, y `bank_seconds`, `bank_increment`, `bank1_remaining` y `bank2_remaining` describen el reloj de cada jugador. `time_mode` vale `turn` por omisión, así que las partidas anteriores no cambian de comportamiento. Los dos relojes son excluyentes por construcción: `gameInsertValues` deja en cero el que no se eligió, y por eso la validación solo comprueba los valores de la bolsa.
 
@@ -467,6 +473,10 @@ El toro azul de la esquina superior cierra el panel en ese navegador y devuelve 
 | Auditoría | Todo lo que la administración ha cambiado, con fecha, objetivo y detalle. |
 
 Al pulsar un nombre se abre su ficha, que empieza por el **usuario**, su **nombre anterior** (`users.previous_username`, migración `0010`, que `changeUsername` rellena en cada cambio), la fecha del **último cambio de nombre** y el **email**, marcado como verificado o sin verificar. Solo se guarda un nombre anterior, no la lista entera. El correo solo viaja en la ficha (`adminUserDetail`); la lista no lo carga.
+
+Toda acción que cambia algo queda en `audit_log`, también borrar un mensaje del chat, silenciar o reactivar a alguien y responder al buzón; leer el chat no se audita. Bloquear o cambiar el rol de un nombre que no existe responde «Usuario no encontrado.» en lugar de dejar una línea de auditoría sobre nadie. Bloquear borra además la presencia de la cuenta.
+
+La exportación es la copia de seguridad del panel: desde `schemaVersion: 4` incluye el correo, su verificación, la zona horaria y el nombre anterior de cada cuenta, sin los cuales una copia no permitiría recuperar ninguna.
 
 El punto de cada fila reutiliza la tabla `presence` y el mismo umbral del contador general: verde significa actividad autenticada en los últimos 2 minutos y gris, desconectado. El texto accesible y el título del punto expresan también el estado, de modo que la información no depende únicamente del color. La consulta es parte de `adminUsers`, no genera escrituras adicionales y no cambia la versión de la aplicación.
 
@@ -626,6 +636,25 @@ CREATE INDEX chat_messages_lobby ON chat_messages(room_type,id DESC);
 
 Reconstruir índices escribe filas y solo debe hacerse después de confirmar el plan con `EXPLAIN QUERY PLAN`. Wrangler crea una copia de seguridad automática antes de aplicar una migración remota; para pérdida o corrupción de datos se usa esa copia o Time Travel, no SQL improvisado. Para detener únicamente el mantenimiento se cambia `triggers.crons` a `[]` y se despliega esa configuración.
 
+## La auditoría de la 3.5.1
+
+El 17 de septiembre de 2026 se revisaron el código, las pantallas y este documento con ojos de QA. `test/v351-audit.test.js` fija cada hallazgo:
+
+| Hallazgo | Corrección |
+| --- | --- |
+| `esc()` del juego no escapaba comillas y el chat metía el nombre del remitente en un `onclick` con `encodeURIComponent`, que deja pasar el apóstrofo: un nombre bien elegido ejecutaba código en la pantalla de quien pulsaba «silenciar». | `esc()` escapa comillas dobles y simples; los argumentos de `onclick` pasan por `jsArg()`; el alta y el cambio de nombre rechazan comillas, `<`, `>`, `&` y barras invertidas. |
+| El nombre y el correo llevaban contadores de PIN distintos (diez intentos en vez de cinco) y «Mi cuenta» no contaba ninguno. | `checkPin` cuenta por cuenta en `login`, `changePin` y `changeUsername`. |
+| `joinGame` solo esperaba a las dos pantallas si había cronómetro por turno: la bolsa de tiempo empezaba a correr en cuanto el rival se unía. | El apretón de manos usa `hasClock`. |
+| `leaderboard` y `listGames` respondían sin sesión y sin correo verificado. | Están en `PROTECTED`; el ranking usa el nombre de la sesión. |
+| Dos revanchas pedidas a la vez dejaban una partida privada en espera, sin rival, ocupando uno de los tres huecos. | La petición que pierde la carrera borra su partida antes de reintentar. |
+| Borrar una cuenta que fue administradora y respondió al buzón fallaba por la clave foránea de `feedback_replies`. | Se borran antes sus respuestas. |
+| La moderación del chat y las respuestas del buzón no quedaban en la auditoría; bloquear a un nombre inexistente sí. | Se auditan; el objetivo inexistente se rechaza. |
+| La exportación no llevaba el correo de las cuentas. | `schemaVersion: 4`. |
+| Un enlace de verificación hacia una dirección que otra cuenta había tomado entretanto daba un error 500. | Responde «Ese correo ya está asociado a otra cuenta.». |
+| La pantalla de verificación prometía un enlace de 3 días y el servidor lo emitía de 15 minutos. | `requestEmailVerification` emite el de 3 días. |
+| «Continuar» desde el lobby perdía la bolsa de tiempo al entrar en la partida o en la sala de espera. | La meta lleva `timeMode`, `bankSeconds` y `bankIncrement`. |
+| Once mensajes del servidor —chat, reloj, colores— salían en español en un juego en inglés o francés, porque la prueba de traducciones no miraba los `return "…"` ni `rename.js`. | Traducidos; la prueba los mira. «El código debe tener N posiciones.» se traduce por patrón (`ERR_PATTERNS`). |
+
 ## Seguridad y archivos locales
 
 Nunca se deben subir a GitHub:
@@ -637,7 +666,7 @@ Nunca se deben subir a GitHub:
 
 Estas exclusiones están definidas en `.gitignore`. Los PIN se almacenan con hash SHA-256 y una sal individual. No se deben registrar PIN, tokens de sesión, secretos de partida ni contenido privado en logs o documentación.
 
-El contacto que alguien deja en el buzón de sugerencias es un dato personal y recibe el mismo trato que la IP: se guarda para poder responder, solo se ve dentro de `/admin`, no aparece en ninguna respuesta del juego y sí va en la exportación, que pasó a `schemaVersion: 3` al incluir el buzón.
+El contacto que alguien deja en el buzón de sugerencias es un dato personal y recibe el mismo trato que la IP: se guarda para poder responder, solo se ve dentro de `/admin`, no aparece en ninguna respuesta del juego y sí va en la exportación, que pasó a `schemaVersion: 3` al incluir el buzón y a `schemaVersion: 4` al incluir el correo de las cuentas.
 
 La IP y el país de cada cuenta son datos personales. Se guardan para poder investigar un abuso —quién creó una partida, desde dónde entró una cuenta bloqueada— y por eso solo se ven dentro de `/admin`: no aparecen en ninguna respuesta del juego, no viajan al navegador de ningún jugador y no se escriben en logs. Sí van en la exportación, que por lo tanto es un archivo con datos personales y nunca debe subirse al repositorio.
 
@@ -649,7 +678,7 @@ El proyecto sigue versionado semántico `vMAYOR.MENOR.PARCHE`:
 - **MENOR (Y)**: funcionalidad nueva compatible hacia atrás —una pantalla, un modo de juego, un ajuste como el cuadrado de idioma.
 - **PARCHE (Z)**: correcciones compatibles hacia atrás, retoques de texto, estilos y rendimiento.
 
-El número vive en tres sitios y los tres se cambian en el mismo commit: `version` en `package.json` conserva el SemVer canónico (`3.5.0`), porque npm y pnpm lo requieren, y `APP_VERSION` en `public/index.html` y `src/version.js` publica `v3.5.0`. El Worker lo firma en todas sus respuestas; `test/client-server-sync.test.js` comprueba que los tres coinciden. De ahí sale lo que ve el jugador en los créditos y lo que viaja con cada mensaje del buzón (`appVersion`), así que un número desfasado hace que un informe apunte a una versión que no es. La versión sube en el commit que introduce el cambio, no al desplegar.
+El número vive en tres sitios y los tres se cambian en el mismo commit: `version` en `package.json` conserva el SemVer canónico (`3.5.1`), porque npm y pnpm lo requieren, y `APP_VERSION` en `public/index.html` y `src/version.js` publica `v3.5.1`. El Worker lo firma en todas sus respuestas; `test/client-server-sync.test.js` comprueba que los tres coinciden. De ahí sale lo que ve el jugador en los créditos y lo que viaja con cada mensaje del buzón (`appVersion`), así que un número desfasado hace que un informe apunte a una versión que no es. La versión sube en el commit que introduce el cambio, no al desplegar.
 
 ## Procedimiento para futuras modificaciones
 

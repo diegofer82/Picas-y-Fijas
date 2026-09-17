@@ -28,6 +28,8 @@ export async function cleanupDatabase(db, at = Date.now()) {
     db.prepare("DELETE FROM request_receipts WHERE created_at<?").bind(receiptCutoff),
     db.prepare("DELETE FROM sessions WHERE expires_at<=?").bind(stamp),
     db.prepare("DELETE FROM presence WHERE last_seen_at<?").bind(presenceCutoff),
+    // Contadores de PIN sin bloqueo vigente y sin movimiento desde hace un dia.
+    db.prepare("DELETE FROM login_attempts WHERE updated_at<? AND (locked_until IS NULL OR locked_until<?)").bind(presenceCutoff, stamp),
     // Solo caducan las altas con correo que nunca se activaron: una cuenta
     // historica sin correo no esta "pendiente", y borrarla seria perder datos.
     db.prepare("DELETE FROM users WHERE email<>'' AND email_verified_at IS NULL AND created_at<?").bind(activationCutoff),

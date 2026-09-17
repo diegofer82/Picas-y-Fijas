@@ -183,8 +183,10 @@ async function activeMute(db, user) {
   if (!r) return "";
   if (r.muted_until === null)
     return "Tu acceso al chat fue silenciado permanentemente por un administrador.";
+  // Un texto fijo, para que el juego lo pueda traducir: con la fecha ISO
+  // dentro salia en espanol y en UTC a todo el mundo.
   return Date.parse(r.muted_until) > Date.now()
-    ? `Tu acceso al chat está silenciado hasta ${r.muted_until}.`
+    ? "Tu acceso al chat está silenciado temporalmente por un administrador."
     : "";
 }
 function publicMessage(r) {
