@@ -351,7 +351,10 @@
      campo va fuera de la vista pero presente en el formulario. */
   .offscreen{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
   .fieldnote{margin:7px 0 0;font-size:12px;line-height:1.45;color:var(--muted)}
-  #account-name-form{margin-bottom:22px}
+  #account-name-form,#account-name-confirm{margin-bottom:22px}
+  #account-name-form.confirming{margin-bottom:8px}
+  .namebtns{display:flex;flex-wrap:wrap;gap:10px}
+  .namebtns .btn{flex:1 1 auto;width:auto}
   #account-email[readonly]{color:var(--muted);cursor:default;box-shadow:none}
   .fieldnote.warn{color:var(--pica)}
   .whoami{display:flex;align-items:center;gap:8px;margin:0 0 16px;font-size:13px;color:var(--muted)}
@@ -608,14 +611,28 @@
       <h2 data-i18n="account_title">Mon compte</h2>
       <p class="hint" data-i18n="account_hint">Change ton nom ou ton PIN. Ton e-mail vérifié ne change pas.</p>
       <div class="whoami"><b id="account-name">—</b></div>
-      <form id="account-name-form">
+      <!-- Dos formularios a proposito: si el nombre nuevo y el PIN compartieran
+           uno, el gestor de contrasenas lo tomaria por un cambio de credenciales
+           y ofreceria «actualizar la contrasena». El primero no tiene PIN; el
+           segundo lleva el nombre actual oculto, asi que el navegador ve el PIN
+           de siempre para la cuenta de siempre y no propone nada. -->
+      <form id="account-name-form" autocomplete="off">
         <label for="account-new-name" data-i18n="account_name">Nom d'utilisateur</label>
-        <input id="account-new-name" type="text" minlength="2" maxlength="24" autocomplete="username" spellcheck="false">
+        <input id="account-new-name" name="display-name" type="text" minlength="2" maxlength="24" autocomplete="off" spellcheck="false">
         <p class="fieldnote" id="account-name-note" data-i18n="account_name_hint">Tu peux le changer une fois tous les 90 jours. Ton e-mail ne change pas.</p>
+        <div class="val" id="account-name-val"></div>
+        <button class="btn ghost" id="account-name-btn" type="submit" data-i18n="account_save_name">Changer mon nom</button>
+      </form>
+      <form id="account-name-confirm" class="hidden">
+        <input class="offscreen" id="account-username-name" type="text" autocomplete="username" tabindex="-1" aria-hidden="true" readonly>
+        <p class="hint" id="account-name-confirm-text"></p>
         <label for="account-name-pin" data-i18n="account_current_pin">PIN actuel</label>
         <input id="account-name-pin" type="password" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" autocomplete="current-password">
-        <div class="val" id="account-name-val"></div>
-        <button class="btn ghost" type="submit" data-i18n="account_save_name">Changer mon nom</button>
+        <div class="val" id="account-name-confirm-val"></div>
+        <div class="namebtns">
+          <button class="btn ghost" type="button" onclick="cancelAccountName()" data-i18n="account_name_cancel">Annuler</button>
+          <button class="btn" type="submit" data-i18n="account_name_confirm_btn">Confirmer</button>
+        </div>
       </form>
 
       <form id="account-email-form">
@@ -1025,7 +1042,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v3.4.2';
+const APP_VERSION = 'v3.4.3';
 /* Enlace de invitación: ...?game=SZ93 */
 let pendingJoinCode = '';
 (function(){
@@ -1686,9 +1703,9 @@ Object.assign(I18N.fr,{
   ,auth_pin_new:"Nouveau PIN · 4–8 chiffres",auth_reset_title:"Choisissez un nouveau PIN",auth_reset_hint:"Votre nouveau PIN protégera votre compte.",auth_reset_cta:"Enregistrer mon nouveau PIN",auth_reset_done:"PIN mis à jour. Vous pouvez vous connecter."
 });
 
-Object.assign(I18N.es,{account_link:"Mi cuenta",account_title:"Mi cuenta",account_hint:"Cambia tu nombre o tu PIN. Tu correo verificado no cambia.",account_name:"Nombre de usuario",account_name_hint:"Puedes cambiarlo una vez cada 90 días. Tu correo no cambia.",account_name_next:"Podrás volver a cambiarlo a partir del {date}.",account_save_name:"Cambiar mi nombre",account_name_saved:"Nombre actualizado. Tu historial y tu ranking te siguen.",account_email:"Correo de acceso",account_save_email:"Verificar este nuevo correo",account_pin_title:"Cambiar mi PIN",account_pin_hint:"Tu PIN debe tener entre 4 y 8 dígitos.",account_current_pin:"PIN actual",account_new_pin:"Nuevo PIN",account_save_pin:"Guardar mi nuevo PIN",account_email_verified:"✓ Correo verificado",account_email_locked:"✓ Correo verificado. Es la llave de tu cuenta y no se puede cambiar.",account_email_pending:"Revisa tu correo y abre el enlace para verificarlo.",account_email_sent:"Te enviamos un enlace de verificación.",account_pin_saved:"PIN actualizado. Tus otras sesiones se cerraron.",account_email_missing:"No has apuntado ningún correo: sin él no podrás recuperar tu PIN.",account_current_pin_invalid:"Escribe tu PIN actual.",verify_title:"Valida tu correo",verify_hint_missing:"Tu cuenta todavía no tiene correo. Apunta uno: es lo que te permitirá recuperar tu PIN si lo olvidas, y hace falta para jugar.",verify_hint_sent:"Te enviamos un enlace. Ábrelo desde este correo para desbloquear tu cuenta; caduca en 3 días.",verify_send:"Enviar el enlace",verify_resend:"Enviar otro enlace",verify_sent:"Enlace enviado. Revisa tu bandeja de entrada y también el correo no deseado.",verify_done:"Ya lo he validado",verify_not_yet:"Todavía no nos consta validado. Abre el enlace del correo y vuelve a intentarlo."});
-Object.assign(I18N.en,{account_link:"My account",account_title:"My account",account_hint:"Change your name or your PIN. Your verified email stays the same.",account_name:"Username",account_name_hint:"You can change it once every 90 days. Your email stays the same.",account_name_next:"You can change it again from {date}.",account_save_name:"Change my name",account_name_saved:"Name updated. Your history and ranking came with you.",account_email:"Sign-in email",account_save_email:"Verify this new email",account_pin_title:"Change my PIN",account_pin_hint:"Your PIN must be 4 to 8 digits.",account_current_pin:"Current PIN",account_new_pin:"New PIN",account_save_pin:"Save my new PIN",account_email_verified:"✓ Email verified",account_email_locked:"✓ Email verified. It is the key to your account and cannot be changed.",account_email_pending:"Check your email and open the link to verify it.",account_email_sent:"We sent you a verification link.",account_pin_saved:"PIN updated. Your other sessions were signed out.",account_email_missing:"No email saved yet: without one you cannot recover your PIN.",account_current_pin_invalid:"Enter your current PIN.",verify_title:"Verify your email",verify_hint_missing:"Your account has no email yet. Add one: it is what lets you recover your PIN if you forget it, and it is required to play.",verify_hint_sent:"We sent you a link. Open it from that inbox to unlock your account; it expires in 3 days.",verify_send:"Send the link",verify_resend:"Send another link",verify_sent:"Link sent. Check your inbox, and your spam folder too.",verify_done:"I have verified it",verify_not_yet:"We don't see it verified yet. Open the link in the email and try again."});
-Object.assign(I18N.fr,{account_link:"Mon compte",account_title:"Mon compte",account_hint:"Change ton nom ou ton PIN. Ton e-mail vérifié ne change pas.",account_name:"Nom d'utilisateur",account_name_hint:"Tu peux le changer une fois tous les 90 jours. Ton e-mail ne change pas.",account_name_next:"Tu pourras le changer à nouveau à partir du {date}.",account_save_name:"Changer mon nom",account_name_saved:"Nom mis à jour. Ton historique et ton classement te suivent.",account_email:"E-mail de connexion",account_save_email:"Vérifier ce nouvel e-mail",account_pin_title:"Modifier mon PIN",account_pin_hint:"Votre PIN doit contenir de 4 à 8 chiffres.",account_current_pin:"PIN actuel",account_new_pin:"Nouveau PIN",account_save_pin:"Enregistrer mon nouveau PIN",account_email_verified:"✓ E-mail vérifié",account_email_locked:"✓ E-mail vérifié. C'est la clé de ton compte, il ne peut pas être modifié.",account_email_pending:"Consultez votre e-mail et ouvrez le lien de vérification.",account_email_sent:"Nous vous avons envoyé un lien de vérification.",account_pin_saved:"PIN mis à jour. Vos autres sessions ont été fermées.",account_email_missing:"Aucun e-mail enregistré : sans lui, impossible de récupérer ton PIN.",account_current_pin_invalid:"Saisis ton PIN actuel.",verify_title:"Valide ton e-mail",verify_hint_missing:"Ton compte n'a pas encore d'e-mail. Ajoutes-en un : c'est ce qui te permettra de récupérer ton PIN si tu l'oublies, et c'est nécessaire pour jouer.",verify_hint_sent:"Nous t'avons envoyé un lien. Ouvre-le depuis cette boîte pour débloquer ton compte ; il expire dans 3 jours.",verify_send:"Envoyer le lien",verify_resend:"Envoyer un autre lien",verify_sent:"Lien envoyé. Vérifie ta boîte de réception, et aussi les indésirables.",verify_done:"Je l'ai validé",verify_not_yet:"Nous ne le voyons pas encore validé. Ouvre le lien reçu par e-mail et réessaie."});
+Object.assign(I18N.es,{account_link:"Mi cuenta",account_title:"Mi cuenta",account_hint:"Cambia tu nombre o tu PIN. Tu correo verificado no cambia.",account_name:"Nombre de usuario",account_name_hint:"Puedes cambiarlo una vez cada 90 días. Tu correo no cambia.",account_name_next:"Podrás volver a cambiarlo a partir del {date}.",account_save_name:"Cambiar mi nombre",account_name_confirm:"Confirma con tu PIN actual que quieres llamarte «{name}». Tu PIN no cambia.",account_name_confirm_btn:"Confirmar",account_name_cancel:"Cancelar",account_name_saved:"Nombre actualizado. Tu historial y tu ranking te siguen.",account_email:"Correo de acceso",account_save_email:"Verificar este nuevo correo",account_pin_title:"Cambiar mi PIN",account_pin_hint:"Tu PIN debe tener entre 4 y 8 dígitos.",account_current_pin:"PIN actual",account_new_pin:"Nuevo PIN",account_save_pin:"Guardar mi nuevo PIN",account_email_verified:"✓ Correo verificado",account_email_locked:"✓ Correo verificado. Es la llave de tu cuenta y no se puede cambiar.",account_email_pending:"Revisa tu correo y abre el enlace para verificarlo.",account_email_sent:"Te enviamos un enlace de verificación.",account_pin_saved:"PIN actualizado. Tus otras sesiones se cerraron.",account_email_missing:"No has apuntado ningún correo: sin él no podrás recuperar tu PIN.",account_current_pin_invalid:"Escribe tu PIN actual.",verify_title:"Valida tu correo",verify_hint_missing:"Tu cuenta todavía no tiene correo. Apunta uno: es lo que te permitirá recuperar tu PIN si lo olvidas, y hace falta para jugar.",verify_hint_sent:"Te enviamos un enlace. Ábrelo desde este correo para desbloquear tu cuenta; caduca en 3 días.",verify_send:"Enviar el enlace",verify_resend:"Enviar otro enlace",verify_sent:"Enlace enviado. Revisa tu bandeja de entrada y también el correo no deseado.",verify_done:"Ya lo he validado",verify_not_yet:"Todavía no nos consta validado. Abre el enlace del correo y vuelve a intentarlo."});
+Object.assign(I18N.en,{account_link:"My account",account_title:"My account",account_hint:"Change your name or your PIN. Your verified email stays the same.",account_name:"Username",account_name_hint:"You can change it once every 90 days. Your email stays the same.",account_name_next:"You can change it again from {date}.",account_save_name:"Change my name",account_name_confirm:"Confirm with your current PIN that you want to be called “{name}”. Your PIN stays the same.",account_name_confirm_btn:"Confirm",account_name_cancel:"Cancel",account_name_saved:"Name updated. Your history and ranking came with you.",account_email:"Sign-in email",account_save_email:"Verify this new email",account_pin_title:"Change my PIN",account_pin_hint:"Your PIN must be 4 to 8 digits.",account_current_pin:"Current PIN",account_new_pin:"New PIN",account_save_pin:"Save my new PIN",account_email_verified:"✓ Email verified",account_email_locked:"✓ Email verified. It is the key to your account and cannot be changed.",account_email_pending:"Check your email and open the link to verify it.",account_email_sent:"We sent you a verification link.",account_pin_saved:"PIN updated. Your other sessions were signed out.",account_email_missing:"No email saved yet: without one you cannot recover your PIN.",account_current_pin_invalid:"Enter your current PIN.",verify_title:"Verify your email",verify_hint_missing:"Your account has no email yet. Add one: it is what lets you recover your PIN if you forget it, and it is required to play.",verify_hint_sent:"We sent you a link. Open it from that inbox to unlock your account; it expires in 3 days.",verify_send:"Send the link",verify_resend:"Send another link",verify_sent:"Link sent. Check your inbox, and your spam folder too.",verify_done:"I have verified it",verify_not_yet:"We don't see it verified yet. Open the link in the email and try again."});
+Object.assign(I18N.fr,{account_link:"Mon compte",account_title:"Mon compte",account_hint:"Change ton nom ou ton PIN. Ton e-mail vérifié ne change pas.",account_name:"Nom d'utilisateur",account_name_hint:"Tu peux le changer une fois tous les 90 jours. Ton e-mail ne change pas.",account_name_next:"Tu pourras le changer à nouveau à partir du {date}.",account_save_name:"Changer mon nom",account_name_confirm:"Confirme avec ton PIN actuel que tu veux t'appeler « {name} ». Ton PIN ne change pas.",account_name_confirm_btn:"Confirmer",account_name_cancel:"Annuler",account_name_saved:"Nom mis à jour. Ton historique et ton classement te suivent.",account_email:"E-mail de connexion",account_save_email:"Vérifier ce nouvel e-mail",account_pin_title:"Modifier mon PIN",account_pin_hint:"Votre PIN doit contenir de 4 à 8 chiffres.",account_current_pin:"PIN actuel",account_new_pin:"Nouveau PIN",account_save_pin:"Enregistrer mon nouveau PIN",account_email_verified:"✓ E-mail vérifié",account_email_locked:"✓ E-mail vérifié. C'est la clé de ton compte, il ne peut pas être modifié.",account_email_pending:"Consultez votre e-mail et ouvrez le lien de vérification.",account_email_sent:"Nous vous avons envoyé un lien de vérification.",account_pin_saved:"PIN mis à jour. Vos autres sessions ont été fermées.",account_email_missing:"Aucun e-mail enregistré : sans lui, impossible de récupérer ton PIN.",account_current_pin_invalid:"Saisis ton PIN actuel.",verify_title:"Valide ton e-mail",verify_hint_missing:"Ton compte n'a pas encore d'e-mail. Ajoutes-en un : c'est ce qui te permettra de récupérer ton PIN si tu l'oublies, et c'est nécessaire pour jouer.",verify_hint_sent:"Nous t'avons envoyé un lien. Ouvre-le depuis cette boîte pour débloquer ton compte ; il expire dans 3 jours.",verify_send:"Envoyer le lien",verify_resend:"Envoyer un autre lien",verify_sent:"Lien envoyé. Vérifie ta boîte de réception, et aussi les indésirables.",verify_done:"Je l'ai validé",verify_not_yet:"Nous ne le voyons pas encore validé. Ouvre le lien reçu par e-mail et réessaie."});
 Object.assign(I18N.es,{menu_settings:"Ajustes",menu_logout:"Cerrar sesión"});
 Object.assign(I18N.en,{menu_settings:"Settings",menu_logout:"Log out"});
 Object.assign(I18N.fr,{menu_settings:"Réglages",menu_logout:"Se déconnecter"});
@@ -2566,6 +2583,7 @@ $('auth-forgot-panel').addEventListener('submit',e=>{e.preventDefault();requestP
 $('account-email-form').addEventListener('submit',e=>{e.preventDefault();saveAccountEmail()});
 $('account-pin-form').addEventListener('submit',e=>{e.preventDefault();saveAccountPin()});
 $('account-name-form').addEventListener('submit',e=>{e.preventDefault();saveAccountName()});
+$('account-name-confirm').addEventListener('submit',e=>{e.preventDefault();confirmAccountName()});
 $('verify-form').addEventListener('submit',e=>{e.preventDefault();sendVerification()});
 async function registerAccount(){
   const email=$('reg-email').value.trim(), name=$('uname').value.trim(), pin=$('upin').value.trim(), repeat=$('upin2').value.trim();
@@ -2622,13 +2640,14 @@ function paintAccountEmail(profile){
 }
 async function openAccount(){
   show('account');
+  cancelAccountName();
   ['account-email-val','account-val','account-name-val'].forEach(id=>{$(id).className='val';$(id).textContent='';});
   ['account-current-pin','account-new-pin','account-repeat-pin','account-name-pin'].forEach(id=>$(id).value='');
   $('account-email-val').textContent=t('loading');
   try{
     const res=await api('accountProfile');if(!res.ok)throw new Error();
     $('account-name').textContent=res.username;
-    $('account-username').value=res.username;$('account-username-pin').value=res.username;
+    $('account-username').value=res.username;$('account-username-pin').value=res.username;$('account-username-name').value=res.username;
     $('account-email').value=res.email||'';
     $('account-new-name').value=res.username;
     paintAccountName(res);
@@ -2653,20 +2672,50 @@ function paintAccountName(profile){
     ?t('account_name_next').replace('{date}',next.toLocaleDateString(lang))
     :t('account_name_hint');
 }
-async function saveAccountName(){
-  const username=$('account-new-name').value.trim(),pin=$('account-name-pin').value.trim();
+/* Primer paso: el nombre nuevo, sin PIN a la vista. El segundo pide el PIN
+   actual solo para confirmar; nunca uno nuevo. */
+function nameStep(confirming){
+  $('account-name-form').classList.toggle('confirming',confirming);
+  $('account-new-name').readOnly=confirming;
+  $('account-name-btn').classList.toggle('hidden',confirming);
+  $('account-name-confirm').classList.toggle('hidden',!confirming);
+}
+function saveAccountName(){
+  const username=$('account-new-name').value.trim();
+  $('account-name-val').className='val';$('account-name-val').textContent='';
   if(username.length<2)return authError('account-name-val',te('El nombre debe tener al menos 2 caracteres.'));
-  if(!/^\d{4,8}$/.test(pin))return authError('account-name-val',t('account_current_pin_invalid'));
-  $('account-name-val').className='val';$('account-name-val').textContent=t('loading');
+  if(username===user)return;
+  $('account-name-confirm-text').textContent=t('account_name_confirm').replace('{name}',username);
+  $('account-name-pin').value='';
+  $('account-name-confirm-val').className='val';$('account-name-confirm-val').textContent='';
+  nameStep(true);
+  $('account-name-pin').focus();
+}
+function cancelAccountName(){
+  nameStep(false);
+  $('account-name-pin').value='';
+  if(user)$('account-new-name').value=user;
+}
+async function confirmAccountName(){
+  const username=$('account-new-name').value.trim(),pin=$('account-name-pin').value.trim();
+  if(!/^\d{4,8}$/.test(pin))return authError('account-name-confirm-val',t('account_current_pin_invalid'));
+  $('account-name-confirm-val').className='val';$('account-name-confirm-val').textContent=t('loading');
   try{const res=await api('changeUsername',{newUsername:username,pin});
-    if(!res.ok){if(res.usernameNextChangeAt)paintAccountName(res);return authError('account-name-val',te(res.error));}
-    $('account-name-pin').value='';
+    if(!res.ok){
+      if(res.usernameNextChangeAt)paintAccountName(res);
+      // Solo un PIN equivocado se corrige en este paso; el resto obliga a
+      // elegir otro nombre, asi que se vuelve al primero con el motivo.
+      if(res.error==='El PIN actual no es correcto.'){ $('account-name-pin').value=''; return authError('account-name-confirm-val',te(res.error)); }
+      nameStep(false);$('account-name-pin').value='';
+      return authError('account-name-val',te(res.error));
+    }
     user=res.username;localStorage.setItem('pf_user',user);
+    nameStep(false);$('account-name-pin').value='';
     $('account-name').textContent=user;$('account-new-name').value=user;
-    $('account-username').value=user;$('account-username-pin').value=user;
+    $('account-username').value=user;$('account-username-pin').value=user;$('account-username-name').value=user;
     if(res.usernameNextChangeAt)paintAccountName(res);
     $('account-name-val').className='val ok';$('account-name-val').textContent=t('account_name_saved');}
-  catch(e){authError('account-name-val',t('net_error'));}
+  catch(e){authError('account-name-confirm-val',t('net_error'));}
 }
 async function saveAccountPin(){
   const currentPin=$('account-current-pin').value.trim(),newPin=$('account-new-pin').value.trim(),repeat=$('account-repeat-pin').value.trim();

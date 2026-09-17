@@ -165,10 +165,18 @@ test('con una partida abierta no se renombra', async () => {
 });
 
 test('«Mi cuenta» ofrece el cambio de nombre en los tres idiomas', () => {
-  assert.match(html, /<form id="account-name-form">/);
+  assert.match(html, /<form id="account-name-form" autocomplete="off">/);
+  // El nombre nuevo y el PIN no comparten formulario: juntos, el gestor de
+  // contraseñas los tomaba por un cambio de credenciales y ofrecía cambiar el PIN.
+  const nameForm = html.slice(html.indexOf('<form id="account-name-form"'), html.indexOf('<form id="account-name-confirm"'));
+  assert.doesNotMatch(nameForm, /type="password"|autocomplete="(username|current-password|new-password)"/);
+  const confirmForm = html.slice(html.indexOf('<form id="account-name-confirm"'), html.indexOf('<form id="account-email-form"'));
+  assert.match(confirmForm, /id="account-username-name" type="text" autocomplete="username"[^>]*readonly/);
+  assert.match(confirmForm, /id="account-name-pin" type="password"[^>]*autocomplete="current-password"/);
+  assert.doesNotMatch(confirmForm, /new-password/, 'confirmar el nombre nunca pide un PIN nuevo');
   assert.match(html, /api\('changeUsername',\{newUsername:username,pin\}\)/);
   assert.match(html, /localStorage\.setItem\('pf_user',user\)/, 'el navegador recuerda el nombre nuevo');
-  for (const key of ['account_name','account_name_hint','account_name_next','account_save_name','account_name_saved'])
+  for (const key of ['account_name','account_name_hint','account_name_next','account_save_name','account_name_saved','account_name_confirm','account_name_confirm_btn','account_name_cancel'])
     assert.equal((html.match(new RegExp(key+':', 'g')) || []).length, 3, `falta ${key} en alguno de los tres idiomas`);
   for (const message of ['Solo puedes cambiar tu nombre una vez cada 90 días.','Termina o cancela tus partidas abiertas antes de cambiar tu nombre.'])
     assert.equal(html.split(`"${message}":`).length - 1, 2, `falta traducir «${message}»`);
