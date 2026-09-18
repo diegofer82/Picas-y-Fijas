@@ -109,3 +109,22 @@ test('el aviso de la invitación existe en los tres idiomas', () => {
   }
   assert.match(html, /const res=await api\('inviteInfo',\{gameId:pendingJoinCode\}\)/);
 });
+
+/* El idioma, en la pantalla de acceso. Vivía dentro del formulario de alta, así
+   que quien ya tenía cuenta y no leía español no tenía forma de cambiarlo sin
+   pulsar «Crear una cuenta». */
+test('el selector de idioma está fuera del formulario de alta y a la vista en los tres modos', () => {
+  const login = html.slice(html.indexOf('<section id="s-login"'), html.indexOf('<section id="s-feedback"'));
+  const antesDeLosFormularios = login.slice(0, login.indexOf('<form id="auth-register-panel"'));
+  assert.match(antesDeLosFormularios, /id="seg-lang"/, 'el selector va antes de los tres paneles, no dentro de uno');
+  for (const panel of ['auth-register-panel','auth-login-panel','auth-forgot-panel']) {
+    const start = login.indexOf('<form id="'+panel);
+    const form = login.slice(start, login.indexOf('</form>', start));
+    assert.doesNotMatch(form, /data-lang=/, `${panel} no debe llevar dentro el selector`);
+  }
+  // Dentro de un <form>, un <button> sin type es un botón de envío: elegir
+  // idioma disparaba el alta. Fuera del formulario y con type, ya no puede.
+  for (const code of ['es','en','fr'])
+    assert.match(login, new RegExp(`<button type="button" data-lang="${code}">`), code);
+  assert.match(html, /\$\('seg-lang'\)\.addEventListener\('click'/);
+});

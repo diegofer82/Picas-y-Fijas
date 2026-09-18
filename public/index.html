@@ -194,6 +194,11 @@
   .seg button.on{background:rgba(91,141,239,.14);border-color:var(--accent);color:var(--text)}
   .seg button:disabled{opacity:.35;cursor:not-allowed}
 
+  /* Arriba de la tarjeta de acceso: discreto porque la mayoria no lo necesita,
+     pero a la vista porque para quien lo necesita no hay alternativa. */
+  .lang-pick{justify-content:flex-end;gap:6px;margin:0 0 14px}
+  .lang-pick button{flex:0 0 auto;min-width:0;padding:7px 12px;font-size:12px;border-radius:9px}
+
   .val{font-size:12px;margin-top:8px;min-height:16px}
   .val.err{color:var(--pink)} .val.ok{color:var(--fija)}
 
@@ -438,6 +443,13 @@
 
   <!-- LOGIN -->
   <section id="s-login" class="card">
+    <!-- El idioma, lo primero y siempre visible: quien no lee español no puede
+         tener que adivinar que esta detras de «Crear una cuenta». -->
+    <div class="seg lang-pick" id="seg-lang" role="group" data-i18n-title="lang_switch">
+      <button type="button" data-lang="es">Español</button>
+      <button type="button" data-lang="en">English</button>
+      <button type="button" data-lang="fr">Français</button>
+    </div>
     <div class="invite-banner hidden" id="login-invite"></div>
     <h2 data-i18n="auth_title">À vous de jouer</h2>
     <p class="hint" id="auth-hint" data-i18n="auth_hint_login">Entrez avec votre nom ou votre e-mail et votre PIN.</p>
@@ -449,12 +461,6 @@
     </div>
     <div class="guest-sep" id="guest-sep"><span data-i18n="guest_or">o</span></div>
     <form id="auth-register-panel" class="hidden">
-      <label data-i18n="login_lang">Idioma</label>
-      <div class="seg" id="seg-lang">
-        <button data-lang="es">Español</button>
-        <button data-lang="en">English</button>
-        <button data-lang="fr">Français</button>
-      </div>
       <label for="reg-email" data-i18n="auth_email">E-mail</label>
       <input type="email" id="reg-email" maxlength="254" autocomplete="email" data-i18n-ph="auth_email_ph" placeholder="vous@exemple.com">
       <label for="uname" data-i18n="auth_display_name">Nom affiché dans le jeu</label>
@@ -1065,7 +1071,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v3.6.0';
+const APP_VERSION = 'v3.6.1';
 /* Enlace de invitación: ...?game=SZ93
    La invitación sobrevive al registro: se guarda en el navegador, porque entre
    abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
