@@ -10,6 +10,8 @@ Versión actual: **3.5.1**. Es una versión de correcciones salida de una audito
 
 El 12 de septiembre de 2026 la base de producción se vació a propósito: quedó una sola cuenta, `Diego`, y se borraron partidas, chat, presencia, buzón y todas las sesiones. El motivo es el mismo: arrancar sin ninguna cuenta que no cumpla la regla nueva.
 
+El trabajo en curso está en «El camino a la 4.0.0»: dieciocho mejoras repartidas en seis etapas y un cierre, ordenadas por lo que cambian para quien llega por primera vez y se encuentra el vestíbulo vacío.
+
 - Juego: https://picasyfijas.fans/ (también https://www.picasyfijas.fans/)
 - Dirección anterior, sigue activa: https://picas-y-fijas.picas-y-fijas.workers.dev/
 - Administración: https://picasyfijas.fans/admin
@@ -692,6 +694,107 @@ El número vive en tres sitios y los tres se cambian en el mismo commit: `versio
 8. Confirmar los cambios en Git y enviar `main`; comprobar después el despliegue automático.
 
 No se deben borrar datos, ejecutar importaciones, alterar producción, cambiar roles o publicar secretos sin autorización explícita del propietario.
+
+## El camino a la 4.0.0
+
+El juego va por delante de su público. Tiene bolsa de tiempo, relojes con autoridad del servidor, chat con hilos privados, reanudación después de recargar, instalación como app y tres idiomas; y aun así, quien llega hoy se encuentra esto: crea una cuenta, va a buscar el correo, vuelve, entra al vestíbulo y **no hay nadie**. Este plan entero está ordenado alrededor de esa frase. Son dieciocho mejoras repartidas en seis etapas por orden de valor, más el cierre. Cuando estén hechas, la versión será la **4.0.0**.
+
+Sube la mayor por tres razones concretas, no por ceremonia: aparecen pantallas que funcionan **sin sesión** —hasta hoy todo lo que no fuera el buzón exigía una—, el ranking cambia de forma —deja de ordenar por victorias y pasa a contar puntos por temporada, así que su respuesta ya no es la misma— y llega un modo con **más de dos jugadores**, que el modelo actual de `games`, con sus `p1` y `p2`, no puede representar.
+
+Cada etapa sube la menor —3.6, 3.7, 3.8, 3.9, 3.10 y 3.11— en el commit que la termina, y el cierre pone la 4.0.0. Ninguna etapa espera a la siguiente para estar en producción: el plan está pensado para que el juego mejore diecinueve veces, no una.
+
+### Cómo se entrega cada tarea
+
+**Cada tarea terminada se comita, se empuja a `main` y se despliega a producción**, en ese orden y sin esperar al final de la etapa. Cuando dos tareas están encadenadas —una no se sostiene sin la otra, o la primera no cambia nada visible para quien juega—, se entregan juntas al terminar la última; la tabla lo dice en la columna «Hecho cuando». Después de cada entrega, `main` queda limpio: sin cambios sueltos y sin archivos generados a medias. Si la tarea trae migración, `npm run db:remote` va **antes** del push, nunca después. Es la misma regla que ya lleva `AGENTS.md`, repetida aquí porque este plan es largo y la tentación de acumular entregas es grande.
+
+### Lo que ninguna tarea de este plan puede romper
+
+Son los invariantes de siempre, y este plan los pone a prueba más que ningún cambio anterior:
+
+- **La puerta del correo se queda.** Ninguna cuenta juega sin `email_verified_at`. Que un visitante practique sin registrarse no es una excepción: un invitado no es una cuenta, y la práctica no escribe una sola fila en D1.
+- **La bolsa de tiempo sigue sin pausa.** La cadencia por correspondencia de la etapa 2 es un modo de reloj nuevo, no un permiso para detener la bolsa.
+- **Los secretos no salen de una partida activa.** La tarea del espectador (E6-T1) es la única del plan capaz de romper esa regla, y por eso lleva prueba propia.
+- **D1 Free manda.** Ninguna tarea añade escrituras al polling ni lecturas sin índice. Al terminar cada etapa se miran las Row Metrics antes de empezar la siguiente.
+- **La versión vive en tres sitios** —`package.json`, `APP_VERSION` de `public/index.html` y `src/version.js`— y se cambian juntos.
+- **Todo texto nuevo nace en los tres idiomas**, también los que devuelve el servidor, y los archivos generados se regeneran en el mismo commit que su fuente.
+
+### Etapa 1 — La puerta abierta (3.6.0)
+
+Tres tareas, ninguna toca las reglas del juego, y son las que más cambian lo que ocurre en la primera visita. Hoy `openPractice()` solo se alcanza desde el vestíbulo, es decir después de registrarse y de verificar el correo: el visitante tiene que pagar por adelantado para saber si el juego le gusta. Y la portada no enseña ni un número, porque el contador de jugadores conectados vive en el vestíbulo, del otro lado de la puerta.
+
+| Tarea | Qué cambia para quien juega | Dónde se toca | Hecho cuando |
+| --- | --- | --- | --- |
+| **E1-T1 (a)** Jugar antes de registrarse | La portada ofrece «Probar ahora»: una partida contra el ordenador en tres segundos, sin cuenta. Al terminarla se le invita a crear una para jugar contra personas. | `public/index.html`: portada, `openPractice()`, las guardas de `show()` y el pie de créditos | Un navegador limpio termina una práctica sin sesión y sin más llamada al API que el acuerdo de versión. `test/guest-practice.test.js` lo fija |
+| **E1-T2 (e)** La portada respira | Debajo del botón: «3 jugadores conectados · 2 partidas en curso». Quien llega ve que el sitio está vivo antes de decidir si se registra. | `src/index.js`: acción pública `publicPulse` con caché de 30 s en el isolate; `public/index.html` | Devuelve **solo números**: ni nombres, ni códigos, ni países. La 3.5.0 metió el ranking y la lista pública detrás de la puerta del correo a propósito y esta tarea no lo deshace; una prueba lo comprueba |
+| **E1-T3 (d)** La invitación sobrevive al registro | Quien abre un enlace de partida sin tener cuenta ve quién le invita y con qué reglas, se registra, verifica el correo y **aterriza dentro de la partida**, no en el vestíbulo. | `public/index.html`: `pendingJoinCode` en `localStorage`, `renderLoginInvite()`, `handleDeepLink()`; `src/index.js`: el enlace de verificación conserva el código | Enlace, registro y verificación desde otro dispositivo acaban en la sala de la partida |
+
+### Etapa 2 — El regreso asíncrono (3.7.0)
+
+Dos amigos en dos husos horarios no pueden terminar una partida hoy, y no es por falta de motor: el motor ya es asíncrono. Lo impiden tres plazos. Una partida en espera caduca a las **2 horas**, una partida activa se cierra como inactiva a las **48**, y «es tu turno» solo llega si la pestaña sigue abierta, porque `public/sw.js` únicamente gestiona `notificationclick`. La cadencia por correspondencia necesita además un reloj que **no** se detenga cuando el rival se va —al contrario que el cronómetro por turno, que sí se detiene al volver al vestíbulo—: si se detuviera, la partida no caducaría jamás.
+
+| Tarea | Qué cambia para quien juega | Dónde se toca | Hecho cuando |
+| --- | --- | --- | --- |
+| **E2-T1 (b)** Cadencia por correspondencia | Un reloj nuevo: **un día** o **tres días** por jugada. La partida privada que espera rival aguanta 48 horas en vez de 2, y una partida en correspondencia no la barre el mantenimiento por inactividad. | `src/game.js`, `src/index.js`, `src/maintenance.js`, `public/index.html`; migración solo si `time_mode` necesita columna nueva | `test/correspondence.test.js`: el reloj corre aunque el rival no esté, la partida no se cierra a las 48 h y la invitación privada dura 48 h. **Encadenada con E2-T2: se entregan juntas** |
+| **E2-T2 (c)** Avisos que sobreviven a la pestaña cerrada | El teléfono avisa cuando toca jugar aunque el juego esté cerrado; quien no tenga la app instalada recibe un correo. | `public/sw.js`, `public/index.html`, `src/push.js` (nuevo, VAPID firmado con Web Crypto, sin dependencias), `src/index.js`, `migrations/0012_push.sql`, secretos `VAPID_PUBLIC` y `VAPID_PRIVATE` | El aviso sale del cambio de turno (`guess`, `passTurn`) y del Cron, **nunca del polling**. Un jugador no recibe más de un aviso por turno. La migración va antes del push |
+
+### Etapa 3 — Lo que se comparte (3.8.0)
+
+El juego no tiene publicidad y no va a tenerla. Lo único que puede traer gente es lo que un jugador comparte por su cuenta, y para eso hay que darle algo que valga la pena compartir. Picas y Fijas es literalmente el antepasado de Wordle: la mecánica del código diario con rejilla de emojis le sienta mejor que a nadie y, además, funciona con cero jugadores conectados, que es el problema de la etapa 1 visto desde el otro lado.
+
+| Tarea | Qué cambia para quien juega | Dónde se toca | Hecho cuando |
+| --- | --- | --- | --- |
+| **E3-T1 (f)** El código del día | Un secreto por día, el mismo para todo el mundo, un intento diario y una clasificación del día por intentos y tiempo. | `src/daily.js` (nuevo), `src/index.js`, `migrations/0013_daily.sql` (solo los resultados), `public/index.html` | El secreto se deriva del día con HMAC y un secreto del Worker: no se guarda en claro y no se puede adivinar desde el navegador. Nadie puede entregar dos veces el mismo día. **Encadenada con E3-T2** |
+| **E3-T2 (f)** La rejilla que se comparte | Al terminar, el resultado se copia como rejilla de emojis —fija llena, pica hueca— sin revelar el código. | `public/index.html` | Se copia igual en los tres idiomas y no contiene el secreto. Se entrega junto con E3-T1 |
+| **E3-T3 (r)** La tarjeta de fin de partida | «He descifrado un código de 5 en 6 intentos»: algo que compartir al acabar cualquier partida, no solo la del día. | `public/index.html`, la misma fontanería de compartir de E3-T2 | Se entrega sola |
+
+### Etapa 4 — El motor al servicio de quien juega (3.9.0)
+
+`public/computer-ai.js` ya sabe mantener el conjunto de códigos compatibles con todas las pistas y medir cómo un intento lo parte. Ese saber está encerrado en la práctica, y cuatro de las mejoras de este plan salen del mismo sitio: sacarlo de ahí es la tarea más rentable de la etapa aunque por sí sola no se vea.
+
+| Tarea | Qué cambia para quien juega | Dónde se toca | Hecho cuando |
+| --- | --- | --- | --- |
+| **E4-T1** El solucionador, fuera del rival | Nada todavía: es el cimiento de las cuatro siguientes. | `public/deduce.js` (nuevo), `public/computer-ai.js` pasa a usarlo | `test/computer-ai.test.js` pasa sin tocarlo. **Encadenada con E4-T2** |
+| **E4-T2 (n)** La partida que se explica | Al terminar, cada intento recibe una nota —óptimo, correcto, desperdiciado— y se señala la jugada en la que la partida se decidió. | `public/index.html` | Se calcula entero en el navegador a partir de `historyGame`: ni una lectura más en D1. Se entrega junto con E4-T1 |
+| **E4-T3 (o)** El cuaderno y el aviso de contradicción | Una cuadrícula para marcar símbolos descartados y confirmados, y un aviso opcional cuando un intento contradice las pistas propias. **Es una opción de la partida, elegida al crearla**, para que los dos jueguen con las mismas reglas. | `public/index.html`, `src/game.js`, `migrations/0014_notebook_option.sql` | La opción viaja en `games` y el servidor la valida; con la opción apagada, la pantalla es la de siempre |
+| **E4-T4 (h)** Ver pensar al ordenador | El ordenador ataca el código del jugador explicando cada jugada: «quedan 18 posibles, este intento las parte en dos». | `public/index.html` | Funciona sin conexión, como el resto de la práctica |
+| **E4-T5 (g)** Enigmas de deducción | «Aquí tienes cinco intentos y sus resultados: deduce el código.» Contenido en solitario, por dificultad, sin rival y sin coste en D1. | `tools/make-puzzles.mjs` (nuevo), `public/puzzles.json` (**generado: no se edita a mano**), `public/index.html` | Una prueba comprueba que cada enigma tiene solución única y otra que el archivo publicado corresponde al generador |
+
+### Etapa 5 — Razones para volver (3.10.0)
+
+Hoy `leaderboard()` ordena por victorias y desempata por partidas jugadas: quien juega doscientas y pierde la mitad va por delante de quien gana nueve de diez, y el que llegó primero se queda arriba para siempre. Y cuando una partida termina, el rival desaparece: la revancha solo existe en los segundos siguientes, aunque `chat_threads` ya guarde un hilo por pareja.
+
+| Tarea | Qué cambia para quien juega | Dónde se toca | Hecho cuando |
+| --- | --- | --- | --- |
+| **E5-T1 (i)** Puntos y temporadas | El ranking premia la dificultad de las reglas y la economía de intentos, y se reinicia cada mes conservando el histórico. | `src/index.js`, `migrations/0015_season.sql` | La respuesta de `leaderboard` cambia de forma: es una de las tres razones de la mayor, y se documenta aquí el día que se haga |
+| **E5-T2 (j)** Perfil público | Los nombres del ranking y del chat se pueden pulsar: victorias, reglas preferidas, mejor partida e insignias. | `src/index.js`, `public/index.html` | Solo lectura y solo lo que ya es público; el correo no aparece nunca |
+| **E5-T3 (k)** Insignias | «Resuelto en 4», «Ganada con 5 segundos», «Al Experto», «7 días seguidos». | `src/index.js`, `migrations/0016_badges.sql`, `public/index.html` | Se calculan **al terminar la partida** y se guardan; abrir un perfil no recorre `games` |
+| **E5-T4 (l)** Lista de rivales | Una lista de con quién se ha jugado, con punto de presencia y botón de desafío. | `src/index.js`, `public/index.html` | Sale de `chat_threads` y de las partidas terminadas: sin tabla nueva |
+
+### Etapa 6 — La sala viva (3.11.0)
+
+Lo que queda es lo que hace que una sala parezca habitada, y lo más ambicioso del plan: dejar de exigir que haya exactamente dos personas libres a la vez.
+
+| Tarea | Qué cambia para quien juega | Dónde se toca | Hecho cuando |
+| --- | --- | --- | --- |
+| **E6-T1 (p)** Espectador de verdad | Desde el vestíbulo se puede mirar una partida pública en curso, con el chat en lectura. Alimenta también la portada de E1-T2. | `src/game.js` (`sanitizeGame`), `src/index.js`, `public/index.html`; las traducciones `spectator_*` ya existen | **La tarea delicada del plan.** Una prueba dedicada comprueba que un espectador de una partida **activa** no recibe ningún secreto, ni el de uno ni el del otro |
+| **E6-T2 (q)** Reacciones rápidas | Cuatro frases hechas en los tres idiomas para quien juega desde el teléfono y no va a escribir. | `src/chat.js`, `public/index.html` | Reutiliza `chat_messages` con su tipo y la espera del zumbido; no abre ninguna vía nueva de moderación |
+| **E6-T3 (m)** La arena | De 3 a 8 jugadores contra el mismo código, a la vez, con clasificación en directo. Resuelve de raíz el «hacen falta dos al mismo tiempo». | `src/arena.js` (nuevo), `src/index.js`, `migrations/0017_arena.sql`, `public/index.html` | `games` no sirve —es de dos, `p1` y `p2`—, así que la arena lleva tablas propias y no toca las partidas clásicas. Es la tercera razón de la mayor |
+
+### Etapa 7 — El cierre: 4.0.0
+
+No es papeleo: es lo que separa dieciocho cambios sueltos de una versión.
+
+1. Subir la versión a `4.0.0` en los tres sitios, en un mismo commit.
+2. Poner al día este documento: «Estado actual», «Arquitectura y archivos», «Modelo de datos» con las tablas nuevas, «Reglas técnicas que no se deben romper» y este mismo plan, que pasa a ser historia.
+3. Regenerar todo lo generado: páginas de reglas e instalación, capturas y su lista en el manifest, iconos si cambió la marca, tarjetas OG y las guías PDF, que para entonces deben hablar del código del día y del análisis.
+4. `npm test` completo, migraciones en local, `wrangler types` y `wrangler deploy --dry-run`.
+5. Repasar en producción las dieciocho mejoras, una por una, en los tres idiomas y en teléfono.
+6. Etiqueta anotada `v4.0.0` sobre el commit del cierre.
+
+### Lo que no entra en la 4.0.0
+
+Quedan fuera a propósito y son las candidatas de la siguiente: el tema claro —hoy no hay `prefers-color-scheme` en el front y la identidad Mesa es oscura—, el aviso que aprovecha la zona horaria del rival que ya guarda la migración `0011`, el resumen semanal por correo y el indicador de fiabilidad de quien abandona partidas. Ninguna de las cuatro cambia la primera visita, que es de lo que trata esta versión.
+
 
 ## Recuperación
 
