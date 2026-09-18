@@ -1071,7 +1071,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v3.6.1';
+const APP_VERSION = 'v3.6.2';
 /* Enlace de invitación: ...?game=SZ93
    La invitación sobrevive al registro: se guarda en el navegador, porque entre
    abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
@@ -1799,7 +1799,24 @@ Object.assign(I18N.es,{menu_settings:"Ajustes",menu_logout:"Cerrar sesión"});
 Object.assign(I18N.en,{menu_settings:"Settings",menu_logout:"Log out"});
 Object.assign(I18N.fr,{menu_settings:"Réglages",menu_logout:"Se déconnecter"});
 
-let lang = URL_LANG || localStorage.getItem('pf_lang') || 'es';
+/* La primera visita, en el idioma del navegador. Es lo unico que evita que
+   quien llega desde un enlace compartido y no lee espanol tenga que buscar
+   donde se cambia antes de entender la pantalla. Solo decide cuando no hay
+   nada mas: la direccion manda sobre todo (/en y /fr), y una eleccion hecha a
+   mano manda sobre el navegador. No se guarda a proposito: guardar seria
+   convertir en eleccion lo que solo es una suposicion, y entonces cambiar el
+   idioma del aparato ya no cambiaria nada. */
+const BROWSER_LANG = (function(){
+  try{
+    const wanted = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language||''];
+    for(const tag of wanted){
+      const code = String(tag).slice(0,2).toLowerCase();
+      if(code==='es'||code==='en'||code==='fr') return code;
+    }
+  }catch(e){}
+  return null;
+})();
+let lang = URL_LANG || localStorage.getItem('pf_lang') || BROWSER_LANG || 'es';
 if(URL_LANG) localStorage.setItem('pf_lang', URL_LANG);
 function t(key, p){
   let s = (I18N[lang] && I18N[lang][key]) || I18N.es[key] || key;

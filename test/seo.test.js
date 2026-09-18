@@ -98,7 +98,21 @@ test('la portada declara metadatos, alternativas y datos estructurados', async (
 test('quien llega a /en o /fr ve la aplicacion en ese idioma', async () => {
   const html = await read('public/index.html');
   assert.match(html, /const URL_LANG = \{'\/es':'es','\/en':'en','\/fr':'fr'\}\[location\.pathname\]/);
-  assert.match(html, /let lang = URL_LANG \|\| localStorage\.getItem\('pf_lang'\) \|\| 'es';/);
+  assert.match(html, /let lang = URL_LANG \|\| localStorage\.getItem\('pf_lang'\) \|\| BROWSER_LANG \|\| 'es';/);
+});
+
+test('la primera visita sigue al idioma del navegador, y nada mas que la primera', async () => {
+  const html = await read('public/index.html');
+  // El orden es la regla entera: direccion > eleccion guardada > navegador > espanol.
+  const orden = html.match(/let lang = ([^;]+);/)[1].split('||').map((x) => x.trim());
+  assert.deepEqual(orden, ["URL_LANG", "localStorage.getItem('pf_lang')", 'BROWSER_LANG', "'es'"]);
+  // La suposicion no se guarda: si se guardara, cambiar el idioma del aparato
+  // ya no cambiaria nada, y ademas se confundiria con una eleccion de verdad.
+  assert.doesNotMatch(html, /setItem\('pf_lang', *BROWSER_LANG\)/);
+  const bloque = html.slice(html.indexOf('const BROWSER_LANG'), html.indexOf('let lang = URL_LANG'));
+  assert.match(bloque, /navigator\.languages/, 'se mira la lista entera, no solo la primera preferencia');
+  assert.match(bloque, /slice\(0,2\)/, 'es-419, en-GB y fr-CA son el mismo idioma que es, en y fr');
+  assert.match(bloque, /catch\(e\)\{\}/, 'un navegador sin `languages` no puede dejar la pagina en blanco');
 });
 
 test('la administracion no se indexa, por dos caminos', async () => {
