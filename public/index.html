@@ -371,6 +371,8 @@
   .invite-banner{background:rgba(79,201,124,.12);border:1px solid rgba(79,201,124,.4);border-radius:12px;
     padding:11px 13px;margin:0 0 14px;font-size:13px;line-height:1.5;color:var(--fija)}
   .invite-banner b{font-family:'JetBrains Mono',monospace;letter-spacing:2px;font-size:15px}
+  .invite-banner .who{color:var(--text);font-weight:700}
+  .invite-banner .invite-rules{display:block;margin-top:5px;color:var(--muted);font-size:12px;line-height:1.45}
   .experience-card{border-color:rgba(91,141,239,.5);background:linear-gradient(135deg,rgba(91,141,239,.12),rgba(224,104,90,.08))}.experience-card .experience-icon{font-size:28px;margin-bottom:7px}.experience-card .experience-status{font-size:12px;color:var(--muted);margin:10px 0 0;line-height:1.45}.experience-card .btn{margin-top:12px}
   .install-card{border-color:rgba(240,180,41,.5);background:linear-gradient(135deg,rgba(240,180,41,.12),rgba(91,141,239,.08))}.install-card .install-icon{margin-bottom:7px}.install-card .btn{margin-top:12px}.install-note{font-size:12px;color:var(--muted);margin:10px 0 0;line-height:1.45}.install-foot{margin-top:11px;font-size:12px;color:var(--muted);display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.install-foot .link{cursor:pointer}
   .install-steps{margin-top:14px;display:flex;flex-direction:column;gap:9px}.install-step{display:flex;gap:11px;align-items:center;background:#0D0B07;border:1px solid var(--edge);border-radius:12px;padding:9px 11px;text-align:left}.install-step .num{flex:0 0 22px;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#0A1020;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}.install-step .txt{flex:1;font-size:13px;line-height:1.45;color:var(--muted)}.install-step .txt b{color:var(--text)}.install-step .shot{flex:0 0 auto;display:block}.install-step .shot svg{display:block}
@@ -1063,12 +1065,35 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v3.5.3';
-/* Enlace de invitación: ...?game=SZ93 */
+const APP_VERSION = 'v3.6.0';
+/* Enlace de invitación: ...?game=SZ93
+   La invitación sobrevive al registro: se guarda en el navegador, porque entre
+   abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
+   segundo aparato. Caduca a las 48 h para que un código viejo no secuestre una
+   visita posterior. El enlace del correo la trae de vuelta desde el teléfono
+   con `&game=`, así que al limpiar la barra de direcciones se quita solo
+   `game` y se respeta `verify_email`, que se lee más abajo. */
+const PENDING_JOIN_KEY = 'pf_pending_join';
+const PENDING_JOIN_TTL = 48 * 60 * 60 * 1000;
+function storePendingJoin(code){ try{ localStorage.setItem(PENDING_JOIN_KEY, JSON.stringify({code:code, at:Date.now()})); }catch(e){} }
+function clearPendingJoin(){ try{ localStorage.removeItem(PENDING_JOIN_KEY); }catch(e){} }
+function readPendingJoin(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(PENDING_JOIN_KEY)||'null');
+    if(!saved||!/^[A-Z0-9]{4,6}$/.test(saved.code||'')) return '';
+    if(!(Date.now()-Number(saved.at)<PENDING_JOIN_TTL)){ clearPendingJoin(); return ''; }
+    return saved.code;
+  }catch(e){ return ''; }
+}
 let pendingJoinCode = '';
 (function(){
   try{ const p=new URLSearchParams(location.search); const g=(p.get('game')||'').toUpperCase().trim();
-    if(/^[A-Z0-9]{4,6}$/.test(g)){ pendingJoinCode=g; history.replaceState({}, '', location.pathname); } }catch(e){}
+    if(/^[A-Z0-9]{4,6}$/.test(g)){
+      pendingJoinCode=g; storePendingJoin(g);
+      p.delete('game'); const rest=p.toString();
+      history.replaceState({}, '', location.pathname+(rest?'?'+rest:''));
+    } else pendingJoinCode=readPendingJoin();
+  }catch(e){}
 })();
 function gameLink(code){ return location.origin+location.pathname+'?game='+code; }
 
@@ -1083,6 +1108,7 @@ const I18N = {
     login_lang:"Idioma", lang_switch:"Cambiar idioma", login_name:"Nombre de usuario", login_name_ph:"p.ej. Diego", login_pin:"Tu contraseña · 4–8 dígitos", login_pin_ph:"4–8 dígitos",
     login_pin_note:"🔒 Es tu contraseña para entrar en la app. No es el código secreto del juego ni el código de la partida.",
     login_invite:"🎮 Te han invitado a la partida {code}. Crea tu nombre y tu contraseña y entrarás directo.",
+    login_invite_host:"🎮 {name} te invita a su partida {code}. Crea tu cuenta y entrarás directo.", login_invite_rules:"Reglas: {rules}", login_invite_gone:"La partida {code} ya no espera rival. Crea tu cuenta y busca otra en el vestíbulo.",
     login_enter:"Entrar", login_min:"Mínimo 2 caracteres", login_pin_invalid:"La contraseña debe tener entre 4 y 8 dígitos",
     login_continue:"Continuar", login_change_name:"Cambiar",
     login_back_title:"Hola otra vez, {name}", login_back_hint:"Escribe la contraseña que elegiste al registrarte.",
@@ -1164,6 +1190,7 @@ const I18N = {
     login_lang:"Language", lang_switch:"Change language", login_name:"Username", login_name_ph:"e.g. Diego", login_pin:"Your password · 4–8 digits", login_pin_ph:"4–8 digits",
     login_pin_note:"🔒 It's your password to sign in to the app. It is not the game's secret code nor the game code.",
     login_invite:"🎮 You've been invited to game {code}. Choose your name and password and you'll go straight in.",
+    login_invite_host:"🎮 {name} invites you to game {code}. Create your account and you'll go straight in.", login_invite_rules:"Rules: {rules}", login_invite_gone:"Game {code} is no longer waiting for an opponent. Create your account and find another one in the lobby.",
     login_enter:"Enter", login_min:"At least 2 characters", login_pin_invalid:"The password must contain 4 to 8 digits",
     login_continue:"Continue", login_change_name:"Change",
     login_back_title:"Welcome back, {name}", login_back_hint:"Type the password you chose when you signed up.",
@@ -1245,6 +1272,7 @@ const I18N = {
     login_lang:"Langue", lang_switch:"Changer de langue", login_name:"Nom d'utilisateur", login_name_ph:"ex. Diego", login_pin:"Ton mot de passe · 4–8 chiffres", login_pin_ph:"4–8 chiffres",
     login_pin_note:"🔒 C'est ton mot de passe pour entrer dans l'app. Ce n'est ni le code secret du jeu ni le code de la partie.",
     login_invite:"🎮 Tu es invité à la partie {code}. Choisis ton nom et ton mot de passe et tu entreras directement.",
+    login_invite_host:"🎮 {name} t'invite à sa partie {code}. Crée ton compte et tu entreras directement.", login_invite_rules:"Règles : {rules}", login_invite_gone:"La partie {code} n'attend plus d'adversaire. Crée ton compte et cherches-en une autre dans le lobby.",
     login_enter:"Entrer", login_min:"2 caractères minimum", login_pin_invalid:"Le mot de passe doit contenir de 4 à 8 chiffres",
     login_continue:"Continuer", login_change_name:"Changer",
     login_back_title:"Te revoilà, {name}", login_back_hint:"Écris le mot de passe choisi lors de ton inscription.",
@@ -1479,6 +1507,8 @@ const ERR = {
     "Un jugador abandonó la partida.":"A player abandoned the game.",
     "La partida fue cancelada.":"The game was cancelled.",
     "El rival ya se unió; la partida ya comenzó.":"The opponent already joined; the game has started.",
+    "No encontramos esa partida.":"We could not find that game.",
+    "La partida ya no espera rival.":"That game is no longer waiting for an opponent.",
     "Solo puedes tener 3 partidas abiertas o activas al mismo tiempo.":"You can only have 3 open or active games at the same time.",
     "Espera 10 segundos antes de crear otra partida.":"Wait 10 seconds before creating another game.",
     "Demasiados PIN incorrectos. Inténtalo de nuevo en 15 minutos.":"Too many incorrect PIN attempts. Try again in 15 minutes.",
@@ -1571,6 +1601,8 @@ const ERR = {
     "Un jugador abandonó la partida.":"Un joueur a abandonné la partie.",
     "La partida fue cancelada.":"La partie a été annulée.",
     "El rival ya se unió; la partida ya comenzó.":"L'adversaire a déjà rejoint ; la partie a commencé.",
+    "No encontramos esa partida.":"Nous n'avons pas trouvé cette partie.",
+    "La partida ya no espera rival.":"Cette partie n'attend plus d'adversaire.",
     "Solo puedes tener 3 partidas abiertas o activas al mismo tiempo.":"Tu peux avoir au maximum 3 parties ouvertes ou actives en même temps.",
     "Espera 10 segundos antes de crear otra partida.":"Attends 10 secondes avant de créer une autre partie.",
     "Demasiados PIN incorrectos. Inténtalo de nuevo en 15 minutos.":"Trop de PIN incorrects. Réessaie dans 15 minutes.",
@@ -1877,12 +1909,32 @@ function applyI18n(){
   pintarIconos();
   setCredits();
 }
-/* Aviso en el registro cuando se llega por un enlace de invitación (?game=XXXX). */
+/* Aviso en el registro cuando se llega por un enlace de invitación (?game=XXXX).
+   Quien llega así todavía no tiene cuenta: antes de pedirle nada se le enseña
+   quién le invita y a qué reglas, que es lo único que le permite decidir. Los
+   datos salen de `inviteInfo`, una lectura pública que solo responde de una
+   partida que sigue esperando rival y nunca devuelve un secreto. */
+let inviteMeta=null, inviteAsked='', inviteGone='';
 function renderLoginInvite(){
   const el=$('login-invite'); if(!el) return;
   if(!pendingJoinCode){ el.classList.add('hidden'); el.innerHTML=''; return; }
-  el.innerHTML=t('login_invite',{code:'<b>'+pendingJoinCode+'</b>'});
+  const code='<b>'+esc(pendingJoinCode)+'</b>';
+  if(inviteMeta&&inviteMeta.gameId===pendingJoinCode)
+    el.innerHTML=t('login_invite_host',{name:'<span class="who">'+esc(inviteMeta.host)+'</span>',code:code})
+      +'<span class="invite-rules">'+esc(t('login_invite_rules',{rules:rulesLabel(inviteMeta)}))+'</span>';
+  else if(inviteGone===pendingJoinCode) el.innerHTML=t('login_invite_gone',{code:code});
+  else el.innerHTML=t('login_invite',{code:code});
   el.classList.remove('hidden');
+}
+async function loadInviteInfo(){
+  if(!pendingJoinCode||inviteAsked===pendingJoinCode) return;
+  inviteAsked=pendingJoinCode;
+  try{
+    const res=await api('inviteInfo',{gameId:pendingJoinCode});
+    if(inviteAsked!==pendingJoinCode) return;
+    if(res.ok){ inviteMeta=res; inviteGone=''; } else { inviteMeta=null; inviteGone=pendingJoinCode; }
+    renderLoginInvite();
+  }catch(e){ inviteAsked=''; }
 }
 
 /* Paleta de hasta 8 colores (índices 0-7). Cada color conserva siempre su figura. */
@@ -2607,6 +2659,7 @@ function resetLoginSteps(){
   ['reg-email','uname','upin','upin2','login-id','login-pin','forgot-email'].forEach(id=>{if($(id)) $(id).value='';});
   ['auth-register-val','auth-login-val','auth-forgot-val'].forEach(id=>{if($(id)){ $(id).className='val'; $(id).textContent=''; }});
   setAuthMode(defaultAuthMode());
+  renderLoginInvite(); loadInviteInfo();
 }
 function authError(id,msg){ const el=$(id); el.className='val err'; el.textContent=msg; }
 /* Sin cuenta y con invitacion: el recien llegado empieza por crear la suya. */
@@ -2677,7 +2730,7 @@ async function sendVerification(){
   if(!/^\S+@\S+\.\S+$/.test(email))return authError('verify-val',t('auth_email_invalid'));
   $('verify-val').className='val'; $('verify-val').textContent=t('loading');
   try{
-    const res=await api('requestEmailVerification',{email});
+    const res=await api('requestEmailVerification',{email,joinCode:pendingJoinCode});
     if(!res.ok)return authError('verify-val',te(res.error));
     $('verify-val').className='val ok'; $('verify-val').textContent=t('verify_sent'); paintVerifyGate();
   }catch(e){ if(e.message!=='EMAIL_PENDING'&&e.message!=='SESSION_EXPIRED') authError('verify-val',t('net_error')); }
@@ -2707,7 +2760,7 @@ async function registerAccount(){
   if(pin!==repeat) return authError('auth-register-val',t('login_pin_mismatch'));
   $('auth-register-val').className='val'; $('auth-register-val').textContent=t('loading');
   try{
-    const res=await api('registerUser',{username:name,email,pin});
+    const res=await api('registerUser',{username:name,email,pin,joinCode:pendingJoinCode});
     if(!res.ok) return authError('auth-register-val',te(res.error));
     $('auth-register-val').className='val ok'; $('auth-register-val').textContent=t('auth_activation_sent');
     setAuthMode('login'); $('login-id').value=email;
@@ -3562,7 +3615,8 @@ function shareCode(){
 }
 async function handleDeepLink(){
   if(!pendingJoinCode || !user) return;
-  const code=pendingJoinCode; pendingJoinCode=''; renderLoginInvite();
+  const code=pendingJoinCode; pendingJoinCode=''; clearPendingJoin();
+  inviteMeta=null; inviteAsked=''; inviteGone=''; renderLoginInvite();
   goToRematch(code); // enruta según estado: unirse / esperar / entrar
 }
 

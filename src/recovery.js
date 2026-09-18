@@ -80,7 +80,17 @@ async function mail(env, to, subject, text, action = null, copy = MAIL_TEXT.es) 
   }
 }
 
-export async function sendEmailVerification(db, env, user, email, origin, activation = false, lang = "es") {
+/* El codigo de la partida viaja en el enlace del correo porque ese enlace se
+   abre muchas veces en otro aparato —el telefono donde esta el buzon— que no
+   sabe nada de la invitacion guardada en el navegador de origen. Sin el, quien
+   fue invitado verifica su cuenta y aterriza en el vestibulo, que es
+   exactamente lo que esta tarea evita. */
+const joinSuffix = (code) => {
+  const clean = String(code || "").toUpperCase().trim();
+  return /^[A-Z0-9]{4,6}$/.test(clean) ? `&game=${clean}` : "";
+};
+
+export async function sendEmailVerification(db, env, user, email, origin, activation = false, lang = "es", joinCode = "") {
   const address = cleanEmail(email);
   if (!validEmail(address)) return { ok: false, error: "Introduce un correo válido." };
   const duplicate = await db.prepare("SELECT id FROM users WHERE email=? AND id<>?").bind(address, user.id).first();
@@ -91,7 +101,7 @@ export async function sendEmailVerification(db, env, user, email, origin, activa
     db.prepare("INSERT INTO email_verifications(token_hash,user_id,email,expires_at,created_at) VALUES(?,?,?,?,?)")
       .bind(await sha256(token), user.id, address, activation ? activationExpiry() : expiry(), at),
   ]);
-  const link = `${origin}/?verify_email=${encodeURIComponent(token)}`;
+  const link = `${origin}/?verify_email=${encodeURIComponent(token)}${joinSuffix(joinCode)}`;
   const copy = mailText(lang);
   const duration = activation ? copy.long : copy.short;
   const delivered = await mail(env, address, copy.verifySubject, copy.verifyBody(duration), { label: copy.verifyLabel, url: link }, copy);
@@ -104,11 +114,11 @@ export async function sendEmailVerification(db, env, user, email, origin, activa
    ha verificado puede pedir el enlace, y con ello corregir una errata. */
 export const EMAIL_LOCKED = "Tu correo ya está verificado y no se puede cambiar.";
 
-export function requestEmailVerification(db, env, user, email, origin, lang) {
+export function requestEmailVerification(db, env, user, email, origin, lang, joinCode = "") {
   if (user.email_verified_at) return { ok: false, error: EMAIL_LOCKED };
   // Solo llega aqui una cuenta que aun no ha verificado: su enlace vale lo
   // mismo que el del alta, 3 dias, que es lo que promete la pantalla.
-  return sendEmailVerification(db, env, user, email, origin, true, lang);
+  return sendEmailVerification(db, env, user, email, origin, true, lang, joinCode);
 }
 
 export async function verifyEmail(db, token) {

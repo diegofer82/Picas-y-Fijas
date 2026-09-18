@@ -290,6 +290,43 @@ async function publicPulse(db) {
   return value;
 }
 
+/* La invitacion, antes de tener cuenta. Quien abre `?game=XXXX` sin sesion
+   necesita saber dos cosas para decidir si se registra: quien le invita y a
+   que reglas. Es una lectura y nada mas: solo responde de una partida que
+   sigue esperando rival, nunca de una activa o terminada, y jamas devuelve un
+   secreto. Con la partida ya empezada dice solo eso, sin nombres. */
+async function inviteInfo(db, code) {
+  const gameId = String(code || "").toUpperCase().trim();
+  if (!/^[A-Z0-9]{4,6}$/.test(gameId))
+    return { ok: false, error: "No encontramos esa partida." };
+  const row = await db
+    .prepare(
+      `SELECT game_id,status,p1,digits,mode,num_colors,allow_repeats,max_attempts,
+        turn_seconds,time_mode,bank_seconds,bank_increment,reveal_secrets
+       FROM games WHERE game_id=?`,
+    )
+    .bind(gameId)
+    .first();
+  if (!row) return { ok: false, error: "No encontramos esa partida." };
+  if (row.status !== "waiting")
+    return { ok: false, error: "La partida ya no espera rival." };
+  return {
+    ok: true,
+    gameId: row.game_id,
+    host: row.p1,
+    digits: Number(row.digits) || 3,
+    mode: row.mode === "colors" ? "colors" : "numbers",
+    numColors: Number(row.num_colors) || 6,
+    allowRepeats: !!row.allow_repeats,
+    maxAttempts: Number(row.max_attempts) || 0,
+    turnSeconds: Number(row.turn_seconds) || 0,
+    timeMode: row.time_mode === "bank" ? "bank" : "turn",
+    bankSeconds: Number(row.bank_seconds) || 0,
+    bankIncrement: Number(row.bank_increment) || 0,
+    revealSecrets: !!row.reveal_secrets,
+  };
+}
+
 function gameInsertValues(params, username, gameId, source = null) {
   const digits = source ? source.digits : toInt(params.digits, 3);
   const mode = source
@@ -1438,6 +1475,9 @@ async function routeApi(request, env, ctx) {
   // La portada solo publica dos agregados. El ranking, las partidas y cualquier
   // dato capaz de identificar a alguien siguen detras de la puerta del correo.
   if (action === "publicPulse") return json(await publicPulse(env.DB));
+  // El enlace de invitacion se abre sin cuenta: esta accion es lo que permite
+  // ensenar quien invita y con que reglas antes de pedir nada a cambio.
+  if (action === "inviteInfo") return json(await inviteInfo(env.DB, params.gameId));
   if (action === "verifyEmail") return json(await verifyEmail(env.DB, String(params.token || "")));
   if (action === "requestPinReset") {
     const origin = requestOrigin(request);
@@ -1503,7 +1543,7 @@ async function routeApi(request, env, ctx) {
       );
   }
   if (action === "requestEmailVerification")
-    return json(await requestEmailVerification(env.DB, env, auth.user, params.email, new URL(request.url).origin, params.lang));
+    return json(await requestEmailVerification(env.DB, env, auth.user, params.email, new URL(request.url).origin, params.lang, params.joinCode));
   if (action === "accountProfile") return json(await accountProfile(env.DB, auth.user));
   if (action === "changePin") return json(await changePin(env.DB, auth.user, auth.tokenHash, String(params.currentPin || ''), String(params.newPin || '')));
   if (action === "changeUsername") return json(await changeUsername(env.DB, auth.user, params));
