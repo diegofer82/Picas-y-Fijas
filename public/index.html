@@ -160,6 +160,13 @@
   .secret-label-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px}
   .secret-label-row label{margin:0}
   .random-code-btn{width:38px;height:34px;border:1px solid var(--edge);border-radius:10px;background:#0D0B07;color:var(--text);cursor:pointer;font-size:18px;line-height:1}
+.guest-try{margin:0 0 16px;padding:14px;border:1px solid rgba(79,201,124,.38);border-radius:14px;background:linear-gradient(180deg,rgba(79,201,124,.10),transparent)}
+  .guest-try .hint{margin:10px 0 0}
+  .guest-sep{display:flex;align-items:center;gap:10px;margin:0 0 16px;color:var(--muted);font-size:11px;letter-spacing:.09em;text-transform:uppercase}
+  .guest-sep::before,.guest-sep::after{content:"";flex:1;height:1px;background:var(--edge)}
+  .guest-invite{margin-top:14px;padding:14px;border:1px solid rgba(91,141,239,.42);border-radius:14px;background:rgba(91,141,239,.09)}
+  .guest-invite h3{margin:0 0 6px;font:400 22px 'Instrument Serif',serif;color:var(--text)}
+  .guest-invite p{margin:0 0 12px;color:var(--muted);font-size:13px;line-height:1.5}
   .practice-badge{display:inline-block;margin-bottom:12px;padding:5px 10px;border:1px solid rgba(240,180,41,.45);border-radius:999px;color:var(--pica);font-size:11px;font-weight:700}
   .practice-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
   .practice-stat{background:#0D0B07;border:1px solid var(--edge);border-radius:11px;padding:10px 6px;text-align:center}
@@ -421,7 +428,7 @@
         </div>
         <hr class="gearsep">
         <button type="button" class="gearitem" id="settings-account" role="menuitem" onclick="menuAccount()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"></circle><path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"></path></svg><span data-i18n="account_link">Mi cuenta</span></button>
-        <button type="button" class="gearitem" role="menuitem" onclick="menuLogout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4.8h3.7a1.5 1.5 0 0 1 1.5 1.5v11.4a1.5 1.5 0 0 1-1.5 1.5H14"></path><path d="M9.6 15.6 5.2 12l4.4-3.6"></path><path d="M5.2 12h9"></path></svg><span data-i18n="menu_logout">Cerrar sesión</span></button>
+        <button type="button" class="gearitem" id="settings-logout" role="menuitem" onclick="menuLogout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4.8h3.7a1.5 1.5 0 0 1 1.5 1.5v11.4a1.5 1.5 0 0 1-1.5 1.5H14"></path><path d="M9.6 15.6 5.2 12l4.4-3.6"></path><path d="M5.2 12h9"></path></svg><span data-i18n="menu_logout">Cerrar sesión</span></button>
       </div>
     </div>
   </div>
@@ -431,6 +438,12 @@
     <div class="invite-banner hidden" id="login-invite"></div>
     <h2 data-i18n="auth_title">À vous de jouer</h2>
     <p class="hint" id="auth-hint" data-i18n="auth_hint_login">Entrez avec votre nom ou votre e-mail et votre PIN.</p>
+    <div class="guest-try" id="guest-try">
+      <button class="btn green" type="button" onclick="startGuestPractice()" data-i18n="guest_try_cta">Probar ahora</button>
+      <button class="btn ghost hidden" type="button" id="guest-resume" onclick="resumeGuestPractice()" data-i18n="practice_resume">Continuar práctica</button>
+      <p class="hint" data-i18n="guest_try_hint">Una partida contra el ordenador, sin cuenta y sin esperar.</p>
+    </div>
+    <div class="guest-sep" id="guest-sep"><span data-i18n="guest_or">o</span></div>
     <form id="auth-register-panel" class="hidden">
       <label data-i18n="login_lang">Idioma</label>
       <div class="seg" id="seg-lang">
@@ -762,9 +775,15 @@
       <div class="legend"><span><i class="pip f"></i><span data-i18n="legend_fija">F = posición correcta</span></span><span><i class="pip p"></i><span data-i18n="legend_pica">P = presente, mal colocada</span></span></div>
       <div style="height:16px"></div>
       <div class="cols" id="practice-logs"><div class="card"><div class="colhead" data-i18n="computer_your_attempts">Tus intentos</div><div class="glog" id="practice-log"></div></div><div class="card hidden" id="practice-computer-log-card"><div class="colhead" data-i18n="computer_attempts">Intentos del computador</div><div class="glog" id="practice-computer-log"></div></div></div>
+      <div class="guest-invite hidden" id="guest-invite">
+        <h3 data-i18n="guest_invite_title">¿Jugamos de verdad?</h3>
+        <p data-i18n="guest_invite_text">Crea una cuenta gratis y juega contra personas: partidas por código, ranking y chat.</p>
+        <button class="btn green" type="button" onclick="guestRegister()" data-i18n="guest_invite_cta">Crear mi cuenta</button>
+      </div>
       <div id="practice-actions" class="hidden"><div style="height:14px"></div><button class="btn green" onclick="startPractice(false)" data-i18n="practice_again">Jugar otra vez</button><div style="height:10px"></div><button class="btn ghost" onclick="openPractice()" data-i18n="practice_settings">Cambiar reglas</button></div>
       <div id="practice-active-actions"><div style="height:14px"></div><div class="row"><button class="btn ghost" onclick="cancelPractice()" data-i18n="practice_cancel">Cancelar</button><button class="btn pink" onclick="surrenderPractice()" data-i18n="practice_surrender">Rendirse</button></div></div>
       <div style="height:10px"></div><button class="btn ghost" id="practice-lobby-btn" onclick="leavePracticeToLobby()" data-i18n="practice_save_lobby">Guardar y volver al lobby</button>
+      <div class="foot credits hidden" id="practice-credits"></div>
     </div>
   </section>
 
@@ -1042,7 +1061,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v3.5.1';
+const APP_VERSION = 'v3.5.2';
 /* Enlace de invitación: ...?game=SZ93 */
 let pendingJoinCode = '';
 (function(){
@@ -1302,6 +1321,11 @@ const I18N = {
 Object.assign(I18N.es,{practice_time:"Tiempo por intento",practice_missed_timeout:"⏱ Intento perdido por tiempo",rl_attempt:"{n}s/intento"});
 Object.assign(I18N.en,{practice_time:"Time per attempt",practice_missed_timeout:"⏱ Attempt lost on time",rl_attempt:"{n}s/try"});
 Object.assign(I18N.fr,{practice_time:"Temps par essai",practice_missed_timeout:"⏱ Essai perdu au temps",rl_attempt:"{n}s/essai"});
+/* El visitante que todavia no tiene cuenta. Juega una practica y, al acabarla,
+   se le invita a crear una: no es una cuenta, no escribe nada en el servidor. */
+Object.assign(I18N.es,{guest_try_cta:"Probar ahora",guest_try_hint:"Una partida contra el ordenador, sin cuenta y sin esperar.",guest_or:"o",guest_back:"Volver al inicio",guest_invite_title:"¿Jugamos de verdad?",guest_invite_text:"Crea una cuenta gratis y juega contra personas: partidas por código, ranking, chat y revancha.",guest_invite_cta:"Crear mi cuenta",guest_saved_toast:"Práctica guardada en este dispositivo. Puedes continuarla desde el inicio."});
+Object.assign(I18N.en,{guest_try_cta:"Play now",guest_try_hint:"A game against the computer, no account and no waiting.",guest_or:"or",guest_back:"Back to the start",guest_invite_title:"Fancy a real match?",guest_invite_text:"Create a free account and play against people: games by code, ranking, chat and rematches.",guest_invite_cta:"Create my account",guest_saved_toast:"Practice saved on this device. You can continue it from the start screen."});
+Object.assign(I18N.fr,{guest_try_cta:"Essayer maintenant",guest_try_hint:"Une partie contre l'ordinateur, sans compte et sans attendre.",guest_or:"ou",guest_back:"Retour à l'accueil",guest_invite_title:"Et contre quelqu'un ?",guest_invite_text:"Crée un compte gratuit et joue contre des personnes : parties par code, classement, tchat et revanche.",guest_invite_cta:"Créer mon compte",guest_saved_toast:"Entraînement sauvegardé sur cet appareil. Tu peux le continuer depuis l'accueil."});
 Object.assign(I18N.es,{
   chat_lobby:"Chat del lobby",chat_game:"Chat de la partida",chat_placeholder:"Escribe un mensaje…",chat_empty:"Todavía no hay mensajes.",chat_deleted:"Mensaje eliminado",chat_mute:"Silenciar usuario",chat_mute_confirm:"¿Silenciar a {name}? Sus mensajes y zumbidos quedarán ocultos hasta que lo reactives desde el botón 🔇.",chat_manage_muted:"Gestionar usuarios silenciados",chat_muted_title:"Usuarios silenciados",chat_muted_empty:"No has silenciado a ningún usuario.",chat_unmute:"Reactivar",chat_unmute_all:"Reactivar a todos",chat_unmuted:"{name} fue reactivado.",chat_all_unmuted:"Todos los usuarios fueron reactivados.",chat_report:"Reportar mensaje",chat_muted:"Usuario silenciado en este dispositivo.",chat_reported:"Mensaje reportado.",chat_nudge:"Enviar zumbido",chat_nudges_on:"Zumbidos activados",chat_nudges_off:"Zumbidos desactivados",chat_joined:"{name} entró en la partida.",chat_paused:"{name} pausó la partida.",chat_resumed:"{name} reanudó la partida.",chat_abandoned:"{name} abandonó la partida.",chat_rematch:"{name} propuso una revancha.",chat_finished:"La partida terminó.",chat_nudged:"{name} te ha enviado un zumbido ⚡",chat_report_reason:"Motivo: 1 spam, 2 insultos/acoso, 3 contenido inapropiado"
 });
@@ -1841,6 +1865,7 @@ function applyI18n(){
   if(typeof renderMutedPanel==='function') renderMutedPanel();
   if(typeof updateExperiencePrompt==='function') updateExperiencePrompt();
   if(typeof updateInstallCard==='function') updateInstallCard();
+  if(typeof syncGuestChrome==='function') syncGuestChrome();
   if(typeof renderPracticeStats==='function'&&$('practice-stats')) renderPracticeStats();
   if(typeof renderPracticeResumeCard==='function'&&$('practice-resume-card')) renderPracticeResumeCard();
   pintarIconos();
@@ -1920,6 +1945,12 @@ const $ = id => document.getElementById(id);
 let feedbackReturn = 'login';
 const BRAND_HOME_FROM = new Set(['rank','history','rules','create','join','practice','feedback']);
 let currentView = 'login';
+/* Un visitante puede jugar antes de registrarse. No es una cuenta: su practica
+   vive entera en el navegador y no escribe ni una fila en D1. Estas son las
+   unicas pantallas que existen sin sesion, y `show()` no deja salir de ellas. */
+let guestMode = false;
+const GUEST_VIEWS = new Set(['login','practice','practice-game','rules','feedback']);
+function guestActive(){ return guestMode && !sessionToken; }
 /* El buzon es la unica de estas pantallas a la que se puede llegar sin sesion,
    asi que la marca lo devuelve a donde se entro —el registro o el lobby— en vez
    de al lobby siempre. Su etiqueta dice lo mismo que su boton Volver. */
@@ -1936,8 +1967,20 @@ function syncSettingsBtn(){
   wrap.classList.toggle('hidden', hide);
   // Mientras el correo no esta validado el servidor rechaza todo lo de la
   // cuenta, asi que ofrecerla desde la rueda solo devolveria a esta pantalla.
-  const account = $('settings-account'); if(account) account.classList.toggle('hidden', currentView==='verify');
+  const account = $('settings-account'); if(account) account.classList.toggle('hidden', currentView==='verify'||guestActive());
+  // El invitado no tiene sesion que cerrar: la misma entrada lo devuelve a la
+  // portada, que es de donde vino.
+  const out = $('settings-logout'); if(out){ const key = guestActive()?'guest_back':'menu_logout', label = out.querySelector('span');
+    if(label){ label.dataset.i18n = key; label.textContent = t(key); } }
   if(hide) closeSettingsMenu();
+}
+/* Lo que cambia de sitio segun haya cuenta o no: los creditos, que en la
+   portada estan siempre y en la practica solo los ve quien no ha entrado, y el
+   boton de continuar, que solo tiene sentido si hay una practica guardada. */
+function syncGuestChrome(){
+  const guest = guestActive();
+  const credits = $('practice-credits'); if(credits) credits.classList.toggle('hidden', !guest);
+  const resume = $('guest-resume'); if(resume) resume.classList.toggle('hidden', !readSavedPractice());
 }
 function syncBrandHome(){
   const b = $('brand-home'); if(!b) return;
@@ -1952,6 +1995,9 @@ function brandHome(){
   else enterLobby();
 }
 function show(name){
+  // Sin sesion abierta solo existen las pantallas publicas: ningun boton
+  // olvidado puede dejar a un invitado delante del vestibulo o de la cuenta.
+  if(!sessionToken && !GUEST_VIEWS.has(name)) name = 'login';
   currentView = name;
   if(name!=='game') gameViewEpoch++;
   ['login','verify','lobby','account','feedback','rank','history','rules','practice','practice-game','create','wait','join','rematch','game'].forEach(s=>{
@@ -1961,6 +2007,7 @@ function show(name){
   if(name!=='practice-game') stopPracticeTick();
   syncBrandHome();
   syncSettingsBtn();
+  syncGuestChrome();
   if(name==='login') resetLoginSteps();
   if(!['game','wait'].includes(name)) stopPoll();
   if(name==='lobby'){ startLobbyPoll(); if(typeof updateInstallCard==='function') updateInstallCard(); } else stopLobbyPoll();
@@ -2457,7 +2504,7 @@ function toggleSettingsMenu(){
   btn.setAttribute('aria-expanded', open?'true':'false');
 }
 function menuAccount(){ closeSettingsMenu(); openAccount(); }
-function menuLogout(){ closeSettingsMenu(); logout(); }
+function menuLogout(){ closeSettingsMenu(); if(guestActive()) return exitGuest(); logout(); }
 document.addEventListener('click', e=>{
   const menu=$('settings-menu'); if(!menu||menu.classList.contains('hidden')) return;
   if(e.target.closest('#settings-wrap')) return;
@@ -2782,7 +2829,7 @@ async function logout(){
   chatEnabled=false;stopChatPoll();$('chat-panel').classList.add('hidden');$('chat-launch').classList.add('hidden');
   show('login');
 }
-function enterLobby(){ showWelcomeNote(); $('lobby-greet').textContent=t('lobby_greeting',{name:user}); $('lobby-rule').innerHTML=ruleSVG(112); $('lobby-toro').innerHTML=toroSVG('calm',54); updateSoundLabel(); show('lobby'); renderPracticeResumeCard(); refreshLobby(); handleDeepLink(); }
+function enterLobby(){ if(!sessionToken) return exitGuest(); showWelcomeNote(); $('lobby-greet').textContent=t('lobby_greeting',{name:user}); $('lobby-rule').innerHTML=ruleSVG(112); $('lobby-toro').innerHTML=toroSVG('calm',54); updateSoundLabel(); show('lobby'); renderPracticeResumeCard(); refreshLobby(); handleDeepLink(); }
 
 function showWelcomeNote(){
   const box=$('lobby-welcome'); if(!box) return;
@@ -3031,8 +3078,9 @@ function discardSavedPractice(){
   stopPracticeTick();practice=null;clearSavedPractice();
 }
 function leavePracticeToLobby(){
-  if(practice&&!practice.finished){pauseActivePractice();toast(t('practice_saved_toast'));}
-  enterLobby();
+  const guest=guestActive();
+  if(practice&&!practice.finished){pauseActivePractice();toast(t(guest?'guest_saved_toast':'practice_saved_toast'));}
+  if(guest) exitGuest(); else enterLobby();
 }
 function cancelPractice(){
   if(!practice||practice.finished)return;
@@ -3082,6 +3130,36 @@ function renderPracticeStats(){
   $('practice-stats').innerHTML=`<div class="practice-stat"><b>${s.played}</b><span>${t('practice_played')}</span></div><div class="practice-stat"><b>${s.wins}</b><span>${t('practice_wins')}</span></div><div class="practice-stat"><b>${s.streak}</b><span>${t('practice_streak')}</span></div>`;
 }
 function openPractice(){ renderPracticeStats(); syncPracticeControls(); show('practice'); }
+/* Reglas de bienvenida: tres cifras, sin repetir y sin reloj. La partida
+   empieza en el acto —ese es el trato de la portada— y cambiar las reglas
+   sigue estando a un toque. */
+function startGuestPractice(){
+  guestMode=true;
+  practiceCfg={...practiceCfg,type:'solo',mode:'numbers',digits:3,allowRepeats:false,maxAttempts:0,turnSeconds:0,timeMode:'turn',bankSeconds:0,bankIncrement:0};
+  practiceClock='legacy';
+  paintPracticeControls();
+  startPractice(false);
+}
+function resumeGuestPractice(){ guestMode=true; resumePractice(); }
+function exitGuest(){
+  if(practice&&!practice.finished) pauseActivePractice(); else stopPracticeTick();
+  guestMode=false; practice=null;
+  show('login');
+}
+function guestRegister(){ exitGuest(); setAuthMode('register'); }
+/* Los controles son la verdad visible de las reglas: cuando la practica arranca
+   sin pasar por su pantalla, hay que dejarlos diciendo lo mismo que se juega. */
+function paintPracticeControls(){
+  const pick=(id,attribute,value)=>{ const seg=$(id); if(!seg) return; const btn=seg.querySelector('[data-'+attribute+'="'+value+'"]'); if(btn) segPick(seg,btn); };
+  pick('p-seg-type','type',practiceCfg.type);
+  pick('p-seg-mode','m',practiceCfg.mode);
+  pick('p-seg-digits','d',practiceCfg.digits);
+  pick('p-seg-repeat','r',practiceCfg.allowRepeats?1:0);
+  pick('p-seg-attempts','a',practiceCfg.maxAttempts);
+  pick('p-seg-time','t',practiceCfg.turnSeconds);
+  pick('p-seg-clock','c',practiceClock==='legacy'?'none':practiceClock);
+  syncPracticeControls();
+}
 function syncPracticeControls(){
   const impossible=practiceCfg.mode==='colors'&&practiceCfg.digits>practiceCfg.numColors;
   const no=$('p-seg-repeat').querySelector('[data-r="0"]'); no.disabled=impossible;
@@ -3169,9 +3247,17 @@ function displayPracticeGame(restored){
   $('practice-game-title').textContent=t(practiceCfg.type==='computer'?'computer_title':'practice_title');
   $('practice-secret').className=practiceCfg.type==='computer'?'':'n'; $('practice-secret').innerHTML=practiceCfg.type==='computer'?codeViewHTML(practice.playerSecret,practiceCfg.mode):'•'.repeat(practiceCfg.digits);
   $('practice-rules').textContent=rulesLabel({...practiceCfg,revealSecrets:true,practiceSolo:practiceCfg.type==='solo'});
-  $('practice-lobby-btn').textContent=t('practice_save_lobby');$('practice-lobby-btn').dataset.i18n='practice_save_lobby';
+  practiceExitChrome('practice_save_lobby',false);
   if(restored&&practiceCfg.type==='computer'&&practice.turn==='computer')$('practice-guessarea').classList.add('hidden');
   show('practice-game'); renderPracticeStatus();
+}
+/* La salida de la practica dice dos cosas distintas segun quien juegue, y al
+   terminar es cuando al invitado se le ofrece la cuenta: hasta entonces nadie
+   le pide nada. */
+function practiceExitChrome(exitKey,ended){
+  const guest=guestActive(),key=guest?'guest_back':exitKey,btn=$('practice-lobby-btn');
+  if(btn){ btn.textContent=t(key); btn.dataset.i18n=key; }
+  const invite=$('guest-invite'); if(invite) invite.classList.toggle('hidden',!(guest&&ended));
 }
 function stopPracticeTick(){ if(practiceTickTimer){clearInterval(practiceTickTimer);practiceTickTimer=null;} if(practiceComputerTimer){clearTimeout(practiceComputerTimer);practiceComputerTimer=null;} }
 function formatPracticeTime(ms){ const total=Math.max(0,Math.ceil(ms/1000)),m=Math.floor(total/60),s=total%60; return m?`${m}:${String(s).padStart(2,'0')}`:`${s}s`; }
@@ -3248,7 +3334,7 @@ function expireComputerPlayerTurn(){if(!practice||practice.finished||practice.tu
 function finishComputerPractice(result,reason=''){
   if(!practice||practice.finished)return;practice.finished=true;stopPracticeTick();clearSavedPractice();
   const s=computerStats(),key=result==='win'?'wins':result==='loss'?'losses':'draws';s.played++;s[key]++;s.byDifficulty[practiceCfg.difficulty][key]++;localStorage.setItem('pf_computer_stats',JSON.stringify(s));
-  $('practice-secret').innerHTML=codeViewHTML(practice.playerSecret,practiceCfg.mode);$('practice-guessarea').classList.add('hidden');$('practice-turn').classList.add('hidden');$('practice-active-actions').classList.add('hidden');$('practice-actions').classList.remove('hidden');$('practice-lobby-btn').textContent=t('result_lobby');$('practice-lobby-btn').dataset.i18n='result_lobby';
+  $('practice-secret').innerHTML=codeViewHTML(practice.playerSecret,practiceCfg.mode);$('practice-guessarea').classList.add('hidden');$('practice-turn').classList.add('hidden');$('practice-active-actions').classList.add('hidden');$('practice-actions').classList.remove('hidden');practiceExitChrome('result_lobby',true);
   const surrendered=reason==='surrender',title=surrendered?t('practice_surrendered'):t('computer_result_'+result),
     detail=surrendered?t('practice_surrender_detail'):reason==='timeout'?t('lose_timeout'):t('computer_both_codes',{yours:practice.playerSecret,computer:practice.secret});
   $('practice-banner').innerHTML=`<div class="banner ${result==='win'?'win':result==='loss'?'lose':'draw'}"><h2>${title}</h2><p>${detail}</p></div><div class="note"><b>${t('practice_secret')}</b> ${codeViewHTML(practice.playerSecret,practiceCfg.mode)} · <b>🤖</b> ${codeViewHTML(practice.secret,practiceCfg.mode)}</div>`;endSound(result==='draw'?'draw':result==='win'?'win':'lose');
@@ -3260,7 +3346,7 @@ function finishPractice(won,reason){
   $('practice-secret').className=''; $('practice-secret').innerHTML=codeViewHTML(practice.secret,practiceCfg.mode);
   const surrendered=reason==='surrender',detail=won?t('practice_attempts_used',{n:practice.guesses.length,time:formatPracticeTime(elapsed)}):t(surrendered?'practice_surrender_detail':reason==='time'?'practice_time_up':'practice_attempts_up');
   $('practice-banner').innerHTML=`<div class="banner ${won?'win':'lose'}"><h2>${t(won?'practice_won':surrendered?'practice_surrendered':'practice_lost')}</h2><p>${detail}</p></div><div class="note"><b>${t('practice_reveal')}</b> ${codeViewHTML(practice.secret,practiceCfg.mode)}</div>`;
-  $('practice-guessarea').classList.add('hidden'); $('practice-active-actions').classList.add('hidden'); $('practice-actions').classList.remove('hidden');$('practice-lobby-btn').textContent=t('result_lobby');$('practice-lobby-btn').dataset.i18n='result_lobby'; endSound(won?'win':'lose');
+  $('practice-guessarea').classList.add('hidden'); $('practice-active-actions').classList.add('hidden'); $('practice-actions').classList.remove('hidden');practiceExitChrome('result_lobby',true); endSound(won?'win':'lose');
 }
 $('p-seg-type').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;practiceCfg.type=b.dataset.type;segPick($('p-seg-type'),b);syncPracticeControls();});
 $('p-seg-difficulty').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;practiceCfg.difficulty=b.dataset.level;segPick($('p-seg-difficulty'),b);});
