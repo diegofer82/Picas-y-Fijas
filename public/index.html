@@ -162,6 +162,7 @@
   .random-code-btn{width:38px;height:34px;border:1px solid var(--edge);border-radius:10px;background:#0D0B07;color:var(--text);cursor:pointer;font-size:18px;line-height:1}
 .guest-try{margin:0 0 16px;padding:14px;border:1px solid rgba(79,201,124,.38);border-radius:14px;background:linear-gradient(180deg,rgba(79,201,124,.10),transparent)}
   .guest-try .hint{margin:10px 0 0}
+  .public-pulse{margin:11px 0 0;color:var(--text);font:600 12px 'JetBrains Mono',monospace;line-height:1.45;text-align:center}
   .guest-sep{display:flex;align-items:center;gap:10px;margin:0 0 16px;color:var(--muted);font-size:11px;letter-spacing:.09em;text-transform:uppercase}
   .guest-sep::before,.guest-sep::after{content:"";flex:1;height:1px;background:var(--edge)}
   .guest-invite{margin-top:14px;padding:14px;border:1px solid rgba(91,141,239,.42);border-radius:14px;background:rgba(91,141,239,.09)}
@@ -442,6 +443,7 @@
       <button class="btn green" type="button" onclick="startGuestPractice()" data-i18n="guest_try_cta">Probar ahora</button>
       <button class="btn ghost hidden" type="button" id="guest-resume" onclick="resumeGuestPractice()" data-i18n="practice_resume">Continuar práctica</button>
       <p class="hint" data-i18n="guest_try_hint">Una partida contra el ordenador, sin cuenta y sin esperar.</p>
+      <p class="public-pulse hidden" id="public-pulse" role="status" aria-live="polite"></p>
     </div>
     <div class="guest-sep" id="guest-sep"><span data-i18n="guest_or">o</span></div>
     <form id="auth-register-panel" class="hidden">
@@ -1061,7 +1063,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v3.5.2';
+const APP_VERSION = 'v3.5.3';
 /* Enlace de invitación: ...?game=SZ93 */
 let pendingJoinCode = '';
 (function(){
@@ -1326,6 +1328,9 @@ Object.assign(I18N.fr,{practice_time:"Temps par essai",practice_missed_timeout:"
 Object.assign(I18N.es,{guest_try_cta:"Probar ahora",guest_try_hint:"Una partida contra el ordenador, sin cuenta y sin esperar.",guest_or:"o",guest_back:"Volver al inicio",guest_invite_title:"¿Jugamos de verdad?",guest_invite_text:"Crea una cuenta gratis y juega contra personas: partidas por código, ranking, chat y revancha.",guest_invite_cta:"Crear mi cuenta",guest_saved_toast:"Práctica guardada en este dispositivo. Puedes continuarla desde el inicio."});
 Object.assign(I18N.en,{guest_try_cta:"Play now",guest_try_hint:"A game against the computer, no account and no waiting.",guest_or:"or",guest_back:"Back to the start",guest_invite_title:"Fancy a real match?",guest_invite_text:"Create a free account and play against people: games by code, ranking, chat and rematches.",guest_invite_cta:"Create my account",guest_saved_toast:"Practice saved on this device. You can continue it from the start screen."});
 Object.assign(I18N.fr,{guest_try_cta:"Essayer maintenant",guest_try_hint:"Une partie contre l'ordinateur, sans compte et sans attendre.",guest_or:"ou",guest_back:"Retour à l'accueil",guest_invite_title:"Et contre quelqu'un ?",guest_invite_text:"Crée un compte gratuit et joue contre des personnes : parties par code, classement, tchat et revanche.",guest_invite_cta:"Créer mon compte",guest_saved_toast:"Entraînement sauvegardé sur cet appareil. Tu peux le continuer depuis l'accueil."});
+Object.assign(I18N.es,{public_pulse_player_one:"{n} jugador conectado",public_pulse_players_many:"{n} jugadores conectados",public_pulse_game_one:"{n} partida en curso",public_pulse_games_many:"{n} partidas en curso"});
+Object.assign(I18N.en,{public_pulse_player_one:"{n} player online",public_pulse_players_many:"{n} players online",public_pulse_game_one:"{n} game in progress",public_pulse_games_many:"{n} games in progress"});
+Object.assign(I18N.fr,{public_pulse_player_one:"{n} joueur connecté",public_pulse_players_many:"{n} joueurs connectés",public_pulse_game_one:"{n} partie en cours",public_pulse_games_many:"{n} parties en cours"});
 Object.assign(I18N.es,{
   chat_lobby:"Chat del lobby",chat_game:"Chat de la partida",chat_placeholder:"Escribe un mensaje…",chat_empty:"Todavía no hay mensajes.",chat_deleted:"Mensaje eliminado",chat_mute:"Silenciar usuario",chat_mute_confirm:"¿Silenciar a {name}? Sus mensajes y zumbidos quedarán ocultos hasta que lo reactives desde el botón 🔇.",chat_manage_muted:"Gestionar usuarios silenciados",chat_muted_title:"Usuarios silenciados",chat_muted_empty:"No has silenciado a ningún usuario.",chat_unmute:"Reactivar",chat_unmute_all:"Reactivar a todos",chat_unmuted:"{name} fue reactivado.",chat_all_unmuted:"Todos los usuarios fueron reactivados.",chat_report:"Reportar mensaje",chat_muted:"Usuario silenciado en este dispositivo.",chat_reported:"Mensaje reportado.",chat_nudge:"Enviar zumbido",chat_nudges_on:"Zumbidos activados",chat_nudges_off:"Zumbidos desactivados",chat_joined:"{name} entró en la partida.",chat_paused:"{name} pausó la partida.",chat_resumed:"{name} reanudó la partida.",chat_abandoned:"{name} abandonó la partida.",chat_rematch:"{name} propuso una revancha.",chat_finished:"La partida terminó.",chat_nudged:"{name} te ha enviado un zumbido ⚡",chat_report_reason:"Motivo: 1 spam, 2 insultos/acoso, 3 contenido inapropiado"
 });
@@ -1866,6 +1871,7 @@ function applyI18n(){
   if(typeof updateExperiencePrompt==='function') updateExperiencePrompt();
   if(typeof updateInstallCard==='function') updateInstallCard();
   if(typeof syncGuestChrome==='function') syncGuestChrome();
+  if(typeof renderPublicPulse==='function') renderPublicPulse();
   if(typeof renderPracticeStats==='function'&&$('practice-stats')) renderPracticeStats();
   if(typeof renderPracticeResumeCard==='function'&&$('practice-resume-card')) renderPracticeResumeCard();
   pintarIconos();
@@ -1994,6 +2000,28 @@ function brandHome(){
   if(currentView==='feedback') closeFeedback();
   else enterLobby();
 }
+let publicPulseData=null, publicPulseLoading=false;
+function renderPublicPulse(){
+  const el=$('public-pulse'); if(!el) return;
+  if(!publicPulseData){ el.classList.add('hidden'); el.textContent=''; return; }
+  const players=publicPulseData.onlineCount;
+  const games=publicPulseData.activeGameCount;
+  el.textContent=t(players===1?'public_pulse_player_one':'public_pulse_players_many',{n:players})+' · '+
+    t(games===1?'public_pulse_game_one':'public_pulse_games_many',{n:games});
+  el.classList.remove('hidden');
+}
+async function loadPublicPulse(){
+  if(publicPulseLoading) return;
+  publicPulseLoading=true;
+  try{
+    const result=await api('publicPulse');
+    if(result.ok&&Number.isFinite(result.onlineCount)&&Number.isFinite(result.activeGameCount)){
+      publicPulseData={onlineCount:result.onlineCount,activeGameCount:result.activeGameCount};
+      renderPublicPulse();
+    }
+  }catch(e){}
+  finally{ publicPulseLoading=false; }
+}
 function show(name){
   // Sin sesion abierta solo existen las pantallas publicas: ningun boton
   // olvidado puede dejar a un invitado delante del vestibulo o de la cuenta.
@@ -2008,7 +2036,7 @@ function show(name){
   syncBrandHome();
   syncSettingsBtn();
   syncGuestChrome();
-  if(name==='login') resetLoginSteps();
+  if(name==='login'){ resetLoginSteps(); loadPublicPulse(); }
   if(!['game','wait'].includes(name)) stopPoll();
   if(name==='lobby'){ startLobbyPoll(); if(typeof updateInstallCard==='function') updateInstallCard(); } else stopLobbyPoll();
   setChatContext(name);

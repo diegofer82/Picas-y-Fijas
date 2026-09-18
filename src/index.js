@@ -124,6 +124,8 @@ const PASSIVE_PRESENCE_ACTIONS = new Set([
   "chatReport",
   "chatNudge",
 ]);
+const PUBLIC_PULSE_TTL_MS = 30 * 1000;
+let publicPulseCache = null;
 const GAME_COLUMNS = new Set([
   "status",
   "p2",
@@ -264,6 +266,28 @@ async function onlineCount(db) {
     .bind(cutoff)
     .first();
   return Number(row?.count) || 0;
+}
+
+async function publicPulse(db) {
+  const stamp = Date.now();
+  if (publicPulseCache?.expiresAt > stamp) return publicPulseCache.value;
+  const presenceCutoff = new Date(stamp - LIMITS.presenceMs).toISOString();
+  const activeCutoff = new Date(stamp - LIMITS.activeTtlMs).toISOString();
+  const row = await db
+    .prepare(
+      `SELECT
+        (SELECT COUNT(*) FROM presence WHERE last_seen_at>=?) AS online_count,
+        (SELECT COUNT(*) FROM games WHERE status='active' AND updated_at>=?) AS active_game_count`,
+    )
+    .bind(presenceCutoff, activeCutoff)
+    .first();
+  const value = {
+    ok: true,
+    onlineCount: Number(row?.online_count) || 0,
+    activeGameCount: Number(row?.active_game_count) || 0,
+  };
+  publicPulseCache = { value, expiresAt: stamp + PUBLIC_PULSE_TTL_MS };
+  return value;
 }
 
 function gameInsertValues(params, username, gameId, source = null) {
@@ -1411,6 +1435,9 @@ async function routeApi(request, env, ctx) {
   // Paso previo del registro: publico como `loginUser`, porque se responde
   // antes de que exista ninguna sesion.
   if (action === "checkUsername") return json(await lookupName(env.DB, params));
+  // La portada solo publica dos agregados. El ranking, las partidas y cualquier
+  // dato capaz de identificar a alguien siguen detras de la puerta del correo.
+  if (action === "publicPulse") return json(await publicPulse(env.DB));
   if (action === "verifyEmail") return json(await verifyEmail(env.DB, String(params.token || "")));
   if (action === "requestPinReset") {
     const origin = requestOrigin(request);
