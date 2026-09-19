@@ -1,6 +1,7 @@
 import { cleanupChat } from "./chat.js";
 import { expiredTurnChanges, LIMITS } from "./game.js";
 import { sendTurnNotification } from "./push.js";
+import { recordFinishedGame } from "./season.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const RECEIPT_RETENTION_MS = 7 * DAY_MS;
@@ -34,6 +35,9 @@ async function expireCorrespondenceTurns(db, env, at) {
     if (Number(result.meta?.changes) !== 1) continue;
     const updated = { ...game, ...Object.fromEntries(entries), version: Number(game.version) + 1 };
     if (updated.status === "active" && env) await sendTurnNotification(db, env, updated);
+    // Una correspondencia que se apaga por el reloj termina aqui, lejos de
+    // cualquier jugador: tambien tiene que sumar sus puntos.
+    if (updated.status === "finished") await recordFinishedGame(db, updated);
   }
 }
 

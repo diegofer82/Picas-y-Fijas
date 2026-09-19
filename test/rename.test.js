@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { Miniflare } from 'miniflare';
 import { seedAccount } from './accounts.js';
+import { recordFinishedGame } from '../src/season.js';
 import { changeUsername } from '../src/rename.js';
 import { register } from '../src/security.js';
 
@@ -21,7 +22,7 @@ before(async () => {
     bindings: { SESSION_TTL_HOURS:'168', ADMIN_PATH:'/admin', DEBUG_ERRORS:'1' },
   });
   db = await mf.getD1Database('DB');
-  for (const file of ['0001_initial.sql','0002_chat.sql','0003_private_threads.sql','0004_admin_insight.sql','0005_feedback.sql','0006_time_bank.sql','0007_d1_free_optimization.sql','0008_email_recovery.sql','0009_username_change.sql','0010_previous_username.sql','0011_user_timezone.sql','0012_push.sql','0013_daily.sql','0014_notebook_option.sql']) {
+  for (const file of ['0001_initial.sql','0002_chat.sql','0003_private_threads.sql','0004_admin_insight.sql','0005_feedback.sql','0006_time_bank.sql','0007_d1_free_optimization.sql','0008_email_recovery.sql','0009_username_change.sql','0010_previous_username.sql','0011_user_timezone.sql','0012_push.sql','0013_daily.sql','0014_notebook_option.sql','0015_season.sql','0016_badges.sql']) {
     const migration = await readFile(new URL('../migrations/'+file, import.meta.url), 'utf8');
     for (const statement of migration.split(';').map((sql) => sql.trim()).filter(Boolean))
       await db.prepare(statement).run();
@@ -56,6 +57,10 @@ async function finishedGame(id, p1, p2, winner) {
   ]);
   await db.prepare(`INSERT INTO games(game_id,status,digits,p1,secret1,p2,secret2,guesses,winner,created_at,updated_at,finish_reason)
     VALUES(?,'finished',4,?,'0123',?,'4567',?,?,?,?,'solved')`).bind(id, p1, p2, guesses, winner, stamp, stamp).run();
+  // Desde la 3.10.0 el ranking no recorre `games`: lee los puntos que se
+  // apuntaron al terminar la partida. Una partida sembrada a mano tiene que
+  // pasar por la misma puerta que las de verdad.
+  await recordFinishedGame(db, await db.prepare('SELECT * FROM games WHERE game_id=?').bind(id).first());
 }
 
 test('renombrar arrastra historial, ranking, chat e hilos, y el correo no cambia', async () => {

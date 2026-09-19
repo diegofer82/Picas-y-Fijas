@@ -51,6 +51,7 @@ import {
   threadForGame,
 } from "./chat.js";
 import { dailyGuess, dailyState } from "./daily.js";
+import { leaderboard, profile, recordFinishedGame, rivals } from "./season.js";
 import { cleanupDatabase } from "./maintenance.js";
 import { deletePushSubscription, savePushSubscription, sendTurnNotification } from "./push.js";
 import { APP_VERSION } from "./version.js";
@@ -66,6 +67,8 @@ const PROTECTED = new Set([
   "lobbyState",
   "listGames",
   "leaderboard",
+  "profile",
+  "rivals",
   "dailyState",
   "dailyGuess",
   "myGames",
@@ -900,13 +903,22 @@ async function makeGuess(db, params, user, onTurnChanged) {
     if (changes.status === "finished") Object.assign(changes, finalClock(game));
     const updated = await saveGame(db, game, changes);
     response.state = sanitizeGame(updated, user.username);
-    if (updated.status === "finished")
+    if (updated.status === "finished") {
       await systemChat(
         db,
         game.game_id,
         `finished:${updated.version}`,
         "finished|",
       );
+      // Los puntos y las insignias de la etapa 5 se cuentan aqui, con la
+      // partida ya guardada, y una sola vez: el recibo de `game_scores` lo
+      // garantiza aunque dos caminos cierren la misma partida. Las insignias
+      // recien ganadas viajan en la respuesta —y en el recibo de
+      // idempotencia— para que la tarjeta final pueda enseñarlas.
+      const counted = await recordFinishedGame(db, updated);
+      const fresh = counted.badges?.[user.username];
+      if (fresh?.length) response.newBadges = fresh;
+    }
     if (requestId)
       await db
         .prepare(
@@ -951,6 +963,7 @@ async function passTurn(db, params, user, onTurnChanged) {
         `finished:${closed.version}`,
         "finished|",
       );
+      await recordFinishedGame(db, closed);
       return { ok: true, resolved: true, timeout: true };
     }
     const expired = expiredTurnChanges(game);
@@ -959,14 +972,15 @@ async function passTurn(db, params, user, onTurnChanged) {
       ...expired,
       updated_at: now(),
     });
-    if (updated.status === "finished")
+    if (updated.status === "finished") {
       await systemChat(
         db,
         game.game_id,
         `finished:${updated.version}`,
         "finished|",
       );
-    else if (updated.turn !== game.turn && onTurnChanged)
+      await recordFinishedGame(db, updated);
+    } else if (updated.turn !== game.turn && onTurnChanged)
       await onTurnChanged(updated);
     return updated.status === "finished"
       ? { ok: true, resolved: true, timeout: true }
@@ -1006,7 +1020,7 @@ async function closeGame(db, params, user) {
           error: "El rival ya se unió; la partida ya comenzó.",
         };
       const opponent = youAre === 1 ? game.p2 : game.p1;
-      await saveGame(db, game, {
+      const closed = await saveGame(db, game, {
         status: "finished",
         winner: opponent,
         finish_reason: "abandon",
@@ -1025,6 +1039,7 @@ async function closeGame(db, params, user) {
         "abandoned",
         `abandoned|${user.username}`,
       );
+      await recordFinishedGame(db, closed);
       return { ok: true, status: "finished", winner: opponent };
     }
     return { ok: false, error: "La partida ya está cerrada." };
@@ -1127,22 +1142,6 @@ async function historyGame(db, params, user) {
   if (game.p1 !== user.username && game.p2 !== user.username)
     return { ok: false, error: "No eres jugador de esta partida." };
   return sanitizeGame(game, user.username);
-}
-
-async function leaderboard(db, username) {
-  const { results } = await db
-    .prepare(
-      `WITH players AS (SELECT p1 user,country1 country,updated_at,winner FROM games WHERE status='finished' UNION ALL SELECT p2,country2,updated_at,winner FROM games WHERE status='finished' AND p2<>''), ranked AS (SELECT user,SUM(CASE WHEN winner=user THEN 1 ELSE 0 END) wins,COUNT(*) played,MAX(country) country FROM players GROUP BY user) SELECT user,wins,played,country FROM ranked ORDER BY wins DESC,played ASC`,
-    )
-    .all();
-  const key = cleanName(username),
-    index = results.findIndex((x) => x.user === key);
-  return {
-    ok: true,
-    ranking: results.slice(0, 50),
-    total: results.length,
-    me: index < 0 ? null : { ...results[index], rank: index + 1 },
-  };
 }
 
 async function togglePause(db, params, user) {
@@ -1467,7 +1466,7 @@ async function adminAction(db, action, params, user, env) {
         error:
           "El ganador debe ser uno de los jugadores o quedar vacío para empate.",
       };
-    await saveGame(db, game, {
+    const corrected = await saveGame(db, game, {
       status: "finished",
       winner,
       turn: 0,
@@ -1475,6 +1474,10 @@ async function adminAction(db, action, params, user, env) {
       finish_reason: "admin-correction",
       updated_at: now(),
     });
+    // Una correccion no reescribe los puntos de una partida que ya se conto:
+    // el recibo la reconoce y la deja como estaba. Lo que arregla es la
+    // partida que nunca llego a contarse.
+    await recordFinishedGame(db, corrected);
   } else return { ok: false, error: "Acción administrativa desconocida." };
   await logAudit(db, user, action, target, params);
   return { ok: true };
@@ -1657,7 +1660,13 @@ async function routeApi(request, env, ctx) {
       result = await dailyGuess(env.DB, env, auth.user, params);
       break;
     case "leaderboard":
-      result = await leaderboard(env.DB, auth.user.username);
+      result = await leaderboard(env.DB, auth.user.username, params);
+      break;
+    case "profile":
+      result = await profile(env.DB, params, auth.user);
+      break;
+    case "rivals":
+      result = await rivals(env.DB, auth.user);
       break;
     case "chatList":
       result = await listChat(env.DB, params, auth.user);

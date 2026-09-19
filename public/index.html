@@ -291,6 +291,23 @@
   .rankrow .wl{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace}
   .rankrow.me{border-color:var(--accent);background:rgba(91,141,239,.08)}
   .rank-separator{padding:7px 13px;color:var(--muted);font-size:13px;border-left:1px dashed var(--edge);margin-left:20px}
+  /* Un nombre que se puede pulsar tiene que parecerlo sin gritar: el subrayado
+     punteado lo dice tambien a quien no distingue el color del acento. */
+  .nmbtn{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;cursor:pointer;
+    border-bottom:1px dotted var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .nmbtn:hover,.nmbtn:focus-visible{border-bottom-color:var(--accent)}
+  .statgrid{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+  .statbox{flex:1 1 118px;background:#0D0B07;border:1px solid var(--edge);border-radius:10px;padding:10px 12px;text-align:center}
+  .statbox b{display:block;font-family:'JetBrains Mono',monospace;font-size:19px;color:var(--text)}
+  .statbox span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .badgelist{display:flex;flex-wrap:wrap;gap:8px}
+  .badgechip{display:flex;align-items:center;gap:8px;background:#0D0B07;border:1px solid var(--edge);
+    border-radius:999px;padding:7px 13px 7px 9px;font-size:13px}
+  .badgechip .ic{font-size:17px;line-height:1}
+  .badgechip b{font-weight:600}
+  .badgechip.fresh{border-color:var(--fija);background:rgba(79,201,124,.10)}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--edge);flex:0 0 auto}
+  .dot.on{background:var(--fija);box-shadow:0 0 0 3px rgba(79,201,124,.18)}
 
   .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
     background:#0D0B07;border:1px solid var(--edge);color:var(--text);padding:12px 18px;border-radius:12px;
@@ -620,6 +637,7 @@
       <div class="lobby-chips">
         <button class="chipbtn" onclick="openRank()"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M7.5 3.9c3-.4 6-.4 9-.1.4 3.5.2 6.2-.5 8.2-.9 2.5-2.4 3.7-4.2 3.7s-3.2-1.3-4-3.8c-.6-2-.7-4.6-.3-8Z"></path><path class="dl" d="M7.5 6c-1.6-.3-2.7 0-3 .9-.2 1.2.9 2.3 3.1 2.7M16.5 6c1.6-.3 2.7 0 3 .9.2 1.2-.9 2.3-3.1 2.7"></path><path class="dl" d="M12 15.9c.1 1.3.1 2.5 0 3.4M8.7 20.1c2.2-.4 4.4-.4 6.6 0"></path></svg><span data-i18n="lobby_ranking">Ranking</span></button>
         <button class="chipbtn" onclick="openHistory()"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M12.3 3.6c4.7-.2 8.6 3.8 8.4 8.5-.2 4.6-4 8.3-8.6 8.3-4.8 0-8.7-4-8.4-8.8.3-4.3 3.8-7.7 8-7.9"></path><path class="dl" d="M11.9 7.3c.2 1.8.2 3.4.1 4.9 1.1.8 2.2 1.4 3.3 2"></path></svg><span data-i18n="lobby_history">Historial</span></button>
+        <button class="chipbtn" onclick="openRivals()"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M9 7.6c0 1.5-1.2 2.7-2.7 2.7S3.6 9.1 3.6 7.6 4.8 4.9 6.3 4.9 9 6.1 9 7.6Z"></path><path class="dl" d="M20.4 7.6c0 1.5-1.2 2.7-2.7 2.7S15 9.1 15 7.6s1.2-2.7 2.7-2.7 2.7 1.2 2.7 2.7Z"></path><path class="dl" d="M2.6 19.1c.2-3 1.7-4.6 4-4.6 2.2 0 3.7 1.5 4 4.5M13.4 19.1c.2-3 1.7-4.6 4-4.6 2.2 0 3.7 1.5 4 4.5"></path></svg><span data-i18n="lobby_rivals">Rivales</span></button>
         <button class="chipbtn" onclick="openPuzzles()"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M4.6 5.3c2.1-.4 4.2-.5 6.3-.3-.3 1.6.3 2.4 1.6 2.5 1.3.1 2-.7 1.9-2.2 1.7-.2 3.3-.2 4.9 0 .3 2 .4 3.9.2 5.8-1.6-.3-2.4.3-2.5 1.6-.1 1.3.7 2 2.2 1.9.2 1.6.1 3.3-.1 4.9-2.1.3-4.2.3-6.3.1.3-1.6-.3-2.4-1.6-2.5-1.3-.1-2 .7-1.9 2.2-1.5.2-3.1.2-4.6 0-.4-4.6-.4-9.3-.1-14Z"></path></svg><span data-i18n="lobby_puzzles">Enigmas</span></button>
         <button class="chipbtn" onclick="refreshLobby()"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M20.1 12.4c.2 4.7-3.7 8.5-8.4 8.4-4.6-.1-8.3-4-8-8.7.3-4.2 3.8-7.4 8-7.3 2.6.1 4.8 1.3 6.3 3.2"></path><path class="dl" d="M19.9 3.7c-.2 1.6-.2 3.1-.1 4.6-1.6.2-3.1.2-4.6.1"></path></svg><span data-i18n="lobby_refresh">Actualizar lista</span></button>
       </div>
@@ -933,8 +951,34 @@
     <div class="card">
       <h2 data-i18n="rank_title">Ranking global 🏆</h2>
       <p class="hint" data-i18n="rank_hint">Victorias totales por jugador. Se actualiza con cada partida terminada.</p>
-      <div class="scoretxt" id="rank-total" style="margin:2px 0 12px"></div>
+      <div class="seg" id="rank-seasons" aria-label="Temporada">
+        <button class="on" data-rank-season="month" onclick="setRankSeason('month')" data-i18n="rank_season_month">Esta temporada</button>
+        <button data-rank-season="all" onclick="setRankSeason('all')" data-i18n="rank_season_all">Desde siempre</button>
+      </div>
+      <div class="scoretxt" id="rank-total" style="margin:8px 0 12px"></div>
       <div class="list" id="rank-list"><div class="empty">…</div></div>
+      <div style="height:16px"></div>
+      <button class="btn ghost" onclick="show('lobby')" data-i18n="back">Volver</button>
+    </div>
+  </section>
+
+  <!-- PERFIL PUBLICO (E5-T2) -->
+  <section id="s-profile" class="hidden">
+    <div class="card">
+      <h2 id="profile-name">Perfil</h2>
+      <p class="hint" id="profile-since"></p>
+      <div id="profile-body"><div class="empty">…</div></div>
+      <div style="height:16px"></div>
+      <button class="btn ghost" onclick="closeProfile()" data-i18n="back">Volver</button>
+    </div>
+  </section>
+
+  <!-- RIVALES (E5-T4) -->
+  <section id="s-rivals" class="hidden">
+    <div class="card">
+      <h2 data-i18n="rivals_title">Rivales 🤝</h2>
+      <p class="hint" data-i18n="rivals_hint">Con quién has jugado. El punto verde dice quién está conectado ahora.</p>
+      <div class="list" id="rivals-list"><div class="empty">…</div></div>
       <div style="height:16px"></div>
       <button class="btn ghost" onclick="show('lobby')" data-i18n="back">Volver</button>
     </div>
@@ -1227,7 +1271,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v3.9.1';
+const APP_VERSION = 'v3.10.0';
 /* Enlace de invitación: ...?game=SZ93
    La invitación sobrevive al registro: se guarda en el navegador, porque entre
    abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
@@ -1997,6 +2041,109 @@ Object.assign(I18N.fr,{
 Object.assign(I18N.es,{account_link:"Mi cuenta",account_title:"Mi cuenta",account_hint:"Cambia tu nombre o tu PIN. Tu correo verificado no cambia.",account_name:"Nombre de usuario",account_name_hint:"Puedes cambiarlo una vez cada 90 días. Tu correo no cambia.",account_name_next:"Podrás volver a cambiarlo a partir del {date}.",account_save_name:"Cambiar mi nombre",account_name_confirm:"Confirma con tu PIN actual que quieres llamarte «{name}». Tu PIN no cambia.",account_name_confirm_btn:"Confirmar",account_name_cancel:"Cancelar",account_name_saved:"Nombre actualizado. Tu historial y tu ranking te siguen.",account_email:"Correo de acceso",account_save_email:"Verificar este nuevo correo",account_pin_title:"Cambiar mi PIN",account_pin_hint:"Tu PIN debe tener entre 4 y 8 dígitos.",account_current_pin:"PIN actual",account_new_pin:"Nuevo PIN",account_save_pin:"Guardar mi nuevo PIN",account_email_verified:"✓ Correo verificado",account_email_locked:"✓ Correo verificado. Es la llave de tu cuenta y no se puede cambiar.",account_email_pending:"Revisa tu correo y abre el enlace para verificarlo.",account_email_sent:"Te enviamos un enlace de verificación.",account_pin_saved:"PIN actualizado. Tus otras sesiones se cerraron.",account_email_missing:"No has apuntado ningún correo: sin él no podrás recuperar tu PIN.",account_current_pin_invalid:"Escribe tu PIN actual.",verify_title:"Valida tu correo",verify_hint_missing:"Tu cuenta todavía no tiene correo. Apunta uno: es lo que te permitirá recuperar tu PIN si lo olvidas, y hace falta para jugar.",verify_hint_sent:"Te enviamos un enlace. Ábrelo desde este correo para desbloquear tu cuenta; caduca en 3 días.",verify_send:"Enviar el enlace",verify_resend:"Enviar otro enlace",verify_sent:"Enlace enviado. Revisa tu bandeja de entrada y también el correo no deseado.",verify_done:"Ya lo he validado",verify_not_yet:"Todavía no nos consta validado. Abre el enlace del correo y vuelve a intentarlo."});
 Object.assign(I18N.en,{account_link:"My account",account_title:"My account",account_hint:"Change your name or your PIN. Your verified email stays the same.",account_name:"Username",account_name_hint:"You can change it once every 90 days. Your email stays the same.",account_name_next:"You can change it again from {date}.",account_save_name:"Change my name",account_name_confirm:"Confirm with your current PIN that you want to be called “{name}”. Your PIN stays the same.",account_name_confirm_btn:"Confirm",account_name_cancel:"Cancel",account_name_saved:"Name updated. Your history and ranking came with you.",account_email:"Sign-in email",account_save_email:"Verify this new email",account_pin_title:"Change my PIN",account_pin_hint:"Your PIN must be 4 to 8 digits.",account_current_pin:"Current PIN",account_new_pin:"New PIN",account_save_pin:"Save my new PIN",account_email_verified:"✓ Email verified",account_email_locked:"✓ Email verified. It is the key to your account and cannot be changed.",account_email_pending:"Check your email and open the link to verify it.",account_email_sent:"We sent you a verification link.",account_pin_saved:"PIN updated. Your other sessions were signed out.",account_email_missing:"No email saved yet: without one you cannot recover your PIN.",account_current_pin_invalid:"Enter your current PIN.",verify_title:"Verify your email",verify_hint_missing:"Your account has no email yet. Add one: it is what lets you recover your PIN if you forget it, and it is required to play.",verify_hint_sent:"We sent you a link. Open it from that inbox to unlock your account; it expires in 3 days.",verify_send:"Send the link",verify_resend:"Send another link",verify_sent:"Link sent. Check your inbox, and your spam folder too.",verify_done:"I have verified it",verify_not_yet:"We don't see it verified yet. Open the link in the email and try again."});
 Object.assign(I18N.fr,{account_link:"Mon compte",account_title:"Mon compte",account_hint:"Change ton nom ou ton PIN. Ton e-mail vérifié ne change pas.",account_name:"Nom d'utilisateur",account_name_hint:"Tu peux le changer une fois tous les 90 jours. Ton e-mail ne change pas.",account_name_next:"Tu pourras le changer à nouveau à partir du {date}.",account_save_name:"Changer mon nom",account_name_confirm:"Confirme avec ton PIN actuel que tu veux t'appeler « {name} ». Ton PIN ne change pas.",account_name_confirm_btn:"Confirmer",account_name_cancel:"Annuler",account_name_saved:"Nom mis à jour. Ton historique et ton classement te suivent.",account_email:"E-mail de connexion",account_save_email:"Vérifier ce nouvel e-mail",account_pin_title:"Modifier mon PIN",account_pin_hint:"Votre PIN doit contenir de 4 à 8 chiffres.",account_current_pin:"PIN actuel",account_new_pin:"Nouveau PIN",account_save_pin:"Enregistrer mon nouveau PIN",account_email_verified:"✓ E-mail vérifié",account_email_locked:"✓ E-mail vérifié. C'est la clé de ton compte, il ne peut pas être modifié.",account_email_pending:"Consultez votre e-mail et ouvrez le lien de vérification.",account_email_sent:"Nous vous avons envoyé un lien de vérification.",account_pin_saved:"PIN mis à jour. Vos autres sessions ont été fermées.",account_email_missing:"Aucun e-mail enregistré : sans lui, impossible de récupérer ton PIN.",account_current_pin_invalid:"Saisis ton PIN actuel.",verify_title:"Valide ton e-mail",verify_hint_missing:"Ton compte n'a pas encore d'e-mail. Ajoutes-en un : c'est ce qui te permettra de récupérer ton PIN si tu l'oublies, et c'est nécessaire pour jouer.",verify_hint_sent:"Nous t'avons envoyé un lien. Ouvre-le depuis cette boîte pour débloquer ton compte ; il expire dans 3 jours.",verify_send:"Envoyer le lien",verify_resend:"Envoyer un autre lien",verify_sent:"Lien envoyé. Vérifie ta boîte de réception, et aussi les indésirables.",verify_done:"Je l'ai validé",verify_not_yet:"Nous ne le voyons pas encore validé. Ouvre le lien reçu par e-mail et réessaie."});
+/* -------------------- etapa 5: puntos, perfil, insignias y rivales --------
+   Los codigos de las insignias los decide el servidor, que no sabe en que
+   lengua se van a leer; el nombre y la frase de cada una viven aqui, en los
+   tres idiomas, como todo lo que se lee en pantalla. */
+Object.assign(I18N.es,{
+  rank_hint:"Los puntos premian la dificultad de las reglas y resolver en pocos intentos. Cada mes empieza una temporada nueva; el total de siempre no se pierde.",
+  rank_season_month:"Esta temporada", rank_season_all:"Desde siempre",
+  rank_points:"{n} pts", rank_line:"{points} pts · {wins} 🏆 · {played} partidas",
+  rank_season_label:"Temporada {season}", rank_season_all_label:"Clasificación de siempre",
+  lobby_rivals:"Rivales",
+  profile_title:"Perfil", profile_since:"Juega desde {date}",
+  profile_empty:"Todavía no ha terminado ninguna partida.",
+  profile_points:"Puntos", profile_played:"Partidas", profile_wins:"Ganadas", profile_winrate:"Acierto",
+  profile_record:"{wins} ganadas · {losses} perdidas · {draws} empates",
+  profile_season:"Esta temporada: {points} pts en {played} partidas", profile_season_one:"Esta temporada: {points} pts en 1 partida",
+  profile_best:"Mejor partida: código descubierto en {n} intentos", profile_best_one:"Mejor partida: código descubierto en 1 intento",
+  profile_best_none:"Todavía no ha descubierto ningún código.",
+  profile_rules:"Reglas preferidas", profile_badges:"Insignias",
+  profile_badges_none:"Sin insignias todavía.",
+  profile_streak_days:"Racha: {n} días seguidos jugando",
+  profile_streak_wins:"Racha: {n} victorias seguidas",
+  profile_not_found:"Ese jugador no existe.",
+  badges_new_one:"¡Insignia nueva!", badges_new_many:"¡{n} insignias nuevas!",
+  badge_first_win:"Primera victoria", badge_first_win_desc:"Ganaste tu primera partida.",
+  badge_solved_4:"Resuelto en 4", badge_solved_4_desc:"Descubriste un código en cuatro intentos o menos.",
+  badge_fast_finish:"Con cinco segundos", badge_fast_finish_desc:"Ganaste con cinco segundos o menos en el reloj.",
+  badge_expert_rules:"Al Experto", badge_expert_rules_desc:"Ganaste con las reglas más duras.",
+  badge_wins_10:"Diez victorias", badge_wins_10_desc:"Has ganado diez partidas.",
+  badge_wins_50:"Cincuenta victorias", badge_wins_50_desc:"Has ganado cincuenta partidas.",
+  badge_days_7:"Siete días seguidos", badge_days_7_desc:"Jugaste siete días seguidos.",
+  rivals_title:"Rivales 🤝", rivals_hint:"Con quién has jugado. El punto verde dice quién está conectado ahora.",
+  rivals_empty:"Todavía no has terminado ninguna partida con nadie.",
+  rivals_record:"{wins}–{losses} en {played} partidas", rivals_record_one:"{wins}–{losses} en 1 partida",
+  rivals_online:"Conectado", rivals_offline:"Desconectado",
+  rivals_challenge:"Desafiar", rivals_last:"Última partida: {when}",
+  rivals_no_game:"No encuentro vuestra última partida para pedir la revancha."
+});
+Object.assign(I18N.en,{
+  rank_hint:"Points reward the difficulty of the rules and cracking the code in few attempts. A new season starts every month; your all-time total stays.",
+  rank_season_month:"This season", rank_season_all:"All time",
+  rank_points:"{n} pts", rank_line:"{points} pts · {wins} 🏆 · {played} games",
+  rank_season_label:"Season {season}", rank_season_all_label:"All-time ranking",
+  lobby_rivals:"Rivals",
+  profile_title:"Profile", profile_since:"Playing since {date}",
+  profile_empty:"No finished games yet.",
+  profile_points:"Points", profile_played:"Games", profile_wins:"Wins", profile_winrate:"Win rate",
+  profile_record:"{wins} won · {losses} lost · {draws} drawn",
+  profile_season:"This season: {points} pts in {played} games", profile_season_one:"This season: {points} pts in 1 game",
+  profile_best:"Best game: code cracked in {n} attempts", profile_best_one:"Best game: code cracked in 1 attempt",
+  profile_best_none:"No code cracked yet.",
+  profile_rules:"Favourite rules", profile_badges:"Badges",
+  profile_badges_none:"No badges yet.",
+  profile_streak_days:"Streak: {n} days in a row",
+  profile_streak_wins:"Streak: {n} wins in a row",
+  profile_not_found:"That player does not exist.",
+  badges_new_one:"New badge!", badges_new_many:"{n} new badges!",
+  badge_first_win:"First win", badge_first_win_desc:"You won your first game.",
+  badge_solved_4:"Solved in 4", badge_solved_4_desc:"You cracked a code in four attempts or fewer.",
+  badge_fast_finish:"Five seconds left", badge_fast_finish_desc:"You won with five seconds or less on the clock.",
+  badge_expert_rules:"Expert rules", badge_expert_rules_desc:"You won under the hardest rules.",
+  badge_wins_10:"Ten wins", badge_wins_10_desc:"You have won ten games.",
+  badge_wins_50:"Fifty wins", badge_wins_50_desc:"You have won fifty games.",
+  badge_days_7:"Seven days in a row", badge_days_7_desc:"You played seven days in a row.",
+  rivals_title:"Rivals 🤝", rivals_hint:"Who you have played. The green dot shows who is online right now.",
+  rivals_empty:"You have not finished a game with anyone yet.",
+  rivals_record:"{wins}–{losses} in {played} games", rivals_record_one:"{wins}–{losses} in 1 game",
+  rivals_online:"Online", rivals_offline:"Offline",
+  rivals_challenge:"Challenge", rivals_last:"Last game: {when}",
+  rivals_no_game:"I cannot find your last game to ask for a rematch."
+});
+Object.assign(I18N.fr,{
+  rank_hint:"Les points récompensent la difficulté des règles et les codes trouvés en peu d'essais. Une saison commence chaque mois ; le total de toujours reste.",
+  rank_season_month:"Cette saison", rank_season_all:"Depuis toujours",
+  rank_points:"{n} pts", rank_line:"{points} pts · {wins} 🏆 · {played} parties",
+  rank_season_label:"Saison {season}", rank_season_all_label:"Classement de toujours",
+  lobby_rivals:"Rivaux",
+  profile_title:"Profil", profile_since:"Joue depuis le {date}",
+  profile_empty:"Aucune partie terminée pour l'instant.",
+  profile_points:"Points", profile_played:"Parties", profile_wins:"Gagnées", profile_winrate:"Réussite",
+  profile_record:"{wins} gagnées · {losses} perdues · {draws} nulles",
+  profile_season:"Cette saison : {points} pts en {played} parties", profile_season_one:"Cette saison : {points} pts en 1 partie",
+  profile_best:"Meilleure partie : code trouvé en {n} essais", profile_best_one:"Meilleure partie : code trouvé en 1 essai",
+  profile_best_none:"Aucun code trouvé pour l'instant.",
+  profile_rules:"Règles préférées", profile_badges:"Badges",
+  profile_badges_none:"Pas encore de badge.",
+  profile_streak_days:"Série : {n} jours d'affilée",
+  profile_streak_wins:"Série : {n} victoires d'affilée",
+  profile_not_found:"Ce joueur n'existe pas.",
+  badges_new_one:"Nouveau badge !", badges_new_many:"{n} nouveaux badges !",
+  badge_first_win:"Première victoire", badge_first_win_desc:"Tu as gagné ta première partie.",
+  badge_solved_4:"Trouvé en 4", badge_solved_4_desc:"Tu as trouvé un code en quatre essais ou moins.",
+  badge_fast_finish:"À cinq secondes", badge_fast_finish_desc:"Tu as gagné avec cinq secondes ou moins au compteur.",
+  badge_expert_rules:"Règles d'expert", badge_expert_rules_desc:"Tu as gagné avec les règles les plus dures.",
+  badge_wins_10:"Dix victoires", badge_wins_10_desc:"Tu as gagné dix parties.",
+  badge_wins_50:"Cinquante victoires", badge_wins_50_desc:"Tu as gagné cinquante parties.",
+  badge_days_7:"Sept jours d'affilée", badge_days_7_desc:"Tu as joué sept jours d'affilée.",
+  rivals_title:"Rivaux 🤝", rivals_hint:"Avec qui tu as joué. Le point vert montre qui est connecté maintenant.",
+  rivals_empty:"Tu n'as encore terminé aucune partie avec personne.",
+  rivals_record:"{wins}–{losses} en {played} parties", rivals_record_one:"{wins}–{losses} en 1 partie",
+  rivals_online:"Connecté", rivals_offline:"Déconnecté",
+  rivals_challenge:"Défier", rivals_last:"Dernière partie : {when}",
+  rivals_no_game:"Je ne retrouve pas votre dernière partie pour demander la revanche."
+});
 /* E3-T3: la tarjeta de fin de partida. La misma rejilla del codigo del dia,
    pero para cualquier partida: es lo unico que un jugador puede ensenar sin
    contar el codigo. */
@@ -2245,7 +2392,7 @@ const $ = id => document.getElementById(id);
    partida o una practica en curso saltarse su propio flujo de salida podria
    costarle el progreso al jugador. */
 let feedbackReturn = 'login';
-const BRAND_HOME_FROM = new Set(['rank','history','rules','create','join','practice','puzzles','daily','feedback']);
+const BRAND_HOME_FROM = new Set(['rank','profile','rivals','history','rules','create','join','practice','puzzles','daily','feedback']);
 let currentView = 'login';
 /* Un visitante puede jugar antes de registrarse. No es una cuenta: su practica
    vive entera en el navegador y no escribe ni una fila en D1. Estas son las
@@ -2325,7 +2472,7 @@ function show(name){
   if(!sessionToken && !GUEST_VIEWS.has(name)) name = 'login';
   currentView = name;
   if(name!=='game') gameViewEpoch++;
-  ['login','verify','lobby','account','feedback','rank','history','rules','practice','practice-game','puzzles','daily','create','wait','join','rematch','game'].forEach(s=>{
+  ['login','verify','lobby','account','feedback','rank','profile','rivals','history','rules','practice','practice-game','puzzles','daily','create','wait','join','rematch','game'].forEach(s=>{
     $('s-'+s).classList.toggle('hidden', s!==name);
   });
   if(name!=='game') stopTick();
@@ -3306,29 +3453,167 @@ function renderGameItems(box, games){
   });
 }
 
-/* -------------------- ranking -------------------- */
+/* -------------------- ranking (E5-T1) --------------------
+   Hasta la 3.9.1 la fila decia victorias y partidas, y el orden era ese. Ahora
+   manda la columna de puntos, que es la que premia jugar dificil y resolver
+   pronto, y la pantalla ofrece dos cajones: el mes en curso y la historia
+   entera. Las victorias siguen en la linea porque son lo que la gente cuenta
+   en voz alta. */
+let rankSeason='month';
+function nameButton(country, name, from){
+  const b=document.createElement('button'); b.className='nmbtn';
+  b.innerHTML=playerChip(country,name);
+  b.onclick=()=>openProfile(name, from);
+  return b;
+}
+function rankRow(row, rank, mine){
+  const el=document.createElement('div'); el.className='rankrow'+(mine?' me':'');
+  const pos=document.createElement('div'); pos.className='pos'; pos.textContent=rank;
+  const nm=document.createElement('div'); nm.className='nm'; nm.appendChild(nameButton(row.country,row.user,'rank'));
+  const wl=document.createElement('div'); wl.className='wl';
+  wl.textContent=t('rank_line',{points:row.points,wins:row.wins,played:row.played});
+  el.appendChild(pos); el.appendChild(nm); el.appendChild(wl);
+  return el;
+}
+function shortDate(iso){
+  try{ return new Date(iso).toLocaleDateString(LOCALE[lang]||'es',{day:'2-digit',month:'short',year:'numeric'}); }
+  catch(e){ return String(iso||'').slice(0,10); }
+}
+function setRankSeason(which){
+  if(rankSeason===which) return;
+  rankSeason=which;
+  document.querySelectorAll('#rank-seasons button').forEach(b=>b.classList.toggle('on', b.dataset.rankSeason===which));
+  openRank();
+}
 async function openRank(){
   show('rank'); $('rank-total').textContent=''; $('rank-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
+  document.querySelectorAll('#rank-seasons button').forEach(b=>b.classList.toggle('on', b.dataset.rankSeason===rankSeason));
   try{
-    const res=await api('leaderboard',{username:user}); const list=res.ranking||[];
-    $('rank-total').textContent=t('rank_total',{n:res.total||0});
+    const res=await api('leaderboard',{username:user, season:rankSeason==='all'?'all':''}); const list=res.ranking||[];
+    const label=rankSeason==='all'?t('rank_season_all_label'):t('rank_season_label',{season:res.season||''});
+    $('rank-total').textContent=label+' · '+t('rank_total',{n:res.total||0});
     if(!list.length){ $('rank-list').innerHTML=`<div class="empty">${t('rank_empty')}</div>`; return; }
     $('rank-list').innerHTML='';
-    list.forEach((r,i)=>{
-      const el=document.createElement('div'); el.className='rankrow'+(r.user===user?' me':'');
-      el.innerHTML=`<div class="pos">${i+1}</div><div class="nm">${playerChip(r.country, r.user)}</div>
-        <div class="wl">${t('rank_wl',{wins:r.wins,played:r.played})}</div>`;
-      $('rank-list').appendChild(el);
-    });
+    list.forEach((r,i)=>{ $('rank-list').appendChild(rankRow(r, r.rank||i+1, r.user===user)); });
     const me=res.me, visible=me&&list.some(r=>r.user===me.user);
     if(me&&!visible){
       const sep=document.createElement('div'); sep.className='rank-separator'; sep.textContent=t('rank_your_pos',{n:me.rank});
       $('rank-list').appendChild(sep);
-      const el=document.createElement('div'); el.className='rankrow me';
-      el.innerHTML=`<div class="pos">${me.rank}</div><div class="nm">${playerChip(me.country,me.user)}</div><div class="wl">${t('rank_wl',{wins:me.wins,played:me.played})}</div>`;
-      $('rank-list').appendChild(el);
+      $('rank-list').appendChild(rankRow(me, me.rank, true));
     }
   }catch(e){ $('rank-list').innerHTML=`<div class="empty">${t('load_error')}</div>`; }
+}
+
+/* -------------------- el perfil publico (E5-T2) y las insignias (E5-T3) ----
+   Todo lo que se pinta aqui llega en una sola respuesta, y esa respuesta sale
+   de filas que se escribieron cuando las partidas terminaron: abrir el perfil
+   de alguien no recorre su historial. Del jugador solo se enseña lo que ya era
+   publico —el nombre, la bandera, lo que ha ganado—; el correo no viaja. */
+const BADGE_ICONS={first_win:'🥇',solved_4:'🎯',fast_finish:'⚡',expert_rules:'🧠',wins_10:'🏅',wins_50:'👑',days_7:'📅'};
+let profileReturn='lobby';
+function badgeChipHTML(code, fresh){
+  const icon=BADGE_ICONS[code]||'🏆';
+  const name=t('badge_'+code), desc=t('badge_'+code+'_desc');
+  return `<span class="badgechip${fresh?' fresh':''}" title="${esc(desc)}"><span class="ic" aria-hidden="true">${icon}</span><b>${esc(name)}</b></span>`;
+}
+function badgesBlockHTML(codes){
+  if(!codes||!codes.length) return '';
+  const title=codes.length===1?t('badges_new_one'):t('badges_new_many',{n:codes.length});
+  return `<div class="note"><b>${esc(title)}</b><div style="height:8px"></div>
+    <div class="badgelist">${codes.map(c=>badgeChipHTML(c,true)).join('')}</div></div>`;
+}
+/* "n-4-norep" y "c6-4-rep" son la forma en que el servidor guarda unas reglas
+   sin guardarlas tres veces; aqui vuelven a ser una frase en el idioma que se
+   esta leyendo. */
+function rulesFromKey(key){
+  const parts=String(key||'').split('-');
+  const colors=parts[0] && parts[0].charAt(0)==='c';
+  const digits=parseInt(parts[1],10)||3;
+  return [colors?t('rl_colors',{n:parseInt(parts[0].slice(1),10)||6}):t('rl_numbers'),
+    t('rl_pos',{n:digits}), parts[2]==='rep'?t('rl_repeat'):t('rl_norepeat')].join(' · ');
+}
+async function openProfile(name, from){
+  profileReturn=from||currentView||'lobby';
+  show('profile');
+  $('profile-name').textContent=name||'';
+  $('profile-since').textContent='';
+  $('profile-body').innerHTML=`<div class="empty">${t('loading')}</div>`;
+  try{
+    const res=await api('profile',{player:name, username:user});
+    if(!res.ok||!res.profile){ $('profile-body').innerHTML=`<div class="empty">${t('profile_not_found')}</div>`; return; }
+    renderProfile(res.profile);
+  }catch(e){ $('profile-body').innerHTML=`<div class="empty">${t('load_error')}</div>`; }
+}
+function closeProfile(){
+  if(profileReturn==='rank') openRank();
+  else if(profileReturn==='rivals') openRivals();
+  else show('lobby');
+}
+function renderProfile(p){
+  $('profile-name').innerHTML=playerChip(p.country,p.username);
+  $('profile-since').textContent=p.since?t('profile_since',{date:shortDate(p.since)}):'';
+  if(!p.played){ $('profile-body').innerHTML=`<div class="empty">${t('profile_empty')}</div>`; return; }
+  const stats=`<div class="statgrid">
+      <div class="statbox"><b>${p.points}</b><span>${esc(t('profile_points'))}</span></div>
+      <div class="statbox"><b>${p.played}</b><span>${esc(t('profile_played'))}</span></div>
+      <div class="statbox"><b>${p.wins}</b><span>${esc(t('profile_wins'))}</span></div>
+      <div class="statbox"><b>${p.winRate}%</b><span>${esc(t('profile_winrate'))}</span></div>
+    </div>`;
+  const lines=[t('profile_record',{wins:p.wins,losses:p.losses,draws:p.draws}),
+    t(p.season.played===1?'profile_season_one':'profile_season',{points:p.season.points,played:p.season.played}),
+    p.bestAttempts?t(p.bestAttempts===1?'profile_best_one':'profile_best',{n:p.bestAttempts}):t('profile_best_none')];
+  if(p.streaks.days>1) lines.push(t('profile_streak_days',{n:p.streaks.days}));
+  if(p.streaks.wins>1) lines.push(t('profile_streak_wins',{n:p.streaks.wins}));
+  const rules=(p.rules||[]).length
+    ? `<h3 style="margin:16px 0 6px;font-size:15px">${esc(t('profile_rules'))}</h3>
+       <div class="det">${p.rules.map(r=>esc(rulesFromKey(r.code))).join('<br>')}</div>` : '';
+  const badges=`<h3 style="margin:16px 0 8px;font-size:15px">${esc(t('profile_badges'))}</h3>`
+    +((p.badges||[]).length
+      ? `<div class="badgelist">${p.badges.map(b=>badgeChipHTML(b.code,false)).join('')}</div>`
+      : `<div class="det">${esc(t('profile_badges_none'))}</div>`);
+  $('profile-body').innerHTML=stats+`<div class="det">${lines.map(esc).join('<br>')}</div>`+rules+badges;
+}
+
+/* -------------------- la lista de rivales (E5-T4) --------------------
+   No hay tabla nueva: los rivales son las parejas que ya existen en los hilos
+   privados, y el marcador sale de las partidas terminadas entre los dos. El
+   boton de desafio no inventa nada tampoco: pide la revancha de la ultima
+   partida que jugasteis, que es el camino que el rival ya conoce —le aparece
+   como invitacion en sus partidas y le llega el aviso. */
+async function openRivals(){
+  show('rivals');
+  $('rivals-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
+  try{
+    const res=await api('rivals',{username:user});
+    const list=res.rivals||[];
+    if(!list.length){ $('rivals-list').innerHTML=`<div class="empty">${t('rivals_empty')}</div>`; return; }
+    $('rivals-list').innerHTML='';
+    list.forEach(r=>{
+      const el=document.createElement('div'); el.className='gitem';
+      const dot=document.createElement('span'); dot.className='dot'+(r.online?' on':'');
+      dot.setAttribute('role','img');
+      dot.setAttribute('aria-label', r.online?t('rivals_online'):t('rivals_offline'));
+      const meta=document.createElement('div'); meta.className='meta';
+      const who=document.createElement('div'); who.className='who';
+      who.appendChild(nameButton('', r.username, 'rivals'));
+      const det=document.createElement('div'); det.className='det';
+      det.textContent=t(r.played===1?'rivals_record_one':'rivals_record',{wins:r.wins,losses:r.losses,played:r.played})
+        +(r.lastPlayedAt?' · '+relativeActivity(r.lastPlayedAt):'');
+      meta.appendChild(who); meta.appendChild(det);
+      const b=document.createElement('button'); b.className='btn sm green'; b.textContent=t('rivals_challenge');
+      b.onclick=()=>challengeRival(r.lastGameId);
+      el.appendChild(dot); el.appendChild(meta); el.appendChild(b);
+      $('rivals-list').appendChild(el);
+    });
+  }catch(e){ $('rivals-list').innerHTML=`<div class="empty">${t('load_error')}</div>`; }
+}
+async function challengeRival(gameId){
+  if(!gameId){ toast(t('rivals_no_game'),true); return; }
+  try{
+    const st=await api('state',{gameId, username:user});
+    if(!st.ok||st.status!=='finished'){ toast(t('rivals_no_game'),true); return; }
+    openRematchFor(Object.assign(metaFromState(st),{gameId}));
+  }catch(e){ toast(t('net_error'),true); }
 }
 
 /* -------------------- el codigo del dia (E3-T1 y E3-T2) --------------------
@@ -3403,6 +3688,9 @@ function dailyShareText(state){
 /* La tarjeta que se comparte al acabar cualquier partida (E3-T3). Vive de lo
    que ya esta en la pantalla: los intentos con su puntuacion. El codigo no
    entra, ni el propio ni el del rival. */
+/* Las insignias ganadas en la jugada que acaba de terminar la partida. Viven
+   lo que vive la pantalla: no se guardan ni se vuelven a pedir. */
+let freshBadges=[];
 let shareCardData=null;
 function shareCardText(card){
   const head=card.solved
@@ -4305,9 +4593,15 @@ async function confirmJoin(){
 
 /* -------------------- revancha -------------------- */
 function openRematch(){
-  finishedMeta={gameId:gState.gameId, digits:gState.digits, mode:gState.mode, numColors:gState.numColors||6, allowRepeats:gState.allowRepeats,
+  openRematchFor({gameId:gState.gameId, digits:gState.digits, mode:gState.mode, numColors:gState.numColors||6, allowRepeats:gState.allowRepeats,
     maxAttempts:gState.maxAttempts, turnSeconds:gState.turnSeconds, timeMode:gState.timeMode, bankSeconds:gState.bankSeconds, bankIncrement:gState.bankIncrement,
-    revealSecrets:gState.revealSecrets, notebook:gState.notebook};
+    revealSecrets:gState.revealSecrets, notebook:gState.notebook}, 'game');
+}
+/* La misma pantalla sirve para la revancha de la partida que se acaba de
+   terminar y para el desafio de la lista de rivales (E5-T4): en los dos casos
+   se pide la revancha de una partida terminada, con sus mismas reglas. */
+function openRematchFor(meta){
+  finishedMeta=meta;
   $('rematch-rules-txt').textContent=t('rematch_rules',{rules:rulesLabel(finishedMeta)});
   const inp=$('secret-r'); inp.maxLength=finishedMeta.digits; inp.value=''; inp.placeholder='•'.repeat(finishedMeta.digits);
   padR.reset(); applyMode('r', finishedMeta.mode, 'secret-r', 'pad-r', padR); $('secret-r-val').textContent='';
@@ -4403,7 +4697,7 @@ function enterGame(meta,initialState=null){
   const inp=$('g-guess'); inp.maxLength=game.digits; inp.value=''; inp.placeholder='•'.repeat(game.digits);
   padG.reset(); applyMode('g', game.mode, 'g-guess', 'pad-g', padG);
   $('g-code').textContent=meta.id; $('g-guess-val').textContent='';
-  gState=null; passRequested=false; lastTurnStart=''; lastYourTurn=null; endSoundPlayed=false;
+  gState=null; passRequested=false; lastTurnStart=''; lastYourTurn=null; endSoundPlayed=false; freshBadges=[];
   resetGameView();
   if(!reviewingHistory)localStorage.setItem('pf_current_game',game.id);
   show('game');
@@ -4525,6 +4819,10 @@ function renderGame(st){
       /* E4-T2: el analisis es de mis intentos contra el codigo del rival; los
          suyos no entran, igual que en la tarjeta. */
       banner.insertAdjacentHTML('beforeend',analysisBlock(game,mine));
+      /* E5-T3: las insignias que acaba de ganar esta jugada. Vienen en la
+         respuesta del intento, no de una consulta aparte, y se enseñan una
+         sola vez: al recargar la partida ya no son noticia. */
+      if(freshBadges.length){ banner.insertAdjacentHTML('beforeend',badgesBlockHTML(freshBadges)); }
     }
     if(reviewingHistory){
       rz.innerHTML=`<button class="btn ghost" onclick="leaveHistoryGame()">${t('back')}</button><div style="height:12px"></div>`;
@@ -4696,6 +4994,7 @@ async function submitGuess(){
     else if(res.pending) toast(t('toast_solved'));
     else if(res.draw) toast(t('draw_title'));
     else toast(t('toast_score',{f:res.fijas,p:res.picas}));
+    if(Array.isArray(res.newBadges)&&res.newBadges.length) freshBadges=res.newBadges;
     if(res.state){ gameRequestSeq++; renderGame(res.state); } else refreshGame();
   }catch(e){ guessSubmitting=false; if(gState) renderGame(gState); toast(t('net_error'),true); refreshGame(); }
 }

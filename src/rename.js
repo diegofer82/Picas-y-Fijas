@@ -79,6 +79,15 @@ export async function changeUsername(db, user, params, at = Date.now()) {
       WHERE (user1_key=?1 OR user2_key=?1) AND user1_key>user2_key`).bind(key),
     db.prepare("UPDATE chat_threads SET pair_key=user1_key||'|'||user2_key WHERE user1_key=?1 OR user2_key=?1").bind(key),
     db.prepare("UPDATE request_receipts SET username_key=? WHERE username_key=?").bind(key, oldKey),
+    // Los puntos de la temporada, las rachas y las insignias son de la
+    // persona, no del nombre: si no viajaran, renombrarse seria empezar de
+    // cero en el ranking. Las filas del nombre nuevo no pueden existir —el
+    // nombre estaba libre y borrar una cuenta se lleva las suyas—, asi que un
+    // UPDATE directo basta y el indice unico avisaria si algun dia no fuera
+    // cierto.
+    db.prepare("UPDATE player_scores SET username=?,username_key=? WHERE username_key=?").bind(username, key, oldKey),
+    db.prepare("UPDATE player_progress SET username=?,username_key=? WHERE username_key=?").bind(username, key, oldKey),
+    db.prepare("UPDATE badges SET username_key=? WHERE username_key=?").bind(key, oldKey),
     db.prepare("DELETE FROM presence WHERE username_key=?").bind(oldKey),
     db.prepare("UPDATE feedback SET username=? WHERE username=?").bind(username, oldName),
     db.prepare("UPDATE audit_log SET target=? WHERE target=?").bind(username, oldName),
