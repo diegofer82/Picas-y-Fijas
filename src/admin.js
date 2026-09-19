@@ -148,6 +148,9 @@ export async function adminDeleteUser(db, params, admin) {
     db.prepare("DELETE FROM request_receipts WHERE username_key=? OR game_id IN (SELECT game_id FROM games WHERE p1=? OR p2=?)")
       .bind(user.username_key, user.username, user.username),
     db.prepare("DELETE FROM chat_reports WHERE reporter_key=?").bind(user.username_key),
+    // El codigo del dia no tiene clave foranea: sus filas se identifican por
+    // la cuenta, asi que se borran aqui como la presencia o los silencios.
+    db.prepare("DELETE FROM daily_results WHERE username_key=?").bind(user.username_key),
     // Un fil privé est une conversation : s'il implique le compte, il part
     // entièrement, y compris les messages de l'autre participant.
     db

@@ -6,7 +6,7 @@ Este es el único documento de referencia del proyecto. Está pensado para perso
 
 Picas y Fijas es un juego multijugador web en español, inglés y francés. La versión vigente funciona íntegramente en Cloudflare; la implementación anterior de Google Sheets y Apps Script fue retirada del árbol actual después de completar la migración. Sigue disponible en el historial de Git si alguna vez se necesita consultar.
 
-Versión actual: **3.7.0**: la etapa 2 del camino a la 4.0.0 abre la cadencia por correspondencia, con uno o tres días por jugada y sin pausa al cerrar el juego, y hace que el turno llegue mediante Web Push aunque la pestaña esté cerrada. Si no hay una suscripción push válida, las partidas por correspondencia recurren al correo verificado; `guess`, `passTurn` y el Cron comparten una deduplicación que impide avisar dos veces del mismo turno. Las invitaciones privadas esperan 48 horas y el mantenimiento ya no cierra una partida por correspondencia por llevar 48 horas sin actividad. La 3.6.2 hizo que la primera visita abriera en el idioma del navegador cuando era inglés o francés, sin pulsar nada; la dirección sigue mandando sobre todo y una elección hecha a mano manda sobre el navegador. La 3.6.1 subió el selector de idioma a lo alto de la pantalla de acceso y se ve en los tres modos —entrar, crear cuenta y recuperar el PIN—. La 3.6.0 cerró la etapa 1: una invitación sobrevive al alta y a la verificación en otro aparato. La 3.5.3 puso el pulso numérico en la portada y la 3.5.2 abrió la práctica sin cuenta. La 3.5.1 corrigió la inyección por nombres, unificó el contador de PIN, protegió el arranque de la bolsa, cerró ranking y lista pública detrás del correo y arregló las revanchas simultáneas. En la 3.5.0, `/admin` pasó a enseñar las horas en la zona de quien las mira y permitió cambiar el nombre sin cambiar el correo. En la 3.3.3, el cronómetro Solo pasó a reiniciarse por intento. La 3.2.0 añadió el acuerdo de versión entre página y servidor. La 3.0.0 separó definitivamente entrar de crear una cuenta y la 3.1.0 fijó la puerta del correo: **no hay cuenta que valga sin correo verificado**.
+Versión actual: **3.8.0**: la etapa 3 del camino a la 4.0.0 estrena el código del día —un secreto por día, el mismo para todo el mundo, un intento diario y una clasificación del día por intentos y tiempo— y la rejilla de emojis que se copia al terminarlo sin revelar el código. La 3.7.0 abrió la etapa 2 del camino a la 4.0.0 abre la cadencia por correspondencia, con uno o tres días por jugada y sin pausa al cerrar el juego, y hace que el turno llegue mediante Web Push aunque la pestaña esté cerrada. Si no hay una suscripción push válida, las partidas por correspondencia recurren al correo verificado; `guess`, `passTurn` y el Cron comparten una deduplicación que impide avisar dos veces del mismo turno. Las invitaciones privadas esperan 48 horas y el mantenimiento ya no cierra una partida por correspondencia por llevar 48 horas sin actividad. La 3.6.2 hizo que la primera visita abriera en el idioma del navegador cuando era inglés o francés, sin pulsar nada; la dirección sigue mandando sobre todo y una elección hecha a mano manda sobre el navegador. La 3.6.1 subió el selector de idioma a lo alto de la pantalla de acceso y se ve en los tres modos —entrar, crear cuenta y recuperar el PIN—. La 3.6.0 cerró la etapa 1: una invitación sobrevive al alta y a la verificación en otro aparato. La 3.5.3 puso el pulso numérico en la portada y la 3.5.2 abrió la práctica sin cuenta. La 3.5.1 corrigió la inyección por nombres, unificó el contador de PIN, protegió el arranque de la bolsa, cerró ranking y lista pública detrás del correo y arregló las revanchas simultáneas. En la 3.5.0, `/admin` pasó a enseñar las horas en la zona de quien las mira y permitió cambiar el nombre sin cambiar el correo. En la 3.3.3, el cronómetro Solo pasó a reiniciarse por intento. La 3.2.0 añadió el acuerdo de versión entre página y servidor. La 3.0.0 separó definitivamente entrar de crear una cuenta y la 3.1.0 fijó la puerta del correo: **no hay cuenta que valga sin correo verificado**.
 
 El 12 de septiembre de 2026 la base de producción se vació a propósito: quedó una sola cuenta, `Diego`, y se borraron partidas, chat, presencia, buzón y todas las sesiones. El motivo es el mismo: arrancar sin ninguna cuenta que no cumpla la regla nueva.
 
@@ -145,6 +145,16 @@ Al finalizar se puede proponer una revancha con las mismas reglas y el mismo riv
 
 El historial muestra hasta las 40 partidas terminadas más recientes del jugador, con resultado, rival, fecha, reglas e intentos realizados. También resume el rendimiento de todo el historial competitivo: partidas, victorias, porcentaje de éxito, promedio de intentos al ganar y rachas. La mejor victoria y la victoria más difícil quedan destacadas; las victorias otorgadas por abandono no participan en esas métricas de eficiencia. La lista se puede filtrar por victorias, derrotas y empates. El ranking global ordena primero por cantidad de victorias y, en caso de igualdad, favorece a quien necesitó menos partidas. Muestra el Top 50, el total de jugadores y la posición propia aunque quede fuera del Top 50.
 
+### El código del día
+
+Cada día hay un código y es el mismo para todo el mundo: cuatro posiciones, cifras del 0 al 9, sin repetir, ocho intentos. Se juega una sola vez al día; al acertar —o al agotar los ocho intentos— la jugada se cierra, se revela el código y la persona aparece en la clasificación del día, ordenada por intentos y, a igualdad de intentos, por tiempo. El día empieza y acaba a medianoche **UTC**: una zona horaria por persona haría que el código dejara de ser el mismo para todo el mundo.
+
+El secreto no está guardado en ninguna parte ni viaja al navegador. Se deriva del día con HMAC-SHA256 y el secreto `DAILY_SECRET` del Worker (`src/daily.js`), así que el mismo día produce siempre el mismo código y desde el navegador no hay nada que leer. La respuesta del servidor solo lleva el código cuando la jugada del día ya está cerrada, igual que una partida terminada.
+
+La clave primaria de `daily_results` —día más cuenta— es lo que impide entregar dos veces el mismo día; el `requestId` de cada intento evita que un envío repetido por una conexión lenta gaste dos. Como escribe en D1, el código del día está detrás de la puerta del correo, como todo lo demás que escribe.
+
+Al terminar, el resultado se copia como rejilla de emojis: un disco lleno por cada fija, un anillo por cada pica y un disco apagado por cada posición sin nada, una línea por intento. La rejilla **no contiene el código** —solo cuántas fijas y cuántas picas tuvo cada intento— y es la misma en los tres idiomas: solo se traduce el título que la acompaña. `test/daily.test.js` fija las dos cosas.
+
 ### Práctica Solo y Contra el computador
 
 La práctica se alcanza por dos puertas. Desde el lobby, **Practicar**. Y desde la portada, sin cuenta: **«Probar ahora»** arranca en el acto una práctica Solo de tres cifras, sin repetidos y sin reloj —cambiar las reglas sigue a un toque—, para que nadie tenga que registrarse antes de saber si el juego le gusta. Un invitado no es una cuenta: mientras no haya sesión solo existen cinco pantallas (portada, práctica, partida de práctica, reglas y buzón) y `show()` devuelve a la portada cualquier otra. Al terminar la práctica aparece la invitación a crear la cuenta, y si sale antes de acabar, la práctica queda guardada en el dispositivo y la portada ofrece **Continuar práctica**. `test/guest-practice.test.js` fija las tres cosas: las pantallas públicas, que nada de ese camino llama al API y que la invitación solo se enseña al final.
@@ -228,12 +238,13 @@ Antes hay que activar **Email Routing** en `picasyfijas.fans` y verificar la dir
 - `src/game.js`: reglas puras, validaciones, cronómetro y sanitización del estado.
 - `src/security.js`: PIN, autenticación, sesiones, limitación de intentos y lectura del país y la IP que pone Cloudflare.
 - `src/chat.js`: permisos, hilos privados, mensajes incrementales y retención del chat.
+- `src/daily.js`: el código del día. Deriva el secreto del día con HMAC-SHA256 y `DAILY_SECRET`, resuelve los intentos y arma la clasificación del día.
 - `src/maintenance.js`: mantenimiento horario fuera del camino crítico de las peticiones.
 - `src/push.js`: suscripciones y avisos de turno. Firma VAPID y cifra `aes128gcm` con Web Crypto, sin dependencias; si una correspondencia no tiene push válido, usa el correo verificado.
 - `src/admin.js`: herramientas de mantenimiento del panel: ficha de usuario, detección de cuentas repetidas, fusión, borrado, limpieza de partidas y consola SQL.
 - `src/rename.js`: el cambio de nombre de usuario y su reescritura en todas las tablas que guardan el nombre.
 - `src/feedback.js`: el buzón de sugerencias y errores: validación, barandillas del endpoint público, consultas del panel y el aviso por correo.
-- `migrations/0001_initial.sql`: esquema reproducible de D1. No es un residuo de la migración desde Google y no debe eliminarse. Las migraciones siguientes añaden o ajustan: `0002` el chat, `0003` los hilos privados, `0004` el origen de cada cuenta, `0005` el buzón de sugerencias, `0006` la bolsa de tiempo, `0007` los índices necesarios para permanecer dentro de D1 Free, `0008` el correo y la recuperación del PIN, `0009` la fecha del último cambio de nombre, `0010` el nombre anterior, `0011` la zona horaria y `0012` la lengua de avisos, las suscripciones push y la deduplicación por turno.
+- `migrations/0001_initial.sql`: esquema reproducible de D1. No es un residuo de la migración desde Google y no debe eliminarse. Las migraciones siguientes añaden o ajustan: `0002` el chat, `0003` los hilos privados, `0004` el origen de cada cuenta, `0005` el buzón de sugerencias, `0006` la bolsa de tiempo, `0007` los índices necesarios para permanecer dentro de D1 Free, `0008` el correo y la recuperación del PIN, `0009` la fecha del último cambio de nombre, `0010` el nombre anterior, `0011` la zona horaria `0012` la lengua de avisos, las suscripciones push y la deduplicación por turno, y `0013` los resultados del código del día.
 - `test/`: pruebas automáticas de reglas, rutas, teclado y regresiones.
 - `tools/make-icons.mjs`: genera los cuatro PNG de la aplicación instalada. Se ejecuta con `npm run icons`.
 - `tools/make-rules-pages.py`: convierte `RULES` en las tres páginas públicas de reglas. El texto no se duplica: la única fuente sigue siendo el juego.
@@ -462,6 +473,7 @@ El nombre nuevo viaja como `newUsername`, no como `username`, porque `authentica
 - `feedback_replies`: las respuestas enviadas desde el panel. Apunta al administrador que respondió sin cascada, así que borrar a quien fue administrador borra antes sus respuestas.
 - `chat_threads`: los hilos privados, uno por pareja de jugadores.
 - `push_subscriptions`: la suscripción Web Push de cada aparato —endpoint y claves públicas del navegador—, con la lengua elegida. Un mismo endpoint cambia de dueño si se cambia de cuenta en el aparato.
+- `daily_results`: lo que hizo cada persona con el código del día —intentos, si lo resolvió y cuánto tardó—. No guarda el código: ese se deriva del día cada vez. Su clave primaria es el día más la cuenta, que es la regla «un intento diario» escrita en el esquema; su índice parcial (`solved = 1`) es el que sirve la clasificación del día.
 - `turn_notifications`: recibos técnicos por partida, versión y usuario. Su clave única es lo que impide que `guess`, `passTurn` y el Cron avisen dos veces del mismo turno; se purgan después de 7 días.
 
 Las columnas de la bolsa de tiempo viven en `games` y conviven con los otros relojes: `time_mode` (`turn`, `bank` o `correspondence`) decide cuál manda. La correspondencia reutiliza `turn_seconds` con 86.400 o 259.200 segundos, porque la aritmética y la autoridad siguen siendo las del reloj por turno; no necesitó una columna nueva. `bank_seconds`, `bank_increment`, `bank1_remaining` y `bank2_remaining` describen la reserva de cada jugador. `time_mode` vale `turn` por omisión, así que las partidas anteriores no cambian de comportamiento.
@@ -600,7 +612,7 @@ pnpm run db:remote
 git push origin main
 ```
 
-La 2.5 trae `0005_feedback.sql` y `0006_time_bank.sql`; la optimización de D1 Free añade `0007_d1_free_optimization.sql` y la correspondencia añade `0012_push.sql`. A todas les aplica esta misma regla. El aviso por correo del buzón necesita además, una sola vez, activar Email Routing en el dominio y colocar sus dos secretos:
+La 2.5 trae `0005_feedback.sql` y `0006_time_bank.sql`; la optimización de D1 Free añade `0007_d1_free_optimization.sql` y la correspondencia añade `0012_push.sql` y el código del día `0013_daily.sql`. A todas les aplica esta misma regla. El aviso por correo del buzón necesita además, una sola vez, activar Email Routing en el dominio y colocar sus dos secretos:
 
 ```text
 wrangler secret put FEEDBACK_TO
@@ -612,6 +624,12 @@ Web Push necesita un par P-256 propio del sitio. La clave pública se guarda com
 ```text
 wrangler secret put VAPID_PUBLIC
 wrangler secret put VAPID_PRIVATE
+```
+
+El código del día necesita el suyo. Cualquier cadena larga y aleatoria sirve; lo importante es que no esté en Git, porque el repositorio es público y quien la tenga puede calcular el código de cualquier día. Si falta, el Worker sigue funcionando con un valor de reserva escrito en `src/daily.js`, que no vale para producción. Cambiarlo cambia el código de hoy a media jornada, así que se pone una vez y se deja:
+
+```text
+wrangler secret put DAILY_SECRET
 ```
 
 Al revés, el Worker nuevo llegaría a una base sin las columnas que espera y cualquier entrada fallaría hasta que la migración se aplicara. Al derecho no hay ventana rota: las columnas nuevas siempre se añaden con valor por omisión, así que el Worker anterior las ignora sin enterarse.
@@ -767,8 +785,8 @@ El juego no tiene publicidad y no va a tenerla. Lo único que puede traer gente 
 
 | Tarea | Qué cambia para quien juega | Dónde se toca | Hecho cuando |
 | --- | --- | --- | --- |
-| **E3-T1 (f)** El código del día | Un secreto por día, el mismo para todo el mundo, un intento diario y una clasificación del día por intentos y tiempo. | `src/daily.js` (nuevo), `src/index.js`, `migrations/0013_daily.sql` (solo los resultados), `public/index.html` | El secreto se deriva del día con HMAC y un secreto del Worker: no se guarda en claro y no se puede adivinar desde el navegador. Nadie puede entregar dos veces el mismo día. **Encadenada con E3-T2** |
-| **E3-T2 (f)** La rejilla que se comparte | Al terminar, el resultado se copia como rejilla de emojis —fija llena, pica hueca— sin revelar el código. | `public/index.html` | Se copia igual en los tres idiomas y no contiene el secreto. Se entrega junto con E3-T1 |
+| **E3-T1 (f)** ✅ El código del día (3.8.0) | Un secreto por día, el mismo para todo el mundo, un intento diario y una clasificación del día por intentos y tiempo. | `src/daily.js` (nuevo), `src/index.js`, `migrations/0013_daily.sql` (solo los resultados), `public/index.html` | El secreto se deriva del día con HMAC y un secreto del Worker: no se guarda en claro y no se puede adivinar desde el navegador. Nadie puede entregar dos veces el mismo día. **Encadenada con E3-T2** |
+| **E3-T2 (f)** ✅ La rejilla que se comparte (3.8.0) | Al terminar, el resultado se copia como rejilla de emojis —fija llena, pica hueca— sin revelar el código. | `public/index.html` | Se copia igual en los tres idiomas y no contiene el secreto. Se entrega junto con E3-T1 |
 | **E3-T3 (r)** La tarjeta de fin de partida | «He descifrado un código de 5 en 6 intentos»: algo que compartir al acabar cualquier partida, no solo la del día. | `public/index.html`, la misma fontanería de compartir de E3-T2 | Se entrega sola |
 
 ### Etapa 4 — El motor al servicio de quien juega (3.9.0)

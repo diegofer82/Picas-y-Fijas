@@ -408,6 +408,9 @@
   @keyframes chatShake{0%,100%{transform:translateX(0)}15%{transform:translateX(-9px) rotate(-1deg)}30%{transform:translateX(8px) rotate(1deg)}45%{transform:translateX(-7px)}60%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
   @keyframes chatBump{0%,100%{transform:scale(1)}35%{transform:scale(1.18) rotate(-8deg)}65%{transform:scale(.94) rotate(5deg)}}
   @media(max-width:600px){.chat-panel{left:0;right:0;bottom:0;width:100%;height:55dvh;border-radius:18px 18px 0 0;padding-bottom:env(safe-area-inset-bottom)}.chat-launch{bottom:max(16px,env(safe-area-inset-bottom))}}
+.daily-grid{font-family:"JetBrains Mono",monospace;font-size:19px;line-height:1.5;letter-spacing:3px;text-align:center;margin:0 0 12px;white-space:pre;overflow-x:auto}
+.daily-card .hint{margin-bottom:12px}
+.daily-rows{display:flex;flex-direction:column;gap:6px;align-items:center}
 </style>
 </head>
 <body>
@@ -572,6 +575,13 @@
         <button class="chipbtn" onclick="openHistory()"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M12.3 3.6c4.7-.2 8.6 3.8 8.4 8.5-.2 4.6-4 8.3-8.6 8.3-4.8 0-8.7-4-8.4-8.8.3-4.3 3.8-7.7 8-7.9"></path><path class="dl" d="M11.9 7.3c.2 1.8.2 3.4.1 4.9 1.1.8 2.2 1.4 3.3 2"></path></svg><span data-i18n="lobby_history">Historial</span></button>
         <button class="chipbtn" onclick="refreshLobby()"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M20.1 12.4c.2 4.7-3.7 8.5-8.4 8.4-4.6-.1-8.3-4-8-8.7.3-4.2 3.8-7.4 8-7.3 2.6.1 4.8 1.3 6.3 3.2"></path><path class="dl" d="M19.9 3.7c-.2 1.6-.2 3.1-.1 4.6-1.6.2-3.1.2-4.6.1"></path></svg><span data-i18n="lobby_refresh">Actualizar lista</span></button>
       </div>
+    </div>
+
+    <div class="card daily-card" id="daily-card">
+      <span class="practice-badge" data-i18n="daily_badge">Nuevo cada día</span>
+      <h2 data-i18n="daily_title">El código del día 🗓️</h2>
+      <p class="hint" id="daily-card-hint">Un solo código para todo el mundo y un intento al día.</p>
+      <button class="btn green" id="daily-card-btn" onclick="openDaily()" data-i18n="daily_play">Jugar el código de hoy</button>
     </div>
 
     <div class="card hidden" id="practice-resume-card">
@@ -794,6 +804,39 @@
       <div id="practice-active-actions"><div style="height:14px"></div><div class="row"><button class="btn ghost" onclick="cancelPractice()" data-i18n="practice_cancel">Cancelar</button><button class="btn pink" onclick="surrenderPractice()" data-i18n="practice_surrender">Rendirse</button></div></div>
       <div style="height:10px"></div><button class="btn ghost" id="practice-lobby-btn" onclick="leavePracticeToLobby()" data-i18n="practice_save_lobby">Guardar y volver al lobby</button>
       <div class="foot credits hidden" id="practice-credits"></div>
+    </div>
+  </section>
+
+  <!-- CODIGO DEL DIA -->
+  <section id="s-daily" class="hidden">
+    <div class="card">
+      <span class="practice-badge" data-i18n="daily_badge">Nuevo cada día</span>
+      <h2 data-i18n="daily_title">El código del día 🗓️</h2>
+      <p class="hint" id="daily-hint"></p>
+      <div class="statusrow" id="daily-status"><span class="chip" id="daily-number"></span><span class="chip" id="daily-attempts"></span><span class="chip" id="daily-next"></span></div>
+      <div id="daily-banner"></div>
+      <div class="guessarea" id="daily-guessarea">
+        <div class="field"><input type="text" id="daily-guess" class="code" inputmode="numeric" autocomplete="off" placeholder="••••"></div>
+        <button class="btn" id="daily-guess-btn" onclick="submitDailyGuess()" data-i18n="guess_btn">Adivinar</button>
+      </div>
+      <div class="val" id="daily-guess-val"></div>
+      <div class="legend"><span><i class="pip f"></i><span data-i18n="legend_fija">F = posición correcta</span></span><span><i class="pip p"></i><span data-i18n="legend_pica">P = presente, mal colocada</span></span></div>
+      <div style="height:16px"></div>
+      <div class="glog" id="daily-log"></div>
+      <div class="hidden" id="daily-share-wrap">
+        <div style="height:14px"></div>
+        <div class="daily-grid" id="daily-grid"></div>
+        <button class="btn green" onclick="shareDaily()" data-i18n="daily_share">Copiar mi rejilla</button>
+      </div>
+      <div style="height:14px"></div>
+      <button class="btn ghost" onclick="enterLobby()" data-i18n="back">Volver</button>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="daily_board_title">Clasificación de hoy 🏆</h2>
+      <p class="hint" id="daily-players"></p>
+      <div class="list" id="daily-board"><div class="empty">…</div></div>
+      <div class="scoretxt" id="daily-your-rank"></div>
     </div>
   </section>
 
@@ -1081,7 +1124,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v3.7.0';
+const APP_VERSION = 'v3.8.0';
 /* Enlace de invitación: ...?game=SZ93
    La invitación sobrevive al registro: se guarda en el navegador, porque entre
    abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
@@ -1197,7 +1240,20 @@ const I18N = {
     lobby_offline:"Sin conexión con el servidor. Reintentando…", outdated_reload:"Hay una versión nueva del juego. Recargando…", outdated_manual:"Hay una versión nueva del juego. Recarga la página para seguir jugando.",
     val_digits:"Solo dígitos 0-9", val_repeats:"Hay repetidos", val_valid:"¡Válido!",
     rl_colors:"{n} colores", rl_numbers:"números", rl_pos:"{n} pos", rl_norepeat:"sin repetir", rl_repeat:"repetidos ✓",
-    rl_attempts:"{n} intentos", rl_turn:"{n}s/turno", rl_reveal:"revela códigos al final", rl_noreveal:"códigos ocultos al final"
+    rl_attempts:"{n} intentos", rl_turn:"{n}s/turno", rl_reveal:"revela códigos al final", rl_noreveal:"códigos ocultos al final",
+    daily_badge:"Nuevo cada día", daily_title:"El código del día 🗓️", daily_play:"Jugar el código de hoy", daily_see:"Ver mi resultado de hoy",
+    daily_card_hint:"Un solo código para todo el mundo y un intento al día.",
+    daily_card_solved:"Hoy lo resolviste en {n} intentos.", daily_card_failed:"Hoy no salió. Mañana hay uno nuevo.",
+    daily_hint:"{digits} posiciones, sin repetir, {max} intentos. El mismo código para todo el mundo hasta la medianoche UTC.",
+    daily_number:"Código #{n}", daily_attempts_chip:"Intento {n} de {max}", daily_next:"Nuevo código en {time}",
+    daily_solved_title:"¡Descifrado! 🎉", daily_solved_detail:"Lo resolviste en {n} intentos y {time}.",
+    daily_failed_title:"Hoy no salió", daily_failed_detail:"Se acabaron los intentos del día.",
+    daily_reveal:"El código era:", daily_done_today:"Ya jugaste el código de hoy.",
+    daily_board_title:"Clasificación de hoy 🏆", daily_board_empty:"Todavía nadie ha resuelto el código de hoy.",
+    daily_board_line:"{n} intentos · {time}", daily_players:"{players} jugando hoy · {solved} resueltos",
+    daily_your_rank:"Tu posición de hoy: #{n}", daily_share:"Copiar mi rejilla", daily_shared:"Rejilla copiada",
+    daily_share_title:"Picas y Fijas · Código #{n}", daily_load_error:"No se pudo cargar el código de hoy.",
+    daily_hours:"{h} h {m} min", daily_minutes:"{m} min"
   },
   en:{
     brand_sub:"Online deduction duel", brand_alias:"Also known as “Bulls and Cows” · inspired by “Mastermind”",
@@ -1279,7 +1335,20 @@ const I18N = {
     lobby_offline:"No connection to the server. Retrying…", outdated_reload:"A new version of the game is out. Reloading…", outdated_manual:"A new version of the game is out. Reload the page to keep playing.",
     val_digits:"Digits 0-9 only", val_repeats:"Repeated digits", val_valid:"Valid!",
     rl_colors:"{n} colors", rl_numbers:"numbers", rl_pos:"{n} pos", rl_norepeat:"no repeats", rl_repeat:"repeats ✓",
-    rl_attempts:"{n} tries", rl_turn:"{n}s/turn", rl_reveal:"reveals codes at the end", rl_noreveal:"codes hidden at the end"
+    rl_attempts:"{n} tries", rl_turn:"{n}s/turn", rl_reveal:"reveals codes at the end", rl_noreveal:"codes hidden at the end",
+    daily_badge:"New every day", daily_title:"Code of the day 🗓️", daily_play:"Play today's code", daily_see:"See today's result",
+    daily_card_hint:"One code for everyone and one go a day.",
+    daily_card_solved:"You cracked today's code in {n} tries.", daily_card_failed:"Not today. A new code lands tomorrow.",
+    daily_hint:"{digits} positions, no repeats, {max} tries. The same code for everyone until midnight UTC.",
+    daily_number:"Code #{n}", daily_attempts_chip:"Try {n} of {max}", daily_next:"New code in {time}",
+    daily_solved_title:"Cracked! 🎉", daily_solved_detail:"You got it in {n} tries and {time}.",
+    daily_failed_title:"Not today", daily_failed_detail:"You used up today's tries.",
+    daily_reveal:"The code was:", daily_done_today:"You already played today's code.",
+    daily_board_title:"Today's ranking 🏆", daily_board_empty:"Nobody has cracked today's code yet.",
+    daily_board_line:"{n} tries · {time}", daily_players:"{players} playing today · {solved} solved",
+    daily_your_rank:"Your place today: #{n}", daily_share:"Copy my grid", daily_shared:"Grid copied",
+    daily_share_title:"Picas y Fijas · Code #{n}", daily_load_error:"Today's code could not be loaded.",
+    daily_hours:"{h} h {m} min", daily_minutes:"{m} min"
   },
   fr:{
     brand_sub:"Duel de déduction en ligne", brand_alias:"Aussi appelé « Bulls and Cows » · inspiré de « Mastermind »",
@@ -1361,7 +1430,20 @@ const I18N = {
     lobby_offline:"Pas de connexion au serveur. Nouvelle tentative…", outdated_reload:"Une nouvelle version du jeu est disponible. Rechargement…", outdated_manual:"Une nouvelle version du jeu est disponible. Recharge la page pour continuer à jouer.",
     val_digits:"Chiffres 0-9 uniquement", val_repeats:"Chiffres répétés", val_valid:"Valide !",
     rl_colors:"{n} couleurs", rl_numbers:"chiffres", rl_pos:"{n} pos", rl_norepeat:"sans répétition", rl_repeat:"répétitions ✓",
-    rl_attempts:"{n} essais", rl_turn:"{n}s/tour", rl_reveal:"codes révélés à la fin", rl_noreveal:"codes masqués à la fin"
+    rl_attempts:"{n} essais", rl_turn:"{n}s/tour", rl_reveal:"codes révélés à la fin", rl_noreveal:"codes masqués à la fin",
+    daily_badge:"Nouveau chaque jour", daily_title:"Le code du jour 🗓️", daily_play:"Jouer le code du jour", daily_see:"Voir mon résultat du jour",
+    daily_card_hint:"Un seul code pour tout le monde et un essai par jour.",
+    daily_card_solved:"Tu l’as trouvé aujourd’hui en {n} essais.", daily_card_failed:"Pas aujourd’hui. Un nouveau code arrive demain.",
+    daily_hint:"{digits} positions, sans répétition, {max} essais. Le même code pour tout le monde jusqu’à minuit UTC.",
+    daily_number:"Code n° {n}", daily_attempts_chip:"Essai {n} sur {max}", daily_next:"Nouveau code dans {time}",
+    daily_solved_title:"Décrypté ! 🎉", daily_solved_detail:"Trouvé en {n} essais et {time}.",
+    daily_failed_title:"Pas aujourd’hui", daily_failed_detail:"Tu as épuisé les essais du jour.",
+    daily_reveal:"Le code était :", daily_done_today:"Tu as déjà joué le code du jour.",
+    daily_board_title:"Classement du jour 🏆", daily_board_empty:"Personne n’a encore décrypté le code du jour.",
+    daily_board_line:"{n} essais · {time}", daily_players:"{players} en jeu aujourd’hui · {solved} réussis",
+    daily_your_rank:"Ta place du jour : n° {n}", daily_share:"Copier ma grille", daily_shared:"Grille copiée",
+    daily_share_title:"Picas y Fijas · Code n° {n}", daily_load_error:"Impossible de charger le code du jour.",
+    daily_hours:"{h} h {m} min", daily_minutes:"{m} min"
   }
 };
 Object.assign(I18N.es,{practice_time:"Tiempo por intento",practice_missed_timeout:"⏱ Intento perdido por tiempo",rl_attempt:"{n}s/intento"});
@@ -1942,6 +2024,8 @@ function applyI18n(){
   if(typeof updateInstallCard==='function') updateInstallCard();
   if(typeof syncGuestChrome==='function') syncGuestChrome();
   if(typeof renderPublicPulse==='function') renderPublicPulse();
+  if(typeof renderDailyCard==='function'&&$('daily-card')) renderDailyCard();
+  if(typeof renderDaily==='function'&&$('daily-log')) renderDaily();
   if(typeof renderPracticeStats==='function'&&$('practice-stats')) renderPracticeStats();
   if(typeof renderPracticeResumeCard==='function'&&$('practice-resume-card')) renderPracticeResumeCard();
   pintarIconos();
@@ -2039,7 +2123,7 @@ const $ = id => document.getElementById(id);
    partida o una practica en curso saltarse su propio flujo de salida podria
    costarle el progreso al jugador. */
 let feedbackReturn = 'login';
-const BRAND_HOME_FROM = new Set(['rank','history','rules','create','join','practice','feedback']);
+const BRAND_HOME_FROM = new Set(['rank','history','rules','create','join','practice','daily','feedback']);
 let currentView = 'login';
 /* Un visitante puede jugar antes de registrarse. No es una cuenta: su practica
    vive entera en el navegador y no escribe ni una fila en D1. Estas son las
@@ -2118,11 +2202,12 @@ function show(name){
   if(!sessionToken && !GUEST_VIEWS.has(name)) name = 'login';
   currentView = name;
   if(name!=='game') gameViewEpoch++;
-  ['login','verify','lobby','account','feedback','rank','history','rules','practice','practice-game','create','wait','join','rematch','game'].forEach(s=>{
+  ['login','verify','lobby','account','feedback','rank','history','rules','practice','practice-game','daily','create','wait','join','rematch','game'].forEach(s=>{
     $('s-'+s).classList.toggle('hidden', s!==name);
   });
   if(name!=='game') stopTick();
   if(name!=='practice-game') stopPracticeTick();
+  if(name!=='daily') stopDailyTick();
   syncBrandHome();
   syncSettingsBtn();
   syncGuestChrome();
@@ -2974,7 +3059,7 @@ async function logout(){
   chatEnabled=false;stopChatPoll();$('chat-panel').classList.add('hidden');$('chat-launch').classList.add('hidden');
   show('login');
 }
-function enterLobby(){ if(!sessionToken) return exitGuest(); showWelcomeNote(); $('lobby-greet').textContent=t('lobby_greeting',{name:user}); $('lobby-rule').innerHTML=ruleSVG(112); $('lobby-toro').innerHTML=toroSVG('calm',54); updateSoundLabel(); show('lobby'); renderPracticeResumeCard(); refreshLobby(); handleDeepLink(); }
+function enterLobby(){ if(!sessionToken) return exitGuest(); showWelcomeNote(); $('lobby-greet').textContent=t('lobby_greeting',{name:user}); $('lobby-rule').innerHTML=ruleSVG(112); $('lobby-toro').innerHTML=toroSVG('calm',54); updateSoundLabel(); show('lobby'); renderDailyCard(); renderPracticeResumeCard(); refreshLobby(); handleDeepLink(); }
 
 function showWelcomeNote(){
   const box=$('lobby-welcome'); if(!box) return;
@@ -3119,6 +3204,150 @@ async function openRank(){
     }
   }catch(e){ $('rank-list').innerHTML=`<div class="empty">${t('load_error')}</div>`; }
 }
+
+/* -------------------- el codigo del dia (E3-T1 y E3-T2) --------------------
+   El secreto no esta aqui: vive en el servidor, derivado del dia. Esta pantalla
+   solo envia intentos y pinta lo que el servidor devuelve --fijas y picas--,
+   que es exactamente lo que hace falta para dibujar la rejilla que se comparte.
+   La rejilla no contiene el codigo: solo cuantas fijas y cuantas picas tuvo
+   cada intento, asi que se puede pegar en cualquier parte sin estropearle el
+   dia a nadie. Los tres marcadores son los mismos en los tres idiomas y se
+   distinguen por forma --disco lleno, anillo, disco apagado-- y no solo por
+   color. */
+const DAILY_FIJA='\u{1F7E2}', DAILY_PICA='⭕', DAILY_NADA='⚫';
+let dailyData=null, dailySending=false, dailyTickTimer=null;
+function stopDailyTick(){ if(dailyTickTimer){ clearInterval(dailyTickTimer); dailyTickTimer=null; } }
+function readDailyMemo(){ try{ return JSON.parse(localStorage.getItem('pf_daily')||'null'); }catch(e){ return null; } }
+/* El vestibulo no pregunta al servidor si ya jugaste hoy: la respuesta anterior
+   se recuerda en este aparato. Una lectura menos en D1 por cada visita. */
+function rememberDaily(){
+  if(!dailyData) return;
+  try{ localStorage.setItem('pf_daily',JSON.stringify({day:dailyData.day,finished:dailyData.finished,solved:dailyData.solved,attempts:dailyData.attempts})); }catch(e){}
+}
+function todayUTC(){ return new Date().toISOString().slice(0,10); }
+function renderDailyCard(){
+  const card=$('daily-card'); if(!card) return;
+  const memo=readDailyMemo(), done=!!(memo&&memo.day===todayUTC()&&memo.finished);
+  $('daily-card-hint').textContent=done
+    ? (memo.solved?t('daily_card_solved',{n:memo.attempts}):t('daily_card_failed'))
+    : t('daily_card_hint');
+  const btn=$('daily-card-btn'), key=done?'daily_see':'daily_play';
+  btn.textContent=t(key); btn.dataset.i18n=key; btn.className=done?'btn ghost':'btn green';
+}
+async function openDaily(){
+  show('daily');
+  $('daily-board').innerHTML=`<div class="empty">${t('loading')}</div>`;
+  stopDailyTick(); dailyTickTimer=setInterval(renderDailyCountdown,30000);
+  await loadDaily();
+}
+async function loadDaily(){
+  try{
+    const res=await api('dailyState');
+    if(res&&res.ok){ dailyData=res; renderDaily(); }
+    else $('daily-board').innerHTML=`<div class="empty">${t('daily_load_error')}</div>`;
+  }catch(e){
+    if(e.message!=='SESSION_EXPIRED'&&e.message!=='EMAIL_PENDING')
+      $('daily-board').innerHTML=`<div class="empty">${t('daily_load_error')}</div>`;
+  }
+}
+function renderDailyCountdown(){
+  if(!dailyData||!$('daily-next')) return;
+  const left=Date.parse(dailyData.nextAt)-Date.now();
+  if(!Number.isFinite(left)||left<=0){ $('daily-next').classList.add('hidden'); return; }
+  const minutes=Math.max(1,Math.round(left/60000)), hours=Math.floor(minutes/60);
+  $('daily-next').classList.remove('hidden');
+  $('daily-next').innerHTML=ico('reloj',14)+'<span>'+t('daily_next',{time:hours?t('daily_hours',{h:hours,m:minutes%60}):t('daily_minutes',{m:minutes})})+'</span>';
+}
+function dailyGridRows(state){
+  return state.guesses.map(g=>DAILY_FIJA.repeat(g.fijas)+DAILY_PICA.repeat(g.picas)
+    +DAILY_NADA.repeat(Math.max(0,state.rules.digits-g.fijas-g.picas)));
+}
+function dailyShareText(state){
+  const score=(state.solved?state.attempts:'X')+'/'+state.rules.maxAttempts;
+  const time=state.solved?' · '+formatPracticeTime(state.durationMs):'';
+  return [t('daily_share_title',{n:state.number}),score+time,...dailyGridRows(state),location.origin+'/'].join('\n');
+}
+async function shareDaily(){
+  if(!dailyData||!dailyData.finished) return;
+  const text=dailyShareText(dailyData);
+  if(navigator.share){ try{ await navigator.share({title:'Picas y Fijas',text}); return; }catch(e){} }
+  try{ await navigator.clipboard.writeText(text); toast(t('daily_shared')); }
+  catch(e){ toast(text); }
+}
+function renderDailyLog(){
+  const rules=dailyData.rules;
+  $('daily-log').innerHTML=dailyData.guesses.length
+    ? dailyData.guesses.slice().reverse().map(g=>{
+        let pips='';
+        for(let i=0;i<g.fijas;i++) pips+='<span class="pip f"></span>';
+        for(let i=0;i<g.picas;i++) pips+='<span class="pip p"></span>';
+        if(!pips) pips=`<span class="scoretxt">${t('log_nada')}</span>`;
+        return `<div class="g">${codeViewHTML(g.guess,rules.mode)}<span class="scoretxt">${g.fijas}F · ${g.picas}P</span><span class="pips">${pips}</span></div>`;
+      }).join('')
+    : `<div class="empty">${t('log_empty_mine')}</div>`;
+}
+function renderDailyBoard(){
+  const list=dailyData.board||[];
+  $('daily-players').textContent=t('daily_players',{players:dailyData.players||0,solved:dailyData.solvedCount||0});
+  $('daily-board').innerHTML=list.length?'':`<div class="empty">${t('daily_board_empty')}</div>`;
+  list.forEach(entry=>{
+    const row=document.createElement('div'); row.className='rankrow'+(entry.username===user?' me':'');
+    row.innerHTML=`<div class="pos">${entry.rank}</div><div class="nm">${playerChip(entry.country,entry.username)}</div>
+      <div class="wl">${t('daily_board_line',{n:entry.attempts,time:formatPracticeTime(entry.durationMs)})}</div>`;
+    $('daily-board').appendChild(row);
+  });
+  const rank=dailyData.yourRank||0, mine=$('daily-your-rank');
+  mine.textContent=rank&&!list.some(entry=>entry.username===user)?t('daily_your_rank',{n:rank}):'';
+}
+function renderDaily(){
+  if(!dailyData) return;
+  const rules=dailyData.rules;
+  $('daily-hint').textContent=t('daily_hint',{digits:rules.digits,max:rules.maxAttempts});
+  $('daily-number').textContent=t('daily_number',{n:dailyData.number});
+  $('daily-attempts').textContent=t('daily_attempts_chip',{n:Math.min(rules.maxAttempts,dailyData.attempts+(dailyData.finished?0:1)),max:rules.maxAttempts});
+  renderDailyCountdown();
+  const input=$('daily-guess'); input.maxLength=rules.digits; input.placeholder='•'.repeat(rules.digits);
+  $('daily-guessarea').classList.toggle('hidden',dailyData.finished);
+  if(dailyData.finished) $('daily-guess-val').textContent='';
+  renderDailyLog();
+  const banner=$('daily-banner');
+  if(dailyData.finished){
+    const detail=dailyData.solved
+      ? t('daily_solved_detail',{n:dailyData.attempts,time:formatPracticeTime(dailyData.durationMs)})
+      : t('daily_failed_detail');
+    banner.innerHTML=`<div class="banner ${dailyData.solved?'win':'lose'}"><h2>${dailyData.solved?t('daily_solved_title'):t('daily_failed_title')}</h2><p>${detail}</p></div>`
+      +(dailyData.secret?`<div class="note"><b>${t('daily_reveal')}</b> ${codeViewHTML(dailyData.secret,rules.mode)}</div>`:'');
+    $('daily-grid').textContent=dailyGridRows(dailyData).join('\n');
+    $('daily-share-wrap').classList.remove('hidden');
+  }else{
+    banner.innerHTML=''; $('daily-share-wrap').classList.add('hidden');
+  }
+  renderDailyBoard();
+  rememberDaily();
+  renderDailyCard();
+}
+async function submitDailyGuess(){
+  if(!dailyData||dailyData.finished||dailySending) return;
+  const rules=dailyData.rules, guess=$('daily-guess').value.trim();
+  if(validateLive(guess,rules.digits,rules.allowRepeats).cls!=='ok'){ toast(t('invalid_guess'),true); return; }
+  const wasFinished=dailyData.finished;
+  dailySending=true; $('daily-guess-btn').disabled=true;
+  /* El mismo recibo que usa una partida: si la conexion tarda y el envio se
+     repite, el intento del dia no se gasta dos veces. */
+  const requestId=(crypto.randomUUID?crypto.randomUUID():[...crypto.getRandomValues(new Uint8Array(16))].map(byte=>byte.toString(16).padStart(2,'0')).join('')).replace(/[^A-Za-z0-9-]/g,'');
+  try{
+    const res=await api('dailyGuess',{guess,requestId},{timeoutMs:30000});
+    if(res&&res.day) dailyData=res;
+    if(res&&!res.ok) toast(res.code==='daily_done'?t('daily_done_today'):te(res.error||t('net_error')),true);
+    $('daily-guess').value=''; $('daily-guess-val').textContent='';
+    renderDaily();
+    if(!wasFinished&&dailyData.finished) endSound(dailyData.solved?'win':'lose');
+  }catch(e){
+    if(e.message!=='SESSION_EXPIRED'&&e.message!=='EMAIL_PENDING') toast(t('net_error'),true);
+  }finally{ dailySending=false; $('daily-guess-btn').disabled=false; }
+}
+$('daily-guess').addEventListener('input',e=>setVal('daily-guess-val',e.target.value,dailyData?dailyData.rules.digits:4,false));
+bindEnterToButton('daily-guess','daily-guess-btn');
 
 /* -------------------- historial -------------------- */
 const LOCALE={es:'es',en:'en',fr:'fr'};

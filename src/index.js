@@ -50,6 +50,7 @@ import {
   systemChat,
   threadForGame,
 } from "./chat.js";
+import { dailyGuess, dailyState } from "./daily.js";
 import { cleanupDatabase } from "./maintenance.js";
 import { deletePushSubscription, savePushSubscription, sendTurnNotification } from "./push.js";
 import { APP_VERSION } from "./version.js";
@@ -65,6 +66,8 @@ const PROTECTED = new Set([
   "lobbyState",
   "listGames",
   "leaderboard",
+  "dailyState",
+  "dailyGuess",
   "myGames",
   "history",
   "historyGame",
@@ -1636,6 +1639,12 @@ async function routeApi(request, env, ctx) {
       break;
     case "gamePresence":
       result = await gamePresence(env.DB, params, auth.user);
+      break;
+    case "dailyState":
+      result = await dailyState(env.DB, env, auth.user);
+      break;
+    case "dailyGuess":
+      result = await dailyGuess(env.DB, env, auth.user, params);
       break;
     case "leaderboard":
       result = await leaderboard(env.DB, auth.user.username);
