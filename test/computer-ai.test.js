@@ -3,8 +3,14 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
+/* Desde E4-T1 el saber deductivo vive en `deduce.js` y `computer-ai.js` es la
+   cara del rival. El contexto carga los dos en el mismo orden que la pagina;
+   lo que se comprueba aqui abajo no ha cambiado ni una coma, que es justo lo
+   que tenia que demostrar la extraccion. */
+const engineSource = await readFile(new URL('../public/deduce.js', import.meta.url), 'utf8');
 const source = await readFile(new URL('../public/computer-ai.js', import.meta.url), 'utf8');
 const context = vm.createContext({ Math });
+vm.runInContext(engineSource, context);
 vm.runInContext(source, context);
 const { createSolver, enumerate, evaluate, compatible } = context.ComputerAI;
 

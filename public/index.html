@@ -413,6 +413,24 @@
 .share-card{margin:14px 0 0}
 .share-card .daily-grid{margin-bottom:10px}
 .daily-rows{display:flex;flex-direction:column;gap:6px;align-items:center}
+.analysis{margin:14px 0 0;border:1px solid var(--edge);border-radius:12px;background:var(--panel);overflow:hidden}
+.analysis>summary{cursor:pointer;padding:11px 13px;font-weight:700;font-size:14px;list-style:none}
+.analysis>summary::-webkit-details-marker{display:none}
+.analysis>summary::after{content:'+';float:right;color:var(--muted)}
+.analysis[open]>summary::after{content:'−'}
+.an-body{padding:0 13px 12px}
+.an-row{display:flex;align-items:center;gap:9px;padding:7px 0;border-top:1px solid rgba(59,50,41,.55);font-size:13px}
+.an-n{min-width:20px;color:var(--muted);font-family:"JetBrains Mono",monospace;font-size:12px}
+.an-code{flex:0 0 auto}
+.an-left{flex:1;color:var(--muted);font-size:12px;text-align:right;white-space:nowrap}
+.an-tag{flex:0 0 auto;border-radius:999px;padding:3px 9px;font-size:11px;font-weight:700;border:1px solid var(--edge);color:var(--muted)}
+.an-tag.optimal{color:var(--fija);border-color:rgba(79,201,124,.55)}
+.an-tag.good{color:var(--accent);border-color:rgba(91,141,239,.55)}
+.an-tag.wasted{color:var(--pink);border-color:rgba(224,104,90,.55)}
+.an-decisive{display:flex;gap:7px;align-items:center;color:var(--pica);font-size:12px;font-weight:700;padding:2px 0 6px 29px}
+.an-decisive::before{content:'◆'}
+.an-foot{color:var(--muted);font-size:11px;line-height:1.45;margin:10px 0 0}
+@media(max-width:420px){.an-row{flex-wrap:wrap}.an-left{order:3;text-align:left;flex:1 0 100%;padding-left:29px}}
 </style>
 </head>
 <body>
@@ -1120,13 +1138,14 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="/deduce.js"></script>
 <script src="/computer-ai.js"></script>
 <script>
 /* ==========================================================================
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v3.8.1';
+const APP_VERSION = 'v3.9.0';
 /* Enlace de invitación: ...?game=SZ93
    La invitación sobrevive al registro: se guarda en el navegador, porque entre
    abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
@@ -1900,6 +1919,11 @@ Object.assign(I18N.fr,{account_link:"Mon compte",account_title:"Mon compte",acco
 Object.assign(I18N.es,{share_card_btn:"Compartir mi partida",share_card_copied:"Tarjeta copiada",share_card_solved:"He descifrado un código de {digits} en {n} intentos",share_card_solved_one:"He descifrado un código de {digits} en un solo intento",share_card_failed:"No he logrado descifrar un código de {digits}"});
 Object.assign(I18N.en,{share_card_btn:"Share my game",share_card_copied:"Card copied",share_card_solved:"I cracked a {digits}-symbol code in {n} tries",share_card_solved_one:"I cracked a {digits}-symbol code in a single try",share_card_failed:"I could not crack a {digits}-symbol code"});
 Object.assign(I18N.fr,{share_card_btn:"Partager ma partie",share_card_copied:"Carte copiée",share_card_solved:"J'ai percé un code de {digits} en {n} essais",share_card_solved_one:"J'ai percé un code de {digits} en un seul essai",share_card_failed:"Je n'ai pas réussi à percer un code de {digits}"});
+/* E4-T2: la partida que se explica. Las notas juzgan la decision, no la
+   suerte, y por eso el pie lo dice con todas las letras. */
+Object.assign(I18N.es,{analysis_title:"Cómo se jugó",analysis_optimal:"Óptimo",analysis_good:"Correcto",analysis_wasted:"Desperdiciado",analysis_left:"{before} posibles → {after}",analysis_decisive:"Aquí se decidió la partida",analysis_foot:"Antes de cada intento quedaban tantos códigos compatibles con tus pistas. La nota compara tu intento con el que más habría reducido esa lista: mide la decisión, no la suerte."});
+Object.assign(I18N.en,{analysis_title:"How it played out",analysis_optimal:"Optimal",analysis_good:"Solid",analysis_wasted:"Wasted",analysis_left:"{before} possible → {after}",analysis_decisive:"This is where the game was decided",analysis_foot:"Before each try, this many codes still matched your clues. The grade compares your try with the one that would have cut that list the most: it judges the decision, not the luck."});
+Object.assign(I18N.fr,{analysis_title:"Comment ça s'est joué",analysis_optimal:"Optimal",analysis_good:"Correct",analysis_wasted:"Gâché",analysis_left:"{before} possibles → {after}",analysis_decisive:"C'est ici que la partie s'est jouée",analysis_foot:"Avant chaque essai, il restait ce nombre de codes compatibles avec tes indices. La note compare ton essai à celui qui aurait le plus réduit cette liste : elle juge la décision, pas la chance."});
 Object.assign(I18N.es,{menu_settings:"Ajustes",menu_logout:"Cerrar sesión"});
 Object.assign(I18N.en,{menu_settings:"Settings",menu_logout:"Log out"});
 Object.assign(I18N.fr,{menu_settings:"Réglages",menu_logout:"Se déconnecter"});
@@ -3308,6 +3332,27 @@ async function shareCard(){
   try{ await navigator.clipboard.writeText(text); toast(t('share_card_copied')); }
   catch(e){ toast(text); }
 }
+/* La partida que se explica (E4-T2). Todo sale de los intentos que ya estan
+   en la pantalla y del motor de `deduce.js`: ni una lectura mas en D1, ni un
+   secreto que ensenar. Si las reglas abren un espacio demasiado grande para
+   rehacerlo en el telefono, `gradeGame` lo dice y aqui no se pinta nada: mejor
+   nada que una nota lenta o inventada. */
+function analysisBlock(rules,guesses){
+  if(typeof Deduce==='undefined'||!Deduce) return '';
+  let report;
+  try{ report=Deduce.gradeGame(rules,guesses); }catch(e){ return ''; }
+  if(!report.available||report.notes.length<2) return '';
+  const rows=report.notes.map(note=>{
+    const decisive=note.index===report.decisiveIndex;
+    return `<div class="an-row"><span class="an-n">${note.index+1}</span>`
+      +`<span class="an-code">${codeViewHTML(note.guess,rules.mode)}</span>`
+      +`<span class="an-left">${t('analysis_left',{before:note.before,after:note.after})}</span>`
+      +`<span class="an-tag ${note.label}">${t('analysis_'+note.label)}</span></div>`
+      +(decisive?`<div class="an-decisive"><span>${t('analysis_decisive')}</span></div>`:'');
+  }).join('');
+  return `<details class="analysis"><summary>${t('analysis_title')}</summary>`
+    +`<div class="an-body">${rows}<p class="an-foot">${t('analysis_foot')}</p></div></details>`;
+}
 async function shareDaily(){
   if(!dailyData||!dailyData.finished) return;
   const text=dailyShareText(dailyData);
@@ -3357,7 +3402,8 @@ function renderDaily(){
       ? t('daily_solved_detail',{n:dailyData.attempts,time:formatPracticeTime(dailyData.durationMs)})
       : t('daily_failed_detail');
     banner.innerHTML=`<div class="banner ${dailyData.solved?'win':'lose'}"><h2>${dailyData.solved?t('daily_solved_title'):t('daily_failed_title')}</h2><p>${detail}</p></div>`
-      +(dailyData.secret?`<div class="note"><b>${t('daily_reveal')}</b> ${codeViewHTML(dailyData.secret,rules.mode)}</div>`:'');
+      +(dailyData.secret?`<div class="note"><b>${t('daily_reveal')}</b> ${codeViewHTML(dailyData.secret,rules.mode)}</div>`:'')
+      +analysisBlock(rules,dailyData.guesses);
     $('daily-grid').textContent=dailyGridRows(dailyData).join('\n');
     $('daily-share-wrap').classList.remove('hidden');
   }else{
@@ -3755,7 +3801,8 @@ function finishComputerPractice(result,reason=''){
   $('practice-banner').innerHTML=`<div class="banner ${result==='win'?'win':result==='loss'?'lose':'draw'}"><h2>${title}</h2><p>${detail}</p></div><div class="note"><b>${t('practice_secret')}</b> ${codeViewHTML(practice.playerSecret,practiceCfg.mode)} · <b>🤖</b> ${codeViewHTML(practice.secret,practiceCfg.mode)}</div>`
     +shareCardBlock({guesses:practice.guesses, digits:practiceCfg.digits,
       solved:practice.guesses.some(g=>g.fijas===practiceCfg.digits), attempts:practice.guesses.filter(g=>!g.missed).length,
-      durationMs:Date.now()-practice.startedAt});endSound(result==='draw'?'draw':result==='win'?'win':'lose');
+      durationMs:Date.now()-practice.startedAt})
+    +analysisBlock(practiceCfg,practice.guesses);endSound(result==='draw'?'draw':result==='win'?'win':'lose');
 }
 function finishPractice(won,reason){
   if(!practice||practice.finished)return; practice.finished=true; stopPracticeTick();clearSavedPractice();
@@ -3765,7 +3812,8 @@ function finishPractice(won,reason){
   const surrendered=reason==='surrender',detail=won?t('practice_attempts_used',{n:practice.guesses.length,time:formatPracticeTime(elapsed)}):t(surrendered?'practice_surrender_detail':reason==='time'?'practice_time_up':'practice_attempts_up');
   $('practice-banner').innerHTML=`<div class="banner ${won?'win':'lose'}"><h2>${t(won?'practice_won':surrendered?'practice_surrendered':'practice_lost')}</h2><p>${detail}</p></div><div class="note"><b>${t('practice_reveal')}</b> ${codeViewHTML(practice.secret,practiceCfg.mode)}</div>`
     +shareCardBlock({guesses:practice.guesses, digits:practiceCfg.digits, solved:won,
-      attempts:practice.guesses.filter(g=>!g.missed).length, durationMs:elapsed});
+      attempts:practice.guesses.filter(g=>!g.missed).length, durationMs:elapsed})
+    +analysisBlock(practiceCfg,practice.guesses);
   $('practice-guessarea').classList.add('hidden'); $('practice-active-actions').classList.add('hidden'); $('practice-actions').classList.remove('hidden');practiceExitChrome('result_lobby',true); endSound(won?'win':'lose');
 }
 $('p-seg-type').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;practiceCfg.type=b.dataset.type;segPick($('p-seg-type'),b);syncPracticeControls();});
@@ -4216,6 +4264,9 @@ function renderGame(st){
       const digits=parseInt(st.digits,10);
       banner.insertAdjacentHTML('beforeend',shareCardBlock({
         guesses:mine, digits, solved:mine.some(g=>g.fijas===digits), attempts:mine.length}));
+      /* E4-T2: el analisis es de mis intentos contra el codigo del rival; los
+         suyos no entran, igual que en la tarjeta. */
+      banner.insertAdjacentHTML('beforeend',analysisBlock(game,mine));
     }
     if(reviewingHistory){
       rz.innerHTML=`<button class="btn ghost" onclick="leaveHistoryGame()">${t('back')}</button><div style="height:12px"></div>`;
