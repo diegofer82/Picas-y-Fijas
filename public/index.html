@@ -885,6 +885,7 @@
         <button data-c="none" class="on" data-i18n="nolimit">Sin límite</button>
         <button data-c="turn" data-i18n="clock_turn">Por turno</button>
         <button data-c="bank" data-i18n="clock_bank">Bolsa de tiempo</button>
+        <button data-c="correspondence" data-i18n="clock_correspondence">Correspondencia</button>
       </div>
 
       <div id="turn-time-wrap" class="hidden">
@@ -911,6 +912,15 @@
           <button data-bi="10">+10s</button>
         </div>
         <p class="hint" data-i18n="bank_hint" style="margin:8px 0 0">Como en el ajedrez: cada jugador gasta de su propia bolsa mientras le toca y pierde si se le acaba.</p>
+      </div>
+
+      <div id="correspondence-wrap" class="hidden">
+        <label data-i18n="lbl_correspondence">Tiempo por jugada</label>
+        <div class="seg mono" id="seg-correspondence">
+          <button data-cd="1" class="on" data-i18n="day_one">1 día</button>
+          <button data-cd="3" data-i18n="day_three">3 días</button>
+        </div>
+        <p class="hint" data-i18n="correspondence_hint" style="margin:8px 0 0">El reloj sigue corriendo aunque alguien cierre el juego.</p>
       </div>
 
       <label data-i18n="lbl_visibility">Visibilidad</label>
@@ -1071,7 +1081,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v3.6.2';
+const APP_VERSION = 'v3.7.0';
 /* Enlace de invitación: ...?game=SZ93
    La invitación sobrevive al registro: se guarda en el navegador, porque entre
    abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
@@ -1385,6 +1395,9 @@ Object.assign(I18N.fr,{
   chat_lobby:"Chat du lobby",chat_game:"Chat de la partie",chat_placeholder:"Écris un message…",chat_empty:"Aucun message pour l'instant.",chat_deleted:"Message supprimé",chat_mute:"Ignorer l'utilisateur",chat_mute_confirm:"Ignorer {name} ? Ses messages et wizz resteront masqués jusqu'à sa réactivation avec le bouton 🔇.",chat_manage_muted:"Gérer les utilisateurs ignorés",chat_muted_title:"Utilisateurs ignorés",chat_muted_empty:"Tu n'as ignoré aucun utilisateur.",chat_unmute:"Réactiver",chat_unmute_all:"Tout réactiver",chat_unmuted:"{name} a été réactivé.",chat_all_unmuted:"Tous les utilisateurs ont été réactivés.",chat_report:"Signaler le message",chat_muted:"Utilisateur ignoré sur cet appareil.",chat_reported:"Message signalé.",chat_nudge:"Envoyer un wizz",chat_nudges_on:"Wizz activés",chat_nudges_off:"Wizz désactivés",chat_joined:"{name} a rejoint la partie.",chat_paused:"{name} a mis la partie en pause.",chat_resumed:"{name} a repris la partie.",chat_abandoned:"{name} a abandonné la partie.",chat_rematch:"{name} a proposé une revanche.",chat_finished:"La partie est terminée.",chat_nudged:"{name} t'a envoyé un wizz ⚡",chat_report_reason:"Motif : 1 spam, 2 harcèlement, 3 contenu inapproprié"
 });
 Object.assign(I18N.fr,{experience_title:"Ne rate pas ton tour",experience_hint:"Active les notifications et le son pour les alertes de tour, d'adversaire et de wizz, même lorsque le chat est fermé.",experience_activate:"Activer les notifications et le son",experience_ready:"Notifications et son activés.",experience_sound_only:"Son activé. Ce navigateur ne prend pas en charge les notifications.",experience_denied:"Le son est activé, mais les notifications sont bloquées. Autorise-les dans les paramètres du site du navigateur.",experience_default:"Recommandé pour une meilleure expérience de jeu.",experience_enabled_toast:"Notifications et son activés",experience_denied_toast:"Le navigateur a bloqué les notifications. Vérifie les autorisations de ce site."});
+Object.assign(I18N.es,{clock_correspondence:"Correspondencia",lbl_correspondence:"Tiempo por jugada",day_one:"1 día",day_three:"3 días",correspondence_hint:"El reloj sigue corriendo aunque alguien cierre el juego.",rl_correspondence_one:"1 día/jugada",rl_correspondence_three:"3 días/jugada",experience_push_ready:"Avisos de turno activados, incluso con el juego cerrado.",experience_push_failed:"No pudimos activar los avisos con el juego cerrado; recibirás un correo cuando sea tu turno."});
+Object.assign(I18N.en,{clock_correspondence:"Correspondence",lbl_correspondence:"Time per move",day_one:"1 day",day_three:"3 days",correspondence_hint:"The clock keeps running even when someone closes the game.",rl_correspondence_one:"1 day/move",rl_correspondence_three:"3 days/move",experience_push_ready:"Turn alerts enabled, even when the game is closed.",experience_push_failed:"We could not enable closed-game alerts; you will receive an email when it is your turn."});
+Object.assign(I18N.fr,{clock_correspondence:"Correspondance",lbl_correspondence:"Temps par coup",day_one:"1 jour",day_three:"3 jours",correspondence_hint:"Le chrono continue même lorsque quelqu’un ferme le jeu.",rl_correspondence_one:"1 jour/coup",rl_correspondence_three:"3 jours/coup",experience_push_ready:"Alertes de tour activées, même lorsque le jeu est fermé.",experience_push_failed:"Impossible d’activer les alertes jeu fermé ; tu recevras un e-mail lorsque ce sera ton tour."});
 Object.assign(I18N.fr,{install_title:"Joue depuis ton écran d'accueil",install_hint_android:"Ajoute-le comme appli : il s'ouvre en plein écran, sans la barre du navigateur, et tu reprends la partie d'un seul geste.",install_hint_ios:"Ajoute-le à ton écran d'accueil : il s'ouvre en plein écran et c'est le seul moyen que l'iPhone te prévienne quand c'est ton tour.",install_btn:"Installer l'appli",install_btn_steps:"Voir comment faire",install_btn_hide:"Masquer les étapes",install_btn_copy:"Copier le lien",install_later:"Pas maintenant",install_guide:"Guide en images",install_done:"C'est fait : le jeu est sur ton écran d'accueil 🎉",install_copied:"Lien copié",install_note_browser:"Ce navigateur intégré ne peut pas l'installer. Copie le lien et ouvre-le dans Safari (iPhone) ou Chrome (Android).",install_ios_1:"Touche le bouton <b>Partager</b> dans la barre de Safari.",install_ios_2:"Fais défiler et choisis <b>Sur l'écran d'accueil</b>.",install_ios_3:"Appuie sur <b>Ajouter</b>, en haut à droite.",install_and_1:"Ouvre le menu <b>⋮</b> du navigateur, en haut à droite.",install_and_2:"Choisis <b>Installer l'application</b> ou <b>Ajouter à l'écran d'accueil</b>.",install_and_3:"Confirme avec <b>Installer</b>.",experience_ios_install:"Sur iPhone, les alertes de tour n'arrivent que si tu ajoutes le jeu à ton écran d'accueil."});
 I18N.fr.session_expired="Ta session a expiré. Saisis ton PIN pour te reconnecter.";
 I18N.fr.missed_timeout="⏱ Tour perdu au temps";
@@ -1522,6 +1535,7 @@ const ERR = {
     "El número de colores debe ser 4, 6 u 8.":"The number of colors must be 4, 6 or 8.",
     "El límite de intentos debe ser ilimitado, 6 o 10.":"The attempt limit must be unlimited, 6 or 10.",
     "El tiempo por turno debe ser ilimitado, 30, 60 o 120 segundos.":"Turn time must be unlimited, 30, 60 or 120 seconds.",
+    "La correspondencia debe dar 1 o 3 días por jugada.":"Correspondence must allow 1 or 3 days per move.",
     "Código inválido.":"Invalid code.",
     "Símbolo fuera de rango.":"Symbol out of range.",
     "No se permiten repetidos en esta partida.":"Repeats aren't allowed in this game.",
@@ -1616,6 +1630,7 @@ const ERR = {
     "El número de colores debe ser 4, 6 u 8.":"Le nombre de couleurs doit être 4, 6 ou 8.",
     "El límite de intentos debe ser ilimitado, 6 o 10.":"La limite d'essais doit être illimitée, 6 ou 10.",
     "El tiempo por turno debe ser ilimitado, 30, 60 o 120 segundos.":"Le temps par tour doit être illimité, 30, 60 ou 120 secondes.",
+    "La correspondencia debe dar 1 o 3 días por jugada.":"La correspondance doit accorder 1 ou 3 jours par coup.",
     "Código inválido.":"Code invalide.",
     "Símbolo fuera de rango.":"Symbole hors limites.",
     "No se permiten repetidos en esta partida.":"Les répétitions ne sont pas autorisées dans cette partie.",
@@ -1976,7 +1991,7 @@ let practiceCfg = { type:'solo', difficulty:'normal', digits:3, mode:'numbers', 
 let practice = null, practiceTickTimer = null, practiceComputerTimer = null;
 const PRACTICE_SAVE_KEY='pf_practice_active_v1';
 let joinMeta = null, finishedMeta = null;
-let game = { id:'', digits:3, mode:'numbers', numColors:6, allowRepeats:false, maxAttempts:0, turnSeconds:0, revealSecrets:false };
+let game = { id:'', digits:3, mode:'numbers', numColors:6, allowRepeats:false, isPublic:true, maxAttempts:0, turnSeconds:0, revealSecrets:false };
 let gState = null;
 let guessSubmitting = false;
 let gameViewEpoch = 0, routeEpoch = 0, gameRequestSeq = 0, reviewingHistory = false;
@@ -1985,7 +2000,7 @@ let lobbyPollTimer = null;
 let lastYourTurn = null;
 let endSoundPlayed = false;
 let soundOn = localStorage.getItem('pf_sound')!=='0';
-let audioCtx = null, serviceWorkerRegistration = null, sessionExpiryHandled = false;
+let audioCtx = null, serviceWorkerRegistration = null, sessionExpiryHandled = false, pushReady = false, pushAttempted = false;
 let myCountry = localStorage.getItem('pf_country') || '';
 let chatTimer=null,chatRoom='',chatItems=[],chatLastId=0,chatUnread=0,chatEnabled=false,chatPollGeneration=0;
 let chatNudgesOn=localStorage.getItem('pf_chat_nudges')!=='0';
@@ -2278,7 +2293,8 @@ function rulesLabel(m){
   const parts=[ (m.mode==='colors'?t('rl_colors',{n:m.numColors||6}):t('rl_numbers')), t('rl_pos',{n:m.digits}),
     (m.allowRepeats?t('rl_repeat'):t('rl_norepeat')) ];
   if(m.maxAttempts>0) parts.push(t('rl_attempts',{n:m.maxAttempts}));
-  if(m.turnSeconds>0) parts.push(t(m.practiceSolo?'rl_attempt':'rl_turn',{n:m.turnSeconds}));
+  if(m.timeMode==='correspondence') parts.push(t(m.turnSeconds===259200?'rl_correspondence_three':'rl_correspondence_one'));
+  else if(m.turnSeconds>0) parts.push(t(m.practiceSolo?'rl_attempt':'rl_turn',{n:m.turnSeconds}));
   if(m.timeMode==='bank'&&m.bankSeconds>0){
     parts.push(t('rl_bank',{n:t('min_short',{n:Math.round(m.bankSeconds/60)})}));
     if(m.bankIncrement>0) parts.push(t('rl_bank_inc',{n:m.bankIncrement}));
@@ -2381,18 +2397,43 @@ function updateSoundLabel(){
 function updateExperiencePrompt(){
   const card=$('experience-card'),status=$('experience-status');if(!card||!status)return;
   const supported='Notification' in window,permission=supported?Notification.permission:'unsupported';
-  const ready=soundOn&&(permission==='granted'||permission==='unsupported');card.classList.toggle('hidden',ready);
+  const iosNeedsInstall=!supported&&IS_IOS&&!isStandalone();
+  const ready=soundOn&&((permission==='granted'&&pushReady)||(permission==='unsupported'&&!iosNeedsInstall));card.classList.toggle('hidden',ready);
   // En el iPhone las notificaciones solo existen dentro de la app instalada:
   // sin ella no hay nada que activar, asi que apuntamos a la pantalla de inicio.
-  const iosNeedsInstall=!supported&&IS_IOS&&!isStandalone();
-  status.textContent=permission==='granted'&&soundOn?t('experience_ready'):permission==='unsupported'?(iosNeedsInstall?t('experience_ios_install'):t('experience_sound_only')):permission==='denied'?t('experience_denied'):t('experience_default');
+  status.textContent=permission==='granted'&&pushReady?t('experience_push_ready'):permission==='granted'&&pushAttempted?t('experience_push_failed'):permission==='unsupported'?(iosNeedsInstall?t('experience_ios_install'):t('experience_sound_only')):permission==='denied'?t('experience_denied'):t('experience_default');
+}
+function vapidKeyBytes(value){
+  const normalized=String(value||'').replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(normalized.padEnd(Math.ceil(normalized.length/4)*4,'='));
+  return Uint8Array.from(raw,c=>c.charCodeAt(0));
+}
+async function syncPushSubscription(){
+  pushAttempted=true;
+  try{
+    if(!sessionToken||Notification.permission!=='granted'||!('serviceWorker' in navigator))return false;
+    const registration=serviceWorkerRegistration||await navigator.serviceWorker.ready;
+    if(!registration.pushManager)return false;
+    let subscription=await registration.pushManager.getSubscription();
+    if(!subscription){
+      const key=await api('pushPublicKey');
+      if(!key.ok||!key.publicKey)return false;
+      subscription=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:vapidKeyBytes(key.publicKey)});
+    }
+    const saved=await api('savePushSubscription',{subscription:subscription.toJSON()});
+    pushReady=!!saved.ok;
+    return pushReady;
+  }catch(e){pushReady=false;return false;}finally{updateExperiencePrompt();}
 }
 async function activateExperience(){
   soundOn=true;localStorage.setItem('pf_sound','1');unlockAudio();primeChatAudio();chime();
   let permission='unsupported';
   try{if('Notification' in window){permission=Notification.permission;if(permission==='default')permission=await Notification.requestPermission();}}catch(e){}
+  if(permission==='granted')await syncPushSubscription();
   updateSoundLabel();
-  if(permission==='denied')toast(t('experience_denied_toast'),true);else toast(t('experience_enabled_toast'));
+  if(permission==='denied')toast(t('experience_denied_toast'),true);
+  else if(permission==='granted'&&!pushReady)toast(t('experience_push_failed'),true);
+  else toast(t('experience_enabled_toast'));
 }
 /* -------------------- instalar el juego como app (PWA) --------------------
    Android y el escritorio dejan instalar de un toque: guardamos el evento
@@ -3509,12 +3550,13 @@ function selectCreateRandomRules(){
   if(cfg.mode==='colors'&&cfg.digits>cfg.numColors) cfg.allowRepeats=true;
   cfg.maxAttempts=[0,6,10][randomInt(3)];
   const pick=(id,selector)=>segPick($(id),$(id).querySelector(selector));
-  // El reloj entra en el sorteo con sus tres formas; la bolsa trae ademas su
-  // tamano y su incremento.
-  clockChoice=['none','turn','bank'][randomInt(3)];
+  // El reloj entra en el sorteo con sus cuatro formas; la bolsa trae ademas su
+  // tamano y su incremento, y la correspondencia su plazo por jugada.
+  clockChoice=['none','turn','bank','correspondence'][randomInt(4)];
   pick('seg-time',`[data-t="${[30,60,120][randomInt(3)]}"]`);
   pick('seg-bank',`[data-b="${[180,300,600][randomInt(3)]}"]`);
   pick('seg-bank-inc',`[data-bi="${[0,3,5,10][randomInt(4)]}"]`);
+  pick('seg-correspondence',`[data-cd="${[1,3][randomInt(2)]}"]`);
   pick('seg-clock',`[data-c="${clockChoice}"]`);
   syncClockControls();
   pick('seg-mode',`[data-m="${cfg.mode}"]`); pick('seg-colors',`[data-nc="${cfg.numColors}"]`);
@@ -3540,15 +3582,17 @@ $('seg-repeat').addEventListener('click', e=>{ const b=e.target.closest('button'
   setVal('secret-c-val', getSecret('c'), cfg.digits, cfg.allowRepeats); });
 $('seg-attempts').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
   cfg.maxAttempts=parseInt(b.dataset.a,10); segPick($('seg-attempts'),b); });
-/* El reloj tiene tres formas y son excluyentes: sin limite, cronometro por
-   turno o bolsa de tiempo. `clockChoice` es lo que se ve; `cfg.turnSeconds` y
+/* El reloj tiene cuatro formas y son excluyentes: sin limite, cronometro por
+   turno, bolsa de tiempo o correspondencia. `clockChoice` es lo que se ve; `cfg.turnSeconds` y
    `cfg.timeMode` son lo que viaja al servidor. */
 let clockChoice='none';
 function syncClockControls(){
   $('turn-time-wrap').classList.toggle('hidden', clockChoice!=='turn');
   $('bank-wrap').classList.toggle('hidden', clockChoice!=='bank');
-  cfg.timeMode = clockChoice==='bank' ? 'bank' : 'turn';
-  cfg.turnSeconds = clockChoice==='turn' ? (+(segValue('seg-time','t')||30)) : 0;
+  $('correspondence-wrap').classList.toggle('hidden', clockChoice!=='correspondence');
+  cfg.timeMode = clockChoice==='bank' ? 'bank' : clockChoice==='correspondence' ? 'correspondence' : 'turn';
+  cfg.turnSeconds = clockChoice==='turn' ? (+(segValue('seg-time','t')||30))
+    : clockChoice==='correspondence' ? (+(segValue('seg-correspondence','cd')||1))*86400 : 0;
   if(clockChoice==='bank'){
     cfg.bankSeconds=+(segValue('seg-bank','b')||300);
     cfg.bankIncrement=+(segValue('seg-bank-inc','bi')||0);
@@ -3562,6 +3606,8 @@ $('seg-bank').addEventListener('click', e=>{ const b=e.target.closest('button');
   segPick($('seg-bank'),b); syncClockControls(); });
 $('seg-bank-inc').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
   segPick($('seg-bank-inc'),b); syncClockControls(); });
+$('seg-correspondence').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
+  segPick($('seg-correspondence'),b); syncClockControls(); });
 $('seg-public').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
   cfg.isPublic=b.dataset.p==='1'; segPick($('seg-public'),b);
   $('pub-hint').textContent=cfg.isPublic?t('pub_hint_public'):t('pub_hint_private'); });
@@ -3588,7 +3634,7 @@ async function createGame(){
     if(!res.ok){ toast(te(res.error),true); return; }
     localStorage.setItem('pf_secret_'+res.gameId, secret);
     enterWait({id:res.gameId, digits:cfg.digits, mode:cfg.mode, numColors:cfg.numColors, allowRepeats:cfg.allowRepeats, maxAttempts:cfg.maxAttempts,
-      turnSeconds:cfg.turnSeconds, timeMode:cfg.timeMode, bankSeconds:cfg.bankSeconds, bankIncrement:cfg.bankIncrement, revealSecrets:cfg.revealSecrets});
+      turnSeconds:cfg.turnSeconds, timeMode:cfg.timeMode, bankSeconds:cfg.bankSeconds, bankIncrement:cfg.bankIncrement, isPublic:cfg.isPublic, revealSecrets:cfg.revealSecrets});
   }catch(e){ toast(t('net_error'),true); } finally{ $('btn-create').disabled=false; $('btn-create-random').disabled=false; }
 }
 function prepareRandomGame(){
@@ -3601,7 +3647,7 @@ function prepareRandomGame(){
 /* -------------------- sala de espera -------------------- */
 function enterWait(meta){
   localStorage.removeItem('pf_current_game');
-  game={id:meta.id, digits:meta.digits, mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats, maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0,
+  game={id:meta.id, digits:meta.digits, mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats, isPublic:meta.isPublic!==false, maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0,
     timeMode:meta.timeMode||'turn', bankSeconds:meta.bankSeconds||0, bankIncrement:meta.bankIncrement||0, revealSecrets:!!meta.revealSecrets};
   $('wait-code').textContent=meta.id; $('wait-info').textContent=rulesLabel(meta);
   show('wait');
@@ -3616,7 +3662,8 @@ async function pollWait(expectedEpoch=gameViewEpoch, expectedGameId=game.id){
     if(st.status==='active'){ notifyJoin(); enterGame(metaFromState(st)); return; }
     if(st.status!=='waiting'){ stopPoll(); toast(t('game_expired'),true); enterLobby(); return; }
     const c=new Date(st.createdAt).getTime();
-    if(c && Date.now()-c > 2*60*60*1000){ stopPoll(); toast(t('game_expired'),true); enterLobby(); return; }
+    const ttl=game.isPublic?2*60*60*1000:48*60*60*1000;
+    if(c && Date.now()-c > ttl){ stopPoll(); toast(t('game_expired'),true); enterLobby(); return; }
   }catch(e){}
 }
 async function cancelWait(){
@@ -3750,7 +3797,7 @@ async function resumeStoredGame(){
 
 /* -------------------- juego -------------------- */
 function metaFromState(st){
-  return {id:st.gameId, digits:parseInt(st.digits,10), mode:st.mode, numColors:st.numColors||6, allowRepeats:st.allowRepeats,
+  return {id:st.gameId, digits:parseInt(st.digits,10), mode:st.mode, numColors:st.numColors||6, allowRepeats:st.allowRepeats, isPublic:st.isPublic,
     maxAttempts:st.maxAttempts||0, turnSeconds:st.turnSeconds||0, timeMode:st.timeMode||'turn', bankSeconds:st.bankSeconds||0, bankIncrement:st.bankIncrement||0,
     revealSecrets:!!st.revealSecrets};
 }
@@ -3773,7 +3820,7 @@ function enterGame(meta,initialState=null){
   const epoch=++gameViewEpoch;
   guessSubmitting=false;
   reviewingHistory=!!meta.review;
-  game={id:meta.id, digits:parseInt(meta.digits,10), mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats,
+  game={id:meta.id, digits:parseInt(meta.digits,10), mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats, isPublic:meta.isPublic!==false,
     maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0, timeMode:meta.timeMode||'turn', bankSeconds:meta.bankSeconds||0, bankIncrement:meta.bankIncrement||0, revealSecrets:!!meta.revealSecrets, spectator:!!meta.spectator};
   const inp=$('g-guess'); inp.maxLength=game.digits; inp.value=''; inp.placeholder='•'.repeat(game.digits);
   padG.reset(); applyMode('g', game.mode, 'g-guess', 'pad-g', padG);
@@ -3905,7 +3952,7 @@ function renderGame(st){
 
   banner.innerHTML=''; rz.innerHTML=''; legend.style.display='flex';
   $('g-abandon-wrap').classList.toggle('hidden',st.status!=='active'||spectator);
-  $('g-pause-btn').classList.toggle('hidden',st.status!=='active'||spectator||!!st.manualPausedBy||!(st.turnSeconds>0));
+  $('g-pause-btn').classList.toggle('hidden',st.status!=='active'||spectator||!!st.manualPausedBy||!(st.turnSeconds>0)||st.timeMode==='correspondence');
   $('g-pause-btn').title=t('pause_btn'); $('g-pause-btn').setAttribute('aria-label',t('pause_btn'));
   turn.classList.remove('hidden'); guessarea.classList.toggle('hidden',spectator);
   updatePauseCover();
@@ -4066,6 +4113,8 @@ function pausedStatusText(st){
    sigue siendo el servidor. */
 function fmtClock(seconds){
   const total=Math.max(0,seconds), mm=Math.floor(total/60), ss=total%60;
+  if(total>=86400){const days=Math.floor(total/86400),hours=Math.floor((total%86400)/3600),mins=Math.floor((total%3600)/60);return days+'d '+String(hours).padStart(2,'0')+':'+String(mins).padStart(2,'0');}
+  if(total>=3600){const hours=Math.floor(total/3600),mins=Math.floor((total%3600)/60),secs=total%60;return hours+':'+String(mins).padStart(2,'0')+':'+String(secs).padStart(2,'0');}
   return mm>0 ? mm+':'+String(ss).padStart(2,'0') : ss+'s';
 }
 /* Solo corre el reloj de quien tiene el turno: el del rival se queda quieto en
@@ -4154,7 +4203,7 @@ document.addEventListener('visibilitychange',()=>{
 /* -------------------- arranque -------------------- */
 applyI18n();
 detectCountry();
-if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').then(reg=>{serviceWorkerRegistration=reg;}).catch(()=>{});
+if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').then(reg=>{serviceWorkerRegistration=reg;if(sessionToken&&'Notification' in window&&Notification.permission==='granted')syncPushSubscription();}).catch(()=>{});
 const emailVerificationToken=new URLSearchParams(location.search).get('verify_email')||'';
 async function boot(){
   if(emailVerificationToken){

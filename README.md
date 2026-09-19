@@ -6,7 +6,7 @@ Este es el único documento de referencia del proyecto. Está pensado para perso
 
 Picas y Fijas es un juego multijugador web en español, inglés y francés. La versión vigente funciona íntegramente en Cloudflare; la implementación anterior de Google Sheets y Apps Script fue retirada del árbol actual después de completar la migración. Sigue disponible en el historial de Git si alguna vez se necesita consultar.
 
-Versión actual: **3.6.2**: la primera visita abre en el idioma del navegador cuando es inglés o francés, sin pulsar nada; la dirección sigue mandando sobre todo y una elección hecha a mano manda sobre el navegador. La 3.6.1 subió el selector de idioma a lo alto de la pantalla de acceso y se ve en los tres modos —entrar, crear cuenta y recuperar el PIN—. Vivía dentro del formulario de alta, así que quien ya tenía cuenta y no leía español no tenía forma de cambiarlo sin pulsar «Crear una cuenta»; de paso desaparece un efecto secundario, porque aquellos botones sin `type` dentro de un `<form>` enviaban el alta al elegir idioma. La 3.6.0 cerró la etapa 1 del camino a la 4.0.0. Una invitación ya sobrevive al alta: quien abre `?game=XXXX` sin tener cuenta ve **quién le invita y con qué reglas** antes de que se le pida nada, el código se guarda en el navegador durante 48 horas y viaja también dentro del enlace del correo de verificación, de modo que activar la cuenta desde el teléfono —otro aparato, otro navegador— acaba **dentro de la partida** y no en el vestíbulo (ver «Etapa 1 — La puerta abierta»). La 3.5.3 hizo que la portada enseñara cuántas personas están conectadas y cuántas partidas siguen en curso antes de pedir una cuenta; `publicPulse` solo publica esos dos números y conserva el resultado 30 segundos en el isolate. La 3.5.2 abrió la primera puerta del camino a la 4.0.0: la portada ofrece **«Probar ahora»** y quien llega juega una práctica contra el ordenador sin cuenta, sin sesión y sin escribir una sola fila en D1; al terminarla se le invita a crear una cuenta para jugar contra personas (ver «Etapa 1 — La puerta abierta»). La 3.5.1 fue una versión de correcciones salida de una auditoría completa: los nombres ya no pueden llevar comillas ni ángulos —un nombre con apóstrofo podía inyectar código en el chat de los demás—, el contador de PIN es de la cuenta y cubre también «Mi cuenta», la bolsa de tiempo espera a que las dos pantallas estén listas, el ranking y la lista pública quedan detrás de la puerta del correo, dos revanchas simultáneas ya no dejan una partida huérfana y la moderación del chat y las respuestas del buzón quedan en la auditoría (ver «La auditoría de la 3.5.1»). En la 3.5.0, `/admin` enseña las horas en la zona horaria de quien lo mira y la ficha de cada jugador dice en qué zona vive y qué hora es allí; la base sigue guardando todo en UTC (ver «Las horas y las zonas horarias»). Desde **Mi cuenta** cada jugador puede cambiar su nombre de usuario —su correo verificado, nunca— una vez cada 90 días, y su historial y su ranking lo siguen. En la 3.3.3, en Solo, el cronómetro se reinicia para cada intento: llegar a cero consume un intento, lo deja visible en el registro y solo termina la práctica cuando se agota el límite elegido. La 3.2.0 añadió el acuerdo de versión entre página y servidor: cada respuesta lleva `appVersion` y una pestaña desfasada se recarga sola, porque una pestaña vieja hablando con el servidor nuevo era la causa de que una cuenta sin validar viera el vestíbulo, de los mensajes en español dentro de un juego en francés y de un contador parado hora y media. En ella `loginUser` responde `ok:false` cuando el correo no está validado. La 3.0.0 subió la mayor porque desapareció un endpoint —`adminMergeUsers`— y porque `loginUser` cambió de contrato: ya no crea cuentas y ya no devuelve `registered`. La 3.1.0 añade la puerta del correo: **no hay cuenta que valga sin correo verificado**.
+Versión actual: **3.7.0**: la etapa 2 del camino a la 4.0.0 abre la cadencia por correspondencia, con uno o tres días por jugada y sin pausa al cerrar el juego, y hace que el turno llegue mediante Web Push aunque la pestaña esté cerrada. Si no hay una suscripción push válida, las partidas por correspondencia recurren al correo verificado; `guess`, `passTurn` y el Cron comparten una deduplicación que impide avisar dos veces del mismo turno. Las invitaciones privadas esperan 48 horas y el mantenimiento ya no cierra una partida por correspondencia por llevar 48 horas sin actividad. La 3.6.2 hizo que la primera visita abriera en el idioma del navegador cuando era inglés o francés, sin pulsar nada; la dirección sigue mandando sobre todo y una elección hecha a mano manda sobre el navegador. La 3.6.1 subió el selector de idioma a lo alto de la pantalla de acceso y se ve en los tres modos —entrar, crear cuenta y recuperar el PIN—. La 3.6.0 cerró la etapa 1: una invitación sobrevive al alta y a la verificación en otro aparato. La 3.5.3 puso el pulso numérico en la portada y la 3.5.2 abrió la práctica sin cuenta. La 3.5.1 corrigió la inyección por nombres, unificó el contador de PIN, protegió el arranque de la bolsa, cerró ranking y lista pública detrás del correo y arregló las revanchas simultáneas. En la 3.5.0, `/admin` pasó a enseñar las horas en la zona de quien las mira y permitió cambiar el nombre sin cambiar el correo. En la 3.3.3, el cronómetro Solo pasó a reiniciarse por intento. La 3.2.0 añadió el acuerdo de versión entre página y servidor. La 3.0.0 separó definitivamente entrar de crear una cuenta y la 3.1.0 fijó la puerta del correo: **no hay cuenta que valga sin correo verificado**.
 
 El 12 de septiembre de 2026 la base de producción se vació a propósito: quedó una sola cuenta, `Diego`, y se borraron partidas, chat, presencia, buzón y todas las sesiones. El motivo es el mismo: arrancar sin ninguna cuenta que no cumpla la regla nueva.
 
@@ -76,7 +76,7 @@ El creador elige su secreto y estas reglas:
 - **Posiciones del secreto:** 3, 4, 5 o 6.
 - **Repeticiones:** permitidas o prohibidas. Si están prohibidas, ningún símbolo puede aparecer dos veces en el código o en un intento.
 - **Intentos por jugador:** sin límite, 6 o 10.
-- **Reloj:** sin límite, **por turno** (30 segundos, 60 segundos o 2 minutos) o **bolsa de tiempo** (3, 5 o 10 minutos por jugador, con incremento opcional de 3, 5 o 10 segundos por jugada). Las dos formas son excluyentes.
+- **Reloj:** sin límite, **por turno** (30 segundos, 60 segundos o 2 minutos), **bolsa de tiempo** (3, 5 o 10 minutos por jugador, con incremento opcional de 3, 5 o 10 segundos por jugada) o **correspondencia** (1 o 3 días por jugada). Las formas son excluyentes.
 - **Visibilidad:** pública, visible en el lobby, o privada, accesible solamente mediante su código.
 - **Revelar secretos al terminar:** desactivado inicialmente; si se activa, cada jugador podrá ver el código del rival cuando finalice la partida.
 
@@ -95,11 +95,13 @@ Durante su turno, el jugador envía un código completo. El servidor valida el i
 - Con tiempo ilimitado, la partida puede jugarse de forma asíncrona: se puede volver al lobby y continuar minutos u horas después.
 - Con cronómetro **por turno**, al llegar a cero el turno pasa automáticamente al rival.
 - Con **bolsa de tiempo**, al llegar a cero se pierde la partida. La partida se cierra con `finish_reason = 'timeout'`.
+- En **correspondencia**, al llegar a cero se registra el intento perdido y el turno pasa al rival. El plazo sigue corriendo aunque una o las dos personas cierren el juego.
 - El servidor es la autoridad del reloj; alterar la hora o la interfaz del navegador no permite jugar fuera de tiempo.
 - Si un jugador vuelve al lobby durante una partida con cronómetro **por turno**, el reloj se detiene hasta que ambos regresen.
 - La pausa manual solo está disponible con cronómetro **por turno**, dura como máximo 5 minutos y tiene un minuto de espera antes de poder solicitar otra.
 - Solo quien solicitó una pausa manual puede reanudarla antes de su vencimiento.
 - **En una partida con bolsa de tiempo no hay ninguna pausa**, ni manual ni al volver al lobby. Es una partida síncrona: los dos jugadores deben estar presentes de principio a fin.
+- **En correspondencia tampoco hay pausa**: detener el reloj al cerrar la pestaña permitiría conservar un turno para siempre.
 
 Volver al lobby no cancela ni abandona una partida. El navegador recuerda la partida abierta e intenta recuperarla después de recargar.
 
@@ -133,8 +135,8 @@ La práctica **contra el computador** también admite bolsa. Ahí solo corre la 
 
 - El creador puede cancelar una partida mientras todavía espera un rival; no se registra victoria ni derrota.
 - Abandonar una partida ya iniciada concede la victoria al rival y registra una derrota para quien abandona.
-- Una partida que espera rival caduca después de 2 horas y desaparece del lobby.
-- Una partida activa se cierra como inactiva después de 48 horas sin actividad; no cuenta como victoria, derrota ni empate.
+- Una partida pública que espera rival caduca después de 2 horas; una invitación privada espera 48 horas.
+- Una partida activa normal se cierra como inactiva después de 48 horas sin actividad; una partida por correspondencia queda fuera de ese barrido y la gobierna su plazo por jugada.
 - Cerrar sesión elimina inmediatamente la presencia del usuario. Para el contador general, se considera conectado a quien tuvo actividad durante los últimos 2 minutos.
 
 ### Revancha, historial y ranking
@@ -213,7 +215,7 @@ Antes hay que activar **Email Routing** en `picasyfijas.fans` y verificar la dir
 ## Arquitectura y archivos
 
 - `public/index.html`: interfaz completa del juego, estilos, traducciones y cliente API.
-- `public/manifest.webmanifest`, `public/sw.js`: instalación como PWA y service worker de notificaciones. La lista `screenshots` del manifest **es generada**: la escribe `tools/make-screenshots.mjs`.
+- `public/manifest.webmanifest`, `public/sw.js`: instalación como PWA y service worker. Recibe el payload Web Push, enseña el aviso traducido y abre la partida exacta al pulsarlo. La lista `screenshots` del manifest **es generada**: la escribe `tools/make-screenshots.mjs`.
 - `public/screenshots/`: las capturas que Chrome enseña al ofrecer la instalación. **Son generadas: no se editan a mano.**
 - `public/icon-192.png`, `public/icon-512.png`, `public/icon-maskable-512.png`, `public/apple-touch-icon.png`: iconos de la aplicación instalada.
 - `public/computer-ai.js`: rival local de práctica, generación de candidatos y estrategias por dificultad.
@@ -227,10 +229,11 @@ Antes hay que activar **Email Routing** en `picasyfijas.fans` y verificar la dir
 - `src/security.js`: PIN, autenticación, sesiones, limitación de intentos y lectura del país y la IP que pone Cloudflare.
 - `src/chat.js`: permisos, hilos privados, mensajes incrementales y retención del chat.
 - `src/maintenance.js`: mantenimiento horario fuera del camino crítico de las peticiones.
+- `src/push.js`: suscripciones y avisos de turno. Firma VAPID y cifra `aes128gcm` con Web Crypto, sin dependencias; si una correspondencia no tiene push válido, usa el correo verificado.
 - `src/admin.js`: herramientas de mantenimiento del panel: ficha de usuario, detección de cuentas repetidas, fusión, borrado, limpieza de partidas y consola SQL.
 - `src/rename.js`: el cambio de nombre de usuario y su reescritura en todas las tablas que guardan el nombre.
 - `src/feedback.js`: el buzón de sugerencias y errores: validación, barandillas del endpoint público, consultas del panel y el aviso por correo.
-- `migrations/0001_initial.sql`: esquema reproducible de D1. No es un residuo de la migración desde Google y no debe eliminarse. Las migraciones siguientes añaden o ajustan: `0002` el chat, `0003` los hilos privados, `0004` el origen de cada cuenta, `0005` el buzón de sugerencias, `0006` la bolsa de tiempo, `0007` los índices necesarios para permanecer dentro de D1 Free, `0008` el correo y la recuperación del PIN y `0009` la fecha del último cambio de nombre, `0010` el nombre anterior y `0011` la zona horaria de cada cuenta.
+- `migrations/0001_initial.sql`: esquema reproducible de D1. No es un residuo de la migración desde Google y no debe eliminarse. Las migraciones siguientes añaden o ajustan: `0002` el chat, `0003` los hilos privados, `0004` el origen de cada cuenta, `0005` el buzón de sugerencias, `0006` la bolsa de tiempo, `0007` los índices necesarios para permanecer dentro de D1 Free, `0008` el correo y la recuperación del PIN, `0009` la fecha del último cambio de nombre, `0010` el nombre anterior, `0011` la zona horaria y `0012` la lengua de avisos, las suscripciones push y la deduplicación por turno.
 - `test/`: pruebas automáticas de reglas, rutas, teclado y regresiones.
 - `tools/make-icons.mjs`: genera los cuatro PNG de la aplicación instalada. Se ejecuta con `npm run icons`.
 - `tools/make-rules-pages.py`: convierte `RULES` en las tres páginas públicas de reglas. El texto no se duplica: la única fuente sigue siendo el juego.
@@ -444,7 +447,7 @@ El nombre nuevo viaja como `newUsername`, no como `username`, porque `authentica
 
 ## Modelo de datos
 
-- `users`: identidad, hash y sal del PIN, rol, bloqueo y el origen de la cuenta: país e IP del alta, país e IP de la última entrada y número de entradas.
+- `users`: identidad, hash y sal del PIN, rol, bloqueo, lengua del último acceso para los avisos y el origen de la cuenta: país e IP del alta, país e IP de la última entrada y número de entradas.
 - `login_attempts`: el contador de PIN incorrectos de cada cuenta (`user:<id>`) y su bloqueo. El mantenimiento borra las filas sin bloqueo vigente que llevan un día quietas.
 - `email_verifications` y `pin_resets`: los enlaces de un solo uso, guardados como hash.
 - `sessions`: sesiones temporales; el PIN no viaja durante las consultas periódicas. Cada sesión guarda la IP y el país desde los que se abrió. `last_seen_at` se muestrea como máximo una vez cada 15 minutos por sesión; la caducidad es fija y no depende de ese campo.
@@ -458,8 +461,10 @@ El nombre nuevo viaja como `newUsername`, no como `username`, porque `authentica
 - `feedback`: el buzón de sugerencias y errores, con su estado de triaje y la nota interna de administración.
 - `feedback_replies`: las respuestas enviadas desde el panel. Apunta al administrador que respondió sin cascada, así que borrar a quien fue administrador borra antes sus respuestas.
 - `chat_threads`: los hilos privados, uno por pareja de jugadores.
+- `push_subscriptions`: la suscripción Web Push de cada aparato —endpoint y claves públicas del navegador—, con la lengua elegida. Un mismo endpoint cambia de dueño si se cambia de cuenta en el aparato.
+- `turn_notifications`: recibos técnicos por partida, versión y usuario. Su clave única es lo que impide que `guess`, `passTurn` y el Cron avisen dos veces del mismo turno; se purgan después de 7 días.
 
-Las columnas de la bolsa de tiempo viven en `games` y conviven con el cronómetro por turno de siempre: `time_mode` (`turn` o `bank`) decide cuál manda, y `bank_seconds`, `bank_increment`, `bank1_remaining` y `bank2_remaining` describen el reloj de cada jugador. `time_mode` vale `turn` por omisión, así que las partidas anteriores no cambian de comportamiento. Los dos relojes son excluyentes por construcción: `gameInsertValues` deja en cero el que no se eligió, y por eso la validación solo comprueba los valores de la bolsa.
+Las columnas de la bolsa de tiempo viven en `games` y conviven con los otros relojes: `time_mode` (`turn`, `bank` o `correspondence`) decide cuál manda. La correspondencia reutiliza `turn_seconds` con 86.400 o 259.200 segundos, porque la aritmética y la autoridad siguen siendo las del reloj por turno; no necesitó una columna nueva. `bank_seconds`, `bank_increment`, `bank1_remaining` y `bank2_remaining` describen la reserva de cada jugador. `time_mode` vale `turn` por omisión, así que las partidas anteriores no cambian de comportamiento.
 
 El país y la IP no los declara el navegador: los pone Cloudflare delante del Worker (`request.cf.country` y `CF-Connecting-IP`, en `requestOrigin`). Se escriben solo al entrar —una escritura por sesión, no por petición— y su único uso es administrativo. El país que enseña la bandera de una partida sigue siendo el que averigua el navegador; son dos datos distintos y no se mezclan.
 
@@ -488,7 +493,7 @@ Al pulsar un nombre se abre su ficha, que empieza por el **usuario**, su **nombr
 
 Toda acción que cambia algo queda en `audit_log`, también borrar un mensaje del chat, silenciar o reactivar a alguien y responder al buzón; leer el chat no se audita. Bloquear o cambiar el rol de un nombre que no existe responde «Usuario no encontrado.» en lugar de dejar una línea de auditoría sobre nadie. Bloquear borra además la presencia de la cuenta.
 
-La exportación es la copia de seguridad del panel: desde `schemaVersion: 4` incluye el correo, su verificación, la zona horaria y el nombre anterior de cada cuenta, sin los cuales una copia no permitiría recuperar ninguna.
+La exportación es la copia de seguridad del panel: `schemaVersion: 5` incluye el correo, su verificación, la zona horaria, el nombre anterior, la lengua de avisos y las suscripciones push. El endpoint de una suscripción identifica un aparato y la exportación sigue siendo un archivo privado.
 
 El punto de cada fila reutiliza la tabla `presence` y el mismo umbral del contador general: verde significa actividad autenticada en los últimos 2 minutos y gris, desconectado. El texto accesible y el título del punto expresan también el estado, de modo que la información no depende únicamente del color. La consulta es parte de `adminUsers`, no genera escrituras adicionales y no cambia la versión de la aplicación.
 
@@ -595,11 +600,18 @@ pnpm run db:remote
 git push origin main
 ```
 
-La 2.5 trae `0005_feedback.sql` y `0006_time_bank.sql`; la optimización de D1 Free añade `0007_d1_free_optimization.sql`. A todas les aplica esta misma regla. El aviso por correo del buzón necesita además, una sola vez, activar Email Routing en el dominio y colocar sus dos secretos:
+La 2.5 trae `0005_feedback.sql` y `0006_time_bank.sql`; la optimización de D1 Free añade `0007_d1_free_optimization.sql` y la correspondencia añade `0012_push.sql`. A todas les aplica esta misma regla. El aviso por correo del buzón necesita además, una sola vez, activar Email Routing en el dominio y colocar sus dos secretos:
 
 ```text
 wrangler secret put FEEDBACK_TO
 wrangler secret put FEEDBACK_FROM
+```
+
+Web Push necesita un par P-256 propio del sitio. La clave pública se guarda como base64url del punto sin comprimir y la privada como base64url del escalar; ninguna de las dos se escribe en Git y la privada nunca llega al navegador:
+
+```text
+wrangler secret put VAPID_PUBLIC
+wrangler secret put VAPID_PRIVATE
 ```
 
 Al revés, el Worker nuevo llegaría a una base sin las columnas que espera y cualquier entrada fallaría hasta que la migración se aplicara. Al derecho no hay ventana rota: las columnas nuevas siempre se añaden con valor por omisión, así que el Worker anterior las ignora sin enterarse.
@@ -627,7 +639,7 @@ Esas tres fuentes sumaban aproximadamente el 98,5 % de las filas escritas observ
 - `listGames` oculta inmediatamente partidas vencidas mediante sus fechas, pero ya no ejecuta dos `UPDATE` globales en cada polling;
 - las limpiezas salen del camino crítico y se agrupan en `cleanupDatabase`.
 
-El Cron Trigger `17 * * * *` se ejecuta a los 17 minutos de cada hora UTC. Borra chat del lobby con más de 24 horas, mensajes de partida heredados con más de 7 días, hilos con más de 7 días, silencios vencidos, recibos idempotentes con más de 7 días, sesiones vencidas y presencia con más de 24 horas. También marca como vencidas las partidas en espera de más de 2 horas y como inactivas las partidas sin actividad durante 48 horas. Las consultas de los jugadores siguen ocultando o cerrando una partida vencida en el momento, por lo que el retraso máximo del mantenimiento no cambia el comportamiento visible.
+El Cron Trigger `17 * * * *` se ejecuta a los 17 minutos de cada hora UTC. Borra chat del lobby con más de 24 horas, mensajes de partida heredados con más de 7 días, hilos con más de 7 días, silencios vencidos, recibos idempotentes y avisos de turno con más de 7 días, sesiones vencidas y presencia con más de 24 horas. También marca como vencidas las partidas públicas que llevan 2 horas esperando y las privadas que llevan 48, y como inactivas las partidas normales sin actividad durante 48 horas. La correspondencia queda fuera de ese cierre: el Cron consume el plazo de uno o tres días, entrega el turno siguiente y emite exactamente un aviso. Las consultas de los jugadores siguen ocultando o cerrando una partida vencida en el momento, por lo que el retraso máximo del mantenimiento no cambia el comportamiento visible.
 
 La migración `0007` elimina `presence_last_seen` y el índice de chat por `game_id`, que no tenían lectores capaces de compensar su coste de escritura. Sustituye el índice general del lobby por uno parcial que solo contiene mensajes `room_type='lobby' AND thread_id IS NULL`. No borra filas ni modifica mensajes, partidas, usuarios o sesiones.
 
@@ -680,7 +692,7 @@ Nunca se deben subir a GitHub:
 
 Estas exclusiones están definidas en `.gitignore`. Los PIN se almacenan con hash SHA-256 y una sal individual. No se deben registrar PIN, tokens de sesión, secretos de partida ni contenido privado en logs o documentación.
 
-El contacto que alguien deja en el buzón de sugerencias es un dato personal y recibe el mismo trato que la IP: se guarda para poder responder, solo se ve dentro de `/admin`, no aparece en ninguna respuesta del juego y sí va en la exportación, que pasó a `schemaVersion: 3` al incluir el buzón y a `schemaVersion: 4` al incluir el correo de las cuentas.
+El contacto que alguien deja en el buzón de sugerencias es un dato personal y recibe el mismo trato que la IP: se guarda para poder responder, solo se ve dentro de `/admin`, no aparece en ninguna respuesta del juego y sí va en la exportación, que pasó a `schemaVersion: 3` al incluir el buzón, a `schemaVersion: 4` al incluir el correo de las cuentas y a `schemaVersion: 5` al incluir la lengua de avisos y las suscripciones push. El endpoint y las claves públicas de una suscripción identifican un aparato: no salen del panel ni deben publicarse.
 
 La IP y el país de cada cuenta son datos personales. Se guardan para poder investigar un abuso —quién creó una partida, desde dónde entró una cuenta bloqueada— y por eso solo se ven dentro de `/admin`: no aparecen en ninguna respuesta del juego, no viajan al navegador de ningún jugador y no se escriben en logs. Sí van en la exportación, que por lo tanto es un archivo con datos personales y nunca debe subirse al repositorio.
 
@@ -692,7 +704,7 @@ El proyecto sigue versionado semántico `vMAYOR.MENOR.PARCHE`:
 - **MENOR (Y)**: funcionalidad nueva compatible hacia atrás —una pantalla, un modo de juego, un ajuste como el cuadrado de idioma.
 - **PARCHE (Z)**: correcciones compatibles hacia atrás, retoques de texto, estilos y rendimiento.
 
-El número vive en tres sitios y los tres se cambian en el mismo commit: `version` en `package.json` conserva el SemVer canónico (`3.5.1`), porque npm y pnpm lo requieren, y `APP_VERSION` en `public/index.html` y `src/version.js` publica `v3.5.1`. El Worker lo firma en todas sus respuestas; `test/client-server-sync.test.js` comprueba que los tres coinciden. De ahí sale lo que ve el jugador en los créditos y lo que viaja con cada mensaje del buzón (`appVersion`), así que un número desfasado hace que un informe apunte a una versión que no es. La versión sube en el commit que introduce el cambio, no al desplegar.
+El número vive en tres sitios y los tres se cambian en el mismo commit: `version` en `package.json` conserva el SemVer canónico (`3.7.0`), porque npm y pnpm lo requieren, y `APP_VERSION` en `public/index.html` y `src/version.js` publica `v3.7.0`. El Worker lo firma en todas sus respuestas; `test/client-server-sync.test.js` comprueba que los tres coinciden. De ahí sale lo que ve el jugador en los créditos y lo que viaja con cada mensaje del buzón (`appVersion`), así que un número desfasado hace que un informe apunte a una versión que no es. La versión sube en el commit que introduce el cambio, no al desplegar.
 
 ## Procedimiento para futuras modificaciones
 
@@ -742,12 +754,12 @@ Tres tareas, ninguna toca las reglas del juego, y son las que más cambian lo qu
 
 ### Etapa 2 — El regreso asíncrono (3.7.0)
 
-Dos amigos en dos husos horarios no pueden terminar una partida hoy, y no es por falta de motor: el motor ya es asíncrono. Lo impiden tres plazos. Una partida en espera caduca a las **2 horas**, una partida activa se cierra como inactiva a las **48**, y «es tu turno» solo llega si la pestaña sigue abierta, porque `public/sw.js` únicamente gestiona `notificationclick`. La cadencia por correspondencia necesita además un reloj que **no** se detenga cuando el rival se va —al contrario que el cronómetro por turno, que sí se detiene al volver al vestíbulo—: si se detuviera, la partida no caducaría jamás.
+Dos amigos en dos husos horarios ya pueden terminar una partida: la correspondencia da **uno o tres días por jugada**, sigue corriendo cuando se cierra la pestaña y no cae en el cierre general por 48 horas sin actividad. Una invitación privada espera 48 horas; las públicas conservan el límite de 2. Web Push entrega el turno con la app cerrada y el correo verificado sirve de respaldo en correspondencia cuando el aparato no tiene una suscripción válida. El cambio de turno y el Cron comparten un recibo único, de modo que el polling no avisa y ningún turno se anuncia dos veces.
 
 | Tarea | Qué cambia para quien juega | Dónde se toca | Hecho cuando |
 | --- | --- | --- | --- |
-| **E2-T1 (b)** Cadencia por correspondencia | Un reloj nuevo: **un día** o **tres días** por jugada. La partida privada que espera rival aguanta 48 horas en vez de 2, y una partida en correspondencia no la barre el mantenimiento por inactividad. | `src/game.js`, `src/index.js`, `src/maintenance.js`, `public/index.html`; migración solo si `time_mode` necesita columna nueva | `test/correspondence.test.js`: el reloj corre aunque el rival no esté, la partida no se cierra a las 48 h y la invitación privada dura 48 h. **Encadenada con E2-T2: se entregan juntas** |
-| **E2-T2 (c)** Avisos que sobreviven a la pestaña cerrada | El teléfono avisa cuando toca jugar aunque el juego esté cerrado; quien no tenga la app instalada recibe un correo. | `public/sw.js`, `public/index.html`, `src/push.js` (nuevo, VAPID firmado con Web Crypto, sin dependencias), `src/index.js`, `migrations/0012_push.sql`, secretos `VAPID_PUBLIC` y `VAPID_PRIVATE` | El aviso sale del cambio de turno (`guess`, `passTurn`) y del Cron, **nunca del polling**. Un jugador no recibe más de un aviso por turno. La migración va antes del push |
+| **E2-T1 (b)** ✅ Cadencia por correspondencia (3.7.0) | Un reloj nuevo: **un día** o **tres días** por jugada. La partida privada que espera rival aguanta 48 horas en vez de 2, y una partida en correspondencia no la barre el mantenimiento por inactividad. | `src/game.js`, `src/index.js`, `src/maintenance.js`, `public/index.html`; no hizo falta otra columna: `time_mode='correspondence'` reutiliza `turn_seconds` | `test/correspondence.test.js`: el reloj corre aunque el rival no esté, la partida no se cierra a las 48 h y la invitación privada dura 48 h. **Entregada con E2-T2** |
+| **E2-T2 (c)** ✅ Avisos que sobreviven a la pestaña cerrada (3.7.0) | El teléfono avisa cuando toca jugar aunque el juego esté cerrado; si una correspondencia no tiene una suscripción push válida, usa el correo verificado. | `public/sw.js`, `public/index.html`, `src/push.js` (nuevo, VAPID firmado y `aes128gcm` con Web Crypto, sin dependencias), `src/index.js`, `migrations/0012_push.sql`, secretos `VAPID_PUBLIC` y `VAPID_PRIVATE` | El aviso sale del cambio de turno (`guess`, `passTurn`) y del Cron, **nunca del polling**. La clave única de `turn_notifications` impide más de un aviso por turno. La migración se aplica antes del push |
 
 ### Etapa 3 — Lo que se comparte (3.8.0)
 

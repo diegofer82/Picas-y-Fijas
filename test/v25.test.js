@@ -20,7 +20,7 @@ before(async () => {
     bindings: { SESSION_TTL_HOURS:'168', ADMIN_PATH:'/admin', DEBUG_ERRORS:'1' },
   });
   db = await mf.getD1Database('DB');
-  for (const file of ['0001_initial.sql','0002_chat.sql','0003_private_threads.sql','0004_admin_insight.sql','0005_feedback.sql','0006_time_bank.sql','0007_d1_free_optimization.sql','0008_email_recovery.sql','0009_username_change.sql','0010_previous_username.sql','0011_user_timezone.sql']) {
+  for (const file of ['0001_initial.sql','0002_chat.sql','0003_private_threads.sql','0004_admin_insight.sql','0005_feedback.sql','0006_time_bank.sql','0007_d1_free_optimization.sql','0008_email_recovery.sql','0009_username_change.sql','0010_previous_username.sql','0011_user_timezone.sql','0012_push.sql']) {
     const migration = await readFile(new URL('../migrations/'+file, import.meta.url), 'utf8');
     for (const statement of migration.split(';').map((sql) => sql.trim()).filter(Boolean)) {
       await db.prepare(statement).run();
@@ -436,9 +436,10 @@ test('la partida aleatoria también sortea la bolsa y su incremento', async () =
   const start = html.indexOf('function selectCreateRandomRules()');
   const end = html.indexOf("$('seg-mode').addEventListener", start);
   const source = html.slice(start, end);
-  assert.match(source, /clockChoice=\['none','turn','bank'\]\[randomInt\(3\)\]/);
+  assert.match(source, /clockChoice=\['none','turn','bank','correspondence'\]\[randomInt\(4\)\]/);
   assert.match(source, /\[180,300,600\]\[randomInt\(3\)\]/);
   assert.match(source, /\[0,3,5,10\]\[randomInt\(4\)\]/);
+  assert.match(source, /\[1,3\]\[randomInt\(2\)\]/);
   assert.match(source, /syncClockControls\(\)/);
 });
 

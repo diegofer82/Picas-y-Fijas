@@ -1,5 +1,6 @@
 export const LIMITS = Object.freeze({
   waitingTtlMs: 2 * 60 * 60 * 1000,
+  privateWaitingTtlMs: 48 * 60 * 60 * 1000,
   activeTtlMs: 48 * 60 * 60 * 1000,
   maxOpenGames: 3,
   createCooldownMs: 10 * 1000,
@@ -78,7 +79,10 @@ export function timerRemaining(game, at = Date.now()) {
    condicionadas a `turn_seconds > 0`, que aqui vale 0, asi que quedan fuera
    solas. */
 export const isBankGame = (game) => String(game?.time_mode || 'turn') === 'bank' && toInt(game?.bank_seconds) > 0;
+export const isCorrespondenceGame = (game) => String(game?.time_mode || 'turn') === 'correspondence'
+  && [86400, 259200].includes(toInt(game?.turn_seconds));
 export const hasClock = (game) => toInt(game?.turn_seconds) > 0 || isBankGame(game);
+export const waitingTtlMs = (game) => truthy(game?.is_public) ? LIMITS.waitingTtlMs : LIMITS.privateWaitingTtlMs;
 const bankColumn = (side) => (side === 1 ? 'bank1_remaining' : 'bank2_remaining');
 
 export function bankRemaining(game, side, at = Date.now()) {
@@ -106,6 +110,14 @@ export function freshTurnClock(game, at = Date.now()) {
   }
   const seconds = Math.max(0, toInt(game.turn_seconds));
   if (!seconds) return { turn_started_at: new Date(at).toISOString(), turn_remaining: 0, timer_paused: 0 };
+  // La correspondencia no espera a que las dos pantallas esten abiertas y no
+  // se detiene al volver al lobby: precisamente existe para jugar en momentos
+  // distintos. Cada cambio de turno arma un plazo nuevo desde el servidor.
+  if (isCorrespondenceGame(game)) return {
+    turn_remaining: seconds,
+    timer_paused: 0,
+    turn_started_at: new Date(at).toISOString(),
+  };
   const lobbyPaused = parseJsonList(game.lobby_paused_by).length > 0;
   const paused = Boolean(game.manual_paused_by) || lobbyPaused;
   return {
@@ -197,7 +209,7 @@ export function gameMeta(game) {
     allowRepeats: truthy(game.allow_repeats), isPublic: truthy(game.is_public),
     mode: game.mode === 'colors' ? 'colors' : 'numbers', numColors: toInt(game.num_colors, 10),
     maxAttempts: toInt(game.max_attempts), turnSeconds: toInt(game.turn_seconds),
-    timeMode: isBankGame(game) ? 'bank' : 'turn',
+    timeMode: isBankGame(game) ? 'bank' : isCorrespondenceGame(game) ? 'correspondence' : 'turn',
     bankSeconds: isBankGame(game) ? toInt(game.bank_seconds) : 0,
     bankIncrement: isBankGame(game) ? Math.max(0, toInt(game.bank_increment)) : 0,
     revealSecrets: truthy(game.reveal_secrets), country1: cleanCountry(game.country1),

@@ -5,4 +5,4 @@
    Comparar dos cadenas es todo lo que hace falta para que se entere y se
    recargue. Debe coincidir con `APP_VERSION` de public/index.html y con la
    version de package.json; hay una prueba que lo vigila. */
-export const APP_VERSION = "v3.6.2";
+export const APP_VERSION = "v3.7.0";

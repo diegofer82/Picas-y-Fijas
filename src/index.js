@@ -9,6 +9,7 @@ import {
   gameMeta,
   hasClock,
   isBankGame,
+  isCorrespondenceGame,
   maxSymbolFor,
   padCode,
   parseJsonList,
@@ -18,6 +19,7 @@ import {
   truthy,
   usernameKey,
   validateCode,
+  waitingTtlMs,
 } from "./game.js";
 import { changeUsername } from "./rename.js";
 import { accountProfile, authenticate, changePin, hashPin, login, lookupName, register, requestOrigin, validPin, verifyTurnstile } from "./security.js";
@@ -49,6 +51,7 @@ import {
   threadForGame,
 } from "./chat.js";
 import { cleanupDatabase } from "./maintenance.js";
+import { deletePushSubscription, savePushSubscription, sendTurnNotification } from "./push.js";
 import { APP_VERSION } from "./version.js";
 import { requestEmailVerification, requestPinReset, resetPin, verifyEmail } from "./recovery.js";
 
@@ -79,6 +82,9 @@ const PROTECTED = new Set([
   "accountProfile",
   "changePin",
   "changeUsername",
+  "pushPublicKey",
+  "savePushSubscription",
+  "deletePushSubscription",
 ]);
 const ADMIN_ACTIONS = new Set([
   "adminSummary",
@@ -277,7 +283,7 @@ async function publicPulse(db) {
     .prepare(
       `SELECT
         (SELECT COUNT(*) FROM presence WHERE last_seen_at>=?) AS online_count,
-        (SELECT COUNT(*) FROM games WHERE status='active' AND updated_at>=?) AS active_game_count`,
+        (SELECT COUNT(*) FROM games WHERE status='active' AND (time_mode='correspondence' OR updated_at>=?)) AS active_game_count`,
     )
     .bind(presenceCutoff, activeCutoff)
     .first();
@@ -302,13 +308,15 @@ async function inviteInfo(db, code) {
   const row = await db
     .prepare(
       `SELECT game_id,status,p1,digits,mode,num_colors,allow_repeats,max_attempts,
-        turn_seconds,time_mode,bank_seconds,bank_increment,reveal_secrets
+        turn_seconds,time_mode,bank_seconds,bank_increment,reveal_secrets,is_public,created_at
        FROM games WHERE game_id=?`,
     )
     .bind(gameId)
     .first();
   if (!row) return { ok: false, error: "No encontramos esa partida." };
   if (row.status !== "waiting")
+    return { ok: false, error: "La partida ya no espera rival." };
+  if (Date.now() - Date.parse(row.created_at) > waitingTtlMs(row))
     return { ok: false, error: "La partida ya no espera rival." };
   return {
     ok: true,
@@ -320,7 +328,7 @@ async function inviteInfo(db, code) {
     allowRepeats: !!row.allow_repeats,
     maxAttempts: Number(row.max_attempts) || 0,
     turnSeconds: Number(row.turn_seconds) || 0,
-    timeMode: row.time_mode === "bank" ? "bank" : "turn",
+    timeMode: row.time_mode === "bank" ? "bank" : row.time_mode === "correspondence" ? "correspondence" : "turn",
     bankSeconds: Number(row.bank_seconds) || 0,
     bankIncrement: Number(row.bank_increment) || 0,
     revealSecrets: !!row.reveal_secrets,
@@ -353,14 +361,14 @@ function gameInsertValues(params, username, gameId, source = null) {
   const maxAttempts = source
     ? toInt(source.max_attempts)
     : Math.max(0, toInt(params.maxAttempts));
-  // El reloj tiene tres formas: sin limite, cronometro por turno (lo de
-  // siempre) y bolsa de tiempo. Son excluyentes, asi que elegir bolsa deja
-  // `turnSeconds` en cero y al reves.
+  // El reloj tiene cuatro formas: sin limite, cronometro por turno (lo de
+  // siempre), correspondencia y bolsa de tiempo. Son excluyentes, asi que
+  // elegir bolsa deja `turnSeconds` en cero y al reves.
+  const sourceMode = String(source?.time_mode || "turn");
+  const requestedMode = String(params.timeMode || "turn");
   const timeMode = source
-    ? (String(source.time_mode || "turn") === "bank" ? "bank" : "turn")
-    : params.timeMode === "bank"
-      ? "bank"
-      : "turn";
+    ? (["bank", "correspondence"].includes(sourceMode) ? sourceMode : "turn")
+    : (["bank", "correspondence"].includes(requestedMode) ? requestedMode : "turn");
   const bankSeconds = source
     ? toInt(source.bank_seconds)
     : timeMode === "bank"
@@ -373,9 +381,7 @@ function gameInsertValues(params, username, gameId, source = null) {
       : 0;
   const turnSeconds = source
     ? toInt(source.turn_seconds)
-    : timeMode === "bank"
-      ? 0
-      : Math.max(0, toInt(params.turnSeconds));
+    : timeMode === "bank" ? 0 : Math.max(0, toInt(params.turnSeconds));
   return {
     gameId,
     digits,
@@ -408,7 +414,10 @@ function validateGameOptions(options) {
     return "No hay suficientes colores distintos para esa longitud. Permite repetidos o elige más colores.";
   if (![0, 6, 10].includes(options.maxAttempts))
     return "El límite de intentos debe ser ilimitado, 6 o 10.";
-  if (![0, 30, 60, 120].includes(options.turnSeconds))
+  if (options.timeMode === "correspondence") {
+    if (![86400, 259200].includes(options.turnSeconds))
+      return "La correspondencia debe dar 1 o 3 días por jugada.";
+  } else if (![0, 30, 60, 120].includes(options.turnSeconds))
     return "El tiempo por turno debe ser ilimitado, 30, 60 o 120 segundos.";
   // Los dos relojes son excluyentes por construccion: `gameInsertValues` deja
   // en cero el que no se eligio. Aqui solo se validan los valores de la bolsa.
@@ -518,14 +527,16 @@ async function createGame(db, params, user, source = null) {
 
 async function listGames(db, includeOnlineCount = true) {
   const cutoff = new Date(Date.now() - LIMITS.waitingTtlMs).toISOString();
+  const privateCutoff = new Date(Date.now() - LIMITS.privateWaitingTtlMs).toISOString();
   const inactiveCutoff = new Date(Date.now() - LIMITS.activeTtlMs).toISOString();
   const { results } = await db
     .prepare(
       `SELECT * FROM games
-       WHERE (status='waiting' AND created_at>=?) OR (status='active' AND updated_at>=?)
+       WHERE (status='waiting' AND ((is_public=1 AND created_at>=?) OR (is_public=0 AND created_at>=?)))
+          OR (status='active' AND (time_mode='correspondence' OR updated_at>=?))
        ORDER BY created_at DESC`,
     )
-    .bind(cutoff, inactiveCutoff)
+    .bind(cutoff, privateCutoff, inactiveCutoff)
     .all();
   const games = results
     .filter((g) => g.status === "waiting" && truthy(g.is_public))
@@ -550,7 +561,7 @@ async function joinGame(db, params, user) {
     if (!game) return { ok: false, error: "Partida no encontrada." };
     if (game.status !== "waiting")
       return { ok: false, error: "Esta partida ya no acepta jugadores." };
-    if (Date.now() - Date.parse(game.created_at) > LIMITS.waitingTtlMs)
+    if (Date.now() - Date.parse(game.created_at) > waitingTtlMs(game))
       return { ok: false, error: "La partida ha expirado." };
     if (game.p1 === user.username)
       return {
@@ -569,17 +580,18 @@ async function joinGame(db, params, user) {
     // empezaba a gastarse en cuanto el rival se unia, antes de que quien tenia
     // el primer turno viera siquiera la partida.
     const timed = hasClock(game);
+    const correspondence = isCorrespondenceGame(game);
     const updated = await saveGame(db, game, {
       p2: user.username,
       secret2: String(params.secret).trim(),
       country2: cleanCountry(params.country),
       status: "active",
       turn: (crypto.getRandomValues(new Uint8Array(1))[0] % 2) + 1,
-      turn_started_at: timed ? "" : now(),
+      turn_started_at: correspondence ? now() : timed ? "" : now(),
       turn_remaining: toInt(game.turn_seconds),
-      timer_paused: timed ? 1 : 0,
+      timer_paused: timed && !correspondence ? 1 : 0,
       timer_ready_by: "",
-      timer_activated: timed ? 0 : 1,
+      timer_activated: timed && !correspondence ? 0 : 1,
       updated_at: now(),
     });
     await activateThreadForGame(db, updated);
@@ -594,7 +606,7 @@ async function state(db, params, user) {
     if (!game) return { ok: false, error: "Partida no encontrada." };
     if (
       game.status === "waiting" &&
-      Date.now() - Date.parse(game.created_at) > LIMITS.waitingTtlMs
+      Date.now() - Date.parse(game.created_at) > waitingTtlMs(game)
     )
       game = await saveGame(db, game, {
         status: "expired",
@@ -603,6 +615,7 @@ async function state(db, params, user) {
       });
     if (
       game.status === "active" &&
+      !isCorrespondenceGame(game) &&
       Date.now() - Date.parse(game.updated_at) > LIMITS.activeTtlMs
     )
       game = await saveGame(db, game, {
@@ -619,7 +632,7 @@ async function state(db, params, user) {
     };
     if (closed[game.status]) return { ok: false, error: closed[game.status] };
     const participant = game.p1 === user.username || game.p2 === user.username;
-    if (game.status === "active" && participant && hasClock(game)) {
+    if (game.status === "active" && participant && hasClock(game) && !isCorrespondenceGame(game)) {
       const checkedAt = Date.now();
       const manualExpired = Boolean(
         game.manual_paused_by &&
@@ -749,7 +762,7 @@ async function lobbyState(db, user) {
   return { ...open, myGames: mine.games, onlineCount: count };
 }
 
-async function makeGuess(db, params, user) {
+async function makeGuess(db, params, user, onTurnChanged) {
   return withConflictRetry(async () => {
     const game = await getGame(db, params.gameId);
     if (!game) return { ok: false, error: "Partida no encontrada." };
@@ -790,6 +803,8 @@ async function makeGuess(db, params, user) {
           `finished:${updated.version}`,
           "finished|",
         );
+      else if (updated.turn !== game.turn && onTurnChanged)
+        await onTurnChanged(updated);
       return {
         ok: false,
         error: isBankGame(game)
@@ -892,11 +907,13 @@ async function makeGuess(db, params, user) {
           now(),
         )
         .run();
+    if (updated.status === "active" && updated.turn !== game.turn && onTurnChanged)
+      await onTurnChanged(updated);
     return response;
   });
 }
 
-async function passTurn(db, params, user) {
+async function passTurn(db, params, user, onTurnChanged) {
   return withConflictRetry(async () => {
     const game = await getGame(db, params.gameId);
     if (!game) return { ok: false, error: "Partida no encontrada." };
@@ -936,6 +953,8 @@ async function passTurn(db, params, user) {
         `finished:${updated.version}`,
         "finished|",
       );
+    else if (updated.turn !== game.turn && onTurnChanged)
+      await onTurnChanged(updated);
     return updated.status === "finished"
       ? { ok: true, resolved: true, timeout: true }
       : { ok: true, passed: true };
@@ -1039,7 +1058,8 @@ async function history(db, user) {
       allowRepeats: truthy(g.allow_repeats),
       maxAttempts: g.max_attempts,
       turnSeconds: g.turn_seconds,
-      timeMode: String(g.time_mode || "turn") === "bank" ? "bank" : "turn",
+      timeMode: String(g.time_mode || "turn") === "bank" ? "bank"
+        : String(g.time_mode || "turn") === "correspondence" ? "correspondence" : "turn",
       bankSeconds: toInt(g.bank_seconds),
       bankIncrement: toInt(g.bank_increment),
       updatedAt: g.updated_at,
@@ -1120,7 +1140,7 @@ async function togglePause(db, params, user) {
       return { ok: false, error: "La partida no está activa." };
     if (game.p1 !== user.username && game.p2 !== user.username)
       return { ok: false, error: "No eres jugador de esta partida." };
-    if (game.turn_seconds <= 0)
+    if (game.turn_seconds <= 0 || isCorrespondenceGame(game))
       return {
         ok: false,
         error:
@@ -1185,7 +1205,7 @@ async function gamePresence(db, params, user) {
     if (game.p1 !== user.username && game.p2 !== user.username)
       return { ok: false, error: "No eres jugador de esta partida." };
     const connected = truthy(params.connected);
-    if (game.turn_seconds > 0 && game.status === "active") {
+    if (game.turn_seconds > 0 && game.status === "active" && !isCorrespondenceGame(game)) {
       let lobby = parseJsonList(game.lobby_paused_by),
         changes = {};
       if (!connected && String(params.reason || "") === "lobby") {
@@ -1307,12 +1327,12 @@ async function adminAction(db, action, params, user, env) {
     return { ok: true, audit: results };
   }
   if (action === "adminExport") {
-    const [users, games, audit, chatMessages, chatReports, chatMutes, feedback] =
+    const [users, games, audit, chatMessages, chatReports, chatMutes, feedback, pushSubscriptions] =
       await Promise.all([
         db
           .prepare(
             `SELECT username,username_key,email,email_verified_at,pin_salt,pin_hash,role,blocked_at,created_at,last_login_at,
-              last_ip,last_country,signup_ip,signup_country,login_count,username_changed_at,previous_username,timezone FROM users`,
+              last_ip,last_country,signup_ip,signup_country,login_count,username_changed_at,previous_username,timezone,notification_lang FROM users`,
           )
           .all(),
         db.prepare("SELECT * FROM games").all(),
@@ -1321,11 +1341,12 @@ async function adminAction(db, action, params, user, env) {
         db.prepare("SELECT * FROM chat_reports ORDER BY id").all(),
         db.prepare("SELECT * FROM chat_mutes ORDER BY username_key").all(),
         db.prepare("SELECT * FROM feedback ORDER BY id").all(),
+        db.prepare("SELECT user_id,endpoint,p256dh,auth,lang,created_at,updated_at FROM push_subscriptions ORDER BY id").all(),
       ]);
     return {
       ok: true,
       exportedAt: now(),
-      schemaVersion: 4,
+      schemaVersion: 5,
       users: users.results,
       games: games.results,
       audit: audit.results,
@@ -1333,6 +1354,7 @@ async function adminAction(db, action, params, user, env) {
       chatReports: chatReports.results,
       chatMutes: chatMutes.results,
       feedback: feedback.results,
+      pushSubscriptions: pushSubscriptions.results,
     };
   }
   // Las herramientas de mantenimiento devuelven su propio detalle, asi que
@@ -1547,6 +1569,16 @@ async function routeApi(request, env, ctx) {
   if (action === "accountProfile") return json(await accountProfile(env.DB, auth.user));
   if (action === "changePin") return json(await changePin(env.DB, auth.user, auth.tokenHash, String(params.currentPin || ''), String(params.newPin || '')));
   if (action === "changeUsername") return json(await changeUsername(env.DB, auth.user, params));
+  if (action === "pushPublicKey") return json({ ok: true, publicKey: String(env.VAPID_PUBLIC || "") });
+  if (action === "savePushSubscription") return json(await savePushSubscription(env.DB, auth.user, params.subscription, params.lang));
+  if (action === "deletePushSubscription") return json(await deletePushSubscription(env.DB, auth.user, params.endpoint));
+  const notifyTurnChange = async (changedGame) => {
+    const work = sendTurnNotification(env.DB, env, changedGame).catch((cause) => {
+      console.error(JSON.stringify({ message: "turn-notification", detail: String(cause?.message || cause) }));
+    });
+    if (ctx?.waitUntil) { ctx.waitUntil(work); return; }
+    await work;
+  };
   let result;
   switch (action) {
     case "createGame":
@@ -1565,10 +1597,10 @@ async function routeApi(request, env, ctx) {
       result = await state(env.DB, params, auth.user);
       break;
     case "guess":
-      result = await makeGuess(env.DB, params, auth.user);
+      result = await makeGuess(env.DB, params, auth.user, notifyTurnChange);
       break;
     case "passTurn":
-      result = await passTurn(env.DB, params, auth.user);
+      result = await passTurn(env.DB, params, auth.user, notifyTurnChange);
       break;
     case "togglePause":
       result = await togglePause(env.DB, params, auth.user);
@@ -1823,6 +1855,6 @@ export default {
     }
   },
   async scheduled(_controller, env, _ctx) {
-    await cleanupDatabase(env.DB);
+    await cleanupDatabase(env.DB, Date.now(), env);
   },
 };

@@ -22,7 +22,7 @@ before(async () => {
     bindings: { SESSION_TTL_HOURS:'168', ADMIN_PATH:'/admin', DEBUG_ERRORS:'1' },
   });
   db = await mf.getD1Database('DB');
-  for (const file of ['0001_initial.sql','0002_chat.sql','0003_private_threads.sql','0004_admin_insight.sql','0005_feedback.sql','0006_time_bank.sql','0007_d1_free_optimization.sql','0008_email_recovery.sql','0009_username_change.sql','0010_previous_username.sql','0011_user_timezone.sql']) {
+  for (const file of ['0001_initial.sql','0002_chat.sql','0003_private_threads.sql','0004_admin_insight.sql','0005_feedback.sql','0006_time_bank.sql','0007_d1_free_optimization.sql','0008_email_recovery.sql','0009_username_change.sql','0010_previous_username.sql','0011_user_timezone.sql','0012_push.sql']) {
     const migration = await readFile(new URL('../migrations/'+file, import.meta.url), 'utf8');
     for (const statement of migration.split(';').map((sql) => sql.trim()).filter(Boolean))
       await db.prepare(statement).run();
@@ -169,9 +169,12 @@ test('la moderacion del chat queda en la auditoria y la exportacion lleva el cor
   assert.equal(missing.body.ok, false, 'no se audita un bloqueo sobre nadie');
 
   const exported = await call('adminExport', {}, boss.token);
+  assert.equal(exported.body.schemaVersion, 5);
+  assert.ok(Array.isArray(exported.body.pushSubscriptions));
   const row = exported.body.users.find((user) => user.username_key === 'ruidoso');
   assert.equal(row.email, 'ruidoso@ejemplo.test', 'sin el correo la copia no permite recuperar ninguna cuenta');
   assert.ok('email_verified_at' in row);
+  assert.ok('notification_lang' in row);
 });
 
 test('un enlace de verificacion cuya direccion ya tiene dueno responde sin error 500', async () => {
