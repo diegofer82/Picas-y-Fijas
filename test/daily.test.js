@@ -166,9 +166,10 @@ test("borrar una cuenta se lleva también lo que jugó al código del día", asy
 
 function gridFunction() {
   const marks = html.match(/const DAILY_FIJA='[^']+', DAILY_PICA='[^']+', DAILY_NADA='[^']+';/);
+  const generic = html.match(/function shareGridRows\(guesses,digits\)\{[\s\S]*?\n\}/);
   const source = html.match(/function dailyGridRows\(state\)\{[\s\S]*?\n\}/);
-  assert.ok(marks && source, "la rejilla se dibuja en public/index.html");
-  return new Function(`${marks[0]}\n${source[0]}\nreturn dailyGridRows;`)();
+  assert.ok(marks && generic && source, "la rejilla se dibuja en public/index.html");
+  return new Function(`${marks[0]}\n${generic[0]}\n${source[0]}\nreturn dailyGridRows;`)();
 }
 
 test("la rejilla cuenta fijas y picas y no lleva el código dentro", () => {
@@ -192,7 +193,7 @@ test("la rejilla cuenta fijas y picas y no lleva el código dentro", () => {
 test("la rejilla y el texto que se comparte son los mismos en los tres idiomas", () => {
   // La rejilla no pasa por `t()`: las marcas son constantes y el texto de
   // alrededor solo traduce el título.
-  const source = html.match(/function dailyGridRows\(state\)\{[\s\S]*?\n\}/)[0];
+  const source = html.match(/function shareGridRows\(guesses,digits\)\{[\s\S]*?\n\}/)[0];
   assert.doesNotMatch(source, /\bt\(/, "la rejilla no depende del idioma");
   const share = html.match(/function dailyShareText\(state\)\{[\s\S]*?\n\}/)[0];
   assert.doesNotMatch(share, /state\.secret/, "lo que se comparte no incluye el código del día");

@@ -410,6 +410,8 @@
   @media(max-width:600px){.chat-panel{left:0;right:0;bottom:0;width:100%;height:55dvh;border-radius:18px 18px 0 0;padding-bottom:env(safe-area-inset-bottom)}.chat-launch{bottom:max(16px,env(safe-area-inset-bottom))}}
 .daily-grid{font-family:"JetBrains Mono",monospace;font-size:19px;line-height:1.5;letter-spacing:3px;text-align:center;margin:0 0 12px;white-space:pre;overflow-x:auto}
 .daily-card .hint{margin-bottom:12px}
+.share-card{margin:14px 0 0}
+.share-card .daily-grid{margin-bottom:10px}
 .daily-rows{display:flex;flex-direction:column;gap:6px;align-items:center}
 </style>
 </head>
@@ -1124,7 +1126,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v3.8.0';
+const APP_VERSION = 'v3.8.1';
 /* Enlace de invitación: ...?game=SZ93
    La invitación sobrevive al registro: se guarda en el navegador, porque entre
    abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
@@ -1892,6 +1894,12 @@ Object.assign(I18N.fr,{
 Object.assign(I18N.es,{account_link:"Mi cuenta",account_title:"Mi cuenta",account_hint:"Cambia tu nombre o tu PIN. Tu correo verificado no cambia.",account_name:"Nombre de usuario",account_name_hint:"Puedes cambiarlo una vez cada 90 días. Tu correo no cambia.",account_name_next:"Podrás volver a cambiarlo a partir del {date}.",account_save_name:"Cambiar mi nombre",account_name_confirm:"Confirma con tu PIN actual que quieres llamarte «{name}». Tu PIN no cambia.",account_name_confirm_btn:"Confirmar",account_name_cancel:"Cancelar",account_name_saved:"Nombre actualizado. Tu historial y tu ranking te siguen.",account_email:"Correo de acceso",account_save_email:"Verificar este nuevo correo",account_pin_title:"Cambiar mi PIN",account_pin_hint:"Tu PIN debe tener entre 4 y 8 dígitos.",account_current_pin:"PIN actual",account_new_pin:"Nuevo PIN",account_save_pin:"Guardar mi nuevo PIN",account_email_verified:"✓ Correo verificado",account_email_locked:"✓ Correo verificado. Es la llave de tu cuenta y no se puede cambiar.",account_email_pending:"Revisa tu correo y abre el enlace para verificarlo.",account_email_sent:"Te enviamos un enlace de verificación.",account_pin_saved:"PIN actualizado. Tus otras sesiones se cerraron.",account_email_missing:"No has apuntado ningún correo: sin él no podrás recuperar tu PIN.",account_current_pin_invalid:"Escribe tu PIN actual.",verify_title:"Valida tu correo",verify_hint_missing:"Tu cuenta todavía no tiene correo. Apunta uno: es lo que te permitirá recuperar tu PIN si lo olvidas, y hace falta para jugar.",verify_hint_sent:"Te enviamos un enlace. Ábrelo desde este correo para desbloquear tu cuenta; caduca en 3 días.",verify_send:"Enviar el enlace",verify_resend:"Enviar otro enlace",verify_sent:"Enlace enviado. Revisa tu bandeja de entrada y también el correo no deseado.",verify_done:"Ya lo he validado",verify_not_yet:"Todavía no nos consta validado. Abre el enlace del correo y vuelve a intentarlo."});
 Object.assign(I18N.en,{account_link:"My account",account_title:"My account",account_hint:"Change your name or your PIN. Your verified email stays the same.",account_name:"Username",account_name_hint:"You can change it once every 90 days. Your email stays the same.",account_name_next:"You can change it again from {date}.",account_save_name:"Change my name",account_name_confirm:"Confirm with your current PIN that you want to be called “{name}”. Your PIN stays the same.",account_name_confirm_btn:"Confirm",account_name_cancel:"Cancel",account_name_saved:"Name updated. Your history and ranking came with you.",account_email:"Sign-in email",account_save_email:"Verify this new email",account_pin_title:"Change my PIN",account_pin_hint:"Your PIN must be 4 to 8 digits.",account_current_pin:"Current PIN",account_new_pin:"New PIN",account_save_pin:"Save my new PIN",account_email_verified:"✓ Email verified",account_email_locked:"✓ Email verified. It is the key to your account and cannot be changed.",account_email_pending:"Check your email and open the link to verify it.",account_email_sent:"We sent you a verification link.",account_pin_saved:"PIN updated. Your other sessions were signed out.",account_email_missing:"No email saved yet: without one you cannot recover your PIN.",account_current_pin_invalid:"Enter your current PIN.",verify_title:"Verify your email",verify_hint_missing:"Your account has no email yet. Add one: it is what lets you recover your PIN if you forget it, and it is required to play.",verify_hint_sent:"We sent you a link. Open it from that inbox to unlock your account; it expires in 3 days.",verify_send:"Send the link",verify_resend:"Send another link",verify_sent:"Link sent. Check your inbox, and your spam folder too.",verify_done:"I have verified it",verify_not_yet:"We don't see it verified yet. Open the link in the email and try again."});
 Object.assign(I18N.fr,{account_link:"Mon compte",account_title:"Mon compte",account_hint:"Change ton nom ou ton PIN. Ton e-mail vérifié ne change pas.",account_name:"Nom d'utilisateur",account_name_hint:"Tu peux le changer une fois tous les 90 jours. Ton e-mail ne change pas.",account_name_next:"Tu pourras le changer à nouveau à partir du {date}.",account_save_name:"Changer mon nom",account_name_confirm:"Confirme avec ton PIN actuel que tu veux t'appeler « {name} ». Ton PIN ne change pas.",account_name_confirm_btn:"Confirmer",account_name_cancel:"Annuler",account_name_saved:"Nom mis à jour. Ton historique et ton classement te suivent.",account_email:"E-mail de connexion",account_save_email:"Vérifier ce nouvel e-mail",account_pin_title:"Modifier mon PIN",account_pin_hint:"Votre PIN doit contenir de 4 à 8 chiffres.",account_current_pin:"PIN actuel",account_new_pin:"Nouveau PIN",account_save_pin:"Enregistrer mon nouveau PIN",account_email_verified:"✓ E-mail vérifié",account_email_locked:"✓ E-mail vérifié. C'est la clé de ton compte, il ne peut pas être modifié.",account_email_pending:"Consultez votre e-mail et ouvrez le lien de vérification.",account_email_sent:"Nous vous avons envoyé un lien de vérification.",account_pin_saved:"PIN mis à jour. Vos autres sessions ont été fermées.",account_email_missing:"Aucun e-mail enregistré : sans lui, impossible de récupérer ton PIN.",account_current_pin_invalid:"Saisis ton PIN actuel.",verify_title:"Valide ton e-mail",verify_hint_missing:"Ton compte n'a pas encore d'e-mail. Ajoutes-en un : c'est ce qui te permettra de récupérer ton PIN si tu l'oublies, et c'est nécessaire pour jouer.",verify_hint_sent:"Nous t'avons envoyé un lien. Ouvre-le depuis cette boîte pour débloquer ton compte ; il expire dans 3 jours.",verify_send:"Envoyer le lien",verify_resend:"Envoyer un autre lien",verify_sent:"Lien envoyé. Vérifie ta boîte de réception, et aussi les indésirables.",verify_done:"Je l'ai validé",verify_not_yet:"Nous ne le voyons pas encore validé. Ouvre le lien reçu par e-mail et réessaie."});
+/* E3-T3: la tarjeta de fin de partida. La misma rejilla del codigo del dia,
+   pero para cualquier partida: es lo unico que un jugador puede ensenar sin
+   contar el codigo. */
+Object.assign(I18N.es,{share_card_btn:"Compartir mi partida",share_card_copied:"Tarjeta copiada",share_card_solved:"He descifrado un código de {digits} en {n} intentos",share_card_solved_one:"He descifrado un código de {digits} en un solo intento",share_card_failed:"No he logrado descifrar un código de {digits}"});
+Object.assign(I18N.en,{share_card_btn:"Share my game",share_card_copied:"Card copied",share_card_solved:"I cracked a {digits}-symbol code in {n} tries",share_card_solved_one:"I cracked a {digits}-symbol code in a single try",share_card_failed:"I could not crack a {digits}-symbol code"});
+Object.assign(I18N.fr,{share_card_btn:"Partager ma partie",share_card_copied:"Carte copiée",share_card_solved:"J'ai percé un code de {digits} en {n} essais",share_card_solved_one:"J'ai percé un code de {digits} en un seul essai",share_card_failed:"Je n'ai pas réussi à percer un code de {digits}"});
 Object.assign(I18N.es,{menu_settings:"Ajustes",menu_logout:"Cerrar sesión"});
 Object.assign(I18N.en,{menu_settings:"Settings",menu_logout:"Log out"});
 Object.assign(I18N.fr,{menu_settings:"Réglages",menu_logout:"Se déconnecter"});
@@ -3258,14 +3266,47 @@ function renderDailyCountdown(){
   $('daily-next').classList.remove('hidden');
   $('daily-next').innerHTML=ico('reloj',14)+'<span>'+t('daily_next',{time:hours?t('daily_hours',{h:hours,m:minutes%60}):t('daily_minutes',{m:minutes})})+'</span>';
 }
+function shareGridRows(guesses,digits){
+  /* Un intento perdido al tiempo no tiene puntuacion: se dibuja vacio, que es
+     exactamente lo que cuenta de el. */
+  return (guesses||[]).map(g=>{
+    const fijas=g.missed?0:(g.fijas||0), picas=g.missed?0:(g.picas||0);
+    return DAILY_FIJA.repeat(fijas)+DAILY_PICA.repeat(picas)+DAILY_NADA.repeat(Math.max(0,digits-fijas-picas));
+  });
+}
 function dailyGridRows(state){
-  return state.guesses.map(g=>DAILY_FIJA.repeat(g.fijas)+DAILY_PICA.repeat(g.picas)
-    +DAILY_NADA.repeat(Math.max(0,state.rules.digits-g.fijas-g.picas)));
+  return shareGridRows(state.guesses,state.rules.digits);
 }
 function dailyShareText(state){
   const score=(state.solved?state.attempts:'X')+'/'+state.rules.maxAttempts;
   const time=state.solved?' · '+formatPracticeTime(state.durationMs):'';
   return [t('daily_share_title',{n:state.number}),score+time,...dailyGridRows(state),location.origin+'/'].join('\n');
+}
+/* La tarjeta que se comparte al acabar cualquier partida (E3-T3). Vive de lo
+   que ya esta en la pantalla: los intentos con su puntuacion. El codigo no
+   entra, ni el propio ni el del rival. */
+let shareCardData=null;
+function shareCardText(card){
+  const head=card.solved
+    ? (card.attempts===1?t('share_card_solved_one',{digits:card.digits}):t('share_card_solved',{digits:card.digits,n:card.attempts}))
+    : t('share_card_failed',{digits:card.digits});
+  const time=card.durationMs?' · '+formatPracticeTime(card.durationMs):'';
+  return ['Picas y Fijas',head+time,...shareGridRows(card.guesses,card.digits),location.origin+'/'].join('\n');
+}
+function shareCardBlock(card){
+  shareCardData=null;
+  const rows=shareGridRows(card&&card.guesses,card&&card.digits);
+  if(!rows.length) return '';
+  shareCardData=card;
+  return `<div class="share-card"><div class="daily-grid">${rows.join('\n')}</div>`
+    +`<button class="btn green" onclick="shareCard()">${t('share_card_btn')}</button></div>`;
+}
+async function shareCard(){
+  if(!shareCardData) return;
+  const text=shareCardText(shareCardData);
+  if(navigator.share){ try{ await navigator.share({title:'Picas y Fijas',text}); return; }catch(e){} }
+  try{ await navigator.clipboard.writeText(text); toast(t('share_card_copied')); }
+  catch(e){ toast(text); }
 }
 async function shareDaily(){
   if(!dailyData||!dailyData.finished) return;
@@ -3711,7 +3752,10 @@ function finishComputerPractice(result,reason=''){
   $('practice-secret').innerHTML=codeViewHTML(practice.playerSecret,practiceCfg.mode);$('practice-guessarea').classList.add('hidden');$('practice-turn').classList.add('hidden');$('practice-active-actions').classList.add('hidden');$('practice-actions').classList.remove('hidden');practiceExitChrome('result_lobby',true);
   const surrendered=reason==='surrender',title=surrendered?t('practice_surrendered'):t('computer_result_'+result),
     detail=surrendered?t('practice_surrender_detail'):reason==='timeout'?t('lose_timeout'):t('computer_both_codes',{yours:practice.playerSecret,computer:practice.secret});
-  $('practice-banner').innerHTML=`<div class="banner ${result==='win'?'win':result==='loss'?'lose':'draw'}"><h2>${title}</h2><p>${detail}</p></div><div class="note"><b>${t('practice_secret')}</b> ${codeViewHTML(practice.playerSecret,practiceCfg.mode)} · <b>🤖</b> ${codeViewHTML(practice.secret,practiceCfg.mode)}</div>`;endSound(result==='draw'?'draw':result==='win'?'win':'lose');
+  $('practice-banner').innerHTML=`<div class="banner ${result==='win'?'win':result==='loss'?'lose':'draw'}"><h2>${title}</h2><p>${detail}</p></div><div class="note"><b>${t('practice_secret')}</b> ${codeViewHTML(practice.playerSecret,practiceCfg.mode)} · <b>🤖</b> ${codeViewHTML(practice.secret,practiceCfg.mode)}</div>`
+    +shareCardBlock({guesses:practice.guesses, digits:practiceCfg.digits,
+      solved:practice.guesses.some(g=>g.fijas===practiceCfg.digits), attempts:practice.guesses.filter(g=>!g.missed).length,
+      durationMs:Date.now()-practice.startedAt});endSound(result==='draw'?'draw':result==='win'?'win':'lose');
 }
 function finishPractice(won,reason){
   if(!practice||practice.finished)return; practice.finished=true; stopPracticeTick();clearSavedPractice();
@@ -3719,7 +3763,9 @@ function finishPractice(won,reason){
   localStorage.setItem('pf_practice_stats',JSON.stringify(s));
   $('practice-secret').className=''; $('practice-secret').innerHTML=codeViewHTML(practice.secret,practiceCfg.mode);
   const surrendered=reason==='surrender',detail=won?t('practice_attempts_used',{n:practice.guesses.length,time:formatPracticeTime(elapsed)}):t(surrendered?'practice_surrender_detail':reason==='time'?'practice_time_up':'practice_attempts_up');
-  $('practice-banner').innerHTML=`<div class="banner ${won?'win':'lose'}"><h2>${t(won?'practice_won':surrendered?'practice_surrendered':'practice_lost')}</h2><p>${detail}</p></div><div class="note"><b>${t('practice_reveal')}</b> ${codeViewHTML(practice.secret,practiceCfg.mode)}</div>`;
+  $('practice-banner').innerHTML=`<div class="banner ${won?'win':'lose'}"><h2>${t(won?'practice_won':surrendered?'practice_surrendered':'practice_lost')}</h2><p>${detail}</p></div><div class="note"><b>${t('practice_reveal')}</b> ${codeViewHTML(practice.secret,practiceCfg.mode)}</div>`
+    +shareCardBlock({guesses:practice.guesses, digits:practiceCfg.digits, solved:won,
+      attempts:practice.guesses.filter(g=>!g.missed).length, durationMs:elapsed});
   $('practice-guessarea').classList.add('hidden'); $('practice-active-actions').classList.add('hidden'); $('practice-actions').classList.remove('hidden');practiceExitChrome('result_lobby',true); endSound(won?'win':'lose');
 }
 $('p-seg-type').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;practiceCfg.type=b.dataset.type;segPick($('p-seg-type'),b);syncPracticeControls();});
@@ -4164,6 +4210,12 @@ function renderGame(st){
     }
     if(!spectator&&st.opponentSecret){
       banner.insertAdjacentHTML('beforeend',`<div class="note"><b>${t('opponent_code',{name:esc(oppLabel)})}</b> ${codeViewHTML(st.opponentSecret,game.mode)}</div>`);
+    }
+    /* E3-T3: la tarjeta sale de mis propios intentos, nunca de los del rival. */
+    if(!spectator){
+      const digits=parseInt(st.digits,10);
+      banner.insertAdjacentHTML('beforeend',shareCardBlock({
+        guesses:mine, digits, solved:mine.some(g=>g.fijas===digits), attempts:mine.length}));
     }
     if(reviewingHistory){
       rz.innerHTML=`<button class="btn ghost" onclick="leaveHistoryGame()">${t('back')}</button><div style="height:12px"></div>`;
