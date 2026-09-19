@@ -431,6 +431,33 @@
 .an-decisive::before{content:'◆'}
 .an-foot{color:var(--muted);font-size:11px;line-height:1.45;margin:10px 0 0}
 @media(max-width:420px){.an-row{flex-wrap:wrap}.an-left{order:3;text-align:left;flex:1 0 100%;padding-left:29px}}
+/* El cuaderno (E4-T3). Tres estados por simbolo, y se distinguen por forma y
+   por marca, no solo por color: tachado el descartado, visto el confirmado. */
+.nb{margin:12px 0 0;border:1px solid var(--edge);border-radius:12px;background:#0D0B07;padding:11px 12px}
+.nb-head{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:9px}
+.nb-head span{flex:1}
+.nb-clear{border:1px solid var(--edge);background:var(--panel);color:var(--muted);border-radius:8px;padding:4px 9px;font-size:11px;cursor:pointer}
+.nb-grid{display:flex;flex-wrap:wrap;gap:7px}
+.nb-cell{position:relative;min-width:42px;height:42px;border:1px solid var(--edge);border-radius:10px;background:var(--panel);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font:800 16px 'JetBrains Mono',monospace;padding:0 6px}
+.nb-cell .mini{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.nb-cell.out{opacity:.5;border-color:rgba(224,104,90,.55)}
+.nb-cell.out::after{content:'';position:absolute;left:5px;right:5px;top:50%;height:2px;background:var(--pink);transform:rotate(-26deg)}
+.nb-cell.in{border-color:var(--fija);box-shadow:inset 0 0 0 2px rgba(79,201,124,.35)}
+.nb-cell.in::before{content:'\2713';position:absolute;top:-2px;right:3px;font-size:11px;color:var(--fija)}
+.nb-hint{color:var(--muted);font-size:11px;line-height:1.45;margin:9px 0 0}
+.contradiction{display:flex;gap:8px;align-items:flex-start;margin:0 0 10px;border:1px solid rgba(240,180,41,.5);border-radius:11px;background:rgba(240,180,41,.08);color:var(--pica);font-size:12px;line-height:1.4;padding:9px 11px}
+.contradiction::before{content:'!';flex:0 0 auto;width:17px;height:17px;border-radius:50%;border:1px solid var(--pica);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px}
+/* Ver pensar al ordenador (E4-T4): una linea bajo cada intento suyo. */
+.think{color:var(--muted);font-size:11px;line-height:1.4;padding:1px 2px 8px;border-bottom:1px solid rgba(59,50,41,.45)}
+/* Enigmas de deduccion (E4-T5). */
+.pz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;margin:12px 0 0}
+.pz-cell{border:1px solid var(--edge);background:var(--panel);color:var(--text);border-radius:10px;padding:10px 4px;cursor:pointer;font:700 14px 'JetBrains Mono',monospace;text-align:center}
+.pz-cell small{display:block;margin-top:3px;color:var(--muted);font-family:'Archivo',sans-serif;font-size:10px;font-weight:600}
+.pz-cell.done{border-color:var(--fija);color:var(--fija)}
+.pz-cell.on{border-color:var(--accent);box-shadow:inset 0 0 0 2px rgba(91,141,239,.3)}
+.pz-clue{display:flex;align-items:center;gap:9px;padding:8px 0;border-top:1px solid rgba(59,50,41,.55)}
+.pz-clue:first-child{border-top:0}
+.pz-clue .scoretxt{margin-left:auto}
 </style>
 </head>
 <body>
@@ -593,6 +620,7 @@
       <div class="lobby-chips">
         <button class="chipbtn" onclick="openRank()"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M7.5 3.9c3-.4 6-.4 9-.1.4 3.5.2 6.2-.5 8.2-.9 2.5-2.4 3.7-4.2 3.7s-3.2-1.3-4-3.8c-.6-2-.7-4.6-.3-8Z"></path><path class="dl" d="M7.5 6c-1.6-.3-2.7 0-3 .9-.2 1.2.9 2.3 3.1 2.7M16.5 6c1.6-.3 2.7 0 3 .9.2 1.2-.9 2.3-3.1 2.7"></path><path class="dl" d="M12 15.9c.1 1.3.1 2.5 0 3.4M8.7 20.1c2.2-.4 4.4-.4 6.6 0"></path></svg><span data-i18n="lobby_ranking">Ranking</span></button>
         <button class="chipbtn" onclick="openHistory()"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M12.3 3.6c4.7-.2 8.6 3.8 8.4 8.5-.2 4.6-4 8.3-8.6 8.3-4.8 0-8.7-4-8.4-8.8.3-4.3 3.8-7.7 8-7.9"></path><path class="dl" d="M11.9 7.3c.2 1.8.2 3.4.1 4.9 1.1.8 2.2 1.4 3.3 2"></path></svg><span data-i18n="lobby_history">Historial</span></button>
+        <button class="chipbtn" onclick="openPuzzles()"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M4.6 5.3c2.1-.4 4.2-.5 6.3-.3-.3 1.6.3 2.4 1.6 2.5 1.3.1 2-.7 1.9-2.2 1.7-.2 3.3-.2 4.9 0 .3 2 .4 3.9.2 5.8-1.6-.3-2.4.3-2.5 1.6-.1 1.3.7 2 2.2 1.9.2 1.6.1 3.3-.1 4.9-2.1.3-4.2.3-6.3.1.3-1.6-.3-2.4-1.6-2.5-1.3-.1-2 .7-1.9 2.2-1.5.2-3.1.2-4.6 0-.4-4.6-.4-9.3-.1-14Z"></path></svg><span data-i18n="lobby_puzzles">Enigmas</span></button>
         <button class="chipbtn" onclick="refreshLobby()"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M20.1 12.4c.2 4.7-3.7 8.5-8.4 8.4-4.6-.1-8.3-4-8-8.7.3-4.2 3.8-7.4 8-7.3 2.6.1 4.8 1.3 6.3 3.2"></path><path class="dl" d="M19.9 3.7c-.2 1.6-.2 3.1-.1 4.6-1.6.2-3.1.2-4.6.1"></path></svg><span data-i18n="lobby_refresh">Actualizar lista</span></button>
       </div>
     </div>
@@ -793,6 +821,8 @@
       <div style="height:10px"></div>
       <button class="btn pink" onclick="startPractice(true)" data-i18n="practice_random">Partida aleatoria 🎲</button>
       <div style="height:10px"></div>
+      <button class="btn ghost" onclick="openPuzzles()" data-i18n="pz_open">Enigmas de deducción 🧩</button>
+      <div style="height:10px"></div>
       <button class="btn ghost" onclick="enterLobby()" data-i18n="back">Volver</button>
     </div>
   </section>
@@ -857,6 +887,44 @@
       <p class="hint" id="daily-players"></p>
       <div class="list" id="daily-board"><div class="empty">…</div></div>
       <div class="scoretxt" id="daily-your-rank"></div>
+    </div>
+  </section>
+
+  <!-- ENIGMAS -->
+  <section id="s-puzzles" class="hidden">
+    <div class="card">
+      <span class="practice-badge" data-i18n="pz_badge">Sin rival y sin reloj</span>
+      <h2 data-i18n="pz_title">Enigmas de deducción 🧩</h2>
+      <p class="hint" data-i18n="pz_hint">Aquí tienes las pistas de una partida que no jugaste: deduce el código. Cada enigma tiene una única solución.</p>
+      <label data-i18n="pz_level">Dificultad</label>
+      <div class="seg" id="pz-seg-level">
+        <button data-l="easy" class="on" data-i18n="difficulty_easy">Fácil</button>
+        <button data-l="normal" data-i18n="difficulty_normal">Normal</button>
+        <button data-l="expert" data-i18n="difficulty_expert">Experto</button>
+      </div>
+      <div class="scoretxt" id="pz-progress"></div>
+      <div class="pz-grid" id="pz-grid"></div>
+      <div style="height:16px"></div>
+      <button class="btn ghost" onclick="closePuzzles()" data-i18n="back">Volver</button>
+      <div class="foot credits hidden" id="pz-credits"></div>
+    </div>
+
+    <div class="card hidden" id="pz-play">
+      <h2 id="pz-play-title"></h2>
+      <p class="hint" id="pz-play-rules"></p>
+      <div class="glog" id="pz-clues"></div>
+      <div style="height:12px"></div>
+      <div class="guessarea" id="pz-guessarea">
+        <div class="field"><input type="text" id="pz-guess" class="code" inputmode="numeric" placeholder="•••"></div>
+        <button class="btn" id="pz-guess-btn" onclick="submitPuzzle()" data-i18n="pz_check">Comprobar</button>
+      </div>
+      <div class="val" id="pz-guess-val"></div>
+      <div id="pz-banner"></div>
+      <div style="height:10px"></div>
+      <div class="row">
+        <button class="btn ghost" onclick="closePuzzle()" data-i18n="pz_back_list">Volver a la lista</button>
+        <button class="btn pink" id="pz-reveal-btn" onclick="revealPuzzle()" data-i18n="pz_reveal">Ver la solución</button>
+      </div>
     </div>
   </section>
 
@@ -1000,6 +1068,13 @@
       </div>
       <p class="hint" data-i18n="reveal_hint" style="margin:8px 0 0">Si se activa, cada jugador verá el código secreto de su rival cuando termine la partida.</p>
 
+      <label data-i18n="lbl_notebook">Cuaderno de deducción</label>
+      <div class="seg" id="seg-notebook">
+        <button data-nb="0" class="on" data-i18n="nb_off">Sin cuaderno</button>
+        <button data-nb="1" data-i18n="nb_on">Con cuaderno</button>
+      </div>
+      <p class="hint" data-i18n="nb_option_hint" style="margin:8px 0 0">Una cuadrícula para marcar símbolos descartados y confirmados, y un aviso cuando un intento contradice tus propias pistas. Se elige aquí para que los dos jueguen con las mismas reglas.</p>
+
       <div style="height:18px"></div>
       <button class="btn pink" id="btn-create-random" onclick="prepareRandomGame()" data-i18n="create_random">Partida aleatoria 🎲</button>
 
@@ -1095,10 +1170,17 @@
         <button class="btn" id="g-guess-btn" onclick="submitGuess()" data-i18n="guess_btn">Adivinar</button>
       </div>
       <div class="val" id="g-guess-val" style="margin-top:0;margin-bottom:8px"></div>
+      <div class="contradiction hidden" id="g-contradiction"></div>
 
       <div class="legend" id="g-legend">
         <span><span class="pip f"></span> <span data-i18n="legend_fija">F = posición correcta</span></span>
         <span><span class="pip p"></span> <span data-i18n="legend_pica">P = presente, mal colocada</span></span>
+      </div>
+
+      <div class="nb hidden" id="g-notebook">
+        <div class="nb-head"><span data-i18n="nb_title">Cuaderno</span><button type="button" class="nb-clear" onclick="clearNotebook()" data-i18n="nb_clear">Borrar marcas</button></div>
+        <div class="nb-grid" id="g-notebook-grid"></div>
+        <p class="nb-hint" data-i18n="nb_hint">Toca un símbolo para marcarlo: una vez descartado, dos veces confirmado. Las marcas son tuyas y viven solo en este aparato.</p>
       </div>
     </div>
 
@@ -1145,7 +1227,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v3.9.0';
+const APP_VERSION = 'v3.9.1';
 /* Enlace de invitación: ...?game=SZ93
    La invitación sobrevive al registro: se guarda en el navegador, porque entre
    abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
@@ -1641,6 +1723,7 @@ const ERR = {
     "La correspondencia debe dar 1 o 3 días por jugada.":"Correspondence must allow 1 or 3 days per move.",
     "Código inválido.":"Invalid code.",
     "Símbolo fuera de rango.":"Symbol out of range.",
+    "La opción de cuaderno no es válida.":"That notebook option is not valid.",
     "No se permiten repetidos en esta partida.":"Repeats aren't allowed in this game.",
     "La bolsa de tiempo debe ser de 3, 5 o 10 minutos.":"The time bank must be 3, 5 or 10 minutes.",
     "El incremento debe ser 0, 3, 5 o 10 segundos.":"The increment must be 0, 3, 5 or 10 seconds.",
@@ -1736,6 +1819,7 @@ const ERR = {
     "La correspondencia debe dar 1 o 3 días por jugada.":"La correspondance doit accorder 1 ou 3 jours par coup.",
     "Código inválido.":"Code invalide.",
     "Símbolo fuera de rango.":"Symbole hors limites.",
+    "La opción de cuaderno no es válida.":"Cette option de carnet n'est pas valide.",
     "No se permiten repetidos en esta partida.":"Les répétitions ne sont pas autorisées dans cette partie.",
     "La bolsa de tiempo debe ser de 3, 5 o 10 minutos.":"La réserve de temps doit être de 3, 5 ou 10 minutes.",
     "El incremento debe ser 0, 3, 5 o 10 segundos.":"L'incrément doit être de 0, 3, 5 ou 10 secondes.",
@@ -1924,6 +2008,10 @@ Object.assign(I18N.fr,{share_card_btn:"Partager ma partie",share_card_copied:"Ca
 Object.assign(I18N.es,{analysis_title:"Cómo se jugó",analysis_optimal:"Óptimo",analysis_good:"Correcto",analysis_wasted:"Desperdiciado",analysis_left:"{before} posibles → {after}",analysis_decisive:"Aquí se decidió la partida",analysis_foot:"Antes de cada intento quedaban tantos códigos compatibles con tus pistas. La nota compara tu intento con el que más habría reducido esa lista: mide la decisión, no la suerte."});
 Object.assign(I18N.en,{analysis_title:"How it played out",analysis_optimal:"Optimal",analysis_good:"Solid",analysis_wasted:"Wasted",analysis_left:"{before} possible → {after}",analysis_decisive:"This is where the game was decided",analysis_foot:"Before each try, this many codes still matched your clues. The grade compares your try with the one that would have cut that list the most: it judges the decision, not the luck."});
 Object.assign(I18N.fr,{analysis_title:"Comment ça s'est joué",analysis_optimal:"Optimal",analysis_good:"Correct",analysis_wasted:"Gâché",analysis_left:"{before} possibles → {after}",analysis_decisive:"C'est ici que la partie s'est jouée",analysis_foot:"Avant chaque essai, il restait ce nombre de codes compatibles avec tes indices. La note compare ton essai à celui qui aurait le plus réduit cette liste : elle juge la décision, pas la chance."});
+/* El cuaderno, el ordenador que se explica y los enigmas (E4-T3, E4-T4, E4-T5). */
+Object.assign(I18N.es,{lbl_notebook:"Cuaderno de deducción",nb_off:"Sin cuaderno",nb_on:"Con cuaderno",nb_option_hint:"Una cuadrícula para marcar símbolos descartados y confirmados, y un aviso cuando un intento contradice tus propias pistas. Se elige aquí para que los dos jueguen con las mismas reglas.",nb_title:"Cuaderno",nb_clear:"Borrar marcas",nb_hint:"Toca un símbolo para marcarlo: una vez descartado, dos veces confirmado. Las marcas son tuyas y viven solo en este aparato.",nb_contradiction:"Ese intento contradice tus pistas: ya sabes que no puede ser el código del rival.",rl_notebook:"con cuaderno",computer_thinking_left:"El computador está pensando… le quedan {n} códigos posibles",think_line:"Le quedaban {before} posibles → ahora {after}",think_groups:"parte la lista en {n} grupos",lobby_puzzles:"Enigmas",pz_open:"Enigmas de deducción 🧩",pz_badge:"Sin rival y sin reloj",pz_title:"Enigmas de deducción 🧩",pz_hint:"Aquí tienes las pistas de una partida que no jugaste: deduce el código. Cada enigma tiene una única solución.",pz_level:"Dificultad",pz_check:"Comprobar",pz_back_list:"Volver a la lista",pz_reveal:"Ver la solución",pz_progress:"{done} de {total} resueltos",pz_clues_count:"{n} pistas",pz_play_title:"Enigma {n}",pz_clue_head:"Las pistas",pz_solved:"¡Código deducido! 🎉",pz_solved_text:"Era la única combinación compatible con estas pistas.",pz_wrong:"Ese código no encaja con las pistas.",pz_revealed:"La solución era:",pz_loading:"Cargando enigmas…",pz_offline:"No pudimos cargar los enigmas. Inténtalo de nuevo con conexión.",pz_already:"Resuelto"});
+Object.assign(I18N.en,{lbl_notebook:"Deduction notebook",nb_off:"No notebook",nb_on:"With notebook",nb_option_hint:"A grid to mark symbols as ruled out or confirmed, plus a warning when a try contradicts your own clues. It is chosen here so both players play by the same rules.",nb_title:"Notebook",nb_clear:"Clear marks",nb_hint:"Tap a symbol to mark it: once for ruled out, twice for confirmed. The marks are yours and live only on this device.",nb_contradiction:"That try contradicts your clues: you already know it cannot be your opponent's code.",rl_notebook:"with notebook",computer_thinking_left:"The computer is thinking… {n} codes still possible",think_line:"{before} were possible → now {after}",think_groups:"splits the list into {n} groups",lobby_puzzles:"Puzzles",pz_open:"Deduction puzzles 🧩",pz_badge:"No opponent, no clock",pz_title:"Deduction puzzles 🧩",pz_hint:"Here are the clues from a game you did not play: deduce the code. Every puzzle has exactly one solution.",pz_level:"Difficulty",pz_check:"Check",pz_back_list:"Back to the list",pz_reveal:"Show the solution",pz_progress:"{done} of {total} solved",pz_clues_count:"{n} clues",pz_play_title:"Puzzle {n}",pz_clue_head:"The clues",pz_solved:"Code deduced! 🎉",pz_solved_text:"It was the only combination matching these clues.",pz_wrong:"That code does not match the clues.",pz_revealed:"The solution was:",pz_loading:"Loading puzzles…",pz_offline:"We could not load the puzzles. Try again when you are online.",pz_already:"Solved"});
+Object.assign(I18N.fr,{lbl_notebook:"Carnet de déduction",nb_off:"Sans carnet",nb_on:"Avec carnet",nb_option_hint:"Une grille pour marquer les symboles écartés et confirmés, et un avertissement quand un essai contredit tes propres indices. Le choix se fait ici pour que les deux jouent avec les mêmes règles.",nb_title:"Carnet",nb_clear:"Effacer les marques",nb_hint:"Touche un symbole pour le marquer : une fois écarté, deux fois confirmé. Les marques sont à toi et restent sur cet appareil.",nb_contradiction:"Cet essai contredit tes indices : tu sais déjà qu'il ne peut pas être le code adverse.",rl_notebook:"avec carnet",computer_thinking_left:"L'ordinateur réfléchit… il lui reste {n} codes possibles",think_line:"{before} possibles → maintenant {after}",think_groups:"coupe la liste en {n} groupes",lobby_puzzles:"Énigmes",pz_open:"Énigmes de déduction 🧩",pz_badge:"Sans adversaire ni chrono",pz_title:"Énigmes de déduction 🧩",pz_hint:"Voici les indices d'une partie que tu n'as pas jouée : déduis le code. Chaque énigme a une seule solution.",pz_level:"Difficulté",pz_check:"Vérifier",pz_back_list:"Retour à la liste",pz_reveal:"Voir la solution",pz_progress:"{done} sur {total} résolues",pz_clues_count:"{n} indices",pz_play_title:"Énigme {n}",pz_clue_head:"Les indices",pz_solved:"Code déduit ! 🎉",pz_solved_text:"C'était la seule combinaison compatible avec ces indices.",pz_wrong:"Ce code ne colle pas avec les indices.",pz_revealed:"La solution était :",pz_loading:"Chargement des énigmes…",pz_offline:"Impossible de charger les énigmes. Réessaie avec une connexion.",pz_already:"Résolue"});
 Object.assign(I18N.es,{menu_settings:"Ajustes",menu_logout:"Cerrar sesión"});
 Object.assign(I18N.en,{menu_settings:"Settings",menu_logout:"Log out"});
 Object.assign(I18N.fr,{menu_settings:"Réglages",menu_logout:"Se déconnecter"});
@@ -2060,6 +2148,8 @@ function applyI18n(){
   if(typeof renderDaily==='function'&&$('daily-log')) renderDaily();
   if(typeof renderPracticeStats==='function'&&$('practice-stats')) renderPracticeStats();
   if(typeof renderPracticeResumeCard==='function'&&$('practice-resume-card')) renderPracticeResumeCard();
+  if(typeof renderPuzzleList==='function'&&$('pz-grid')) renderPuzzleList();
+  if(typeof renderOpenPuzzle==='function'&&$('pz-play')) renderOpenPuzzle();
   pintarIconos();
   setCredits();
 }
@@ -2102,12 +2192,12 @@ const COLORS = [
 let user = localStorage.getItem('pf_user') || '';
 let userPin = '';
 let sessionToken = localStorage.getItem('pf_session') || '';
-let cfg = { digits:3, mode:'numbers', numColors:6, allowRepeats:false, isPublic:true, maxAttempts:0, turnSeconds:0, timeMode:'turn', bankSeconds:300, bankIncrement:5, revealSecrets:false };
+let cfg = { digits:3, mode:'numbers', numColors:6, allowRepeats:false, isPublic:true, maxAttempts:0, turnSeconds:0, timeMode:'turn', bankSeconds:300, bankIncrement:5, revealSecrets:false, notebook:false };
 let practiceCfg = { type:'solo', difficulty:'normal', digits:3, mode:'numbers', numColors:6, allowRepeats:false, maxAttempts:0, turnSeconds:0, timeMode:'turn', bankSeconds:0, bankIncrement:0 };
 let practice = null, practiceTickTimer = null, practiceComputerTimer = null;
 const PRACTICE_SAVE_KEY='pf_practice_active_v1';
 let joinMeta = null, finishedMeta = null;
-let game = { id:'', digits:3, mode:'numbers', numColors:6, allowRepeats:false, isPublic:true, maxAttempts:0, turnSeconds:0, revealSecrets:false };
+let game = { id:'', digits:3, mode:'numbers', numColors:6, allowRepeats:false, isPublic:true, maxAttempts:0, turnSeconds:0, revealSecrets:false, notebook:false };
 let gState = null;
 let guessSubmitting = false;
 let gameViewEpoch = 0, routeEpoch = 0, gameRequestSeq = 0, reviewingHistory = false;
@@ -2155,13 +2245,13 @@ const $ = id => document.getElementById(id);
    partida o una practica en curso saltarse su propio flujo de salida podria
    costarle el progreso al jugador. */
 let feedbackReturn = 'login';
-const BRAND_HOME_FROM = new Set(['rank','history','rules','create','join','practice','daily','feedback']);
+const BRAND_HOME_FROM = new Set(['rank','history','rules','create','join','practice','puzzles','daily','feedback']);
 let currentView = 'login';
 /* Un visitante puede jugar antes de registrarse. No es una cuenta: su practica
    vive entera en el navegador y no escribe ni una fila en D1. Estas son las
    unicas pantallas que existen sin sesion, y `show()` no deja salir de ellas. */
 let guestMode = false;
-const GUEST_VIEWS = new Set(['login','practice','practice-game','rules','feedback']);
+const GUEST_VIEWS = new Set(['login','practice','practice-game','puzzles','rules','feedback']);
 function guestActive(){ return guestMode && !sessionToken; }
 /* El buzon es la unica de estas pantallas a la que se puede llegar sin sesion,
    asi que la marca lo devuelve a donde se entro —el registro o el lobby— en vez
@@ -2192,6 +2282,7 @@ function syncSettingsBtn(){
 function syncGuestChrome(){
   const guest = guestActive();
   const credits = $('practice-credits'); if(credits) credits.classList.toggle('hidden', !guest);
+  const puzzleCredits = $('pz-credits'); if(puzzleCredits) puzzleCredits.classList.toggle('hidden', !guest);
   const resume = $('guest-resume'); if(resume) resume.classList.toggle('hidden', !readSavedPractice());
 }
 function syncBrandHome(){
@@ -2234,7 +2325,7 @@ function show(name){
   if(!sessionToken && !GUEST_VIEWS.has(name)) name = 'login';
   currentView = name;
   if(name!=='game') gameViewEpoch++;
-  ['login','verify','lobby','account','feedback','rank','history','rules','practice','practice-game','daily','create','wait','join','rematch','game'].forEach(s=>{
+  ['login','verify','lobby','account','feedback','rank','history','rules','practice','practice-game','puzzles','daily','create','wait','join','rematch','game'].forEach(s=>{
     $('s-'+s).classList.toggle('hidden', s!==name);
   });
   if(name!=='game') stopTick();
@@ -2417,6 +2508,9 @@ function rulesLabel(m){
     if(m.bankIncrement>0) parts.push(t('rl_bank_inc',{n:m.bankIncrement}));
   }
   parts.push(t(m.revealSecrets?'rl_reveal':'rl_noreveal'));
+  // El cuaderno solo se nombra cuando esta encendido: apagada, la partida es
+  // la de siempre y su linea de reglas no tiene por que crecer.
+  if(m.notebook) parts.push(t('rl_notebook'));
   return parts.join(' · ');
 }
 function relativeActivity(iso){
@@ -2684,7 +2778,7 @@ function makePad(slotsId, paletteId, getLen, getColors, onChange){
 const padC = makePad('slots-c','palette-c', ()=>cfg.digits, ()=>cfg.numColors, v=>setVal('secret-c-val', v, cfg.digits, cfg.allowRepeats));
 const padJ = makePad('slots-j','palette-j', ()=>joinMeta?joinMeta.digits:3, ()=>joinMeta?joinMeta.numColors:6, v=>setVal('secret-j-val', v, joinMeta.digits, joinMeta.allowRepeats));
 const padR = makePad('slots-r','palette-r', ()=>finishedMeta?finishedMeta.digits:3, ()=>finishedMeta?finishedMeta.numColors:6, v=>setVal('secret-r-val', v, finishedMeta.digits, finishedMeta.allowRepeats));
-const padG = makePad('slots-g','palette-g', ()=>game.digits, ()=>game.numColors||6, v=>setVal('g-guess-val', v, game.digits, game.allowRepeats));
+const padG = makePad('slots-g','palette-g', ()=>game.digits, ()=>game.numColors||6, v=>{setVal('g-guess-val', v, game.digits, game.allowRepeats); renderContradiction(v);});
 const practicePad = makePad('practice-slots','practice-palette', ()=>practiceCfg.digits, ()=>practiceCfg.numColors, v=>setVal('practice-guess-val',v,practiceCfg.digits,practiceCfg.allowRepeats));
 const practiceSecretPad = makePad('practice-secret-slots','practice-secret-palette', ()=>practiceCfg.digits, ()=>practiceCfg.numColors, v=>setVal('practice-secret-val',v,practiceCfg.digits,practiceCfg.allowRepeats));
 function setVal(elId, v, digits, allowRepeats){
@@ -3205,7 +3299,7 @@ function renderGameItems(box, games){
     const b=document.createElement('button'); b.className='btn sm'+(invite?' green':'');
     b.textContent= invite ? t('join_btn') : (g.status==='waiting'?t('see_btn'):t('continue_btn'));
     b.onclick=()=>{ const meta={id:g.gameId,digits:g.digits,mode:g.mode,numColors:g.numColors,allowRepeats:g.allowRepeats,maxAttempts:g.maxAttempts,turnSeconds:g.turnSeconds,
-      timeMode:g.timeMode,bankSeconds:g.bankSeconds,bankIncrement:g.bankIncrement,revealSecrets:g.revealSecrets};
+      timeMode:g.timeMode,bankSeconds:g.bankSeconds,bankIncrement:g.bankIncrement,revealSecrets:g.revealSecrets,notebook:g.notebook};
       if(invite){ goToRematch(g.gameId); }
       else if(g.status==='waiting'||!complete){ enterWait(meta); } else { enterGame(meta); } };
     el.appendChild(b); box.appendChild(el);
@@ -3438,6 +3532,147 @@ bindEnterToButton('daily-guess','daily-guess-btn');
 
 /* -------------------- historial -------------------- */
 const LOCALE={es:'es',en:'en',fr:'fr'};
+/* -------------------- enigmas de deduccion (E4-T5) --------------------
+   Contenido en solitario: unas pistas y un codigo que deducir, sin rival, sin
+   reloj y sin una sola fila en D1. Los enigmas se fabrican de antemano con
+   `tools/make-puzzles.mjs` y se publican en `public/puzzles.json`, que no se
+   edita a mano.
+
+   El archivo no guarda la solucion y no le hace falta: cada enigma tiene una
+   unica combinacion compatible con sus pistas, de modo que comprobar una
+   respuesta es exactamente comprobar que es compatible —eso lo hace
+   `Deduce.contradicts` sin enumerar nada— y revelarla es filtrar el espacio.
+   Asi la respuesta no esta escrita en ningun sitio que se pueda abrir.
+
+   Lo unico que se guarda de quien juega son los enigmas resueltos, aqui en el
+   navegador: no es una partida, no toca el ranking y no cuesta nada. */
+const PUZZLE_FILE='/puzzles.json';
+const PUZZLE_CACHE_KEY='pf_puzzles_v1';
+const PUZZLE_SOLVED_KEY='pf_puzzles_solved';
+let puzzleData=null, puzzleLevel='easy', puzzleOpen=null, puzzlesLoading=false, puzzlesFailed=false;
+let puzzlesReturn='lobby';
+function solvedPuzzles(){
+  try{ const saved=JSON.parse(localStorage.getItem(PUZZLE_SOLVED_KEY)||'[]'); return new Set(Array.isArray(saved)?saved:[]); }
+  catch(e){ return new Set(); }
+}
+function markPuzzleSolved(id){
+  const solved=solvedPuzzles(); solved.add(id);
+  try{ localStorage.setItem(PUZZLE_SOLVED_KEY,JSON.stringify([...solved])); }catch(e){}
+}
+function puzzleLevelData(){ return (puzzleData&&puzzleData.levels||[]).find(level=>level.level===puzzleLevel)||null; }
+async function openPuzzles(){
+  puzzlesReturn=guestActive()?'practice':'lobby';
+  closePuzzle(); show('puzzles'); renderPuzzleList();
+  if(!puzzleData) await loadPuzzles();
+}
+function closePuzzles(){ closePuzzle(); show(puzzlesReturn); }
+async function loadPuzzles(){
+  if(puzzlesLoading) return;
+  puzzlesLoading=true; puzzlesFailed=false;
+  // Lo ya descargado sirve de entrada: el archivo es el mismo para todos y no
+  // cambia entre despliegues, asi que una segunda visita no espera a la red.
+  try{ const cached=JSON.parse(localStorage.getItem(PUZZLE_CACHE_KEY)||'null'); if(cached&&Array.isArray(cached.levels)) puzzleData=cached; }catch(e){}
+  renderPuzzleList();
+  try{
+    const response=await fetch(PUZZLE_FILE,{cache:'no-cache'});
+    if(response.ok){
+      const data=await response.json();
+      if(data&&Array.isArray(data.levels)&&data.levels.length){
+        puzzleData=data;
+        try{ localStorage.setItem(PUZZLE_CACHE_KEY,JSON.stringify(data)); }catch(e){}
+      }
+    }
+  }catch(e){}
+  puzzlesFailed=!puzzleData;
+  puzzlesLoading=false;
+  renderPuzzleList();
+}
+function renderPuzzleList(){
+  const grid=$('pz-grid'); if(!grid) return;
+  [...$('pz-seg-level').children].forEach(button=>button.classList.toggle('on',button.dataset.l===puzzleLevel));
+  const level=puzzleLevelData();
+  if(!level){
+    grid.innerHTML='';
+    $('pz-progress').textContent=puzzlesFailed?t('pz_offline'):t('pz_loading');
+    return;
+  }
+  const solved=solvedPuzzles();
+  $('pz-progress').textContent=t('pz_progress',{done:level.puzzles.filter(puzzle=>solved.has(puzzle.id)).length,total:level.puzzles.length});
+  grid.innerHTML=level.puzzles.map((puzzle,index)=>{
+    const done=solved.has(puzzle.id)?' done':'';
+    const open=(puzzleOpen&&puzzleOpen.id===puzzle.id)?' on':'';
+    return `<button type="button" class="pz-cell${done}${open}" onclick="openPuzzle('${puzzle.id}')">`
+      +`${done?'✓ ':''}${index+1}<small>${t('pz_clues_count',{n:puzzle.clues.length})}</small></button>`;
+  }).join('');
+}
+function openPuzzle(id){
+  const level=puzzleLevelData(); if(!level) return;
+  const index=level.puzzles.findIndex(puzzle=>puzzle.id===id);
+  if(index<0) return;
+  puzzleOpen={id,index,rules:level.rules,clues:level.puzzles[index].clues,finished:false};
+  const input=$('pz-guess');
+  input.maxLength=level.rules.digits; input.value=''; input.placeholder='•'.repeat(level.rules.digits);
+  $('pz-guess-val').textContent=''; $('pz-banner').innerHTML='';
+  $('pz-guessarea').classList.remove('hidden'); $('pz-reveal-btn').classList.remove('hidden');
+  $('pz-play').classList.remove('hidden');
+  renderPuzzleList(); renderOpenPuzzle();
+  $('pz-play').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function closePuzzle(){
+  puzzleOpen=null;
+  const play=$('pz-play'); if(play) play.classList.add('hidden');
+  renderPuzzleList();
+}
+function renderOpenPuzzle(){
+  if(!puzzleOpen){ const play=$('pz-play'); if(play) play.classList.add('hidden'); return; }
+  const rules=puzzleOpen.rules;
+  $('pz-play-title').textContent=t('pz_play_title',{n:puzzleOpen.index+1});
+  $('pz-play-rules').textContent=t('pz_clue_head')+' · '+rulesLabel({...rules,revealSecrets:true});
+  $('pz-clues').innerHTML=puzzleOpen.clues.map(([guess,fijas,picas])=>{
+    let pips='';
+    for(let i=0;i<fijas;i++) pips+='<span class="pip f"></span>';
+    for(let i=0;i<picas;i++) pips+='<span class="pip p"></span>';
+    if(!pips) pips=`<span class="scoretxt">${t('log_nada')}</span>`;
+    return `<div class="pz-clue">${codeViewHTML(guess,rules.mode)}<span class="scoretxt">${fijas}F · ${picas}P</span><span class="pips">${pips}</span></div>`;
+  }).join('');
+}
+function puzzleClueTurns(){
+  return puzzleOpen.clues.map(([guess,fijas,picas])=>({guess,fijas,picas}));
+}
+function submitPuzzle(){
+  if(!puzzleOpen||puzzleOpen.finished||typeof Deduce==='undefined'||!Deduce) return;
+  const rules=puzzleOpen.rules, code=$('pz-guess').value.trim();
+  if(validateLive(code,rules.digits,rules.allowRepeats).cls!=='ok'){ toast(t('invalid_guess'),true); return; }
+  // Solucion unica: ser compatible con las pistas y ser la solucion son lo
+  // mismo, asi que no hace falta guardar la respuesta para comprobarla.
+  if(Deduce.contradicts(code,puzzleClueTurns())){
+    $('pz-banner').innerHTML=`<div class="banner lose"><h2>${t('pz_wrong')}</h2></div>`;
+    endSound('lose'); return;
+  }
+  puzzleOpen.finished=true; markPuzzleSolved(puzzleOpen.id);
+  $('pz-guessarea').classList.add('hidden'); $('pz-reveal-btn').classList.add('hidden');
+  $('pz-banner').innerHTML=`<div class="banner win"><h2>${t('pz_solved')}</h2><p>${t('pz_solved_text')}</p></div>`
+    +`<div class="note"><b>${t('pz_revealed')}</b> ${codeViewHTML(code,rules.mode)}</div>`;
+  endSound('win'); renderPuzzleList();
+}
+function revealPuzzle(){
+  if(!puzzleOpen||puzzleOpen.finished||typeof Deduce==='undefined'||!Deduce) return;
+  const rules=puzzleOpen.rules;
+  let candidates=Deduce.enumerate(rules);
+  for(const [guess,fijas,picas] of puzzleOpen.clues) candidates=Deduce.filter(candidates,guess,{fijas,picas});
+  puzzleOpen.finished=true;
+  $('pz-guessarea').classList.add('hidden'); $('pz-reveal-btn').classList.add('hidden');
+  $('pz-banner').innerHTML=`<div class="note"><b>${t('pz_revealed')}</b> ${codeViewHTML(candidates[0]||'',rules.mode)}</div>`;
+}
+$('pz-seg-level').addEventListener('click',event=>{
+  const button=event.target.closest('button'); if(!button) return;
+  puzzleLevel=button.dataset.l; closePuzzle(); renderPuzzleList();
+});
+$('pz-guess').addEventListener('input',event=>{
+  if(puzzleOpen) setVal('pz-guess-val',event.target.value,puzzleOpen.rules.digits,puzzleOpen.rules.allowRepeats);
+});
+bindEnterToButton('pz-guess','pz-guess-btn');
+
 let historyEntries=[],historyStats=null,historyFilter='all';
 
 function renderHistoryStats(){
@@ -3569,7 +3804,7 @@ function resumePracticeTimers(){
   }else if(practiceCfg.turnSeconds&&practice.turn!=='computer')practice.deadline=Date.now()+Math.max(1,Number.isFinite(practice.pausedRemainingMs)?practice.pausedRemainingMs:practiceCfg.turnSeconds*1000);
   practice.pausedRemainingMs=0;
   if(practice.deadline||isPracticeBank())practiceTickTimer=setInterval(renderPracticeStatus,250);
-  if(practiceCfg.type==='computer'&&practice.turn==='computer'){ $('practice-turn').className='turnbar sending';$('practice-turn-txt').textContent=t('computer_thinking');practiceComputerTimer=setTimeout(runComputerTurn,450); }
+  if(practiceCfg.type==='computer'&&practice.turn==='computer'){ $('practice-turn').className='turnbar sending';$('practice-turn-txt').textContent=computerThinkingText();practiceComputerTimer=setTimeout(runComputerTurn,450); }
   renderPracticeStatus();saveActivePractice();
 }
 function practiceStats(){
@@ -3765,8 +4000,23 @@ function expireSoloAttempt(){if(!practice||practice.finished||practiceCfg.type!=
   toast(t('practice_missed_timeout'));practice.deadline=Date.now()+practiceCfg.turnSeconds*1000;renderPracticeStatus();saveActivePractice();
 }
 function cryptoRandom(){const bytes=new Uint32Array(1);crypto.getRandomValues(bytes);return bytes[0]/4294967296;}
+/* Ver pensar al ordenador (E4-T4). El rival ya no solo juega: dice con cuantos
+   codigos contaba antes del intento, cuantos le quedan despues y en cuantos
+   grupos parte ese intento la lista. Las cifras salen del mismo solucionador
+   que elige la jugada, asi que no cuestan una pasada de mas, funcionan sin
+   conexion como el resto de la practica y se guardan con la partida para que
+   sigan ahi al continuarla. */
+function computerThinkingText(){
+  const left=practice&&practice.solver&&practice.solver.candidateCount?practice.solver.candidateCount():0;
+  return left>0?t('computer_thinking_left',{n:left}):t('computer_thinking');
+}
+function thinkLine(g){
+  if(!(g.before>0)) return '';
+  const groups=g.groups>1?' · '+t('think_groups',{n:g.groups}):'';
+  return `<div class="think">${t('think_line',{before:g.before,after:g.after})}${groups}</div>`;
+}
 function renderComputerLog(){
-  $('practice-computer-log').innerHTML=practice.computerGuesses.length?practice.computerGuesses.slice().reverse().map(g=>{let p='';for(let i=0;i<g.fijas;i++)p+='<span class="pip f"></span>';for(let i=0;i<g.picas;i++)p+='<span class="pip p"></span>';if(!p)p=`<span class="scoretxt">${t('log_nada')}</span>`;return `<div class="g">${codeViewHTML(g.guess,practiceCfg.mode)}<span class="scoretxt">${g.fijas}F · ${g.picas}P</span><span class="pips">${p}</span></div>`;}).join(''):`<div class="empty">${t('log_empty_theirs')}</div>`;
+  $('practice-computer-log').innerHTML=practice.computerGuesses.length?practice.computerGuesses.slice().reverse().map(g=>{let p='';for(let i=0;i<g.fijas;i++)p+='<span class="pip f"></span>';for(let i=0;i<g.picas;i++)p+='<span class="pip p"></span>';if(!p)p=`<span class="scoretxt">${t('log_nada')}</span>`;return `<div class="g">${codeViewHTML(g.guess,practiceCfg.mode)}<span class="scoretxt">${g.fijas}F · ${g.picas}P</span><span class="pips">${p}</span></div>`+thinkLine(g);}).join(''):`<div class="empty">${t('log_empty_theirs')}</div>`;
 }
 function handlePlayerComputerScore(score){
   settlePracticeBank();
@@ -3777,12 +4027,14 @@ function handlePlayerComputerScore(score){
   beginComputerTurn();
 }
 function beginComputerTurn(){
-  practice.turn='computer';practice.deadline=0;$('practice-guessarea').classList.add('hidden');$('practice-turn').className='turnbar sending';$('practice-turn-txt').textContent=t('computer_thinking');renderPracticeStatus();saveActivePractice();practiceComputerTimer=setTimeout(runComputerTurn,450);
+  practice.turn='computer';practice.deadline=0;$('practice-guessarea').classList.add('hidden');$('practice-turn').className='turnbar sending';$('practice-turn-txt').textContent=computerThinkingText();renderPracticeStatus();saveActivePractice();practiceComputerTimer=setTimeout(runComputerTurn,450);
 }
 function runComputerTurn(){
   practiceComputerTimer=null;if(!practice||practice.finished)return;
   const guess=practice.solver.nextGuess(),score=evaluatePractice(practice.playerSecret,guess);
-  practice.solver.record(guess,score);practice.computerGuesses.push({guess,...score});renderComputerLog();renderPracticeStatus();
+  const thought=practice.solver.explain?practice.solver.explain(guess):{before:0,groups:0};
+  practice.solver.record(guess,score);
+  practice.computerGuesses.push({guess,...score,before:thought.before,after:practice.solver.candidateCount(),groups:thought.groups});renderComputerLog();renderPracticeStatus();
   if(score.fijas===practiceCfg.digits){finishComputerPractice(practice.pendingWinner==='player'?'draw':'loss');return;}
   if(practice.pendingWinner==='player'){finishComputerPractice('win');return;}
   if(practiceCfg.maxAttempts&&playerPracticeAttempts()>=practiceCfg.maxAttempts&&practice.computerGuesses.length>=practiceCfg.maxAttempts){finishComputerPractice('draw');return;}
@@ -3936,6 +4188,8 @@ $('seg-public').addEventListener('click', e=>{ const b=e.target.closest('button'
   $('pub-hint').textContent=cfg.isPublic?t('pub_hint_public'):t('pub_hint_private'); });
 $('seg-reveal').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
   cfg.revealSecrets=b.dataset.v==='1'; segPick($('seg-reveal'),b); });
+$('seg-notebook').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
+  cfg.notebook=b.dataset.nb==='1'; segPick($('seg-notebook'),b); });
 $('secret-c').addEventListener('input', e=>setVal('secret-c-val', e.target.value, cfg.digits, cfg.allowRepeats));
 
 function getSecret(ctx){
@@ -3953,11 +4207,11 @@ async function createGame(){
     const res=await api('createGame',{username:user, digits:cfg.digits, secret, mode:cfg.mode, numColors:cfg.numColors,
       allowRepeats:cfg.allowRepeats, isPublic:cfg.isPublic, maxAttempts:cfg.maxAttempts, turnSeconds:cfg.turnSeconds,
       timeMode:cfg.timeMode, bankSeconds:cfg.bankSeconds, bankIncrement:cfg.bankIncrement,
-      revealSecrets:cfg.revealSecrets, country:myCountry});
+      revealSecrets:cfg.revealSecrets, notebook:cfg.notebook, country:myCountry});
     if(!res.ok){ toast(te(res.error),true); return; }
     localStorage.setItem('pf_secret_'+res.gameId, secret);
     enterWait({id:res.gameId, digits:cfg.digits, mode:cfg.mode, numColors:cfg.numColors, allowRepeats:cfg.allowRepeats, maxAttempts:cfg.maxAttempts,
-      turnSeconds:cfg.turnSeconds, timeMode:cfg.timeMode, bankSeconds:cfg.bankSeconds, bankIncrement:cfg.bankIncrement, isPublic:cfg.isPublic, revealSecrets:cfg.revealSecrets});
+      turnSeconds:cfg.turnSeconds, timeMode:cfg.timeMode, bankSeconds:cfg.bankSeconds, bankIncrement:cfg.bankIncrement, isPublic:cfg.isPublic, revealSecrets:cfg.revealSecrets, notebook:cfg.notebook});
   }catch(e){ toast(t('net_error'),true); } finally{ $('btn-create').disabled=false; $('btn-create-random').disabled=false; }
 }
 function prepareRandomGame(){
@@ -3971,7 +4225,7 @@ function prepareRandomGame(){
 function enterWait(meta){
   localStorage.removeItem('pf_current_game');
   game={id:meta.id, digits:meta.digits, mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats, isPublic:meta.isPublic!==false, maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0,
-    timeMode:meta.timeMode||'turn', bankSeconds:meta.bankSeconds||0, bankIncrement:meta.bankIncrement||0, revealSecrets:!!meta.revealSecrets};
+    timeMode:meta.timeMode||'turn', bankSeconds:meta.bankSeconds||0, bankIncrement:meta.bankIncrement||0, revealSecrets:!!meta.revealSecrets, notebook:!!meta.notebook};
   $('wait-code').textContent=meta.id; $('wait-info').textContent=rulesLabel(meta);
   show('wait');
   const waitEpoch=gameViewEpoch, waitGameId=game.id;
@@ -4027,7 +4281,7 @@ function closeRules(){ show(rulesReturn); }
 function openJoin(meta){
   localStorage.removeItem('pf_current_game');
   joinMeta={gameId:meta.gameId||meta.id, digits:meta.digits, mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats,
-    maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0, timeMode:meta.timeMode||'turn', bankSeconds:meta.bankSeconds||0, bankIncrement:meta.bankIncrement||0, revealSecrets:!!meta.revealSecrets};
+    maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0, timeMode:meta.timeMode||'turn', bankSeconds:meta.bankSeconds||0, bankIncrement:meta.bankIncrement||0, revealSecrets:!!meta.revealSecrets, notebook:!!meta.notebook};
   $('join-code').textContent=joinMeta.gameId;
   $('join-rules-txt').textContent=t('join_rules',{rules:rulesLabel(joinMeta)});
   const inp=$('secret-j'); inp.maxLength=joinMeta.digits; inp.value=''; inp.placeholder='•'.repeat(joinMeta.digits);
@@ -4045,7 +4299,7 @@ async function confirmJoin(){
     if(!res.ok){ toast(te(res.error),true); enterLobby(); return; }
     localStorage.setItem('pf_secret_'+joinMeta.gameId, secret);
     enterGame({id:joinMeta.gameId, digits:joinMeta.digits, mode:joinMeta.mode, numColors:joinMeta.numColors, allowRepeats:joinMeta.allowRepeats, maxAttempts:joinMeta.maxAttempts,
-      turnSeconds:joinMeta.turnSeconds, timeMode:joinMeta.timeMode, bankSeconds:joinMeta.bankSeconds, bankIncrement:joinMeta.bankIncrement});
+      turnSeconds:joinMeta.turnSeconds, timeMode:joinMeta.timeMode, bankSeconds:joinMeta.bankSeconds, bankIncrement:joinMeta.bankIncrement, notebook:joinMeta.notebook});
   }catch(e){ toast(t('net_error'),true); } finally{ $('btn-join').disabled=false; }
 }
 
@@ -4053,7 +4307,7 @@ async function confirmJoin(){
 function openRematch(){
   finishedMeta={gameId:gState.gameId, digits:gState.digits, mode:gState.mode, numColors:gState.numColors||6, allowRepeats:gState.allowRepeats,
     maxAttempts:gState.maxAttempts, turnSeconds:gState.turnSeconds, timeMode:gState.timeMode, bankSeconds:gState.bankSeconds, bankIncrement:gState.bankIncrement,
-    revealSecrets:gState.revealSecrets};
+    revealSecrets:gState.revealSecrets, notebook:gState.notebook};
   $('rematch-rules-txt').textContent=t('rematch_rules',{rules:rulesLabel(finishedMeta)});
   const inp=$('secret-r'); inp.maxLength=finishedMeta.digits; inp.value=''; inp.placeholder='•'.repeat(finishedMeta.digits);
   padR.reset(); applyMode('r', finishedMeta.mode, 'secret-r', 'pad-r', padR); $('secret-r-val').textContent='';
@@ -4122,7 +4376,7 @@ async function resumeStoredGame(){
 function metaFromState(st){
   return {id:st.gameId, digits:parseInt(st.digits,10), mode:st.mode, numColors:st.numColors||6, allowRepeats:st.allowRepeats, isPublic:st.isPublic,
     maxAttempts:st.maxAttempts||0, turnSeconds:st.turnSeconds||0, timeMode:st.timeMode||'turn', bankSeconds:st.bankSeconds||0, bankIncrement:st.bankIncrement||0,
-    revealSecrets:!!st.revealSecrets};
+    revealSecrets:!!st.revealSecrets, notebook:!!st.notebook};
 }
 function resetGameView(){
   hideToast();
@@ -4138,13 +4392,14 @@ function resetGameView(){
   $('g-guessarea').classList.toggle('hidden',!!game.spectator); $('g-guess').disabled=true; $('g-guess-btn').disabled=true;
   $('g-abandon-wrap').classList.add('hidden'); $('g-legend').style.display='flex';
   $('g-pause-cover').classList.add('hidden'); $('g-pause-btn').classList.add('hidden');
+  $('g-notebook').classList.add('hidden'); $('g-contradiction').classList.add('hidden'); $('g-contradiction').textContent='';
 }
 function enterGame(meta,initialState=null){
   const epoch=++gameViewEpoch;
   guessSubmitting=false;
   reviewingHistory=!!meta.review;
   game={id:meta.id, digits:parseInt(meta.digits,10), mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats, isPublic:meta.isPublic!==false,
-    maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0, timeMode:meta.timeMode||'turn', bankSeconds:meta.bankSeconds||0, bankIncrement:meta.bankIncrement||0, revealSecrets:!!meta.revealSecrets, spectator:!!meta.spectator};
+    maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0, timeMode:meta.timeMode||'turn', bankSeconds:meta.bankSeconds||0, bankIncrement:meta.bankIncrement||0, revealSecrets:!!meta.revealSecrets, notebook:!!meta.notebook, spectator:!!meta.spectator};
   const inp=$('g-guess'); inp.maxLength=game.digits; inp.value=''; inp.placeholder='•'.repeat(game.digits);
   padG.reset(); applyMode('g', game.mode, 'g-guess', 'pad-g', padG);
   $('g-code').textContent=meta.id; $('g-guess-val').textContent='';
@@ -4178,7 +4433,7 @@ async function refreshGame(expectedEpoch=gameViewEpoch, expectedGameId=game.id){
     }else toast(te(st.error)||t('net_error'),true);
   }catch(e){ /* Un fallo transitorio conserva visible el último estado válido. */ }
 }
-$('g-guess').addEventListener('input', e=>setVal('g-guess-val', e.target.value, game.digits, game.allowRepeats));
+$('g-guess').addEventListener('input', e=>{setVal('g-guess-val', e.target.value, game.digits, game.allowRepeats); renderContradiction(e.target.value);});
 
 bindEnterToButton('upin2','auth-register-btn');
 bindEnterToButton('login-pin','auth-login-btn');
@@ -4197,6 +4452,9 @@ function renderGame(st){
   if(st.mode) game.mode=st.mode;
   if(st.digits) game.digits=parseInt(st.digits,10);
   if(st.turnStartedAt!==lastTurnStart){ lastTurnStart=st.turnStartedAt; passRequested=false; }
+  if(typeof st.notebook==='boolean') game.notebook=st.notebook;
+  syncNotebook(st);
+  renderContradiction(game.mode==='colors'?padG.get():$('g-guess').value);
 
   const me=st.youAre; const oppName = me===1 ? st.p2 : st.p1; const oppLabel = oppName||t('rival');
   const spectator=me===0;
@@ -4319,7 +4577,7 @@ function renderGame(st){
     turn.className='turnbar theirs';
     $('g-turn-txt').textContent= st.whoseTurn ? t('turn_of',{name:st.whoseTurn}) : t('waiting_generic');
     $('g-guess-btn').disabled=true; $('g-guess').disabled=true; padG.setDisabled(true);
-    $('g-guess').value=''; padG.reset(); $('g-guess-val').textContent='';
+    $('g-guess').value=''; padG.reset(); $('g-guess-val').textContent=''; renderContradiction('');
     if(pending && pending===user){
       $('g-turn-txt').textContent=t('solved_wait',{name:oppLabel});
     }
@@ -4351,6 +4609,66 @@ function renderLog(id, arr, emptyMsg){
     box.appendChild(el);
   });
 }
+
+/* -------------------- el cuaderno y el aviso de contradiccion (E4-T3) -------
+   Las dos cosas son la misma opcion de la partida: se elige al crearla, viaja
+   en `games` y la pantalla las enciende porque lo dice el servidor —`st.notebook`
+   y no una preferencia guardada aqui—, de modo que los dos juegan con las
+   mismas reglas. Lo que si es personal son las marcas: son notas de quien
+   juega, no una jugada, asi que viven en este navegador y nunca se envian.
+   El aviso no bloquea nada: dice que ese intento ya estaba descartado por las
+   propias pistas y deja decidir. */
+const NOTEBOOK_STATES=['','out','in'];
+let notebookMarks={};
+function notebookKey(){ return 'pf_notebook_'+game.id; }
+function loadNotebook(){
+  try{ const saved=JSON.parse(localStorage.getItem(notebookKey())||'{}'); notebookMarks=(saved&&typeof saved==='object')?saved:{}; }
+  catch(e){ notebookMarks={}; }
+}
+function saveNotebook(){ try{ localStorage.setItem(notebookKey(),JSON.stringify(notebookMarks)); }catch(e){} }
+function cycleNotebook(symbol){
+  const next=NOTEBOOK_STATES[(NOTEBOOK_STATES.indexOf(notebookMarks[symbol]||'')+1)%NOTEBOOK_STATES.length];
+  if(next) notebookMarks[symbol]=next; else delete notebookMarks[symbol];
+  saveNotebook(); renderNotebook();
+}
+function clearNotebook(){ notebookMarks={}; saveNotebook(); renderNotebook(); }
+function notebookSymbols(){ return game.mode==='colors' ? Math.min(game.numColors||6, COLORS.length) : 10; }
+function renderNotebook(){
+  const grid=$('g-notebook-grid'); if(!grid) return;
+  let html='';
+  for(let symbol=0; symbol<notebookSymbols(); symbol++){
+    const state=notebookMarks[String(symbol)]||'';
+    const face=game.mode==='colors'
+      ? `<span class="mini" style="background:${COLORS[symbol].c}" aria-hidden="true">${symbolSVG(symbol,14)}</span>`
+      : String(symbol);
+    html+=`<button type="button" class="nb-cell ${state}" onclick="cycleNotebook('${symbol}')"`
+      +` aria-pressed="${state?'true':'false'}">${face}</button>`;
+  }
+  grid.innerHTML=html;
+}
+function syncNotebook(st){
+  const box=$('g-notebook'); if(!box) return;
+  const on=!!(st&&st.notebook)&&st.status!=='finished'&&st.youAre!==0;
+  box.classList.toggle('hidden',!on);
+  if(on){ loadNotebook(); renderNotebook(); }
+}
+/* Un intento contradice las pistas propias cuando, tomado como si fuera el
+   codigo del rival, no habria dado las puntuaciones que ya estan en pantalla.
+   Se mide en el navegador contra los intentos que ya tiene, sin una lectura
+   mas en D1 y sin tocar ningun secreto. */
+function myClues(st){
+  const owner=(st&&st.youAre===2)?st.p2:(st&&st.p1);
+  return ((st&&st.guesses)||[]).filter(entry=>entry.by===owner);
+}
+function renderContradiction(value){
+  const box=$('g-contradiction'); if(!box) return;
+  const guess=String(value||'');
+  const armed=!!(gState&&gState.notebook)&&gState.status==='active'&&gState.youAre!==0
+    &&typeof Deduce!=='undefined'&&!!Deduce&&guess.length===game.digits;
+  const bad=armed&&Deduce.contradicts(guess,myClues(gState));
+  box.classList.toggle('hidden',!bad);
+  box.textContent=bad?t('nb_contradiction'):'';
+}
 async function submitGuess(){
   if(guessSubmitting) return;
   const guess=getSecret('g');
@@ -4371,7 +4689,7 @@ async function submitGuess(){
       res=await api('guess',{gameId:game.id, username:user, guess, requestId},{timeoutMs:30000});
     }
     if(!res.ok){ guessSubmitting=false; if(gState) renderGame(gState); toast(te(res.error),true); refreshGame(); return; }
-    $('g-guess').value=''; padG.reset(); $('g-guess-val').textContent='';
+    $('g-guess').value=''; padG.reset(); $('g-guess-val').textContent=''; renderContradiction('');
     guessSubmitting=false;
     if(res.tie) toast(t('toast_tie'));
     else if(res.win) toast(t('win_title'));

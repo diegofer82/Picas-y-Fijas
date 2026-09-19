@@ -212,7 +212,8 @@ export function gameMeta(game) {
     timeMode: isBankGame(game) ? 'bank' : isCorrespondenceGame(game) ? 'correspondence' : 'turn',
     bankSeconds: isBankGame(game) ? toInt(game.bank_seconds) : 0,
     bankIncrement: isBankGame(game) ? Math.max(0, toInt(game.bank_increment)) : 0,
-    revealSecrets: truthy(game.reveal_secrets), country1: cleanCountry(game.country1),
+    revealSecrets: truthy(game.reveal_secrets), notebook: truthy(game.notebook),
+    country1: cleanCountry(game.country1),
     country2: cleanCountry(game.country2), updatedAt: game.updated_at,
   };
 }
@@ -257,6 +258,9 @@ export function sanitizeGame(game, username) {
     finishReason: game.finish_reason || '', revealSecrets: meta.revealSecrets,
     opponentSecret: game.status === 'finished' && meta.revealSecrets && youAre ? (youAre === 1 ? secret2 : secret1) : '',
     yourSecret: youAre === 1 ? secret1 : youAre === 2 ? secret2 : '',
+    // El cuaderno es una regla de la partida: la pantalla lo enciende porque
+    // lo dice el servidor, nunca porque lo guarde el navegador.
+    notebook: meta.notebook,
     pendingWinner: game.pending_winner || '', rematchId: game.rematch_id || '',
     createdAt: game.created_at, updatedAt: game.updated_at, version: game.version,
   };

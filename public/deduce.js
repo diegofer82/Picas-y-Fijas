@@ -114,6 +114,28 @@
     return { guess: best, worst: bestWorst, squares: bestSquares, secrets };
   }
 
+  /* El aviso de contradiccion (E4-T3). Un intento contradice las pistas
+     propias cuando, tomado como si fuera el codigo del rival, no habria dado
+     las puntuaciones que ya estan en la pantalla: es decir, ya estaba
+     descartado antes de escribirlo. No hace falta enumerar nada para saberlo
+     —basta releer el propio historial—, asi que sirve igual en una partida de
+     seis simbolos que en una de tres. Los turnos perdidos al tiempo no dicen
+     nada y no cuentan. */
+  function contradicts(candidate, history) {
+    const code = String(candidate || '');
+    const clues = (history || []).filter((turn) => turn && !turn.missed
+      && typeof turn.guess === 'string' && turn.guess.length === code.length);
+    if (!code.length || !clues.length) return false;
+    return !compatible(code, clues);
+  }
+
+  /* Ver pensar al ordenador (E4-T4). Cuantos codigos seguian en pie antes del
+     intento y en cuantos grupos los parte: son las dos cifras con las que se
+     explica una jugada. `before` es exacto y no cuesta nada, porque el
+     solucionador ya mantiene la lista; el reparto si hay que recorrerla, asi
+     que por encima de este limite se calla en vez de bloquear el telefono. */
+  var EXPLAIN_LIMIT = 20000;
+
   function createSolver(rules, difficulty, options) {
     const random = options && options.random ? options.random : Math.random;
     const history = [];
@@ -128,6 +150,12 @@
         ensureCandidates();
         history.push({ guess: String(guess), fijas: Number(score.fijas), picas: Number(score.picas) });
         candidates = filter(candidates, guess, score);
+      },
+      explain(guess) {
+        ensureCandidates();
+        const before = candidates.length;
+        const groups = before <= EXPLAIN_LIMIT ? split(candidates, String(guess)).groups : 0;
+        return { before, groups };
       },
       nextGuess() {
         ensureCandidates();
@@ -191,6 +219,7 @@
 
   root.Deduce = Object.freeze({
     evaluate, sameScore, symbolCount, spaceSize, enumerate, compatible,
-    filter, split, sample, bestProbe, createSolver, gradeGame, GRADE_LIMIT,
+    filter, split, sample, bestProbe, contradicts, createSolver, gradeGame,
+    GRADE_LIMIT, EXPLAIN_LIMIT,
   });
 })(typeof globalThis !== 'undefined' ? globalThis : window);

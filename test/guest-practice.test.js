@@ -37,7 +37,7 @@ test('la practica del invitado no habla con el servidor: ni una llamada al API',
 });
 
 test('sin sesion solo existen las pantallas publicas', () => {
-  assert.match(html, /const GUEST_VIEWS = new Set\(\['login','practice','practice-game','rules','feedback'\]\)/);
+  assert.match(html, /const GUEST_VIEWS = new Set\(\['login','practice','practice-game','puzzles','rules','feedback'\]\)/);
   assert.match(html, /if\(!sessionToken && !GUEST_VIEWS\.has\(name\)\) name = 'login';/);
   // El vestibulo, la cuenta, el ranking y la partida quedan fuera de esa lista.
   for (const view of ['lobby', 'account', 'rank', 'history', 'create', 'wait', 'join', 'rematch', 'game', 'verify']) {

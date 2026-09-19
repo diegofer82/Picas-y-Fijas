@@ -311,7 +311,7 @@ async function inviteInfo(db, code) {
   const row = await db
     .prepare(
       `SELECT game_id,status,p1,digits,mode,num_colors,allow_repeats,max_attempts,
-        turn_seconds,time_mode,bank_seconds,bank_increment,reveal_secrets,is_public,created_at
+        turn_seconds,time_mode,bank_seconds,bank_increment,reveal_secrets,notebook,is_public,created_at
        FROM games WHERE game_id=?`,
     )
     .bind(gameId)
@@ -335,6 +335,7 @@ async function inviteInfo(db, code) {
     bankSeconds: Number(row.bank_seconds) || 0,
     bankIncrement: Number(row.bank_increment) || 0,
     revealSecrets: !!row.reveal_secrets,
+    notebook: !!row.notebook,
   };
 }
 
@@ -361,6 +362,9 @@ function gameInsertValues(params, username, gameId, source = null) {
   const revealSecrets = source
     ? truthy(source.reveal_secrets)
     : truthy(params.revealSecrets);
+  // El cuaderno y el aviso de contradiccion son una regla compartida: se
+  // elige al crear la partida y la revancha la hereda, como el revelado.
+  const notebook = source ? truthy(source.notebook) : truthy(params.notebook);
   const maxAttempts = source
     ? toInt(source.max_attempts)
     : Math.max(0, toInt(params.maxAttempts));
@@ -393,6 +397,7 @@ function gameInsertValues(params, username, gameId, source = null) {
     allowRepeats,
     isPublic,
     revealSecrets,
+    notebook,
     maxAttempts,
     turnSeconds,
     timeMode,
@@ -430,6 +435,10 @@ function validateGameOptions(options) {
     if (![0, 3, 5, 10].includes(options.bankIncrement))
       return "El incremento debe ser 0, 3, 5 o 10 segundos.";
   }
+  // `truthy` ya deja la opcion en un booleano; comprobarlo aqui es lo que
+  // impide que un cliente cuele cualquier otra cosa en la columna.
+  if (typeof options.notebook !== "boolean")
+    return "La opción de cuaderno no es válida.";
   return validateCode(
     options.secret,
     options.digits,
@@ -506,6 +515,7 @@ async function createGame(db, params, user, source = null) {
     "",
     "",
     options.revealSecrets ? 1 : 0,
+    options.notebook ? 1 : 0,
     "",
     0,
     "",
@@ -519,7 +529,7 @@ async function createGame(db, params, user, source = null) {
     .prepare(
       `INSERT INTO games(game_id,status,digits,p1,secret1,p2,secret2,turn,guesses,winner,created_at,updated_at,
     allow_repeats,is_public,mode,num_colors,max_attempts,turn_seconds,turn_started_at,rematch_id,pending_winner,country1,country2,
-    turn_remaining,timer_paused,manual_paused_by,manual_pause_until,last_manual_pause_at,lobby_paused_by,reveal_secrets,timer_ready_by,timer_activated,finish_reason,
+    turn_remaining,timer_paused,manual_paused_by,manual_pause_until,last_manual_pause_at,lobby_paused_by,reveal_secrets,notebook,timer_ready_by,timer_activated,finish_reason,
     time_mode,bank_seconds,bank_increment,bank1_remaining,bank2_remaining)
     VALUES(${values.map(() => "?").join(",")})`,
     )

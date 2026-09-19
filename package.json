@@ -1,6 +1,6 @@
 {
   "name": "picas-y-fijas",
-  "version": "3.9.0",
+  "version": "3.9.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,6 +9,7 @@
     "check": "node --check src/index.js && node --check src/game.js && node --test",
     "deploy": "wrangler deploy",
     "icons": "node tools/make-icons.mjs public",
+    "puzzles": "node tools/make-puzzles.mjs",
     "pages": "python tools/make-rules-pages.py && python tools/make-install-pages.py",
     "screenshots": "node tools/make-screenshots.mjs",
     "db:local": "wrangler d1 migrations apply picas-y-fijas-db --local",

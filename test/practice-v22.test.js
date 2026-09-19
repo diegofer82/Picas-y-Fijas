@@ -30,7 +30,10 @@ test('computer practice exposes difficulty, both logs, turn state and local thin
 });
 
 test('the computer attempt indicator refreshes after recording the final guess', () => {
-  assert.match(practiceSource,/computerGuesses\.push\(\{guess,\.\.\.score\}\);renderComputerLog\(\);renderPracticeStatus\(\);/);
+  // Desde E4-T4 el intento del ordenador viaja con su explicacion; lo que
+  // vigila esta prueba sigue siendo el orden: primero se apunta, despues se
+  // repintan el registro y el contador.
+  assert.match(practiceSource,/computerGuesses\.push\(\{guess,\.\.\.score[\s\S]*?\);renderComputerLog\(\);renderPracticeStatus\(\);/);
   assert.match(practiceSource,/renderPracticeStatus\(\);\s*if\(score\.fijas===practiceCfg\.digits\)/);
 });
 

@@ -39,7 +39,9 @@ test('every difficulty guesses only codes compatible with all received clues', (
 
 test('the solver API never receives or stores the player secret', () => {
   const solver=createSolver({mode:'numbers',digits:3,numColors:10,allowRepeats:false},'normal');
-  assert.deepEqual(Object.keys(solver).sort(),['candidateCount','difficulty','history','nextGuess','record','rules']);
+  // `explain` (E4-T4) dice cuantos codigos seguian en pie y en cuantos grupos
+  // los parte un intento: sigue sin haber ninguna puerta hacia el secreto.
+  assert.deepEqual(Object.keys(solver).sort(),['candidateCount','difficulty','explain','history','nextGuess','record','rules']);
   assert.equal('secret' in solver,false);
   solver.record('012',evaluate('321','012'));
   assert.equal(compatible(solver.nextGuess(),solver.history),true);
