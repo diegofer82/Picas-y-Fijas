@@ -47,6 +47,7 @@ import {
   reportChat,
   sendChat,
   sendNudge,
+  sendReaction,
   systemChat,
   threadForGame,
 } from "./chat.js";
@@ -84,6 +85,7 @@ const PROTECTED = new Set([
   "chatSend",
   "chatReport",
   "chatNudge",
+  "chatReact",
   "requestEmailVerification",
   "accountProfile",
   "changePin",
@@ -135,6 +137,7 @@ const PASSIVE_PRESENCE_ACTIONS = new Set([
   "chatSend",
   "chatReport",
   "chatNudge",
+  "chatReact",
 ]);
 const PUBLIC_PULSE_TTL_MS = 30 * 1000;
 let publicPulseCache = null;
@@ -1696,6 +1699,9 @@ async function routeApi(request, env, ctx) {
       break;
     case "chatNudge":
       result = await sendNudge(env.DB, params, auth.user);
+      break;
+    case "chatReact":
+      result = await sendReaction(env.DB, params, auth.user);
       break;
     default:
       if (ADMIN_ACTIONS.has(action))

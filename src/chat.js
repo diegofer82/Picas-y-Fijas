@@ -428,6 +428,66 @@ export async function sendNudge(db, p, user) {
     ),
   };
 }
+/* Reacciones rapidas (E6-T2). Quien juega desde el telefono, con el pulgar en
+   el teclado numerico, no va a escribir «buena jugada»: pulsa una de estas
+   cuatro y sigue jugando.
+
+   No abren ninguna via nueva de moderacion, y por eso no son mensajes de
+   usuario: lo que se guarda es **la clave**, no un texto, asi que no hay nada
+   que traducir en el servidor, nada que filtrar y nada que denunciar. Cada
+   pantalla la lee en su idioma. Viajan por `chat_messages` con el tipo que ya
+   existia para los avisos de la partida —el CHECK de la tabla no admite uno
+   nuevo y esta tarea no trae migracion— y respetan la misma espera que el
+   zumbido, que es lo que impide convertirlas en una metralleta. */
+export const REACTIONS = Object.freeze(["luck", "close", "wow", "gg"]);
+export const reactionBody = (reaction, name) => `react_${reaction}|${name}`;
+export async function sendReaction(db, p, user) {
+  const room = await roomAccess(db, p, user);
+  if (room.ok && room.spectator) return { ok: false, error: "Este chat es privado." };
+  if (!room.ok || room.roomType !== "private")
+    return room.ok
+      ? { ok: false, error: "Las reacciones solo están disponibles en conversaciones privadas." }
+      : room;
+  const muted = await activeMute(db, user);
+  if (muted) return { ok: false, error: muted };
+  const reaction = String(p.reaction || "");
+  if (!REACTIONS.includes(reaction)) return { ok: false, error: "Esa reacción no existe." };
+  const last = await db
+    .prepare(
+      "SELECT created_at FROM chat_messages WHERE thread_id=? AND sender_key=? AND kind='system' ORDER BY id DESC LIMIT 1",
+    )
+    .bind(room.threadId, user.username_key)
+    .first();
+  if (last && Date.now() - Date.parse(last.created_at) < CHAT.nudgeCooldownMs)
+    return { ok: false, error: "Espera 30 segundos antes de enviar otra reacción." };
+  const stamp = now(),
+    result = await db
+      .prepare(
+        "INSERT INTO chat_messages(room_type,game_id,thread_id,sender,sender_key,kind,body,created_at) VALUES('game',?,?,?,?,'system',?,?)",
+      )
+      .bind(
+        room.gameId || null,
+        room.threadId,
+        user.username,
+        user.username_key,
+        reactionBody(reaction, user.username),
+        stamp,
+      )
+      .run();
+  await db
+    .prepare("UPDATE chat_threads SET last_message_at=? WHERE id=?")
+    .bind(stamp, room.threadId)
+    .run();
+  return {
+    ok: true,
+    message: publicMessage(
+      await db
+        .prepare("SELECT * FROM chat_messages WHERE id=?")
+        .bind(result.meta.last_row_id)
+        .first(),
+    ),
+  };
+}
 export async function reportChat(db, p, user) {
   const reason = ["spam", "harassment", "inappropriate"].includes(p.reason)
       ? p.reason
