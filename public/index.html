@@ -684,6 +684,15 @@
       <div class="list" id="mine-list"><div class="empty">—</div></div>
     </div>
 
+    <!-- LA ARENA (E6-T3) -->
+    <div class="card" id="arena-card">
+      <h2 data-i18n="arena_title">La arena 🏟️</h2>
+      <p class="hint" data-i18n="arena_hint">De 3 a 8 jugadores contra el mismo código, a la vez. Lo sortea el servidor: nadie elige secreto y nadie espera turno.</p>
+      <div class="list" id="arena-list"><div class="empty">…</div></div>
+      <div style="height:10px"></div>
+      <button class="btn sm" onclick="openArenaCreate()" data-i18n="arena_open">Abrir una arena</button>
+    </div>
+
     <div class="card">
       <h2 data-i18n="available_title">Partidas disponibles</h2>
       <div class="availability-stats">
@@ -1190,6 +1199,68 @@
     </div>
   </section>
 
+  <!-- LA ARENA: ABRIR UNA (E6-T3) -->
+  <section id="s-arena-new" class="hidden">
+    <div class="card">
+      <h2 data-i18n="arena_new_title">Abrir una arena</h2>
+      <p class="hint" data-i18n="arena_new_hint">El código lo sortea el servidor cuando empieza. Tú eliges las reglas y avisas a quien quieras con el código de la arena.</p>
+
+      <label data-i18n="lbl_mode">Modo</label>
+      <div class="seg" id="arena-seg-mode">
+        <button data-m="numbers" class="on" data-i18n="mode_numbers">Números 0-9</button>
+        <button data-m="colors" data-i18n="mode_colors">Colores</button>
+      </div>
+
+      <label data-i18n="lbl_positions">Posiciones</label>
+      <div class="seg mono" id="arena-seg-digits">
+        <button data-d="3" class="on">3</button>
+        <button data-d="4">4</button>
+        <button data-d="5">5</button>
+      </div>
+
+      <label data-i18n="lbl_repeats">Repetidos</label>
+      <div class="seg" id="arena-seg-repeat">
+        <button data-r="0" class="on" data-i18n="rep_no">No permitir</button>
+        <button data-r="1" data-i18n="rep_yes">Permitir</button>
+      </div>
+
+      <label data-i18n="lbl_attempts">Límite de intentos</label>
+      <div class="seg mono" id="arena-seg-attempts">
+        <button data-a="6">6</button>
+        <button data-a="10" class="on">10</button>
+      </div>
+
+      <div class="val" id="arena-new-val"></div>
+      <button class="btn" id="btn-arena-create" onclick="createArena()" data-i18n="arena_create_btn">Abrir la arena</button>
+      <div style="height:10px"></div>
+      <button class="btn ghost" onclick="enterLobby()" data-i18n="back">Volver</button>
+    </div>
+  </section>
+
+  <!-- LA ARENA: JUGAR -->
+  <section id="s-arena" class="hidden">
+    <div class="card">
+      <div class="players"><span class="pill" id="arena-code">····</span><span class="pill" id="arena-status"></span></div>
+      <div class="scoretxt" id="arena-rules"></div>
+      <div id="arena-banner"></div>
+      <div class="list" id="arena-board"><div class="empty">…</div></div>
+      <div id="arena-play" class="hidden">
+        <div style="height:12px"></div>
+        <label data-i18n="arena_your_guess">Tu intento</label>
+        <input type="text" id="arena-guess" class="code" inputmode="numeric" maxlength="3" placeholder="•••">
+        <div class="pad hidden" id="pad-a"><div class="slots" id="slots-a"></div><div class="palette" id="palette-a"></div></div>
+        <div class="val" id="arena-guess-val"></div>
+        <button class="btn" id="btn-arena-guess" onclick="sendArenaGuess()" data-i18n="guess_btn">Adivinar</button>
+      </div>
+      <div style="height:12px"></div>
+      <div class="list" id="arena-log"></div>
+      <div style="height:12px"></div>
+      <button class="btn green hidden" id="btn-arena-start" onclick="startArena()" data-i18n="arena_start">Empezar la arena</button>
+      <div style="height:8px"></div>
+      <button class="btn ghost" id="btn-arena-leave" onclick="leaveArena()" data-i18n="arena_leave">Salir de la arena</button>
+    </div>
+  </section>
+
   <!-- JUEGO -->
   <section id="s-game" class="hidden">
     <div class="card">
@@ -1281,7 +1352,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v3.10.2';
+const APP_VERSION = 'v3.11.0';
 /* Enlace de invitación: ...?game=SZ93
    La invitación sobrevive al registro: se guarda en el navegador, porque entre
    abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
@@ -1374,6 +1445,7 @@ const I18N = {
     rematch_send:"Enviar revancha", back_home:"Volver al inicio", result_lobby:"Volver al lobby",
     game_match:"Partida", game_yourcode:"Tu código:", opponent_code:"Código secreto de {name}:", vs:"vs {name}", waiting_short:"esperando…",
     spectator_confirm:"La partida está llena. ¿Deseas continuar como espectador?", spectator_mode:"Espectador", spectator_p1:"Intentos de {name} → código de {opp}", spectator_p2:"Intentos de {name} → código de {opp}", spectator_winner:"Ganó {name} 🏆",
+    arena_title:"La arena 🏟️", arena_hint:"De 3 a 8 jugadores contra el mismo código, a la vez. Lo sortea el servidor: nadie elige secreto y nadie espera turno.", arena_open:"Abrir una arena", arena_empty:"No hay ninguna arena abierta. Abre tú la primera.", arena_join:"Entrar", arena_new_title:"Abrir una arena", arena_new_hint:"El código lo sortea el servidor. Tú eliges las reglas y compartes el código de la arena con quien quieras.", arena_create_btn:"Abrir la arena", arena_start:"Empezar la arena", arena_leave:"Salir de la arena", arena_leave_confirm:"¿Salir de la arena? Si ya ha empezado, tus intentos se quedan en la clasificación.", arena_your_guess:"Tu intento", arena_players:"{n}/{max} jugadores", arena_status_waiting:"Esperando jugadores", arena_status_active:"En juego", arena_status_finished:"Terminada", arena_need:"Faltan {n} para poder empezar.", arena_ready:"Ya se puede empezar. Comparte el código para que entre más gente.", arena_solved:"Descifrado en {n}", arena_attempts:"{n} intentos", arena_attempts_one:"1 intento", arena_attempts_none:"Todavía no ha probado", arena_best:"mejor {n}F", arena_gaveup:"Se marchó", arena_nomore:"Sin intentos", arena_secret:"El código era {code}", arena_you_solved:"¡Lo descifraste en {n} intentos!", arena_over:"Arena terminada", arena_log_empty:"Todavía no has probado nada.", arena_empty_board:"Aquí aparecerá quien entre.",
     watch_title:"Partidas en curso", watch_hint:"Mira jugar a otros: los códigos secretos no se ven hasta que la partida termina.", watch_empty:"Ahora mismo no hay ninguna partida pública en juego.", watch_btn:"Mirar", watch_attempts:"{a} · {b} intentos", spectator_chat_readonly:"Estás mirando: puedes leer el chat de la partida, no escribir.", spectator_leave:"Dejar de mirar",
     guess_btn:"Adivinar", legend_fija:"F = posición correcta", legend_pica:"P = presente, mal colocada",
     colhead_mine:"Tus intentos → código de {name}", colhead_theirs:"Intentos de {name} → tu código",
@@ -1470,6 +1542,7 @@ const I18N = {
     rematch_send:"Send rematch", back_home:"Back to home", result_lobby:"Back to lobby",
     game_match:"Game", game_yourcode:"Your code:", opponent_code:"{name}'s secret code:", vs:"vs {name}", waiting_short:"waiting…",
     spectator_confirm:"This game is full. Continue as a spectator?", spectator_mode:"Spectator", spectator_p1:"{name}'s guesses → {opp}'s code", spectator_p2:"{name}'s guesses → {opp}'s code", spectator_winner:"{name} won 🏆",
+    arena_title:"The arena 🏟️", arena_hint:"Three to eight players against the same code, at the same time. The server draws it: nobody picks a secret and nobody waits for a turn.", arena_open:"Open an arena", arena_empty:"No arena is open. Be the first to open one.", arena_join:"Enter", arena_new_title:"Open an arena", arena_new_hint:"The server draws the code. You choose the rules and share the arena code with whoever you like.", arena_create_btn:"Open the arena", arena_start:"Start the arena", arena_leave:"Leave the arena", arena_leave_confirm:"Leave the arena? If it has already started, your guesses stay on the board.", arena_your_guess:"Your guess", arena_players:"{n}/{max} players", arena_status_waiting:"Waiting for players", arena_status_active:"Playing", arena_status_finished:"Finished", arena_need:"{n} more needed to start.", arena_ready:"Ready to start. Share the code so more people can join.", arena_solved:"Cracked in {n}", arena_attempts:"{n} guesses", arena_attempts_one:"1 guess", arena_attempts_none:"No guesses yet", arena_best:"best {n}F", arena_gaveup:"Left", arena_nomore:"Out of guesses", arena_secret:"The code was {code}", arena_you_solved:"You cracked it in {n} guesses!", arena_over:"Arena over", arena_log_empty:"You have not tried anything yet.", arena_empty_board:"Whoever joins will show up here.",
     watch_title:"Games in progress", watch_hint:"Watch others play: the secret codes stay hidden until the game ends.", watch_empty:"No public game is being played right now.", watch_btn:"Watch", watch_attempts:"{a} · {b} guesses", spectator_chat_readonly:"You are watching: you can read the game chat, not write in it.", spectator_leave:"Stop watching",
     guess_btn:"Guess", legend_fija:"F = correct position", legend_pica:"P = present, wrong spot",
     colhead_mine:"Your guesses → {name}'s code", colhead_theirs:"{name}'s guesses → your code",
@@ -1566,6 +1639,7 @@ const I18N = {
     rematch_send:"Envoyer la revanche", back_home:"Retour à l'accueil", result_lobby:"Retour au lobby",
     game_match:"Partie", game_yourcode:"Ton code :", opponent_code:"Code secret de {name} :", vs:"vs {name}", waiting_short:"en attente…",
     spectator_confirm:"Cette partie est complète. Continuer comme spectateur ?", spectator_mode:"Spectateur", spectator_p1:"Essais de {name} → code de {opp}", spectator_p2:"Essais de {name} → code de {opp}", spectator_winner:"{name} a gagné 🏆",
+    arena_title:"L'arène 🏟️", arena_hint:"De 3 à 8 joueurs contre le même code, en même temps. C'est le serveur qui le tire : personne ne choisit de secret et personne n'attend son tour.", arena_open:"Ouvrir une arène", arena_empty:"Aucune arène ouverte. Ouvre la première.", arena_join:"Entrer", arena_new_title:"Ouvrir une arène", arena_new_hint:"Le code est tiré par le serveur. Tu choisis les règles et tu partages le code de l'arène avec qui tu veux.", arena_create_btn:"Ouvrir l'arène", arena_start:"Lancer l'arène", arena_leave:"Quitter l'arène", arena_leave_confirm:"Quitter l'arène ? Si elle a déjà commencé, tes essais restent au classement.", arena_your_guess:"Ton essai", arena_players:"{n}/{max} joueurs", arena_status_waiting:"En attente de joueurs", arena_status_active:"En jeu", arena_status_finished:"Terminée", arena_need:"Il manque {n} pour commencer.", arena_ready:"On peut commencer. Partage le code pour que d'autres entrent.", arena_solved:"Trouvé en {n}", arena_attempts:"{n} essais", arena_attempts_one:"1 essai", arena_attempts_none:"Pas encore d'essai", arena_best:"meilleur {n}F", arena_gaveup:"A quitté", arena_nomore:"Plus d'essais", arena_secret:"Le code était {code}", arena_you_solved:"Tu l'as trouvé en {n} essais !", arena_over:"Arène terminée", arena_log_empty:"Tu n'as encore rien essayé.", arena_empty_board:"Ceux qui entrent apparaîtront ici.",
     watch_title:"Parties en cours", watch_hint:"Regarde les autres jouer : les codes secrets restent cachés jusqu'à la fin de la partie.", watch_empty:"Aucune partie publique n'est en cours pour le moment.", watch_btn:"Regarder", watch_attempts:"{a} · {b} essais", spectator_chat_readonly:"Tu regardes : tu peux lire le chat de la partie, pas y écrire.", spectator_leave:"Arrêter de regarder",
     guess_btn:"Deviner", legend_fija:"F = bonne position", legend_pica:"P = présent, mal placé",
     colhead_mine:"Tes essais → code de {name}", colhead_theirs:"Essais de {name} → ton code",
@@ -1826,6 +1900,20 @@ const ERR = {
     "El rival no está conectado.":"Your opponent is not online.",
     "Espera 30 segundos antes de enviar otro zumbido.":"Wait 30 seconds before sending another nudge.",
     "Las reacciones solo están disponibles en conversaciones privadas.":"Quick reactions are only available in private conversations.",
+    "La arena se juega a 6 o a 10 intentos.":"An arena is played with 6 or 10 guesses.",
+    "Ya estás en una arena abierta.":"You are already in an open arena.",
+    "Espera 30 segundos antes de crear otra arena.":"Wait 30 seconds before opening another arena.",
+    "No encontramos esa arena.":"We could not find that arena.",
+    "Esa arena ya ha empezado.":"That arena has already started.",
+    "Esa arena ha expirado.":"That arena has expired.",
+    "Esa arena está llena.":"That arena is full.",
+    "Solo quien abrió la arena puede empezarla.":"Only the player who opened the arena can start it.",
+    "Hacen falta al menos 3 jugadores para empezar.":"At least 3 players are needed to start.",
+    "Esa arena no está en juego.":"That arena is not being played.",
+    "No juegas en esta arena.":"You are not playing in this arena.",
+    "Ya has descifrado el código.":"You have already cracked the code.",
+    "Ya no juegas en esta arena.":"You are no longer playing in this arena.",
+    "Has agotado tus intentos.":"You have used all your guesses.",
     "Esa reacción no existe.":"That reaction does not exist.",
     "Espera 30 segundos antes de enviar otra reacción.":"Wait 30 seconds before sending another reaction.",
     "Mensaje no encontrado.":"Message not found.",
@@ -1925,6 +2013,20 @@ const ERR = {
     "El rival no está conectado.":"Ton adversaire n'est pas connecté.",
     "Espera 30 segundos antes de enviar otro zumbido.":"Attends 30 secondes avant d'envoyer un autre wizz.",
     "Las reacciones solo están disponibles en conversaciones privadas.":"Les réactions ne sont disponibles que dans les conversations privées.",
+    "La arena se juega a 6 o a 10 intentos.":"Une arène se joue en 6 ou 10 essais.",
+    "Ya estás en una arena abierta.":"Tu es déjà dans une arène ouverte.",
+    "Espera 30 segundos antes de crear otra arena.":"Attends 30 secondes avant d'ouvrir une autre arène.",
+    "No encontramos esa arena.":"Nous n'avons pas trouvé cette arène.",
+    "Esa arena ya ha empezado.":"Cette arène a déjà commencé.",
+    "Esa arena ha expirado.":"Cette arène a expiré.",
+    "Esa arena está llena.":"Cette arène est complète.",
+    "Solo quien abrió la arena puede empezarla.":"Seul celui qui a ouvert l'arène peut la lancer.",
+    "Hacen falta al menos 3 jugadores para empezar.":"Il faut au moins 3 joueurs pour commencer.",
+    "Esa arena no está en juego.":"Cette arène n'est pas en jeu.",
+    "No juegas en esta arena.":"Tu ne joues pas dans cette arène.",
+    "Ya has descifrado el código.":"Tu as déjà trouvé le code.",
+    "Ya no juegas en esta arena.":"Tu ne joues plus dans cette arène.",
+    "Has agotado tus intentos.":"Tu as épuisé tes essais.",
     "Esa reacción no existe.":"Cette réaction n'existe pas.",
     "Espera 30 segundos antes de enviar otra reacción.":"Attends 30 secondes avant d'envoyer une autre réaction.",
     "Mensaje no encontrado.":"Message introuvable.",
@@ -2374,6 +2476,7 @@ let endSoundPlayed = false;
 let soundOn = localStorage.getItem('pf_sound')!=='0';
 let audioCtx = null, serviceWorkerRegistration = null, sessionExpiryHandled = false, pushReady = false, pushAttempted = false;
 let myCountry = localStorage.getItem('pf_country') || '';
+let arenaView={id:'',digits:3,mode:'numbers',numColors:10,allowRepeats:false,maxAttempts:10};
 let chatTimer=null,chatRoom='',chatItems=[],chatLastId=0,chatUnread=0,chatEnabled=false,chatPollGeneration=0;
 let chatNudgesOn=localStorage.getItem('pf_chat_nudges')!=='0';
 let privateThreads=[],selectedPrivateThread=null,privateThreadsFetchedAt=0,privateThreadsBusy=false;
@@ -2491,12 +2594,13 @@ function show(name){
   if(!sessionToken && !GUEST_VIEWS.has(name)) name = 'login';
   currentView = name;
   if(name!=='game') gameViewEpoch++;
-  ['login','verify','lobby','account','feedback','rank','profile','rivals','history','rules','practice','practice-game','puzzles','daily','create','wait','join','rematch','game'].forEach(s=>{
+  ['login','verify','lobby','account','feedback','rank','profile','rivals','history','rules','practice','practice-game','puzzles','daily','create','wait','join','rematch','arena-new','arena','game'].forEach(s=>{
     $('s-'+s).classList.toggle('hidden', s!==name);
   });
   if(name!=='game') stopTick();
   if(name!=='practice-game') stopPracticeTick();
   if(name!=='daily') stopDailyTick();
+  if(name!=='arena') stopArenaPoll();
   syncBrandHome();
   syncSettingsBtn();
   syncGuestChrome();
@@ -2975,6 +3079,7 @@ const padC = makePad('slots-c','palette-c', ()=>cfg.digits, ()=>cfg.numColors, v
 const padJ = makePad('slots-j','palette-j', ()=>joinMeta?joinMeta.digits:3, ()=>joinMeta?joinMeta.numColors:6, v=>setVal('secret-j-val', v, joinMeta.digits, joinMeta.allowRepeats));
 const padR = makePad('slots-r','palette-r', ()=>finishedMeta?finishedMeta.digits:3, ()=>finishedMeta?finishedMeta.numColors:6, v=>setVal('secret-r-val', v, finishedMeta.digits, finishedMeta.allowRepeats));
 const padG = makePad('slots-g','palette-g', ()=>game.digits, ()=>game.numColors||6, v=>{setVal('g-guess-val', v, game.digits, game.allowRepeats); renderContradiction(v);});
+const padA = makePad('slots-a','palette-a', ()=>arenaView.digits, ()=>arenaView.numColors||6, v=>setVal('arena-guess-val', v, arenaView.digits, arenaView.allowRepeats));
 const practicePad = makePad('practice-slots','practice-palette', ()=>practiceCfg.digits, ()=>practiceCfg.numColors, v=>setVal('practice-guess-val',v,practiceCfg.digits,practiceCfg.allowRepeats));
 const practiceSecretPad = makePad('practice-secret-slots','practice-secret-palette', ()=>practiceCfg.digits, ()=>practiceCfg.numColors, v=>setVal('practice-secret-val',v,practiceCfg.digits,practiceCfg.allowRepeats));
 function setVal(elId, v, digits, allowRepeats){
@@ -3401,6 +3506,7 @@ async function lobbyRefresh(detect){
     $('open-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
     $('private-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
     $('watch-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
+    $('arena-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
   }
   try{
     const snapshot=await api('lobbyState');
@@ -3427,6 +3533,7 @@ async function lobbyRefresh(detect){
     $('public-now').textContent=t('public_now',{active:publicActive,open:publicOpen});
     renderOpen(snapshot.games||[]);
     renderWatchable(snapshot.watchable||[]);
+    renderArenaList(snapshot.arenas||[]);
     renderPrivate(privateGames); renderMine(publicMine);
   }catch(e){
     // En caso de corte, la última lista sigue visible: poner los contadores a
@@ -3523,6 +3630,165 @@ function renderGameItems(box, games){
       if(invite){ goToRematch(g.gameId); }
       else if(g.status==='waiting'||!complete){ enterWait(meta); } else { enterGame(meta); } };
     el.appendChild(b); box.appendChild(el);
+  });
+}
+
+/* -------------------- la arena (E6-T3) --------------------
+   De 3 a 8 jugadores contra el mismo codigo, a la vez. No hay turnos, asi que
+   esta pantalla no tiene reloj ni espera a nadie: pide el estado cada cuatro
+   segundos y pinta la clasificacion en directo. Los intentos de los demas no
+   viajan —todos atacan el mismo codigo—, asi que de cada rival solo se ve
+   cuanto ha gastado y su mejor numero de fijas. */
+let arenaSt=null, arenaPollTimer=null, arenaBusy=false;
+function openArenaCreate(){ if(!sessionToken) return; show('arena-new'); }
+function arenaFormOptions(){
+  const mode=segValue('arena-seg-mode','m')||'numbers';
+  return { mode, numColors: mode==='colors'?6:10, digits: parseInt(segValue('arena-seg-digits','d')||'3',10),
+    allowRepeats: segValue('arena-seg-repeat','r')==='1', maxAttempts: parseInt(segValue('arena-seg-attempts','a')||'10',10) };
+}
+['arena-seg-mode','arena-seg-digits','arena-seg-repeat','arena-seg-attempts'].forEach(id=>{
+  $(id).addEventListener('click', e=>{ const b=e.target.closest('button'); if(b) segPick($(id),b); });
+});
+async function createArena(){
+  $('btn-arena-create').disabled=true;
+  try{
+    const res=await api('arenaCreate',{...arenaFormOptions(), country:myCountry});
+    if(!res.ok){ toast(te(res.error),true); return; }
+    enterArena(res.arenaId);
+  }catch(e){ toast(t('net_error'),true); }
+  finally{ $('btn-arena-create').disabled=false; }
+}
+async function joinArena(arenaId){
+  try{
+    const res=await api('arenaJoin',{arenaId, country:myCountry});
+    if(!res.ok){ toast(te(res.error),true); refreshLobby(); return; }
+    enterArena(res.arenaId);
+  }catch(e){ toast(t('net_error'),true); }
+}
+function enterArena(arenaId){
+  arenaView={...arenaView, id:arenaId};
+  arenaSt=null; $('arena-code').textContent=arenaId; $('arena-banner').innerHTML='';
+  $('arena-board').innerHTML=`<div class="empty">${t('loading')}</div>`; $('arena-log').innerHTML='';
+  show('arena'); refreshArena(); startArenaPoll();
+}
+function startArenaPoll(){ stopArenaPoll(); arenaPollTimer=setInterval(refreshArena, 4000); }
+function stopArenaPoll(){ if(arenaPollTimer){ clearInterval(arenaPollTimer); arenaPollTimer=null; } }
+async function refreshArena(){
+  if(!arenaView.id||$('s-arena').classList.contains('hidden')) return;
+  try{
+    const st=await api('arenaState',{arenaId:arenaView.id});
+    if(!st.ok){ stopArenaPoll(); toast(te(st.error),true); enterLobby(); return; }
+    renderArena(st);
+  }catch(e){ /* Un corte pasajero deja en pantalla el ultimo estado valido. */ }
+}
+function arenaRules(st){
+  return [ st.mode==='colors'?t('rl_colors',{n:st.numColors}):t('rl_numbers'), t('rl_pos',{n:st.digits}),
+    st.allowRepeats?t('rl_repeat'):t('rl_norepeat'), t('rl_attempts',{n:st.maxAttempts}) ].join(' · ');
+}
+function arenaPlayerLine(row, st){
+  if(row.solvedAt) return t('arena_solved',{n:row.attempts});
+  if(row.gaveUp) return t('arena_gaveup');
+  if(row.attempts>=st.maxAttempts) return t('arena_nomore');
+  if(!row.attempts) return t('arena_attempts_none');
+  return t(row.attempts===1?'arena_attempts_one':'arena_attempts',{n:row.attempts})+' · '+t('arena_best',{n:row.bestFijas});
+}
+function renderArena(st){
+  if(String(st.arenaId)!==String(arenaView.id)) return;
+  arenaSt=st;
+  arenaView={id:st.arenaId, digits:st.digits, mode:st.mode, numColors:st.numColors, allowRepeats:st.allowRepeats, maxAttempts:st.maxAttempts};
+  $('arena-code').textContent=st.arenaId;
+  $('arena-status').textContent=st.status==='waiting'?t('arena_status_waiting'):st.status==='active'?t('arena_status_active'):t('arena_status_finished');
+  $('arena-rules').textContent=arenaRules(st)+' · '+t('arena_players',{n:st.players,max:st.maxPlayers});
+  const over=st.status==='finished'||st.status==='expired';
+  const box=$('arena-board'); box.innerHTML='';
+  (st.board||[]).forEach(row=>{
+    const el=document.createElement('div'); el.className='gitem'+(row.solvedAt?' invite':'');
+    el.innerHTML=`<div class="gid">${row.position}</div>
+      <div class="meta"><div class="who">${playerChip(row.country,row.username)}</div>
+      <div class="det">${esc(arenaPlayerLine(row,st))}</div></div>`;
+    box.appendChild(el);
+  });
+  if(!(st.board||[]).length) box.innerHTML=`<div class="empty">${t('arena_empty_board')}</div>`;
+  const playing=st.status==='active'&&st.youArePlaying&&!st.solved&&st.attemptsLeft>0;
+  $('arena-play').classList.toggle('hidden',!playing);
+  if(playing){
+    const input=$('arena-guess'); input.maxLength=st.digits; input.placeholder='•'.repeat(st.digits);
+    applyMode('a', st.mode, 'arena-guess', 'pad-a', padA);
+  }
+  $('btn-arena-start').classList.toggle('hidden', !(st.status==='waiting'&&st.youAreHost));
+  $('btn-arena-start').disabled = st.players<st.minPlayers;
+  $('btn-arena-leave').textContent = over?t('back_home'):t('arena_leave');
+  const banner=$('arena-banner');
+  if(st.status==='waiting') banner.innerHTML=`<div class="banner"><p>${esc(st.players<st.minPlayers?t('arena_need',{n:st.minPlayers-st.players}):t('arena_ready'))}</p></div>`;
+  else if(over) banner.innerHTML=`<div class="banner"><h2>${esc(t('arena_over'))}</h2><p>${esc(t('arena_secret',{code:st.secret}))}</p></div>`;
+  else if(st.solved) banner.innerHTML=`<div class="banner"><h2>${esc(t('arena_you_solved',{n:st.attempts}))}</h2></div>`;
+  else if(!st.attemptsLeft&&st.youArePlaying) banner.innerHTML=`<div class="banner"><p>${esc(t('arena_nomore'))}</p></div>`;
+  else banner.innerHTML='';
+  renderArenaLog(st);
+}
+function renderArenaLog(st){
+  const box=$('arena-log'), rows=st.guesses||[];
+  if(!rows.length){ box.innerHTML=`<div class="empty">${t('arena_log_empty')}</div>`; return; }
+  box.innerHTML='';
+  rows.slice().reverse().forEach(g=>{
+    const el=document.createElement('div'); el.className='g';
+    let pips='';
+    for(let i=0;i<g.fijas;i++) pips+='<span class="pip f"></span>';
+    for(let i=0;i<g.picas;i++) pips+='<span class="pip p"></span>';
+    if(g.fijas+g.picas===0) pips=`<span class="scoretxt">${t('log_nada')}</span>`;
+    el.innerHTML=`${codeViewHTML(g.guess, st.mode)}<span class="scoretxt">${g.fijas}F · ${g.picas}P</span><span class="pips">${pips}</span>`;
+    box.appendChild(el);
+  });
+}
+async function startArena(){
+  $('btn-arena-start').disabled=true;
+  try{
+    const res=await api('arenaStart',{arenaId:arenaView.id});
+    if(!res.ok){ toast(te(res.error),true); return; }
+    await refreshArena();
+  }catch(e){ toast(t('net_error'),true); }
+  finally{ $('btn-arena-start').disabled=false; }
+}
+async function leaveArena(){
+  const id=arenaView.id;
+  const over=arenaSt&&(arenaSt.status==='finished'||arenaSt.status==='expired');
+  if(!over&&!confirm(t('arena_leave_confirm'))) return;
+  stopArenaPoll();
+  try{ if(id) await api('arenaLeave',{arenaId:id}); }catch(e){}
+  arenaSt=null; arenaView={...arenaView, id:''}; enterLobby();
+}
+async function sendArenaGuess(){
+  if(arenaBusy) return;
+  const guess=arenaView.mode==='colors'?padA.get():$('arena-guess').value.trim();
+  const check=validateLive(guess, arenaView.digits, arenaView.allowRepeats);
+  if(check.cls!=='ok'){ toast(t('check_code'),true); return; }
+  arenaBusy=true; $('btn-arena-guess').disabled=true;
+  try{
+    const res=await api('arenaGuess',{arenaId:arenaView.id, guess, requestId:(crypto.randomUUID?crypto.randomUUID():[...crypto.getRandomValues(new Uint8Array(16))].map(byte=>byte.toString(16).padStart(2,'0')).join('')).replace(/[^A-Za-z0-9-]/g,'')});
+    if(!res.ok){ toast(te(res.error),true); return; }
+    $('arena-guess').value=''; padA.reset(); $('arena-guess-val').textContent='';
+    if(res.solved) toast(t('arena_you_solved',{n:res.attempts}));
+    else toast(t('toast_score',{f:res.fijas,p:res.picas}));
+    await refreshArena();
+  }catch(e){ toast(t('net_error'),true); }
+  finally{ arenaBusy=false; $('btn-arena-guess').disabled=false; }
+}
+$('arena-guess').addEventListener('input', e=>setVal('arena-guess-val', e.target.value, arenaView.digits, arenaView.allowRepeats));
+/* Las arenas abiertas, en el vestibulo. Salen de la misma respuesta del lobby,
+   con su propia consulta indexada y un tope de doce. */
+function renderArenaList(list){
+  const box=$('arena-list');
+  if(!list||!list.length){ box.innerHTML=`<div class="empty">${t('arena_empty')}</div>`; return; }
+  box.innerHTML='';
+  list.forEach(a=>{
+    const el=document.createElement('div'); el.className='gitem';
+    el.innerHTML=`<div class="gid">${esc(a.arenaId)}</div>
+      <div class="meta"><div class="who">${playerChip('',a.host)}</div>
+      <div class="det">${esc(arenaRules(a))} · ${esc(t('arena_players',{n:a.players,max:a.maxPlayers}))}</div></div>
+      <span class="pill" style="margin-right:2px">${a.status==='active'?esc(t('arena_status_active')):esc(t('arena_status_waiting'))}</span>`;
+    const b=document.createElement('button'); b.className='btn sm'+(a.status==='waiting'?' pink':'');
+    b.textContent=t(a.status==='waiting'?'arena_join':'see_btn');
+    b.onclick=()=>joinArena(a.arenaId); el.appendChild(b); box.appendChild(el);
   });
 }
 

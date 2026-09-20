@@ -51,6 +51,15 @@ import {
   systemChat,
   threadForGame,
 } from "./chat.js";
+import {
+  arenaGuess,
+  arenaState,
+  createArena,
+  joinArena,
+  leaveArena,
+  listArenas,
+  startArena,
+} from "./arena.js";
 import { dailyGuess, dailyState } from "./daily.js";
 import { leaderboard, profile, recordFinishedGame, rivals } from "./season.js";
 import { cleanupDatabase } from "./maintenance.js";
@@ -72,6 +81,12 @@ const PROTECTED = new Set([
   "rivals",
   "dailyState",
   "dailyGuess",
+  "arenaCreate",
+  "arenaJoin",
+  "arenaStart",
+  "arenaState",
+  "arenaGuess",
+  "arenaLeave",
   "myGames",
   "history",
   "historyGame",
@@ -790,12 +805,13 @@ async function myGames(db, user, includeOnlineCount = true) {
 // coherente el contador en línea y se evita ejecutar dos veces el mismo
 // conteo de presencia en cada actualización del navegador.
 async function lobbyState(db, user) {
-  const [open, mine, count] = await Promise.all([
+  const [open, mine, count, arenas] = await Promise.all([
     listGames(db, false),
     myGames(db, user, false),
     onlineCount(db),
+    listArenas(db),
   ]);
-  return { ...open, myGames: mine.games, onlineCount: count };
+  return { ...open, myGames: mine.games, onlineCount: count, arenas };
 }
 
 async function makeGuess(db, params, user, onTurnChanged) {
@@ -1672,6 +1688,24 @@ async function routeApi(request, env, ctx) {
       break;
     case "gamePresence":
       result = await gamePresence(env.DB, params, auth.user);
+      break;
+    case "arenaCreate":
+      result = await createArena(env.DB, auth.user, params);
+      break;
+    case "arenaJoin":
+      result = await joinArena(env.DB, auth.user, params);
+      break;
+    case "arenaStart":
+      result = await startArena(env.DB, auth.user, params);
+      break;
+    case "arenaState":
+      result = await arenaState(env.DB, auth.user, params);
+      break;
+    case "arenaGuess":
+      result = await arenaGuess(env.DB, auth.user, params);
+      break;
+    case "arenaLeave":
+      result = await leaveArena(env.DB, auth.user, params);
       break;
     case "dailyState":
       result = await dailyState(env.DB, env, auth.user);

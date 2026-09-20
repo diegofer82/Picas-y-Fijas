@@ -1,3 +1,4 @@
+import { cleanupArenas } from "./arena.js";
 import { cleanupChat } from "./chat.js";
 import { expiredTurnChanges, LIMITS } from "./game.js";
 import { sendTurnNotification } from "./push.js";
@@ -50,6 +51,7 @@ export async function cleanupDatabase(db, at = Date.now(), env = null) {
   const activationCutoff = new Date(at - ACTIVATION_RETENTION_MS).toISOString();
 
   await cleanupChat(db, at);
+  await cleanupArenas(db, at);
   await expireCorrespondenceTurns(db, env, at);
   await db.batch([
     db.prepare(
