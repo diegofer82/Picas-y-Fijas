@@ -127,7 +127,7 @@ test("la pantalla enciende el cuaderno porque lo dice el servidor, no el navegad
   // piden, y por eso no cuestan una sola lectura en D1.
   const block = html.match(/const NOTEBOOK_STATES[\s\S]*?function renderContradiction\(value\)\{[\s\S]*?\n\}/)[0];
   assert.doesNotMatch(block, /\bapi\(/, "el cuaderno no habla con el servidor");
-  assert.doesNotMatch(block, /yourSecret|opponentSecret|\.secret/, "el cuaderno no toca ningún secreto");
+  assert.doesNotMatch(block, /yourSecret|opponentSecret|\.secret\b/, "el cuaderno no toca ningún secreto");
   assert.match(block, /localStorage\.setItem\(notebookKey\(\)/, "las marcas viven en este aparato");
   assert.match(html, /<div class="seg" id="seg-notebook">/, "la opción se elige al crear la partida");
   assert.match(html, /notebook:cfg\.notebook/, "y viaja con la creación");

@@ -47,6 +47,16 @@ export async function changeUsername(db, user, params, at = Date.now()) {
     .bind(oldName)
     .first();
   if (open) return { ok: false, error: "Termina o cancela tus partidas abiertas antes de cambiar tu nombre." };
+  // Una arena abierta es lo mismo visto desde el otro modo: sus filas se
+  // identifican por la clave del nombre, asi que renombrarse en mitad de una
+  // dejaba a la persona fuera de su propia arena —«No juegas en esta arena»—
+  // y a la arena esperando unos intentos que ya no podian llegar.
+  const arena = await db
+    .prepare(`SELECT p.arena_id FROM arena_players p JOIN arenas a ON a.arena_id=p.arena_id
+       WHERE p.username_key=? AND a.status IN ('waiting','active') LIMIT 1`)
+    .bind(oldKey)
+    .first();
+  if (arena) return { ok: false, error: "Sal de tu arena o espera a que termine antes de cambiar tu nombre." };
 
   const stamp = new Date(at).toISOString();
   const byOld = `"by":${JSON.stringify(oldName)}`, byNew = `"by":${JSON.stringify(username)}`;
@@ -88,6 +98,14 @@ export async function changeUsername(db, user, params, at = Date.now()) {
     db.prepare("UPDATE player_scores SET username=?,username_key=? WHERE username_key=?").bind(username, key, oldKey),
     db.prepare("UPDATE player_progress SET username=?,username_key=? WHERE username_key=?").bind(username, key, oldKey),
     db.prepare("UPDATE badges SET username_key=? WHERE username_key=?").bind(key, oldKey),
+    // La arena y el codigo del dia guardan tambien el nombre escrito, y por la
+    // misma razon que el ranking: para no cruzar con `users` en cada consulta.
+    // Si no viajaran, la clasificacion de una arena terminada y la del dia
+    // seguirian ensenando el nombre de antes.
+    db.prepare("UPDATE arenas SET host=?,host_key=? WHERE host_key=?").bind(username, key, oldKey),
+    db.prepare("UPDATE arena_players SET username=?,username_key=? WHERE username_key=?").bind(username, key, oldKey),
+    db.prepare("UPDATE arena_guesses SET username=?,username_key=? WHERE username_key=?").bind(username, key, oldKey),
+    db.prepare("UPDATE daily_results SET username=?,username_key=? WHERE username_key=?").bind(username, key, oldKey),
     db.prepare("DELETE FROM presence WHERE username_key=?").bind(oldKey),
     db.prepare("UPDATE feedback SET username=? WHERE username=?").bind(username, oldName),
     db.prepare("UPDATE audit_log SET target=? WHERE target=?").bind(username, oldName),

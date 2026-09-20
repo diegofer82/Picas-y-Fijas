@@ -147,8 +147,13 @@ test('todo mensaje que puede leer un jugador existe en los tres idiomas', async 
     html.slice(html.indexOf('const ERR = {'), html.indexOf('/* Instrucciones del juego')).replace('const ERR', 'var ERR') + ';return ERR;',
   )();
   const messages = new Set();
-  for (const file of ['index.js','security.js','recovery.js','rename.js','game.js','chat.js','feedback.js','admin.js','maintenance.js'])
-    for (const message of serverMessages(await readFile(new URL('../src/'+file, import.meta.url), 'utf8')))
+  // La lista de archivos era a mano, y por eso `arena.js`, `daily.js`,
+  // `push.js` y `season.js` entraron al juego sin que nadie comprobara sus
+  // mensajes: cuatro frases salian en espanol dentro de un juego en frances.
+  // Ahora se recorre `src/` entero, asi que un modulo nuevo no puede colarse.
+  const sources = new URL('../src/', import.meta.url);
+  for (const file of (await readdir(sources)).filter((name) => name.endsWith('.js')))
+    for (const message of serverMessages(await readFile(new URL(file, sources), 'utf8')))
       messages.add(message);
   const untranslated = [...messages]
     .filter((message) => !ADMIN_ONLY.has(message))

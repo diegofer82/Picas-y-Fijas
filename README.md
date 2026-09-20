@@ -6,11 +6,21 @@ Este es el único documento de referencia del proyecto. Está pensado para perso
 
 Picas y Fijas es un juego multijugador web en español, inglés y francés. La versión vigente funciona íntegramente en Cloudflare; la implementación anterior de Google Sheets y Apps Script fue retirada del árbol actual después de completar la migración. Sigue disponible en el historial de Git si alguna vez se necesita consultar.
 
-Versión actual: **3.11.0**: cierra la etapa 6 con **la arena**. De 3 a 8 jugadores contra el mismo código, a la vez: lo sortea el servidor, así que nadie elige secreto y nadie juega con ventaja; no hay turnos, así que una desconexión no congela a nadie; y siempre hay límite de intentos, que es lo que garantiza que una arena termine aunque alguien cierre la pestaña. La clasificación se ve en directo, pero los intentos de los demás no viajan —todos atacan el mismo código—: de cada rival solo se sabe cuánto ha gastado y cuál es su mejor número de fijas, que no dicen nada del código. Vive en tablas propias (`arenas`, `arena_players`, `arena_guesses`) y no toca ni una columna de las partidas clásicas. La 3.10.2 añadió las **reacciones rápidas**. Quien juega desde el teléfono tiene cuatro frases hechas —suerte, casi, vaya jugada, buena partida— a un toque, en los tres idiomas. Lo que se guarda es la clave, no la frase: el servidor no sabe en qué idioma se leerá y no le hace falta saberlo, así que no hay texto libre que moderar por esa vía. Viajan por el chat de siempre, con el tipo que ya existía para los avisos de la partida, y respetan la misma espera de 30 segundos que el zumbido. La 3.10.1 abrió la etapa 6, la de la sala viva, con el **espectador de verdad**. El vestíbulo enseña las partidas públicas que ya están en juego y cualquiera puede mirarlas: los nombres, las reglas, los intentos de los dos y el reloj, en directo. Lo que no se ve es ningún código: quien mira es `youAre === 0` y para esa cifra `secretsFor()` devuelve dos cadenas vacías, también al terminar, cuando los códigos se revelan a quienes jugaron. El chat de la partida se puede leer, no escribir, y la lectura se filtra por el identificador de la partida, porque el hilo de la pareja guarda conversaciones más antiguas que siguen siendo privadas. La lista no cuesta una consulta más: sale de la misma lectura con la que el vestíbulo ya se dibujaba. La 3.10.0 cerró la etapa 5 del camino a la 4.0.0, la de las razones para volver. El ranking deja de premiar la insistencia: cada partida terminada reparte **puntos** por la dificultad de las reglas y por la economía de intentos, y la clasificación se reinicia **cada mes** conservando el total de siempre. Los nombres del ranking y de la lista de rivales se pueden pulsar y abren un **perfil público** —victorias, reglas preferidas, mejor partida, rachas e insignias— que no enseña nada que no fuera ya público y nunca el correo. Hay **siete insignias**, que se calculan al terminar la partida y se guardan, de modo que abrir un perfil no recorre `games`. Y hay una **lista de rivales**: con quién se ha jugado, el marcador de la pareja, un punto de presencia y un botón de desafío que pide la revancha de la última partida. La 3.9.1 cerró la etapa 4 del camino a la 4.0.0 poniendo el motor de deducción al servicio de quien juega. Una partida puede crearse **con cuaderno**: una cuadrícula para marcar símbolos descartados y confirmados y un aviso cuando un intento contradice las pistas propias; es una opción de la partida, la valida el servidor y la heredan las revanchas, para que los dos jueguen con las mismas reglas. El ordenador de la práctica explica cada jugada —cuántos códigos le quedaban, cuántos le quedan y en cuántos grupos los parte—. Y hay **enigmas de deducción**: 72 puzles en tres dificultades, en solitario, sin cuenta y sin una sola fila en D1. La 3.9.0 abrió la etapa: el saber deductivo salió del rival de la práctica y pasó a `public/deduce.js`, y con él llegó lo primero que se vio: al acabar cualquier partida, cada intento recibe una nota —óptimo, correcto, desperdiciado— y se señala la jugada tras la cual solo quedaba un código. Se calcula entero en el navegador, sin una lectura más en D1. La 3.8.1 cerró la etapa 3 con la tarjeta de fin de partida —al acabar cualquier partida, contra una persona o contra el ordenador, la misma rejilla de emojis del código del día se puede compartir sin revelar ningún código—. La 3.8.0 estrenó el código del día —un secreto por día, el mismo para todo el mundo, un intento diario y una clasificación del día por intentos y tiempo— y la rejilla de emojis que se copia al terminarlo sin revelar el código. La 3.7.0 abrió la etapa 2 del camino a la 4.0.0 abre la cadencia por correspondencia, con uno o tres días por jugada y sin pausa al cerrar el juego, y hace que el turno llegue mediante Web Push aunque la pestaña esté cerrada. Si no hay una suscripción push válida, las partidas por correspondencia recurren al correo verificado; `guess`, `passTurn` y el Cron comparten una deduplicación que impide avisar dos veces del mismo turno. Las invitaciones privadas esperan 48 horas y el mantenimiento ya no cierra una partida por correspondencia por llevar 48 horas sin actividad. La 3.6.2 hizo que la primera visita abriera en el idioma del navegador cuando era inglés o francés, sin pulsar nada; la dirección sigue mandando sobre todo y una elección hecha a mano manda sobre el navegador. La 3.6.1 subió el selector de idioma a lo alto de la pantalla de acceso y se ve en los tres modos —entrar, crear cuenta y recuperar el PIN—. La 3.6.0 cerró la etapa 1: una invitación sobrevive al alta y a la verificación en otro aparato. La 3.5.3 puso el pulso numérico en la portada y la 3.5.2 abrió la práctica sin cuenta. La 3.5.1 corrigió la inyección por nombres, unificó el contador de PIN, protegió el arranque de la bolsa, cerró ranking y lista pública detrás del correo y arregló las revanchas simultáneas. En la 3.5.0, `/admin` pasó a enseñar las horas en la zona de quien las mira y permitió cambiar el nombre sin cambiar el correo. En la 3.3.3, el cronómetro Solo pasó a reiniciarse por intento. La 3.2.0 añadió el acuerdo de versión entre página y servidor. La 3.0.0 separó definitivamente entrar de crear una cuenta y la 3.1.0 fijó la puerta del correo: **no hay cuenta que valga sin correo verificado**.
+Versión actual: **4.0.0**. Cierra «El camino a la 4.0.0»: dieciocho mejoras en seis etapas, ordenadas alrededor de una sola frase —quien llegaba creaba una cuenta, iba a buscar el correo, volvía, entraba al vestíbulo y no había nadie—. La mayor sube por tres razones concretas, no por ceremonia: hay pantallas que funcionan **sin sesión**, cuando hasta la 3.5.1 todo lo que no fuera el buzón exigía una; el **ranking cambió de forma**, porque dejó de ordenar por victorias y pasó a contar puntos por temporada, de modo que su respuesta ya no es la misma; y llegó un modo con **más de dos jugadores**, que el modelo de `games`, con sus `p1` y `p2`, no podía representar. Antes de ponerle el número se auditó entera —véase «La auditoría de la 4.0.0»—, porque dieciocho cambios en seis etapas dejan grietas en las costuras y no en el sitio donde se miró al escribirlas.
+
+Lo que hay hoy, de lo último a lo primero. La **arena** (3.11.0) junta de 3 a 8 jugadores contra el mismo código, a la vez: lo sortea el servidor, así que nadie elige secreto y nadie juega con ventaja; no hay turnos, así que una desconexión no congela a nadie; y siempre hay límite de intentos, que es lo que garantiza que una arena termine aunque alguien cierre la pestaña. La clasificación se ve en directo, pero los intentos de los demás no viajan —todos atacan el mismo código—: de cada rival solo se sabe cuánto ha gastado y cuál es su mejor número de fijas, que no dicen nada del código. Vive en tablas propias (`arenas`, `arena_players`, `arena_guesses`) y no toca ni una columna de las partidas clásicas. Las **reacciones rápidas** (3.10.2) dan cuatro frases hechas —suerte, casi, vaya jugada, buena partida— a un toque, en los tres idiomas; lo que se guarda es la clave, no la frase, así que por esa vía no entra texto libre que moderar. El **espectador** (3.10.1) deja mirar desde el vestíbulo una partida pública en curso: los nombres, las reglas, los intentos de los dos y el reloj, en directo. Lo que no se ve es ningún código: quien mira es `youAre === 0` y para esa cifra `secretsFor()` devuelve dos cadenas vacías, también al terminar, cuando los códigos se revelan a quienes jugaron. El chat de la partida se puede leer, no escribir, y la lectura se filtra por el identificador de la partida, porque el hilo de la pareja guarda conversaciones más antiguas que siguen siendo privadas.
+
+La 3.10.0 trajo las razones para volver. El ranking dejó de premiar la insistencia: cada partida terminada reparte **puntos** por la dificultad de las reglas y por la economía de intentos, y la clasificación se reinicia **cada mes** conservando el total de siempre. Los nombres del ranking y de la lista de rivales se pueden pulsar y abren un **perfil público** —victorias, reglas preferidas, mejor partida, rachas e insignias— que no enseña nada que no fuera ya público y nunca el correo. Hay **siete insignias**, que se calculan al terminar la partida y se guardan, de modo que abrir un perfil no recorre `games`. Y hay una **lista de rivales**: con quién se ha jugado, el marcador de la pareja, un punto de presencia y un botón de desafío que pide la revancha de la última partida.
+
+La 3.9.1 puso el motor de deducción al servicio de quien juega. Una partida puede crearse **con cuaderno**: una cuadrícula para marcar símbolos descartados y confirmados y un aviso cuando un intento contradice las pistas propias; es una opción de la partida, la valida el servidor y la heredan las revanchas, para que los dos jueguen con las mismas reglas. El ordenador de la práctica explica cada jugada —cuántos códigos le quedaban, cuántos le quedan y en cuántos grupos los parte—. Y hay **enigmas de deducción**: 72 puzles en tres dificultades, en solitario, sin cuenta y sin una sola fila en D1. La 3.9.0 abrió la etapa: el saber deductivo salió del rival de la práctica y pasó a `public/deduce.js`, y con él llegó **la partida que se explica**: al acabar cualquier partida, cada intento recibe una nota —óptimo, correcto, desperdiciado— y se señala la jugada tras la cual solo quedaba un código. Se calcula entero en el navegador, sin una lectura más en D1.
+
+La 3.8.1 cerró la etapa 3 con la **tarjeta de fin de partida** —al acabar cualquier partida, contra una persona o contra el ordenador, la misma rejilla de emojis del código del día se puede compartir sin revelar ningún código—. La 3.8.0 estrenó el **código del día** —un secreto por día, el mismo para todo el mundo, un intento diario y una clasificación del día por intentos y tiempo— y la rejilla de emojis que se copia al terminarlo. La 3.7.0 abrió la **cadencia por correspondencia**, con uno o tres días por jugada y sin pausa al cerrar el juego, e hizo que el turno llegue mediante Web Push aunque la pestaña esté cerrada; si no hay una suscripción push válida, las partidas por correspondencia recurren al correo verificado, y `guess`, `passTurn` y el Cron comparten una deduplicación que impide avisar dos veces del mismo turno. Las invitaciones privadas esperan 48 horas y el mantenimiento ya no cierra una partida por correspondencia por llevar 48 horas sin actividad.
+
+La 3.6.2 hizo que la primera visita abriera en el idioma del navegador cuando era inglés o francés, sin pulsar nada; la dirección sigue mandando sobre todo y una elección hecha a mano manda sobre el navegador. La 3.6.1 subió el selector de idioma a lo alto de la pantalla de acceso. La 3.6.0 cerró la etapa 1: una **invitación sobrevive al alta** y a la verificación en otro aparato. La 3.5.3 puso el **pulso numérico** en la portada y la 3.5.2 abrió la **práctica sin cuenta**. La 3.5.1 corrigió la inyección por nombres, unificó el contador de PIN, protegió el arranque de la bolsa, cerró ranking y lista pública detrás del correo y arregló las revanchas simultáneas. En la 3.5.0, `/admin` pasó a enseñar las horas en la zona de quien las mira. En la 3.3.3, el cronómetro Solo pasó a reiniciarse por intento. La 3.2.0 añadió el acuerdo de versión entre página y servidor. La 3.0.0 separó definitivamente entrar de crear una cuenta y la 3.1.0 fijó la puerta del correo: **no hay cuenta que valga sin correo verificado**.
 
 El 12 de septiembre de 2026 la base de producción se vació a propósito: quedó una sola cuenta, `Diego`, y se borraron partidas, chat, presencia, buzón y todas las sesiones. El motivo es el mismo: arrancar sin ninguna cuenta que no cumpla la regla nueva.
 
-El trabajo en curso está en «El camino a la 4.0.0»: dieciocho mejoras repartidas en seis etapas y un cierre, ordenadas por lo que cambian para quien llega por primera vez y se encuentra el vestíbulo vacío.
+«El camino a la 4.0.0» queda como historia: las seis etapas están entregadas y la séptima —el cierre— es esta versión. Lo que quedó fuera a propósito abre la lista de la siguiente, en «Lo que no entra en la 4.0.0».
 
 - Juego: https://picasyfijas.fans/ (también https://www.picasyfijas.fans/)
 - Dirección anterior, sigue activa: https://picas-y-fijas.picas-y-fijas.workers.dev/
@@ -173,6 +183,42 @@ conectado ahora y un botón de desafío que pide la revancha de la última parti
 como invitación en sus partidas, con su aviso, igual que cualquier otra revancha. No hay tabla nueva detrás: los
 pares salen de los hilos privados que ya existían y el marcador, de las partidas terminadas entre los dos.
 
+### La arena
+
+Un modo aparte, y la respuesta al problema de fondo del juego: para una partida clásica hacen falta **dos personas libres al mismo tiempo**. La arena lo resuelve por el otro lado —junta de 3 a 8 contra el mismo código— y por eso vive en sus propias tablas: `games` es de dos, con `p1`, `p2`, dos secretos y un turno, y no puede representar esto sin deformarse.
+
+- **El código lo sortea el servidor.** Nadie elige secreto, así que nadie juega con ventaja, y nadie tiene que esperar a que el rival piense el suyo.
+- **No hay turnos.** Cada quien prueba cuando quiere: una desconexión no congela a los demás.
+- **Siempre hay límite de intentos**, 6 o 10. Es lo que garantiza que una arena termine aunque alguien cierre la pestaña y no vuelva.
+- **Las reglas son las de siempre**: números o colores, 4, 6 u 8 colores, de 3 a 6 posiciones, con o sin repetición.
+- Quien la abre es el anfitrión y es el único que puede empezarla, con **3 jugadores como mínimo**. Se comparte por su código, igual que una partida privada.
+- Una arena espera **2 horas** a llenarse. Ya empezada, se cierra sola cuando no queda nadie jugando —todos han acertado, agotado sus intentos o se han marchado— y el Cron barre las que quedan colgadas.
+- **Solo se puede estar en una arena abierta a la vez**, y hay que esperar 30 segundos entre dos aperturas.
+
+La clasificación se ve en directo, pero **los intentos de los demás no viajan**: todos atacan el mismo código, así que leer el intento de otro y su resultado sería jugar con su cabeza. De cada rival se sabe cuántos intentos ha gastado y cuál es su mejor número de fijas, que no dicen nada del código. Delante van quienes lo descifraron, y entre ellos manda quien lo hizo con menos intentos; después, quienes siguen jugando, por lo cerca que están; quien se marcha cierra la lista, conservando lo que jugó.
+
+Marcharse antes de empezar es marcharse; si quien se va es el anfitrión, la arena se va con él. Ya empezada, marcharse no borra a nadie de la clasificación: la arena es de todos y lo jugado cuenta. **El código no sale de la tabla hasta que la arena termina**, salvo para quien acaba de acertarlo, que ya lo sabe.
+
+La arena **no reparte puntos de temporada**. Es un modo nuevo y medirlo con la misma vara que una partida de dos deformaría una clasificación que acaba de estrenarse; si un día se decide contarlo, será con su propia cuenta y su propio recibo, como hizo `game_scores`.
+
+### Mirar una partida
+
+Desde el vestíbulo se puede mirar cualquier **partida pública en curso** que ya tenga a sus dos jugadores dentro. Se ven los nombres, las reglas, los intentos de los dos con sus picas y fijas, y el reloj, en directo.
+
+Lo que no se ve es **ningún código**. Quien mira es `youAre === 0`, y para esa cifra `secretsFor()` devuelve dos cadenas vacías: ni el suyo, porque no tiene, ni el del rival, tampoco al terminar, cuando los códigos se revelan a quienes jugaron. Es la regla de siempre —los secretos no salen de una partida activa— aplicada a una pantalla nueva, y `test/spectator.test.js` recorre entera la respuesta que recibe quien mira para comprobarlo.
+
+El chat de la partida se puede **leer, no escribir**, y lo que se lee es el de **esta** partida, filtrado por su identificador: el hilo privado de la pareja es más largo que la partida y guarda conversaciones anteriores que siguen siendo suyas.
+
+La lista de partidas que se pueden mirar no cuesta una consulta más: sale de la misma lectura con la que el vestíbulo ya se dibujaba.
+
+### El chat, los zumbidos y las reacciones rápidas
+
+Hay un chat mundial en el vestíbulo y un chat privado por partida, exclusivo de sus dos jugadores. El de partida se cierra 24 horas después de terminar y conserva sus filas durante 7 días; el del vestíbulo conserva 24 horas.
+
+El **zumbido** avisa al rival de que le toca. Requiere que esté presente en la partida y tiene 30 segundos de espera por emisor.
+
+Las **reacciones rápidas** son cuatro frases hechas —«¡Suerte!», «Casi», «¡Vaya jugada!», «Buena partida»— a un toque, para quien juega desde el teléfono y no va a escribir. Viajan por el chat de siempre, con el mismo tipo que los avisos de la partida, y respetan la misma espera de 30 segundos que el zumbido. Lo que se guarda es la **clave** (`react_gg|Nombre`), no la frase: el servidor no sabe en qué idioma se leerá y no le hace falta saberlo, así que cada pantalla la lee en el suyo y por esta vía no entra texto libre que haya que moderar.
+
 ### El código del día
 
 Cada día hay un código y es el mismo para todo el mundo: cuatro posiciones, cifras del 0 al 9, sin repetir, ocho intentos. Se juega una sola vez al día; al acertar —o al agotar los ocho intentos— la jugada se cierra, se revela el código y la persona aparece en la clasificación del día, ordenada por intentos y, a igualdad de intentos, por tiempo. El día empieza y acaba a medianoche **UTC**: una zona horaria por persona haría que el código dejara de ser el mismo para todo el mundo.
@@ -274,11 +320,12 @@ Antes hay que activar **Email Routing** en `picasyfijas.fans` y verificar la dir
 - `public/computer-ai.js`: rival local de práctica. Desde la 3.9.0 no guarda saber propio: es el nombre por el que la práctica llama al adversario, y toma de `deduce.js` la generación de candidatos y las estrategias por dificultad.
 - `public/puzzles.json`: los enigmas de deducción. **Es generado: no se edita a mano.** Sale de `node tools/make-puzzles.mjs`, que es determinista, y una prueba lo regenera y lo compara byte a byte. No guarda ninguna solución: cada enigma tiene una única combinación compatible con sus pistas, así que comprobar una respuesta es comprobar que es compatible.
 - `public/admin.html`: panel reservado de administración, en pestañas.
+- `public/audio/`: los dos sonidos del juego —el aviso de mensaje y el zumbido—, servidos tal cual.
 - `public/robots.txt`, `public/sitemap.xml`: indexación. Abren el juego a los buscadores, cierran `/admin` y `/api` y declaran las tres direcciones de idioma.
 - `public/rules-es.html`, `public/rules-en.html`, `public/rules-fr.html`: las reglas como página pública. **Son generadas: no se editan a mano.** Salen de `RULES`, en `public/index.html`, con `python tools/make-rules-pages.py`.
 - `public/install-es.html`, `public/install-en.html`, `public/install-fr.html`: la guía de instalación como página pública. **Son generadas: no se editan a mano.** Salen de las claves `install_*` y de `INSTALL_ART`, en `public/index.html`, con `python tools/make-install-pages.py`.
 - `public/og-es.png`, `public/og-en.png`, `public/og-fr.png`: la tarjeta social de 1200×630 que se ve al compartir el enlace, una por idioma. Se generan con `python tools/make-og-images.py` y necesitan `python -m pip install pillow`.
-- `src/index.js`: Worker, rutas, API, acceso a D1 y operaciones administrativas.
+- `src/index.js`: Worker, rutas, API, acceso a D1 y operaciones administrativas. Aquí vive también `settleFinishedGame()`, por donde pasan todos los finales de una partida, y `safeParams()`, que es lo que impide que un cuerpo mal formado se convierta en un error 500.
 - `src/game.js`: reglas puras, validaciones, cronómetro y sanitización del estado.
 - `src/security.js`: PIN, autenticación, sesiones, limitación de intentos y lectura del país y la IP que pone Cloudflare.
 - `src/chat.js`: permisos, hilos privados, mensajes incrementales y retención del chat.
@@ -289,9 +336,10 @@ Antes hay que activar **Email Routing** en `picasyfijas.fans` y verificar la dir
 - `src/maintenance.js`: mantenimiento horario fuera del camino crítico de las peticiones.
 - `src/push.js`: suscripciones y avisos de turno. Firma VAPID y cifra `aes128gcm` con Web Crypto, sin dependencias; si una correspondencia no tiene push válido, usa el correo verificado.
 - `src/admin.js`: herramientas de mantenimiento del panel: ficha de usuario, detección de cuentas repetidas, fusión, borrado, limpieza de partidas y consola SQL.
-- `src/rename.js`: el cambio de nombre de usuario y su reescritura en todas las tablas que guardan el nombre.
+- `src/rename.js`: el cambio de nombre de usuario y su reescritura en todas las tablas que guardan el nombre —partidas, chat, ranking, insignias, arena y código del día—. También es donde se decide cuándo **no** se puede cambiar: con una partida o una arena abiertas, no.
+- `src/recovery.js`: los enlaces de un solo uso que llegan por correo —verificar la dirección y reponer el PIN—, su emisión, su caducidad y el correo que los lleva en los tres idiomas.
 - `src/feedback.js`: el buzón de sugerencias y errores: validación, barandillas del endpoint público, consultas del panel y el aviso por correo.
-- `migrations/0001_initial.sql`: esquema reproducible de D1. No es un residuo de la migración desde Google y no debe eliminarse. Las migraciones siguientes añaden o ajustan: `0002` el chat, `0003` los hilos privados, `0004` el origen de cada cuenta, `0005` el buzón de sugerencias, `0006` la bolsa de tiempo, `0007` los índices necesarios para permanecer dentro de D1 Free, `0008` el correo y la recuperación del PIN, `0009` la fecha del último cambio de nombre, `0010` el nombre anterior, `0011` la zona horaria `0012` la lengua de avisos, las suscripciones push y la deduplicación por turno, `0013` los resultados del código del día, `0014` la opción de cuaderno de la partida, `0015` los puntos por temporada y el recibo de cada partida contada, `0016` las insignias y las rachas, y `0017` la arena con sus tres tablas.
+- `migrations/0001_initial.sql`: esquema reproducible de D1. No es un residuo de la migración desde Google y no debe eliminarse. Las migraciones siguientes añaden o ajustan: `0002` el chat, `0003` los hilos privados, `0004` el origen de cada cuenta, `0005` el buzón de sugerencias, `0006` la bolsa de tiempo, `0007` los índices necesarios para permanecer dentro de D1 Free, `0008` el correo y la recuperación del PIN, `0009` la fecha del último cambio de nombre, `0010` el nombre anterior, `0011` la zona horaria, `0012` la lengua de avisos, las suscripciones push y la deduplicación por turno, `0013` los resultados del código del día, `0014` la opción de cuaderno de la partida, `0015` los puntos por temporada y el recibo de cada partida contada, `0016` las insignias y las rachas, y `0017` la arena con sus tres tablas.
 - `test/`: pruebas automáticas de reglas, rutas, teclado y regresiones.
 - `tools/make-icons.mjs`: genera los cuatro PNG de la aplicación instalada. Se ejecuta con `npm run icons`.
 - `tools/make-puzzles.mjs`: fabrica `public/puzzles.json`. Usa el mismo `public/deduce.js` que el navegador, parte de una semilla fija y quita de cada enigma las pistas que sobran hasta dejar el más apretado con solución única. Se ejecuta con `npm run puzzles`.
@@ -535,7 +583,7 @@ Las columnas de la bolsa de tiempo viven en `games` y conviven con los otros rel
 
 El país y la IP no los declara el navegador: los pone Cloudflare delante del Worker (`request.cf.country` y `CF-Connecting-IP`, en `requestOrigin`). Se escriben solo al entrar —una escritura por sesión, no por petición— y su único uso es administrativo. El país que enseña la bandera de una partida sigue siendo el que averigua el navegador; son dos datos distintos y no se mezclan.
 
-Ninguna de esas cuatro tablas tiene clave foránea hacia `users`, así que dos operaciones tienen que acordarse de ellas y lo hacen: cambiar de nombre las arrastra —los puntos son de la persona, no del nombre— y borrar una cuenta las borra, para que un nombre reutilizado no herede unos puntos que no jugó.
+**Ninguna tabla que guarde el nombre escrito tiene clave foránea hacia `users`.** Lo guardan así a propósito: el polling no tiene que cruzar con `users` en cada consulta. El precio es que dos operaciones tienen que acordarse de todas ellas, una por una, y lo hacen. **Cambiar de nombre las arrastra** —`games`, el chat y sus hilos, `player_scores`, `player_progress`, `badges`, las tres tablas de la arena y `daily_results`—, porque los puntos y la historia son de la persona, no del nombre; y con una partida o una arena todavía abiertas el cambio se rechaza, porque una jugada en vuelo llegaría con el nombre viejo. **Borrar una cuenta las borra**, incluidas las de la arena y las del código del día, para que un nombre reutilizado no herede una historia que no jugó y para que el derecho al olvido sea de verdad.
 
 Los secretos de jugadores nunca deben exponerse mientras una partida esté activa. Toda nueva respuesta API debe pasar por la sanitización correspondiente.
 
@@ -624,16 +672,24 @@ Sin sesión solo existen las pantallas de `GUEST_VIEWS` —portada, práctica, p
 
 El buzón de sugerencias es el único endpoint que escribe en D1 sin sesión. Cualquier cambio en él debe conservar sus cuatro barandillas —campo trampa, longitud, espera entre mensajes y tope por hora y por día—, porque son lo único que lo separa de un grifo abierto.
 
-La administración no está enlazada desde el juego. Requiere una cuenta con rol `admin`, y toda acción que cambie algo queda en `audit_log`. Un jugador sin ese rol recibe siempre un error, tenga o no sesión válida.
+**Una partida solo termina por un sitio.** Hay cinco caminos que la cierran —el intento ganador, la bandera caída, el abandono, el Cron y la corrección de un administrador— y los cinco pasan por `settleFinishedGame()`, que avisa en el chat de la partida y llama a `recordFinishedGame()`. Separar las dos mitades es lo que hizo que durante tres versiones una partida con bolsa de tiempo cerrada por el reloj no repartiera ni un punto ni una insignia. El recibo de `game_scores` hace que llamarla dos veces no cuente dos veces, así que el camino nuevo siempre debe pasar por ahí.
+
+**La arena no toca las partidas clásicas.** Sus tablas son suyas, el código lo sortea el servidor y no sale hasta que termina, nadie ve los intentos de nadie y siempre hay límite de intentos. Esas cuatro cosas son lo que la hace justa y lo que la hace terminable; `test/arena.test.js` las fija.
+
+**Nada de lo que mande un navegador puede provocar un error 500.** El cuerpo de una petición es un objeto de valores simples y nada más: `safeParams()` descarta lo que no lo sea —`subscription` es el único parámetro estructurado del API— y un cuerpo demasiado grande responde `413` con su mensaje, no una traza. Equivocarse al escribir una petición es un error del cliente, y se le contesta como tal.
+
+**Ningún fuente lleva bytes de control crudos.** Un `\x00` escrito como byte y no como escape convierte el archivo en binario a ojos de Git: el diff deja de existir, la revisión también, y `grep` se salta el archivo. Le pasó a `src/security.js`, que es justo el módulo de sesiones y contraseñas. `test/audit-v4.test.js` recorre `src/`, `public/`, `test/`, `tools/` y `migrations/` para que no vuelva a pasar.
+
+La administración no está enlazada desde el juego. Requiere una cuenta con rol `admin`, y toda acción que cambie algo queda en `audit_log`. Un jugador sin ese rol recibe siempre un error, tenga o no sesión válida. Sus mensajes son los únicos del servidor que se quedan en español: es una herramienta interna, y `test/client-server-sync.test.js` recorre `src/` entero para comprobar que todos los demás existen en los tres idiomas.
 
 ## Desarrollo local
 
-Requisitos: Node.js 20 o posterior y pnpm.
+Requisitos: Node.js 20 o posterior. El proyecto se conduce con **`npm`** —es lo que dice `AGENTS.md` y lo que usan las instrucciones de entrega—; `pnpm` ejecuta exactamente los mismos scripts y el repositorio conserva su `pnpm-lock.yaml`, así que sirve igual siempre que se elija uno y no se mezclen.
 
 ```text
-pnpm install
-pnpm run db:local
-pnpm run dev
+npm install
+npm run db:local
+npm run dev
 ```
 
 La aplicación queda normalmente en `http://localhost:8787` y el panel en `http://localhost:8787/admin`.
@@ -641,25 +697,29 @@ La aplicación queda normalmente en `http://localhost:8787` y el panel en `http:
 Comandos disponibles:
 
 ```text
-pnpm test       # todas las pruebas
-pnpm run check  # sintaxis y pruebas
-pnpm run deploy # despliegue manual excepcional
-pnpm run pages       # regenera las paginas de reglas y de instalacion
-pnpm run screenshots # rehace las capturas del manifest (con el servidor en marcha)
-pnpm run db:local
-pnpm run db:remote
+npm test        # todas las pruebas
+npm run check   # sintaxis y pruebas
+npm run deploy  # despliegue manual excepcional
+npm run pages       # regenera las paginas de reglas y de instalacion
+npm run puzzles     # regenera public/puzzles.json
+npm run icons       # regenera los cuatro PNG de la app instalada
+npm run screenshots # rehace las capturas del manifest (con el servidor en marcha)
+npm run db:local
+npm run db:remote
 ```
 
-Antes de terminar cualquier cambio se debe ejecutar `pnpm run check`. Si cambia una regla, una ruta o una interacción crítica, se debe añadir o actualizar una prueba.
+Fuera de `package.json` quedan dos generadores que necesitan Python: `python tools/make-og-images.py` para las tarjetas sociales (requiere `pillow`) y `python tools/pdf/build.py` para las guías de estrategia (requiere `reportlab`).
+
+Antes de terminar cualquier cambio se debe ejecutar `npm run check`. Si cambia una regla, una ruta o una interacción crítica, se debe añadir o actualizar una prueba.
 
 ## Base de datos y despliegue
 
 Para una instalación nueva, se crea la base D1, se coloca su identificador en `wrangler.jsonc` y se aplica el esquema:
 
 ```text
-pnpm install
-pnpm run db:remote
-pnpm run deploy
+npm install
+npm run db:remote
+npm run deploy
 ```
 
 Una modificación futura del esquema debe añadirse como una migración numerada nueva; nunca se debe reescribir `0001_initial.sql` después de que una base dependa de ella.
@@ -667,11 +727,11 @@ Una modificación futura del esquema debe añadirse como una migración numerada
 **El orden importa cuando un cambio trae migración.** Cloudflare despliega solo al recibir `main`, así que la migración debe aplicarse antes de empujar:
 
 ```text
-pnpm run db:remote
+npm run db:remote
 git push origin main
 ```
 
-La 2.5 trae `0005_feedback.sql` y `0006_time_bank.sql`; la optimización de D1 Free añade `0007_d1_free_optimization.sql` y la correspondencia añade `0012_push.sql` y el código del día `0013_daily.sql`. A todas les aplica esta misma regla. El aviso por correo del buzón necesita además, una sola vez, activar Email Routing en el dominio y colocar sus dos secretos:
+La regla vale para todas, sin excepción: `0005_feedback.sql` y `0006_time_bank.sql` con la 2.5, `0007_d1_free_optimization.sql` con la optimización de D1 Free, `0012_push.sql` con la correspondencia, `0013_daily.sql` con el código del día, `0014_notebook_option.sql` con el cuaderno, `0015_season.sql` y `0016_badges.sql` con los puntos y las insignias, y `0017_arena.sql` con la arena. El aviso por correo del buzón necesita además, una sola vez, activar Email Routing en el dominio y colocar sus dos secretos:
 
 ```text
 wrangler secret put FEEDBACK_TO
@@ -683,6 +743,12 @@ Web Push necesita un par P-256 propio del sitio. La clave pública se guarda com
 ```text
 wrangler secret put VAPID_PUBLIC
 wrangler secret put VAPID_PRIVATE
+```
+
+Turnstile protege las dos puertas públicas —la petición del enlace de PIN y el buzón de sugerencias— y **se verifica siempre en el Worker**. `TURNSTILE_ENABLED` y `TURNSTILE_HOSTNAMES` viajan en `wrangler.jsonc` porque no son secretos; la clave privada, sí. Con `TURNSTILE_ENABLED` a `"1"` y sin secreto, la comprobación **falla cerrada**: una instalación nueva que se salte este paso deja el alta y la recuperación del PIN sin funcionar. Las pruebas locales dejan la bandera sin poner a propósito.
+
+```text
+wrangler secret put TURNSTILE_SECRET
 ```
 
 El código del día necesita el suyo. Cualquier cadena larga y aleatoria sirve; lo importante es que no esté en Git, porque el repositorio es público y quien la tenga puede calcular el código de cualquier día. Si falta, el Worker sigue funcionando con un valor de reserva escrito en `src/daily.js`, que no vale para producción. Cambiarlo cambia el código de hoy a media jornada, así que se pone una vez y se deja:
@@ -758,6 +824,26 @@ El 17 de septiembre de 2026 se revisaron el código, las pantallas y este docume
 | «Continuar» desde el lobby perdía la bolsa de tiempo al entrar en la partida o en la sala de espera. | La meta lleva `timeMode`, `bankSeconds` y `bankIncrement`. |
 | Once mensajes del servidor —chat, reloj, colores— salían en español en un juego en inglés o francés, porque la prueba de traducciones no miraba los `return "…"` ni `rename.js`. | Traducidos; la prueba los mira. «El código debe tener N posiciones.» se traduce por patrón (`ERR_PATTERNS`). |
 
+## La auditoría de la 4.0.0
+
+El 20 de septiembre de 2026, antes de poner el número, se revisó la versión entera con ojos de QA: no leyendo el código, sino **jugándolo**. La simulación recorrió los 90 juegos de reglas legales —números y colores, 4/6/8 colores, de 3 a 6 posiciones, con y sin repetición, sin límite / 6 / 10 intentos— de principio a fin contra el Worker de verdad, comparó 2,3 millones de pares intento/secreto con una implementación de referencia, jugó arenas de 3 a 8 jugadores con todas sus formas de acabar, y disparó unas 1.100 llamadas al API con parámetros absurdos, hostiles o ausentes. `test/audit-v4.test.js` fija cada hallazgo.
+
+Lo que resistió sin una sola grieta: la aritmética de picas y fijas, la validación de códigos, los tres relojes con su aritmética al segundo, la regla del último intento y del empate, la sanitización —ningún código del rival salió nunca de una partida activa, ni hacia el rival ni hacia quien miraba—, la idempotencia por `requestId`, la puerta del correo en las 37 acciones del API, y las 648 claves del catálogo de idiomas, que están las tres veces y con las mismas variables.
+
+| Hallazgo | Corrección |
+| --- | --- |
+| Dos de los cinco caminos que cierran una partida no contaban sus puntos: la bandera que descubre el rival al consultar (`state`) y la que descubre quien intenta jugar fuera de tiempo (`guess`). Una partida con bolsa de tiempo terminada por el reloj —el caso normal— no repartía ni un punto ni una insignia, y su chat no recibía el aviso de final. | `settleFinishedGame()`: avisar y contar dejan de ser dos mitades sueltas y los cinco caminos pasan por ahí. |
+| Cambiar de nombre no arrastraba las tres tablas de la arena ni `daily_results`. Renombrarse durante una arena dejaba a la persona fuera de su propia arena —«No juegas en esta arena»— y la arena se quedaba esperando unos intentos que ya no podían llegar. | Una arena abierta bloquea el cambio, igual que una partida; y las cuatro tablas viajan con el nombre, como ya hacían el ranking y las insignias. |
+| Borrar una cuenta no borraba sus filas de `arena_players` ni de `arena_guesses`, así que su nombre seguía en la clasificación de cada arena que jugó, y las arenas que había abierto sobrevivían a su cuenta. | El borrado se lleva sus filas y las arenas de las que fue anfitriona, como ya se llevaba sus partidas. |
+| Un navegador podía hacer que el servidor respondiera **500**: un cuerpo demasiado grande, un cuerpo que fuera `null` o una lista, o un campo como `{"toString":1}` en `guess`, que hace estallar `String()`. | `safeParams()` acepta solo un objeto de valores simples —`subscription` es la única excepción— y un cuerpo demasiado grande responde `413` con su mensaje y sin traza. |
+| `src/security.js` llevaba tres bytes de control crudos dentro de una expresión regular, escritos como bytes en vez de como escapes. Git leía el archivo como **binario**: cada cambio del módulo de sesiones y contraseñas salía en el diff como «Binary files differ», sin revisión posible, y `grep` se lo saltaba. | Los mismos caracteres, escritos `\x00-\x1f\x7f`. Una prueba recorre ahora los cinco directorios de fuentes. |
+| Cuatro mensajes del servidor salían en español dentro de un juego en inglés o en francés: la prueba de traducciones llevaba una lista de archivos escrita a mano y `arena.js`, `daily.js`, `push.js` y `season.js` nunca entraron en ella. | Traducidos; la prueba recorre `src/` entero, así que un módulo nuevo no puede colarse. |
+| En `test/notebook.test.js`, una frontera de palabra estaba escrita con un byte de retroceso crudo en vez de su escape: la aseveración buscaba «`.secret`» seguido de un retroceso, que no aparece nunca. Comprobaba menos de lo que decía. | Escrita como escape; la aseveración vuelve a valer. |
+| Tres de las dieciocho mejoras —la arena, el espectador y las reacciones rápidas— solo estaban documentadas dentro del plan. «Cómo se juega» no las mencionaba. | Tienen sección propia. |
+| `TURNSTILE_SECRET` no figuraba en ninguna lista de secretos, aunque `TURNSTILE_ENABLED` viaja a `"1"` en `wrangler.jsonc` y la comprobación falla cerrada: una instalación nueva que siguiera este documento se quedaba sin alta ni recuperación de PIN. | Documentado junto a los demás, con la advertencia. |
+| El documento mandaba `pnpm` para desarrollar y desplegar, y `npm` en la lista de herramientas, en el plan y en `AGENTS.md`. Y la regla de «migración antes del push» solo enumeraba hasta la `0013`. | Un solo gestor en las instrucciones, `npm`, con la nota de que `pnpm` sirve igual; y la lista de migraciones llega hasta la `0017`. |
+| Faltaban en «Arquitectura y archivos» `src/recovery.js` —los enlaces de correo— y `public/audio/`. | Añadidos. |
+
 ## Seguridad y archivos locales
 
 Nunca se deben subir a GitHub:
@@ -781,14 +867,14 @@ El proyecto sigue versionado semántico `vMAYOR.MENOR.PARCHE`:
 - **MENOR (Y)**: funcionalidad nueva compatible hacia atrás —una pantalla, un modo de juego, un ajuste como el cuadrado de idioma.
 - **PARCHE (Z)**: correcciones compatibles hacia atrás, retoques de texto, estilos y rendimiento.
 
-El número vive en tres sitios y los tres se cambian en el mismo commit: `version` en `package.json` conserva el SemVer canónico (`3.7.0`), porque npm y pnpm lo requieren, y `APP_VERSION` en `public/index.html` y `src/version.js` publica `v3.7.0`. El Worker lo firma en todas sus respuestas; `test/client-server-sync.test.js` comprueba que los tres coinciden. De ahí sale lo que ve el jugador en los créditos y lo que viaja con cada mensaje del buzón (`appVersion`), así que un número desfasado hace que un informe apunte a una versión que no es. La versión sube en el commit que introduce el cambio, no al desplegar.
+El número vive en tres sitios y los tres se cambian en el mismo commit: `version` en `package.json` conserva el SemVer canónico (`4.0.0`), porque npm y pnpm lo requieren, y `APP_VERSION` en `public/index.html` y `src/version.js` publica `v4.0.0`. El Worker lo firma en todas sus respuestas; `test/client-server-sync.test.js` comprueba que los tres coinciden. De ahí sale lo que ve el jugador en los créditos y lo que viaja con cada mensaje del buzón (`appVersion`), así que un número desfasado hace que un informe apunte a una versión que no es. La versión sube en el commit que introduce el cambio, no al desplegar.
 
 ## Procedimiento para futuras modificaciones
 
 1. Leer este documento y revisar `git status` para no sobrescribir trabajo pendiente.
 2. Identificar las reglas y contratos afectados antes de editar.
 3. Hacer el cambio más pequeño que resuelva el problema.
-4. Ejecutar `pnpm run check` y añadir pruebas de regresión cuando corresponda.
+4. Ejecutar `npm run check` y añadir pruebas de regresión cuando corresponda.
 5. Revisar que no se filtren datos privados ni secretos.
 6. Actualizar este documento si cambian arquitectura, operación, rutas, límites o decisiones duraderas.
 7. Subir la versión según las reglas de «Versionado», en `package.json`, `APP_VERSION` de `public/index.html` y `src/version.js` a la vez.
@@ -796,7 +882,9 @@ El número vive en tres sitios y los tres se cambian en el mismo commit: `versio
 
 No se deben borrar datos, ejecutar importaciones, alterar producción, cambiar roles o publicar secretos sin autorización explícita del propietario.
 
-## El camino a la 4.0.0
+## El camino a la 4.0.0 — hecho
+
+**Este plan está terminado.** Las seis etapas se entregaron una por una entre la 3.5.2 y la 3.11.0, y la séptima —el cierre— es la 4.0.0. Se conserva entero, y no resumido, porque explica por qué existe cada pantalla del juego y en qué orden se decidió construirlas: leerlo es la forma más rápida de entender el estado actual. Lo que sigue está escrito en el tiempo en que se escribió.
 
 El juego va por delante de su público. Tiene bolsa de tiempo, relojes con autoridad del servidor, chat con hilos privados, reanudación después de recargar, instalación como app y tres idiomas; y aun así, quien llega hoy se encuentra esto: crea una cuenta, va a buscar el correo, vuelve, entra al vestíbulo y **no hay nadie**. Este plan entero está ordenado alrededor de esa frase. Son dieciocho mejoras repartidas en seis etapas por orden de valor, más el cierre. Cuando estén hechas, la versión será la **4.0.0**.
 
@@ -881,16 +969,16 @@ Lo que queda es lo que hace que una sala parezca habitada, y lo más ambicioso d
 | **E6-T2 (q)** ✅ Reacciones rápidas (3.10.2) | Cuatro frases hechas en los tres idiomas para quien juega desde el teléfono y no va a escribir. | `src/chat.js` (`REACTIONS`, `sendReaction`), `src/index.js` (acción `chatReact`), `public/index.html` | Reutiliza `chat_messages` con su tipo y la espera del zumbido; no abre ninguna vía nueva de moderación. Lo que se guarda es la **clave** (`react_gg\|Nombre`), no la frase, así que por esta vía no entra texto libre y cada pantalla la lee en su idioma. El tipo es el de los avisos de la partida porque el `CHECK` de `chat_messages` no admite uno nuevo y esta tarea no trae migración. `test/reactions.test.js` lo fija |
 | **E6-T3 (m)** ✅ La arena (3.11.0) | De 3 a 8 jugadores contra el mismo código, a la vez, con clasificación en directo. Resuelve de raíz el «hacen falta dos al mismo tiempo». | `src/arena.js` (nuevo), `src/index.js`, `src/maintenance.js`, `migrations/0017_arena.sql`, `public/index.html` | `games` no sirve —es de dos, `p1` y `p2`—, así que la arena lleva tablas propias y no toca las partidas clásicas. Es la tercera razón de la mayor. `test/arena.test.js` fija lo que la hace justa —el código lo sortea el servidor y no sale hasta el final, nadie ve los intentos de nadie— y lo que la hace terminable: límite de intentos siempre, cierre automático cuando no queda nadie jugando e idempotencia por `requestId` |
 
-### Etapa 7 — El cierre: 4.0.0
+### Etapa 7 — El cierre: 4.0.0 ✅
 
-No es papeleo: es lo que separa dieciocho cambios sueltos de una versión.
+No era papeleo: era lo que separa dieciocho cambios sueltos de una versión. Lo que se hizo, en el orden en que estaba escrito:
 
-1. Subir la versión a `4.0.0` en los tres sitios, en un mismo commit.
-2. Poner al día este documento: «Estado actual», «Arquitectura y archivos», «Modelo de datos» con las tablas nuevas, «Reglas técnicas que no se deben romper» y este mismo plan, que pasa a ser historia.
-3. Regenerar todo lo generado: páginas de reglas e instalación, capturas y su lista en el manifest, iconos si cambió la marca, tarjetas OG y las guías PDF, que para entonces deben hablar del código del día y del análisis.
-4. `npm test` completo, migraciones en local, `wrangler types` y `wrangler deploy --dry-run`.
-5. Repasar en producción las dieciocho mejoras, una por una, en los tres idiomas y en teléfono.
-6. Etiqueta anotada `v4.0.0` sobre el commit del cierre.
+1. ✅ La versión subió a `4.0.0` en los tres sitios, en un mismo commit.
+2. ✅ Este documento se puso al día: «Estado actual», «Arquitectura y archivos» con `recovery.js` y `public/audio/`, «Modelo de datos» con las tablas de la arena y la regla de qué arrastra un cambio de nombre, «Reglas técnicas que no se deben romper» con cuatro reglas nuevas, y este plan, que pasa a ser historia. Se añadieron además las tres secciones de «Cómo se juega» que faltaban —la arena, mirar una partida y el chat con sus reacciones—, porque tres de las dieciocho mejoras solo estaban documentadas dentro de este plan.
+3. ✅ Se regeneró lo generado: las tres páginas de reglas, las tres de instalación, `public/puzzles.json` y las tres guías PDF, que ahora hablan del código del día, de los enigmas, del cuaderno, de la arena y del análisis de la partida. Los iconos y las tarjetas OG no se tocaron porque la marca no cambió, y las capturas del manifest tampoco porque ninguna pantalla cambió de aspecto.
+4. ✅ `npm test` completo, migraciones en local y `wrangler deploy --dry-run`.
+5. ✅ Una auditoría entera antes de ponerle el número, con simulación exhaustiva de combinaciones de juego: «La auditoría de la 4.0.0».
+6. ✅ Etiqueta anotada `v4.0.0` sobre el commit del cierre.
 
 ### Lo que no entra en la 4.0.0
 

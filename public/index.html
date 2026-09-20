@@ -1352,7 +1352,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v3.11.0';
+const APP_VERSION = 'v4.0.0';
 /* Enlace de invitación: ...?game=SZ93
    La invitación sobrevive al registro: se guarda en el navegador, porque entre
    abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
@@ -1929,6 +1929,11 @@ const ERR = {
     "El mensaje no puede superar 300 caracteres.":"The message cannot be longer than 300 characters.",
     "Tu acceso al chat fue silenciado permanentemente por un administrador.":"An administrator has muted your chat access permanently.",
     "Tu acceso al chat está silenciado temporalmente por un administrador.":"An administrator has muted your chat access for a while.",
+    "Sal de tu arena o espera a que termine antes de cambiar tu nombre.":"Leave your arena or wait for it to end before changing your name.",
+    "Ya jugaste el código de hoy.":"You already played today’s code.",
+    "El código del día cambió mientras se procesaba tu intento.":"The daily code changed while your guess was being processed.",
+    "Suscripción push inválida.":"Invalid push subscription.",
+    "Jugador no encontrado.":"Player not found.",
     "Solicitud demasiado grande.":"Request too large.",
     "Error temporal del servidor.":"Temporary server error."
   },
@@ -2042,6 +2047,11 @@ const ERR = {
     "El mensaje no puede superar 300 caracteres.":"Le message ne peut pas dépasser 300 caractères.",
     "Tu acceso al chat fue silenciado permanentemente por un administrador.":"Un administrateur t'a retiré définitivement l'accès au chat.",
     "Tu acceso al chat está silenciado temporalmente por un administrador.":"Un administrateur t'a retiré temporairement l'accès au chat.",
+    "Sal de tu arena o espera a que termine antes de cambiar tu nombre.":"Quitte ton arène ou attends qu’elle se termine avant de changer de nom.",
+    "Ya jugaste el código de hoy.":"Tu as déjà joué le code du jour.",
+    "El código del día cambió mientras se procesaba tu intento.":"Le code du jour a changé pendant le traitement de ton essai.",
+    "Suscripción push inválida.":"Abonnement push invalide.",
+    "Jugador no encontrado.":"Joueur introuvable.",
     "Solicitud demasiado grande.":"Requête trop volumineuse.",
     "Error temporal del servidor.":"Erreur temporaire du serveur."
   }
@@ -2057,7 +2067,7 @@ const RULES = {
         <li><b>Posiciones</b>: 3, 4, 5 o 6.</li>
         <li><b>Repetidos</b>: permitir o no.</li>
         <li><b>Límite de intentos</b>: sin límite, 6 o 10 por jugador.</li>
-        <li><b>Reloj</b>: sin límite; <b>por turno</b> (30 s, 60 s o 2 min), y al llegar a cero el turno pasa al rival; o <b>bolsa de tiempo</b> (3, 5 o 10 min por jugador, con incremento opcional por jugada), como en el ajedrez: solo corre el reloj de quien juega, no hay pausas y quien agota su bolsa pierde la partida.</li>
+        <li><b>Reloj</b>: sin límite; <b>por turno</b> (30 s, 60 s o 2 min), y al llegar a cero el turno pasa al rival; <b>bolsa de tiempo</b> (3, 5 o 10 min por jugador, con incremento opcional por jugada), como en el ajedrez: solo corre el reloj de quien juega, no hay pausas y quien agota su bolsa pierde la partida; o <b>correspondencia</b> (1 o 3 días por jugada), que sigue corriendo aunque los dos cierren el juego.</li>
         <li><b>Visibilidad</b>: pública (lobby) o privada (solo por código).</li>
         <li><b>Revelar códigos al terminar</b>: desactivado por defecto; si se activa, cada jugador verá el secreto de su rival al finalizar.</li>
       </ul>
@@ -2066,6 +2076,7 @@ const RULES = {
     <li>Se turnan para adivinar. Tras cada intento se responde con <span class="pill f">Fijas</span> y <span class="pill p">Picas</span>.</li>
     <li>Gana quien <b>descifra primero</b> el código del rival. Si quien empezó acierta, el otro tiene un <b>último intento para igualar</b>. Con límite de intentos, si nadie acierta → <b>empate</b>.</li>
     <li>Al terminar: botón <b>Revancha</b> (misma configuración, mismo rival). Cuando uno la propone, el otro ve <b>“Ir a la revancha”</b>.</li>
+    <li>Y hay más de una forma de jugar: <b>la arena</b> junta de 3 a 8 jugadores contra un mismo código que sortea el servidor, sin turnos y con límite de intentos; <b>el código del día</b> es un secreto diario, el mismo para todo el mundo, con un solo intento al día; <b>los enigmas</b> se resuelven en solitario a partir de unas pistas dadas; y <b>la práctica</b> se juega en solitario o contra el ordenador, sin conexión y sin cuenta.</li>
   </ol>
   <div class="note"><b>Fija</b> = dígito correcto en la <b>posición correcta</b>. &nbsp; <b>Pica</b> = dígito correcto pero en <b>otra posición</b>.</div>
   <div class="note"><b>Modo colores:</b> mismo cálculo de picas y fijas, solo cambian las cifras por fichas de color.</div>
@@ -2081,7 +2092,7 @@ const RULES = {
         <li><b>Positions</b>: 3, 4, 5 or 6.</li>
         <li><b>Repeats</b>: allowed or not.</li>
         <li><b>Attempt limit</b>: none, 6 or 10 per player.</li>
-        <li><b>Clock</b>: none; <b>per turn</b> (30 s, 60 s or 2 min), and reaching zero passes the turn to your opponent; or a <b>time bank</b> (3, 5 or 10 min each, with an optional increment per move), just like chess: only the clock of whoever is playing runs, there are no pauses and running out of bank loses the game.</li>
+        <li><b>Clock</b>: none; <b>per turn</b> (30 s, 60 s or 2 min), and reaching zero passes the turn to your opponent; a <b>time bank</b> (3, 5 or 10 min each, with an optional increment per move), just like chess: only the clock of whoever is playing runs, there are no pauses and running out of bank loses the game; or <b>correspondence</b> (1 or 3 days per move), which keeps running even when both players close the game.</li>
         <li><b>Visibility</b>: public (lobby) or private (code only).</li>
         <li><b>Reveal codes at the end</b>: off by default; when enabled, each player sees their opponent's secret after the game.</li>
       </ul>
@@ -2090,6 +2101,7 @@ const RULES = {
     <li>Players take turns guessing. Each guess is answered with <span class="pill f">Fixed</span> and <span class="pill p">Present</span>.</li>
     <li>Whoever <b>cracks the opponent's code first</b> wins. If the player who started cracks it, the other gets one <b>last try to tie</b>. With an attempt limit, if nobody cracks it → <b>draw</b>.</li>
     <li>When it ends: a <b>Rematch</b> button (same settings, same opponent). When one proposes it, the other sees <b>“Go to rematch”</b>.</li>
+    <li>And there is more than one way to play: <b>the arena</b> puts 3 to 8 players against a single code drawn by the server, with no turns and an attempt limit; <b>the daily code</b> is one secret a day, the same for everyone, with a single try; <b>the puzzles</b> are solved alone from a set of given clues; and <b>practice</b> is played alone or against the computer, offline and without an account.</li>
   </ol>
   <div class="note"><b>Fixed (F)</b> = correct digit in the <b>correct position</b>. &nbsp; <b>Present (P)</b> = correct digit in a <b>different position</b>.</div>
   <div class="note"><b>Colors mode:</b> same F/P scoring, colored pegs instead of digits.</div>
@@ -2105,7 +2117,7 @@ const RULES = {
         <li><b>Positions</b> : 3, 4, 5 ou 6.</li>
         <li><b>Répétitions</b> : autorisées ou non.</li>
         <li><b>Limite d'essais</b> : illimité, 6 ou 10 par joueur.</li>
-        <li><b>Horloge</b> : illimitée ; <b>par tour</b> (30 s, 60 s ou 2 min), et à zéro le tour passe à l'adversaire ; ou <b>réserve de temps</b> (3, 5 ou 10 min par joueur, avec incrément facultatif par coup), comme aux échecs : seule l'horloge de celui qui joue tourne, il n'y a pas de pause et épuiser sa réserve fait perdre la partie.</li>
+        <li><b>Horloge</b> : illimitée ; <b>par tour</b> (30 s, 60 s ou 2 min), et à zéro le tour passe à l'adversaire ; <b>réserve de temps</b> (3, 5 ou 10 min par joueur, avec incrément facultatif par coup), comme aux échecs : seule l'horloge de celui qui joue tourne, il n'y a pas de pause et épuiser sa réserve fait perdre la partie ; ou <b>correspondance</b> (1 ou 3 jours par coup), qui continue de tourner même si les deux ferment le jeu.</li>
         <li><b>Visibilité</b> : publique (lobby) ou privée (code seulement).</li>
         <li><b>Révéler les codes à la fin</b> : désactivé par défaut ; si activé, chaque joueur voit le secret de son adversaire à la fin.</li>
       </ul>
@@ -2114,6 +2126,7 @@ const RULES = {
     <li>Les joueurs devinent à tour de rôle. Chaque essai reçoit <span class="pill f">Fixes</span> et <span class="pill p">Présents</span>.</li>
     <li>Celui qui <b>trouve le code adverse en premier</b> gagne. Si le joueur qui a commencé trouve, l'autre a un <b>dernier essai pour égaliser</b>. Avec une limite d'essais, si personne ne trouve → <b>égalité</b>.</li>
     <li>À la fin : bouton <b>Revanche</b> (mêmes réglages, même adversaire). Quand l'un la propose, l'autre voit <b>« Aller à la revanche »</b>.</li>
+    <li>Et il y a plus d'une façon de jouer : <b>l'arène</b> réunit de 3 à 8 joueurs contre un même code tiré par le serveur, sans tours et avec une limite d'essais ; <b>le code du jour</b> est un secret quotidien, le même pour tout le monde, avec un seul essai ; <b>les énigmes</b> se résolvent en solitaire à partir d'indices donnés ; et <b>l'entraînement</b> se joue seul ou contre l'ordinateur, hors ligne et sans compte.</li>
   </ol>
   <div class="note"><b>Fixe (F)</b> = bon chiffre à la <b>bonne position</b>. &nbsp; <b>Présent (P)</b> = bon chiffre à une <b>autre position</b>.</div>
   <div class="note"><b>Mode couleurs :</b> même calcul F/P, des pions colorés à la place des chiffres.</div>

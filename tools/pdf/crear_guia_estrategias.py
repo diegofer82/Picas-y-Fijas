@@ -180,6 +180,33 @@ for txt in [
     "Seguir una secuencia fija aunque una pista ya haya localizado todos los símbolos.",
 ]: story.append(p("• " + txt))
 
+story.append(PageBreak())
+
+story += [p("6. Los otros modos, y lo que enseñan", "H1PF"), p("El duelo por turnos no es la única forma de jugar, y cada modo entrena una parte distinta del mismo músculo. Las estrategias de las páginas anteriores valen en todos: cambia lo que está en juego, no la lógica.")]
+story += [table([
+    ["Modo", "Qué cambia", "Qué entrena"],
+    ["El código del día", "Un secreto por día, el mismo para todo el mundo: 4 posiciones, sin repetición, 8 intentos y un solo intento diario. La clasificación del día ordena por intentos y, a igualdad, por tiempo.", "La apertura. Con un único intento diario no hay margen para una jugada desperdiciada: conviene abrir con el código que mejor parte el espacio, no con el que 'suena' bien."],
+    ["Los enigmas", "72 puzles en tres dificultades. Se dan unas pistas ya jugadas y hay que deducir el código. Cada enigma tiene una única solución compatible.", "La deducción pura, sin reloj y sin rival. Es el ejercicio del paso 3 del método: filtrar candidatos hasta que solo quede uno."],
+    ["La arena", "De 3 a 8 jugadores contra el mismo código, que sortea el servidor. Sin turnos, con límite de intentos siempre, y nadie ve los intentos de nadie.", "La economía. Todos parten del mismo espacio y gana quien lo reduce en menos jugadas: es la mejor prueba de si una apertura es buena de verdad."],
+    ["La práctica", "En solitario contra un código aleatorio, o contra el ordenador, sin conexión y sin cuenta.", "Todo lo anterior, sin coste. El rival artificial juega con el mismo método de esta guía y explica cada jugada."],
+], [30*mm, 74*mm, 70*mm])]
+
+story += [p("El cuaderno", "H2PF"), p("Una partida puede crearse <b>con cuaderno</b>: una cuadrícula para marcar cada símbolo como descartado o confirmado, y un aviso cuando el intento que se está escribiendo <b>contradice las pistas propias</b>, es decir, cuando ya estaba descartado antes de escribirlo. Es una opción de la partida, elegida al crearla, para que los dos jueguen con las mismas reglas. Las marcas son personales y no salen del aparato.")]
+story += [box("El aviso de contradicción no dice cuál es el código ni cuántos quedan: solo que ese intento no puede serlo. Es exactamente el error más caro de esta guía —jugar un código incompatible con una pista anterior— convertido en una señal.", CYAN)]
+
+story += [p("El análisis de la partida", "H2PF"), p("Al terminar cualquier partida, el juego vuelve sobre los intentos y los puntúa. No juzga la suerte, juzga la decisión: compara lo que se jugó con lo que habría jugado el mejor intento posible <b>sobre la misma lista de candidatos</b>, y por eso un intento que parte bien la lista es bueno aunque el resultado saliera flojo.")]
+story += [table([
+    ["Nota", "Qué significa"],
+    ["Óptimo", "En el peor caso, ese intento dejaba tan pocos candidatos como el mejor intento disponible."],
+    ["Correcto", "Se queda cerca del mejor: divide bien, aunque no del todo."],
+    ["Desperdiciado", "Deja muchos más candidatos de los necesarios. Casi siempre es un intento que repite información que ya se tenía."],
+    ["La jugada decisiva", "Aquella tras la cual solo quedaba un código compatible: ahí la partida ya estaba ganada y lo demás fue escribirlo."],
+], [32*mm, 142*mm])]
+story += [p("Leer el análisis después de perder es más útil que después de ganar: la nota señala el turno exacto en el que se dejó de dividir el espacio y se empezó a adivinar.")]
+story += [box("Todo esto se calcula en el navegador, a partir de los intentos que ya están en la pantalla. El juego nunca ve el código para puntuar una partida: solo los intentos y sus respuestas, que es justo lo que tiene quien juega.", GREEN)]
+
+story.append(PageBreak())
+
 log_rows = [["Turno", "Intento", "F", "P", "F+P", "Deducción / candidatos restantes"]]
 log_rows += [[str(i), "", "", "", "", ""] for i in range(1, 6)]
 story += [p("Hoja de registro", "H2PF"), table(log_rows, [14*mm, 28*mm, 12*mm, 12*mm, 16*mm, 92*mm])]

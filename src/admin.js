@@ -160,6 +160,15 @@ export async function adminDeleteUser(db, params, admin) {
     db.prepare("DELETE FROM badges WHERE username_key=?").bind(user.username_key),
     db.prepare("DELETE FROM game_scores WHERE game_id IN (SELECT game_id FROM games WHERE p1=? OR p2=?)")
       .bind(user.username, user.username),
+    // La arena guarda el nombre escrito en sus tres tablas y no tiene clave
+    // foranea hacia `users`: sin esto, borrar una cuenta dejaba su nombre en
+    // la clasificacion de cada arena que jugo. Se va lo suyo, y se van enteras
+    // las arenas que abrio, igual que se van las partidas en las que jugo.
+    db.prepare("DELETE FROM arena_guesses WHERE username_key=? OR arena_id IN (SELECT arena_id FROM arenas WHERE host_key=?)")
+      .bind(user.username_key, user.username_key),
+    db.prepare("DELETE FROM arena_players WHERE username_key=? OR arena_id IN (SELECT arena_id FROM arenas WHERE host_key=?)")
+      .bind(user.username_key, user.username_key),
+    db.prepare("DELETE FROM arenas WHERE host_key=?").bind(user.username_key),
     // Un fil privé est une conversation : s'il implique le compte, il part
     // entièrement, y compris les messages de l'autre participant.
     db

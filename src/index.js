@@ -181,6 +181,10 @@ const GAME_COLUMNS = new Set([
   "bank2_remaining",
 ]);
 class ConflictError extends Error {}
+/* Lo que manda el navegador puede ser cualquier cosa, y equivocarse no es un
+   fallo del servidor: un cuerpo demasiado grande merece un 413 y un mensaje,
+   no un 500 con traza. */
+class PayloadError extends Error {}
 const PRESENCE_TOUCH_MS = 60 * 1000;
 
 const json = (body, status = 200, extra = {}) =>
@@ -206,7 +210,7 @@ async function bodyParams(request) {
   if (!request.body) return {};
   const maxBytes = 32 * 1024;
   const declared = Number(request.headers.get("content-length") || 0);
-  if (declared > maxBytes) throw new Error("Solicitud demasiado grande.");
+  if (declared > maxBytes) throw new PayloadError("Solicitud demasiado grande.");
   const reader = request.body.getReader(),
     chunks = [];
   let total = 0;
@@ -216,7 +220,7 @@ async function bodyParams(request) {
     total += value.byteLength;
     if (total > maxBytes) {
       await reader.cancel();
-      throw new Error("Solicitud demasiado grande.");
+      throw new PayloadError("Solicitud demasiado grande.");
     }
     chunks.push(value);
   }
@@ -227,10 +231,27 @@ async function bodyParams(request) {
     offset += chunk.byteLength;
   }
   try {
-    return JSON.parse(new TextDecoder().decode(bytes));
+    return safeParams(JSON.parse(new TextDecoder().decode(bytes)));
   } catch {
     return {};
   }
+}
+
+/* La unica forma que entiende el API es un objeto de valores simples. Un
+   cuerpo que sea `null`, una lista o un numero no es una peticion, y un valor
+   que sea un objeto tampoco: `String({toString:1})` lanza, y lanzar aqui
+   significaba devolver un 500 por un campo mal escrito. La excepcion es
+   `subscription`, el unico parametro estructurado del API, que valida
+   `validPushSubscription` antes de tocar nada. */
+const STRUCTURED_PARAMS = new Set(["subscription"]);
+function safeParams(parsed) {
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+  const safe = {};
+  for (const [key, value] of Object.entries(parsed))
+    safe[key] = value !== null && typeof value === "object" && !STRUCTURED_PARAMS.has(key)
+      ? ""
+      : value;
+  return safe;
 }
 
 async function getGame(db, gameId) {
@@ -736,8 +757,14 @@ async function state(db, params, user) {
           `resumed|${autoResumeFrom}`,
         );
       const expired = expiredTurnChanges(game);
-      if (expired)
+      if (expired) {
         game = await saveGame(db, game, { ...expired, updated_at: now() });
+        // Es el camino normal de la bolsa de tiempo: quien agota su reserva no
+        // vuelve a pedir nada, y es el rival quien descubre la bandera caida en
+        // su siguiente consulta. La partida termina de verdad, asi que tambien
+        // tiene que avisar en el chat y sumar sus puntos.
+        if (game.status === "finished") await settleFinishedGame(db, game);
+      }
     }
     const response = sanitizeGame(game, user.username);
     if (participant && game.p2) {
@@ -814,6 +841,20 @@ async function lobbyState(db, user) {
   return { ...open, myGames: mine.games, onlineCount: count, arenas };
 }
 
+/* Una partida solo termina de una manera: avisando en su propio chat y
+   entrando en la cuenta de la temporada. Los caminos que la cierran son
+   cinco —el intento ganador, la bandera caida, el abandono, el Cron y la
+   correccion de un administrador— y hasta aqui dos de ellos se olvidaban de
+   lo segundo: la bandera que descubre el rival al consultar y la que
+   descubre quien intenta jugar fuera de tiempo. Una partida con bolsa
+   cerrada por el reloj no repartia ni un punto. Las dos mitades viven ahora
+   juntas, para que anadir un camino nuevo no vuelva a dejarse una. El recibo
+   de `game_scores` hace que llamarla dos veces no cuente dos veces. */
+async function settleFinishedGame(db, game) {
+  await systemChat(db, game.game_id, `finished:${game.version}`, "finished|");
+  return recordFinishedGame(db, game);
+}
+
 async function makeGuess(db, params, user, onTurnChanged) {
   return withConflictRetry(async () => {
     const game = await getGame(db, params.gameId);
@@ -848,13 +889,7 @@ async function makeGuess(db, params, user, onTurnChanged) {
         ...expired,
         updated_at: now(),
       });
-      if (updated.status === "finished")
-        await systemChat(
-          db,
-          game.game_id,
-          `finished:${updated.version}`,
-          "finished|",
-        );
+      if (updated.status === "finished") await settleFinishedGame(db, updated);
       else if (updated.turn !== game.turn && onTurnChanged)
         await onTurnChanged(updated);
       return {
@@ -940,18 +975,12 @@ async function makeGuess(db, params, user, onTurnChanged) {
     const updated = await saveGame(db, game, changes);
     response.state = sanitizeGame(updated, user.username);
     if (updated.status === "finished") {
-      await systemChat(
-        db,
-        game.game_id,
-        `finished:${updated.version}`,
-        "finished|",
-      );
       // Los puntos y las insignias de la etapa 5 se cuentan aqui, con la
       // partida ya guardada, y una sola vez: el recibo de `game_scores` lo
       // garantiza aunque dos caminos cierren la misma partida. Las insignias
       // recien ganadas viajan en la respuesta —y en el recibo de
       // idempotencia— para que la tarjeta final pueda enseñarlas.
-      const counted = await recordFinishedGame(db, updated);
+      const counted = await settleFinishedGame(db, updated);
       const fresh = counted.badges?.[user.username];
       if (fresh?.length) response.newBadges = fresh;
     }
@@ -993,13 +1022,7 @@ async function passTurn(db, params, user, onTurnChanged) {
       const flag = expiredTurnChanges(game);
       if (!flag) return { ok: false, error: "Aún queda tiempo." };
       const closed = await saveGame(db, game, { ...flag, updated_at: now() });
-      await systemChat(
-        db,
-        game.game_id,
-        `finished:${closed.version}`,
-        "finished|",
-      );
-      await recordFinishedGame(db, closed);
+      await settleFinishedGame(db, closed);
       return { ok: true, resolved: true, timeout: true };
     }
     const expired = expiredTurnChanges(game);
@@ -1008,15 +1031,8 @@ async function passTurn(db, params, user, onTurnChanged) {
       ...expired,
       updated_at: now(),
     });
-    if (updated.status === "finished") {
-      await systemChat(
-        db,
-        game.game_id,
-        `finished:${updated.version}`,
-        "finished|",
-      );
-      await recordFinishedGame(db, updated);
-    } else if (updated.turn !== game.turn && onTurnChanged)
+    if (updated.status === "finished") await settleFinishedGame(db, updated);
+    else if (updated.turn !== game.turn && onTurnChanged)
       await onTurnChanged(updated);
     return updated.status === "finished"
       ? { ok: true, resolved: true, timeout: true }
@@ -1923,6 +1939,9 @@ export default {
         return noStoreHtml(await env.ASSETS.fetch(request));
       return env.ASSETS.fetch(request);
     } catch (cause) {
+      // Un cuerpo demasiado grande no es un fallo del servidor y no merece una
+      // traza en el registro: se contesta y se calla.
+      if (cause instanceof PayloadError) return error(cause.message, 413);
       console.error(
         JSON.stringify({
           message: cause?.message,
