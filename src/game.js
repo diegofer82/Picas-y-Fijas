@@ -218,6 +218,22 @@ export function gameMeta(game) {
   };
 }
 
+/* El espectador (E6-T1). Quien mira una partida sin jugarla es `youAre === 0`,
+   y esa sola cifra decide todo lo que sigue: ni su codigo, ni el del rival, ni
+   el que se revela al terminar salen de aqui. La regla vive en una funcion
+   propia, y no dentro del objeto, para que se pueda leer de un vistazo y para
+   que una prueba la pueda llamar sola: los secretos no salen de una partida
+   activa, y mirar no es una excepcion. */
+export function secretsFor(game, youAre, secret1, secret2, revealSecrets) {
+  if (youAre !== 1 && youAre !== 2) return { yourSecret: '', opponentSecret: '' };
+  return {
+    yourSecret: youAre === 1 ? secret1 : secret2,
+    opponentSecret: game.status === 'finished' && revealSecrets
+      ? (youAre === 1 ? secret2 : secret1)
+      : '',
+  };
+}
+
 export function sanitizeGame(game, username) {
   const timerAsOf = Date.now();
   const bank = isBankGame(game);
@@ -256,8 +272,8 @@ export function sanitizeGame(game, username) {
     attemptsP2: guesses.filter((entry) => entry.by === game.p2).length,
     winner: game.winner, isDraw: game.status === 'finished' && !game.winner,
     finishReason: game.finish_reason || '', revealSecrets: meta.revealSecrets,
-    opponentSecret: game.status === 'finished' && meta.revealSecrets && youAre ? (youAre === 1 ? secret2 : secret1) : '',
-    yourSecret: youAre === 1 ? secret1 : youAre === 2 ? secret2 : '',
+    spectator: youAre === 0,
+    ...secretsFor(game, youAre, secret1, secret2, meta.revealSecrets),
     // El cuaderno es una regla de la partida: la pantalla lo enciende porque
     // lo dice el servidor, nunca porque lo guarde el navegador.
     notebook: meta.notebook,

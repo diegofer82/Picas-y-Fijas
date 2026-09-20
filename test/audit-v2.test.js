@@ -36,7 +36,21 @@ test('chat permissions keep lobby authenticated and game chat private to both pl
   assert.equal(sent.ok,true,sent.error);
   const list=await api('chatList',{roomType:'game',gameId},b.token);
   assert.equal(list.messages.some((message)=>message.body==='Bonne partie 😄'),true);
-  const denied=await api('chatList',{roomType:'game',gameId},spectator.token);
+  /* Desde E6-T1 una partida **publica** en curso se puede mirar, y con ella se
+     lee lo que se ha dicho en esa partida: de lectura, filtrado por su
+     identificador y sin el hilo de la pareja, que es mas largo que la partida.
+     Escribir sigue siendo cosa de quienes juegan. */
+  const watching=await api('chatList',{roomType:'game',gameId},spectator.token);
+  assert.equal(watching.ok,true,watching.error);
+  assert.equal(watching.canWrite,false);
+  assert.equal(watching.threadId,0);
+  const refused=await api('chatSend',{roomType:'game',gameId,body:'Yo tambien juego'},spectator.token);
+  assert.equal(refused.ok,false);
+  assert.match(refused.error,/privado/);
+  // Una partida privada no se mira ni se lee.
+  const c=await player('Chat-C'),d=await player('Chat-D');
+  const secretGame=await createAndJoin(c,d,{digits:3,mode:'numbers',numColors:10,allowRepeats:false,maxAttempts:0,turnSeconds:0,revealSecrets:false,isPublic:false,secret:'123',secret2:'456'});
+  const denied=await api('chatList',{roomType:'game',gameId:secretGame},spectator.token);
   assert.equal(denied.ok,false);
   assert.match(denied.error,/privado/);
   const lobby=await api('chatSend',{roomType:'lobby',body:'Hola lobby'},spectator.token);

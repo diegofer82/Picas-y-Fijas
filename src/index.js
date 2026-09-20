@@ -558,9 +558,26 @@ async function listGames(db, includeOnlineCount = true) {
     .filter((g) => g.status === "waiting" && truthy(g.is_public))
     .slice(0, 30)
     .map((g) => ({ ...gameMeta(g), createdAt: g.created_at }));
+  /* Las partidas que se pueden mirar (E6-T1). Salen de la misma lectura que ya
+     hacia el vestibulo —ni una consulta mas— y solo son publicas y con los dos
+     jugadores dentro. `gameMeta` no sabe de secretos: lo unico que se anade es
+     cuantos intentos lleva cada uno, que es lo que hace apetecible entrar. */
+  const watchable = results
+    .filter((g) => g.status === "active" && truthy(g.is_public) && g.p1 && g.p2)
+    .sort((a, b) => String(b.updated_at).localeCompare(String(a.updated_at)))
+    .slice(0, 12)
+    .map((g) => {
+      const played = parseJsonList(g.guesses);
+      return {
+        ...gameMeta(g),
+        attemptsP1: played.filter((entry) => entry.by === g.p1).length,
+        attemptsP2: played.filter((entry) => entry.by === g.p2).length,
+      };
+    });
   return {
     ok: true,
     games,
+    watchable,
     activeCount: results.filter((g) => g.status === "active").length,
     privateCount: results.filter((g) => !truthy(g.is_public)).length,
     publicActiveCount: results.filter(

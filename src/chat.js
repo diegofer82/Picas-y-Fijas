@@ -1,3 +1,5 @@
+import { truthy } from "./game.js";
+
 const CHAT = Object.freeze({
   maxLength: 300,
   lobbyRetentionMs: 86400000,
@@ -143,6 +145,7 @@ async function roomAccess(db, p, user) {
   if (p.roomType !== "private" && p.roomType !== "game")
     return { ok: true, roomType: "lobby", threadId: null, gameId: "" };
   let thread;
+  let watched = null;
   if (p.roomType === "private")
     thread = await db
       .prepare("SELECT * FROM chat_threads WHERE id=?")
@@ -154,14 +157,35 @@ async function roomAccess(db, p, user) {
       .bind(String(p.gameId || "").toUpperCase())
       .first();
     if (!game) return { ok: false, error: "Partida no encontrada." };
+    watched = game;
     thread = await threadForGame(db, game, false);
   }
   if (!thread) return { ok: false, error: "Conversación no encontrada." };
   if (
     thread.user1_key !== user.username_key &&
     thread.user2_key !== user.username_key
-  )
-    return { ok: false, error: "Este chat es privado." };
+  ) {
+    /* El espectador (E6-T1) lee, y solo lee, lo que se ha dicho **en esta
+       partida publica**. El hilo de la pareja es mas largo que la partida
+       —guarda lo que se dijeron en otras, y alguna privada—, asi que su
+       identificador viaja pero la lectura se filtra por `game_id`. Fuera de
+       una partida publica en curso o recien terminada, el chat sigue siendo
+       privado y se responde como siempre. */
+    const open = watched
+      && truthy(watched.is_public)
+      && (watched.status === "active"
+        || (watched.status === "finished"
+          && Date.now() - Date.parse(watched.updated_at) <= CHAT.gameOpenAfterFinishMs));
+    if (!open) return { ok: false, error: "Este chat es privado." };
+    return {
+      ok: true,
+      roomType: "game",
+      spectator: true,
+      threadId: Number(thread.id),
+      gameId: watched.game_id,
+      opponent: "",
+    };
+  }
   const activity=thread.last_message_at&&thread.last_message_at>thread.last_game_at?thread.last_message_at:thread.last_game_at;
   if (Date.now() - Date.parse(activity) > CHAT.threadActiveMs)
     return { ok: false, error: "Esta conversación está archivada." };
@@ -228,6 +252,25 @@ export async function listChat(db, p, user) {
   const room = await roomAccess(db, p, user);
   if (!room.ok) return room;
   const after = Math.max(0, parseInt(p.after, 10) || 0);
+  if (room.spectator) {
+    const { results } = await db
+      .prepare(
+        after
+          ? "SELECT * FROM chat_messages WHERE game_id=? AND id>? ORDER BY id ASC LIMIT 100"
+          : "SELECT * FROM chat_messages WHERE game_id=? ORDER BY id DESC LIMIT 100",
+      )
+      .bind(...(after ? [room.gameId, after] : [room.gameId]))
+      .all();
+    return {
+      ok: true,
+      messages: (after ? results : results.reverse()).map(publicMessage),
+      roomType: "game",
+      spectator: true,
+      threadId: 0,
+      opponent: "",
+      canWrite: false,
+    };
+  }
   const q =
     room.roomType === "lobby"
       ? db
@@ -257,6 +300,7 @@ export async function listChat(db, p, user) {
 export async function sendChat(db, p, user) {
   const room = await roomAccess(db, p, user);
   if (!room.ok) return room;
+  if (room.spectator) return { ok: false, error: "Este chat es privado." };
   const muted = await activeMute(db, user);
   if (muted) return { ok: false, error: muted };
   const body = String(p.body ?? "").trim(),
@@ -326,6 +370,7 @@ export async function sendChat(db, p, user) {
 }
 export async function sendNudge(db, p, user) {
   const room = await roomAccess(db, p, user);
+  if (room.ok && room.spectator) return { ok: false, error: "Este chat es privado." };
   if (!room.ok || room.roomType !== "private")
     return room.ok
       ? {
@@ -400,6 +445,7 @@ export async function reportChat(db, p, user) {
     user,
   );
   if (!room.ok) return room;
+  if (room.spectator) return { ok: false, error: "Este chat es privado." };
   if (m.sender_key === user.username_key)
     return { ok: false, error: "No puedes reportar tu propio mensaje." };
   await db

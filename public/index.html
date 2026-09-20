@@ -421,7 +421,7 @@
   .chat-panel{position:fixed;right:max(18px,env(safe-area-inset-right));bottom:82px;z-index:44;width:min(360px,calc(100vw - 36px));height:min(470px,calc(100dvh - 120px));background:#1B1610;border:1px solid var(--edge);border-radius:18px;box-shadow:0 18px 55px rgba(0,0,0,.55);display:flex;flex-direction:column;overflow:hidden}
   .chat-head{display:flex;align-items:center;gap:9px;padding:12px 14px;border-bottom:1px solid var(--edge);background:var(--panel)}.chat-head strong{flex:1}.chat-icon-btn{border:1px solid var(--edge);background:#0D0B07;color:var(--text);border-radius:9px;min-width:34px;height:32px;cursor:pointer}.chat-icon-btn:disabled{opacity:.4;cursor:not-allowed}
   .chat-muted-panel{padding:10px 12px;border-bottom:1px solid var(--edge);background:#100D08;max-height:150px;overflow:auto}.chat-muted-title{font-size:12px;color:var(--muted);margin-bottom:8px}.chat-muted-row{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px;border-bottom:1px solid rgba(59,50,41,.45)}.chat-muted-row:last-child{border-bottom:0}.chat-muted-row span{flex:1;overflow:hidden;text-overflow:ellipsis}.chat-muted-row button,.chat-unmute-all{border:1px solid var(--edge);background:var(--panel);color:var(--text);border-radius:8px;padding:6px 9px;cursor:pointer;font-size:11px}.chat-unmute-all{width:100%;margin-top:8px;color:var(--accent)}
-  .chat-messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:9px;overscroll-behavior:contain}.chat-empty{margin:auto;color:var(--muted);font-size:13px;text-align:center}.chat-msg{max-width:86%;background:var(--panel-2);border:1px solid var(--edge);border-radius:12px;padding:8px 10px;align-self:flex-start;overflow-wrap:anywhere}.chat-msg.mine{align-self:flex-end;border-color:rgba(91,141,239,.5);background:rgba(91,141,239,.10)}.chat-msg.system,.chat-msg.nudge{max-width:96%;align-self:center;text-align:center;background:transparent;border-style:dashed;color:var(--muted);font-size:12px}.chat-msg.nudge{color:var(--pica);border-color:rgba(240,180,41,.45);font-weight:700}.chat-meta{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:10px;margin-bottom:3px}.chat-meta b{color:var(--text);font-size:11px}.chat-actions{margin-left:auto;display:flex;gap:3px}.chat-actions button{background:transparent;border:0;color:var(--muted);padding:0 2px;cursor:pointer;font-size:11px}.chat-body{white-space:pre-wrap;font-size:13px;line-height:1.35}.chat-compose{border-top:1px solid var(--edge);padding:10px;display:flex;gap:7px;background:var(--panel)}.chat-compose input{min-width:0;padding:10px 11px;font-size:14px}.chat-send{width:auto;padding:0 13px}.chat-shake{animation:chatShake .55s ease}
+  .chat-messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:9px;overscroll-behavior:contain}.chat-empty{margin:auto;color:var(--muted);font-size:13px;text-align:center}.chat-msg{max-width:86%;background:var(--panel-2);border:1px solid var(--edge);border-radius:12px;padding:8px 10px;align-self:flex-start;overflow-wrap:anywhere}.chat-msg.mine{align-self:flex-end;border-color:rgba(91,141,239,.5);background:rgba(91,141,239,.10)}.chat-msg.system,.chat-msg.nudge{max-width:96%;align-self:center;text-align:center;background:transparent;border-style:dashed;color:var(--muted);font-size:12px}.chat-msg.nudge{color:var(--pica);border-color:rgba(240,180,41,.45);font-weight:700}.chat-meta{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:10px;margin-bottom:3px}.chat-meta b{color:var(--text);font-size:11px}.chat-actions{margin-left:auto;display:flex;gap:3px}.chat-actions button{background:transparent;border:0;color:var(--muted);padding:0 2px;cursor:pointer;font-size:11px}.chat-body{white-space:pre-wrap;font-size:13px;line-height:1.35}.chat-readonly{border-top:1px solid var(--edge);padding:10px 12px;background:var(--panel);color:var(--muted);font-size:12px;text-align:center}.chat-compose{border-top:1px solid var(--edge);padding:10px;display:flex;gap:7px;background:var(--panel)}.chat-compose input{min-width:0;padding:10px 11px;font-size:14px}.chat-send{width:auto;padding:0 13px}.chat-shake{animation:chatShake .55s ease}
   @keyframes chatShake{0%,100%{transform:translateX(0)}15%{transform:translateX(-9px) rotate(-1deg)}30%{transform:translateX(8px) rotate(1deg)}45%{transform:translateX(-7px)}60%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
   @keyframes chatBump{0%,100%{transform:scale(1)}35%{transform:scale(1.18) rotate(-8deg)}65%{transform:scale(.94) rotate(5deg)}}
   @media(max-width:600px){.chat-panel{left:0;right:0;bottom:0;width:100%;height:55dvh;border-radius:18px 18px 0 0;padding-bottom:env(safe-area-inset-bottom)}.chat-launch{bottom:max(16px,env(safe-area-inset-bottom))}}
@@ -699,6 +699,13 @@
       <div class="lobby-section">
         <div class="lobby-section-title" data-i18n="lobby_open">Partidas públicas abiertas</div>
         <div class="list" id="open-list"><div class="empty">…</div></div>
+      </div>
+      <!-- Espectador (E6-T1): las partidas publicas que ya tienen sus dos
+           jugadores no se podian ni ver. Ahora se pueden mirar. -->
+      <div class="lobby-section">
+        <div class="lobby-section-title" data-i18n="watch_title">Partidas en curso</div>
+        <div class="lobby-section-hint" data-i18n="watch_hint">Mira jugar a otros: los códigos secretos no se ven hasta que la partida termina.</div>
+        <div class="list" id="watch-list"><div class="empty">…</div></div>
       </div>
     </div>
 
@@ -1259,6 +1266,7 @@
   <div class="chat-head"><strong id="chat-title">Chat</strong><button class="chat-icon-btn hidden" id="chat-nudge" type="button" onclick="sendChatNudge()" data-ico="rayo"></button><button class="chat-icon-btn hidden" id="chat-nudge-toggle" type="button" onclick="toggleNudges()"></button><button class="chat-icon-btn" id="chat-muted-btn" type="button" onclick="toggleMutedPanel()" data-ico="mudo"></button><button class="chat-icon-btn" type="button" onclick="closeChat()" data-ico="cerrar" data-ico-size="18"></button></div>
   <div class="chat-muted-panel hidden" id="chat-muted-panel"></div>
   <div class="chat-messages" id="chat-messages"><div class="chat-empty">Cargando…</div></div>
+  <div class="chat-readonly hidden" id="chat-readonly"></div>
   <form class="chat-compose" id="chat-form"><input type="text" id="chat-input" maxlength="300" autocomplete="off"><button class="btn chat-send" id="chat-send" type="submit" data-ico="enviar" data-ico-size="18"></button></form>
 </aside>
 
@@ -1271,7 +1279,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v3.10.0';
+const APP_VERSION = 'v3.10.1';
 /* Enlace de invitación: ...?game=SZ93
    La invitación sobrevive al registro: se guarda en el navegador, porque entre
    abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
@@ -1364,6 +1372,7 @@ const I18N = {
     rematch_send:"Enviar revancha", back_home:"Volver al inicio", result_lobby:"Volver al lobby",
     game_match:"Partida", game_yourcode:"Tu código:", opponent_code:"Código secreto de {name}:", vs:"vs {name}", waiting_short:"esperando…",
     spectator_confirm:"La partida está llena. ¿Deseas continuar como espectador?", spectator_mode:"Espectador", spectator_p1:"Intentos de {name} → código de {opp}", spectator_p2:"Intentos de {name} → código de {opp}", spectator_winner:"Ganó {name} 🏆",
+    watch_title:"Partidas en curso", watch_hint:"Mira jugar a otros: los códigos secretos no se ven hasta que la partida termina.", watch_empty:"Ahora mismo no hay ninguna partida pública en juego.", watch_btn:"Mirar", watch_attempts:"{a} · {b} intentos", spectator_chat_readonly:"Estás mirando: puedes leer el chat de la partida, no escribir.", spectator_leave:"Dejar de mirar",
     guess_btn:"Adivinar", legend_fija:"F = posición correcta", legend_pica:"P = presente, mal colocada",
     colhead_mine:"Tus intentos → código de {name}", colhead_theirs:"Intentos de {name} → tu código",
     rival:"rival", log_empty_mine:"Aún no has adivinado", log_empty_theirs:"Sin intentos todavía", log_nada:"nada",
@@ -1459,6 +1468,7 @@ const I18N = {
     rematch_send:"Send rematch", back_home:"Back to home", result_lobby:"Back to lobby",
     game_match:"Game", game_yourcode:"Your code:", opponent_code:"{name}'s secret code:", vs:"vs {name}", waiting_short:"waiting…",
     spectator_confirm:"This game is full. Continue as a spectator?", spectator_mode:"Spectator", spectator_p1:"{name}'s guesses → {opp}'s code", spectator_p2:"{name}'s guesses → {opp}'s code", spectator_winner:"{name} won 🏆",
+    watch_title:"Games in progress", watch_hint:"Watch others play: the secret codes stay hidden until the game ends.", watch_empty:"No public game is being played right now.", watch_btn:"Watch", watch_attempts:"{a} · {b} guesses", spectator_chat_readonly:"You are watching: you can read the game chat, not write in it.", spectator_leave:"Stop watching",
     guess_btn:"Guess", legend_fija:"F = correct position", legend_pica:"P = present, wrong spot",
     colhead_mine:"Your guesses → {name}'s code", colhead_theirs:"{name}'s guesses → your code",
     rival:"opponent", log_empty_mine:"No guesses yet", log_empty_theirs:"No guesses yet", log_nada:"none",
@@ -1554,6 +1564,7 @@ const I18N = {
     rematch_send:"Envoyer la revanche", back_home:"Retour à l'accueil", result_lobby:"Retour au lobby",
     game_match:"Partie", game_yourcode:"Ton code :", opponent_code:"Code secret de {name} :", vs:"vs {name}", waiting_short:"en attente…",
     spectator_confirm:"Cette partie est complète. Continuer comme spectateur ?", spectator_mode:"Spectateur", spectator_p1:"Essais de {name} → code de {opp}", spectator_p2:"Essais de {name} → code de {opp}", spectator_winner:"{name} a gagné 🏆",
+    watch_title:"Parties en cours", watch_hint:"Regarde les autres jouer : les codes secrets restent cachés jusqu'à la fin de la partie.", watch_empty:"Aucune partie publique n'est en cours pour le moment.", watch_btn:"Regarder", watch_attempts:"{a} · {b} essais", spectator_chat_readonly:"Tu regardes : tu peux lire le chat de la partie, pas y écrire.", spectator_leave:"Arrêter de regarder",
     guess_btn:"Deviner", legend_fija:"F = bonne position", legend_pica:"P = présent, mal placé",
     colhead_mine:"Tes essais → code de {name}", colhead_theirs:"Essais de {name} → ton code",
     rival:"adversaire", log_empty_mine:"Aucun essai pour l'instant", log_empty_theirs:"Aucun essai pour l'instant", log_nada:"rien",
@@ -2562,23 +2573,30 @@ function jsArg(s){ return encodeURIComponent(String(s)).replace(/'/g,'%27'); }
 /* -------------------- chat 2.1 -------------------- */
 function chatMutedUsers(){try{return new Set(JSON.parse(localStorage.getItem('pf_chat_muted')||'[]'));}catch(e){return new Set();}}
 function chatUserKey(value){return String(value||'').trim().toLocaleLowerCase();}
-function currentChatRoom(){if(!$('s-game').classList.contains('hidden')&&gState?.chatThreadId)return{roomType:'private',threadId:gState.chatThreadId};if(selectedPrivateThread)return{roomType:'private',threadId:selectedPrivateThread.id};return{roomType:'lobby',gameId:''};}
+function currentChatRoom(){if(!$('s-game').classList.contains('hidden')&&game.spectator)return{roomType:'game',gameId:game.id};if(!$('s-game').classList.contains('hidden')&&gState?.chatThreadId)return{roomType:'private',threadId:gState.chatThreadId};if(selectedPrivateThread)return{roomType:'private',threadId:selectedPrivateThread.id};return{roomType:'lobby',gameId:''};}
 function openPrivateChat(id){selectedPrivateThread=privateThreads.find(x=>x.id===Number(id))||{id:Number(id),opponent:''};chatRoom='';chatItems=[];chatLastId=0;updateChatLabels();$('chat-panel').classList.remove('hidden');pollChat();}
 function openPrimaryChat(){if($('s-game').classList.contains('hidden'))selectedPrivateThread=null;toggleChat();}
 function renderPrivateThreads(){const host=$('private-chat-bubbles'),menu=$('private-chat-menu'),inLobby=!$('s-lobby').classList.contains('hidden');host.classList.toggle('hidden',!inLobby||!privateThreads.length);if(!inLobby)return;const visible=privateThreads.slice(0,3),rest=privateThreads.slice(3);host.innerHTML=visible.map(x=>`<button class="private-chat-bubble ${Number(x.lastMessageId)>Number(localStorage.getItem('pf_chat_read_'+x.id)||0)?'unread':''}" onclick="openPrivateChat(${x.id})" title="${esc(x.opponent)}">${esc([...x.opponent][0]?.toUpperCase()||'?')}</button>`).join('')+(rest.length?`<button class="private-chat-bubble" onclick="$('private-chat-menu').classList.toggle('hidden')">+${rest.length}</button>`:'');menu.innerHTML=rest.map(x=>`<button onclick="openPrivateChat(${x.id});$('private-chat-menu').classList.add('hidden')">💬 ${esc(x.opponent)}</button>`).join('');}
 async function refreshPrivateThreads(force=false){if(!sessionToken||privateThreadsBusy||(!force&&Date.now()-privateThreadsFetchedAt<15000))return;privateThreadsBusy=true;privateThreadsFetchedAt=Date.now();try{const r=await api('chatList',{listThreads:true});if(r.ok){privateThreads=r.threads||[];renderPrivateThreads();}}catch(e){}finally{privateThreadsBusy=false;}}
 function setChatContext(view){
-  const allowed=!!sessionToken&&(view==='lobby'||(view==='game'&&gState&&gState.youAre>0&&gState.p2));
+  /* Mirando una partida (E6-T1) el chat existe, pero solo para leerlo: la
+     caja de escribir desaparece y el servidor tampoco aceptaria el mensaje. */
+  const watching=view==='game'&&!!game.spectator&&!!gState&&!!gState.p2;
+  const allowed=!!sessionToken&&(view==='lobby'||watching||(view==='game'&&gState&&gState.youAre>0&&gState.p2));
   chatEnabled=allowed;$('chat-launch').classList.toggle('hidden',!allowed);
   if(!allowed){$('chat-panel').classList.add('hidden');stopChatPoll();return;}
   if(view==='lobby')selectedPrivateThread=null;
-  const room=view==='game'?'private:'+(gState?.chatThreadId||game.id):'lobby';
+  const room=watching?'watch:'+game.id:view==='game'?'private:'+(gState?.chatThreadId||game.id):'lobby';
   if(room!==chatRoom){chatRoom=room;chatItems=[];chatLastId=0;chatUnread=0;renderChat();updateChatBadge();}
   updateChatLabels();startChatPoll();if(view==='lobby')refreshPrivateThreads(true);renderPrivateThreads();
 }
 function updateChatLabels(){
   if(!$('chat-title'))return;const room=currentChatRoom();
-  $('chat-title').textContent=room.roomType==='private'?`${t('chat_game')} · ${selectedPrivateThread?.opponent||gState?.chatOpponent||''}`:t('chat_lobby');
+  const watching=room.roomType==='game';
+  $('chat-form').classList.toggle('hidden',watching);
+  $('chat-readonly').classList.toggle('hidden',!watching);
+  $('chat-readonly').textContent=t('spectator_chat_readonly');
+  $('chat-title').textContent=watching?`${t('chat_game')} · ${t('spectator_mode')}`:room.roomType==='private'?`${t('chat_game')} · ${selectedPrivateThread?.opponent||gState?.chatOpponent||''}`:t('chat_lobby');
   $('chat-input').placeholder=t('chat_placeholder');
   $('chat-nudge').title=t('chat_nudge');$('chat-nudge').setAttribute('aria-label',t('chat_nudge'));
   $('chat-nudge-toggle').title=t(chatNudgesOn?'chat_nudges_on':'chat_nudges_off');
@@ -3351,6 +3369,7 @@ async function lobbyRefresh(detect){
   if(!detect){
     $('open-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
     $('private-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
+    $('watch-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
   }
   try{
     const snapshot=await api('lobbyState');
@@ -3376,6 +3395,7 @@ async function lobbyRefresh(detect){
     $('private-now').textContent=t('private_now',{n:privateCount});
     $('public-now').textContent=t('public_now',{active:publicActive,open:publicOpen});
     renderOpen(snapshot.games||[]);
+    renderWatchable(snapshot.watchable||[]);
     renderPrivate(privateGames); renderMine(publicMine);
   }catch(e){
     // En caso de corte, la última lista sigue visible: poner los contadores a
@@ -3397,6 +3417,7 @@ async function lobbyRefresh(detect){
     if(!detect){
       $('open-list').innerHTML=`<div class="empty">${t('load_error')}</div>`;
       $('private-list').innerHTML=`<div class="empty">${t('load_error')}</div>`;
+      $('watch-list').innerHTML=`<div class="empty">${t('load_error')}</div>`;
     }
   }finally{ lobbyRefreshBusy=false; }
 }
@@ -3416,6 +3437,27 @@ function renderOpen(games){
     const b=document.createElement('button'); b.className='btn pink sm'; b.textContent=t('join_btn');
     b.onclick=()=>openJoin(g); el.appendChild(b); box.appendChild(el);
   });
+}
+/* Partidas que se pueden mirar (E6-T1). Solo publicas, solo con los dos
+   jugadores dentro, y nunca las propias: quien juega ya tiene su pantalla. */
+function renderWatchable(games){
+  const box=$('watch-list');
+  const list=(games||[]).filter(g=>g.p1!==user&&g.p2!==user);
+  if(!list.length){ box.innerHTML=`<div class="empty">${t('watch_empty')}</div>`; return; }
+  box.innerHTML='';
+  list.forEach(g=>{
+    const el=document.createElement('div'); el.className='gitem';
+    el.innerHTML=`<div class="gid">${esc(g.gameId)}</div>
+      <div class="meta"><div class="who">${playerChip(g.country1,g.p1)}<span class="vs-sep">vs</span>${playerChip(g.country2,g.p2)}</div>
+      <div class="det">${rulesLabel(g)} · ${t('watch_attempts',{a:g.attemptsP1||0,b:g.attemptsP2||0})}</div></div>`;
+    const b=document.createElement('button'); b.className='btn sm'; b.textContent=t('watch_btn');
+    b.onclick=()=>watchGame(g); el.appendChild(b); box.appendChild(el);
+  });
+}
+function watchGame(g){
+  enterGame({id:g.gameId,digits:g.digits,mode:g.mode,numColors:g.numColors,allowRepeats:g.allowRepeats,isPublic:true,
+    maxAttempts:g.maxAttempts,turnSeconds:g.turnSeconds,timeMode:g.timeMode,bankSeconds:g.bankSeconds,
+    bankIncrement:g.bankIncrement,revealSecrets:g.revealSecrets,notebook:g.notebook,spectator:true});
 }
 function renderPrivate(games){
   const box=$('private-list');
@@ -4699,7 +4741,7 @@ function enterGame(meta,initialState=null){
   $('g-code').textContent=meta.id; $('g-guess-val').textContent='';
   gState=null; passRequested=false; lastTurnStart=''; lastYourTurn=null; endSoundPlayed=false; freshBadges=[];
   resetGameView();
-  if(!reviewingHistory)localStorage.setItem('pf_current_game',game.id);
+  if(!reviewingHistory&&!game.spectator)localStorage.setItem('pf_current_game',game.id);
   show('game');
   if(initialState)renderGame(initialState);
   else refreshGame(epoch,game.id);
@@ -4741,6 +4783,8 @@ bindEnterToButton('g-guess','g-guess-btn');
 function renderGame(st){
   if(!st||String(st.gameId)!==String(game.id)||$('s-game').classList.contains('hidden')) return;
   gState=st;
+  // Espectador (E6-T1): lo decide el servidor, no la pantalla que abrio.
+  if(typeof st.spectator==='boolean') game.spectator=st.spectator;
   setChatContext('game');
   if(typeof st.allowRepeats==='boolean') game.allowRepeats=st.allowRepeats;
   if(st.mode) game.mode=st.mode;
@@ -4999,8 +5043,8 @@ async function submitGuess(){
   }catch(e){ guessSubmitting=false; if(gState) renderGame(gState); toast(t('net_error'),true); refreshGame(); }
 }
 async function leaveGame(){
-  const id=game.id; localStorage.removeItem('pf_current_game'); stopPoll(); stopTick();
-  try{ if(id) await api('gamePresence',{gameId:id,username:user,connected:false,reason:'lobby'}); }catch(e){}
+  const id=game.id, watching=!!game.spectator; localStorage.removeItem('pf_current_game'); stopPoll(); stopTick();
+  try{ if(id&&!watching) await api('gamePresence',{gameId:id,username:user,connected:false,reason:'lobby'}); }catch(e){}
   enterLobby();
 }
 function leaveHistoryGame(){
