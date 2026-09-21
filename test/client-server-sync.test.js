@@ -130,6 +130,9 @@ const ADMIN_ONLY = new Set([
   'Nada que cambiar.',
   'Este mensaje no tiene un correo válido.',
   'No se pudo enviar el correo.',
+  'Arena no encontrada.',
+  'Esa arena no existe o ya está cerrada.',
+  'Esa partida no tiene rival: ciérrala en lugar de darle un resultado.',
 ]);
 
 function serverMessages(source) {

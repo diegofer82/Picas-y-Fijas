@@ -235,7 +235,7 @@ test('el panel no se queda sin puerta: recuperacion del PIN desde el acceso', ()
 });
 
 test('el panel no deja entrar a una cuenta sin correo validado', () => {
-  // Entrar a un panel cuyas ocho pestañas responderian 403 no ayuda a nadie.
+  // Entrar a un panel cuyas nueve pestañas responderian 403 no ayuda a nadie.
   assert.match(adminHtml, /if\(r\.emailPending\)return showGate\(r\.email\)/);
   assert.match(adminHtml, /function showGate\(email\)/);
   assert.doesNotMatch(adminHtml, /checkOwnRecovery/);
@@ -293,7 +293,7 @@ test('limpiar partidas cuenta antes de borrar', async () => {
 
 test('ninguna herramienta nueva responde sin rol de administrador', async () => {
   const intruder = await player('Curioso');
-  for (const action of ['adminUserDetail','adminDeleteUser','adminPurgeGames','adminSql','adminChatThreads','adminChatThread','adminCloseSessions']) {
+  for (const action of ['adminUserDetail','adminDeleteUser','adminPurgeGames','adminSql','adminChatThreads','adminChatThread','adminCloseSessions','adminArenas','adminArenaDetail','adminCloseArena','adminSetGameResult']) {
     const denied = await api(action, { target:'Jefa', sql:'SELECT 1' }, intruder.token);
     assert.equal(denied.ok, false, `${action} deberia rechazar a un jugador`);
     assert.match(denied.error, /administrador/);
@@ -318,4 +318,91 @@ test('el panel abre las conversaciones aparte y ofrece la vuelta al juego', asyn
     'cada usuario lleva un punto de presencia');
   assert.match(html, /aria-label="\$\{x\.online\?'En línea':'Desconectado'\}"/,
     'el estado no depende solo del color');
+});
+
+/* Lo que trajo la 4.0.0 también tiene que verse y arreglarse desde el panel:
+   la arena, los puntos, el código del día, la correspondencia y los avisos. */
+
+test('el panel ve las arenas sin ver su código mientras se juega, y puede cerrarlas', async () => {
+  const boss = await admin();
+  const people = [await player('Arena-A'), await player('Arena-B'), await player('Arena-C')];
+  const created = await api('arenaCreate', { digits:3, mode:'numbers', allowRepeats:false, maxAttempts:10, country:'es' }, people[0].token);
+  assert.equal(created.ok, true, created.error);
+  for (const person of people.slice(1))
+    assert.equal((await api('arenaJoin', { arenaId:created.arenaId, country:'fr' }, person.token)).ok, true);
+  assert.equal((await api('arenaStart', { arenaId:created.arenaId }, people[0].token)).ok, true);
+  await api('arenaGuess', { arenaId:created.arenaId, guess:'012' }, people[1].token);
+
+  const list = await api('adminArenas', {}, boss.token);
+  const row = list.arenas.find((a) => a.arena_id === created.arenaId);
+  assert.equal(row.status, 'active');
+  assert.equal(row.players, 3);
+  assert.equal(row.secret, undefined, 'la lista no lleva el código');
+
+  const playing = await api('adminArenaDetail', { target:created.arenaId }, boss.token);
+  assert.equal(playing.arena.secret, '', 'mientras se juega, el código no sale ni hacia el panel');
+  assert.deepEqual(playing.players.map((p) => p.position), [1, 2, 3]);
+
+  const closed = await api('adminCloseArena', { target:created.arenaId }, boss.token);
+  assert.equal(closed.ok, true, closed.error);
+  const over = await api('adminArenaDetail', { target:created.arenaId }, boss.token);
+  assert.equal(over.arena.status, 'finished');
+  assert.equal(over.arena.finish_reason, 'admin');
+  assert.match(over.arena.secret, /^\d{3}$/, 'terminada, el código ya se puede ver');
+  const again = await api('adminCloseArena', { target:created.arenaId }, boss.token);
+  assert.equal(again.ok, false, 'una arena cerrada no se cierra dos veces');
+  const audit = await api('adminAudit', {}, boss.token);
+  assert.equal(audit.audit.some((a) => a.action === 'adminCloseArena' && a.target === created.arenaId), true);
+});
+
+test('dar un resultado desde el panel es un final como los demás: cuenta y avisa', async () => {
+  const boss = await admin();
+  const a = await player('Colgada'), b = await player('Colgado');
+  const gameId = await duel(a, b, '123', '456');
+  const done = await api('adminSetGameResult', { target:gameId, winner:'Colgada' }, boss.token);
+  assert.equal(done.ok, true, done.error);
+  const db = await mf.getD1Database('DB');
+  assert.ok(await db.prepare('SELECT 1 FROM game_scores WHERE game_id=?').bind(gameId).first(), 'la partida entra en la temporada');
+  assert.ok(await db.prepare("SELECT 1 FROM chat_messages WHERE game_id=? AND kind='system' AND body='finished|'").bind(gameId).first(),
+    'y su chat recibe el aviso de final, como en los otros cuatro caminos');
+  const lonely = await api('createGame', { username:a.username, digits:3, mode:'numbers', numColors:10,
+    allowRepeats:false, maxAttempts:0, turnSeconds:0, revealSecrets:false, isPublic:true, secret:'789', country:'co' }, a.token);
+  const refused = await api('adminSetGameResult', { target:lonely.gameId, winner:'' }, boss.token);
+  assert.equal(refused.ok, false, 'sin rival no hay resultado que dar');
+  assert.match(adminHtml, /api\('adminSetGameResult'/, 'y el panel tiene el botón que la pide');
+});
+
+test('el resumen, la ficha y las partidas cuentan lo que trajo la 4.0.0', async () => {
+  const boss = await admin();
+  const summary = await api('adminSummary', {}, boss.token);
+  for (const key of ['correspondence','watchable','arenasOpen','arenasDay','dailyToday','dailySolvedToday','seasonPlayers','badges','pushDevices'])
+    assert.ok(key in summary.activity, `el resumen cuenta ${key}`);
+  assert.match(summary.season, /^\d{4}-\d{2}$/);
+
+  const detail = await api('adminUserDetail', { target:'Colgada' }, boss.token);
+  assert.ok(detail.allTimeScore?.points > 0, 'la ficha trae los puntos de siempre');
+  assert.ok(detail.seasonScore, 'y los de la temporada');
+  assert.ok(Array.isArray(detail.badges) && detail.badges.some((b) => b.code === 'first_win'));
+  assert.equal(typeof detail.daily.played, 'number');
+  assert.ok(Array.isArray(detail.arenas) && Array.isArray(detail.push));
+  assert.ok('notification_lang' in detail.user);
+  for (const row of detail.push) assert.equal(row.endpoint, undefined, 'el endpoint de un aparato no viaja a la ficha');
+
+  const games = await api('adminGames', {}, boss.token);
+  for (const column of ['time_mode','turn_seconds','bank_seconds','notebook','is_public','finish_reason'])
+    assert.ok(column in games.games[0], `la lista de partidas trae ${column}`);
+  assert.equal(games.games[0].secret1, undefined, 'y ningún secreto');
+
+  const exported = await api('adminExport', {}, boss.token);
+  for (const table of ['playerScores','gameScores','badges','playerProgress','dailyResults','arenas','arenaPlayers','arenaGuesses'])
+    assert.ok(Array.isArray(exported[table]), `la copia incluye ${table}`);
+});
+
+test('el chat del panel lee los avisos y las reacciones, no sus claves', async () => {
+  assert.match(adminHtml, /function systemText\(body\)/);
+  for (const key of ['joined','finished','react_luck','react_close','react_wow','react_gg'])
+    assert.ok(adminHtml.includes(`${key}:'`), `falta el texto de ${key}`);
+  assert.match(adminHtml, /m\.kind==='system'\?`<i>\$\{esc\(systemText\(m\.body\)\)\}<\/i>`/);
+  assert.match(adminHtml, /data-label="Reacciones"/);
+  assert.match(adminHtml, /data-tab="arenas"/);
 });

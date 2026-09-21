@@ -170,7 +170,7 @@ test('la moderacion del chat queda en la auditoria y la exportacion lleva el cor
   assert.equal(missing.body.ok, false, 'no se audita un bloqueo sobre nadie');
 
   const exported = await call('adminExport', {}, boss.token);
-  assert.equal(exported.body.schemaVersion, 5);
+  assert.equal(exported.body.schemaVersion, 6);
   assert.ok(Array.isArray(exported.body.pushSubscriptions));
   const row = exported.body.users.find((user) => user.username_key === 'ruidoso');
   assert.equal(row.email, 'ruidoso@ejemplo.test', 'sin el correo la copia no permite recuperar ninguna cuenta');

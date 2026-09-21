@@ -123,6 +123,7 @@
       <button data-tab="resumen" class="on">Resumen</button>
       <button data-tab="usuarios">Usuarios</button>
       <button data-tab="partidas">Partidas</button>
+      <button data-tab="arenas">Arenas</button>
       <button data-tab="chat">Conversaciones</button>
       <button data-tab="moderacion">Moderación</button>
       <button data-tab="feedback">Feedback</button>
@@ -134,6 +135,8 @@
       <div class="panel">
         <div class="row"><h2 class="grow">Estado</h2><button id="refresh">Actualizar</button><button id="export">Exportar copia</button><button id="logout" class="ghost">Cerrar sesión</button></div>
         <div class="cards" id="summary"></div>
+        <h3>Juego</h3>
+        <div class="cards" id="summaryPlay"></div>
         <h3>Países de los jugadores</h3>
         <div class="cards" id="countries"></div>
       </div>
@@ -150,8 +153,17 @@
 
     <div id="tab-partidas" class="hidden">
       <div class="panel">
-        <div class="row"><h2 class="grow">Partidas recientes</h2><input id="gameFilter" placeholder="Filtrar por código o jugador"></div>
-        <div class="scroll stack"><table><thead><tr><th>Código</th><th>Estado</th><th>Jugadores</th><th>Ganador</th><th>Actualizada</th><th>Acción</th></tr></thead><tbody id="games"></tbody></table></div>
+        <div class="row"><h2 class="grow">Partidas recientes</h2><input id="gameFilter" placeholder="Filtrar por código, jugador o reglas"></div>
+        <p class="muted small">Una correspondencia puede pasar días sin moverse con todo derecho: su plazo es por jugada, y el mantenimiento no la cierra por inactividad.</p>
+        <div class="scroll stack"><table><thead><tr><th>Código</th><th>Estado</th><th>Jugadores</th><th>Reglas</th><th>Ganador</th><th>Actualizada</th><th>Acción</th></tr></thead><tbody id="games"></tbody></table></div>
+      </div>
+    </div>
+
+    <div id="tab-arenas" class="hidden">
+      <div class="panel">
+        <div class="row"><h2 class="grow">Arenas</h2><input id="arenaFilter" placeholder="Filtrar por código o anfitrión"></div>
+        <p class="muted small">De 3 a 8 jugadores contra un código que sortea el servidor. Viven en sus propias tablas y no reparten puntos. El Cron cierra las colgadas y las borra a los 7 días de terminar.</p>
+        <div class="scroll stack"><table><thead><tr><th>Código</th><th>Estado</th><th>Anfitrión</th><th class="nowrap">Jugadores</th><th>Reglas</th><th>Actualizada</th><th>Acciones</th></tr></thead><tbody id="arenas"></tbody></table></div>
       </div>
     </div>
 
@@ -159,7 +171,7 @@
       <div class="panel">
         <div class="row"><h2 class="grow">Conversaciones</h2><input id="threadFilter" placeholder="Filtrar por participante"></div>
         <p class="muted small">Cada fila es un chat completo. Los mensajes se abren aparte, en su propia ventana.</p>
-        <div class="scroll stack"><table><thead><tr><th>Conversación</th><th class="nowrap">Mensajes</th><th class="nowrap">Zumbidos</th><th class="nowrap">Borrados</th><th class="nowrap">Reportes</th><th>Última actividad</th><th></th></tr></thead><tbody id="threads"></tbody></table></div>
+        <div class="scroll stack"><table><thead><tr><th>Conversación</th><th class="nowrap">Mensajes</th><th class="nowrap">Zumbidos</th><th class="nowrap">Reacciones</th><th class="nowrap">Borrados</th><th class="nowrap">Reportes</th><th>Última actividad</th><th></th></tr></thead><tbody id="threads"></tbody></table></div>
       </div>
     </div>
 
@@ -187,7 +199,7 @@
         <h2>Limpiar partidas</h2>
         <p class="muted small">Primero se cuenta, después se borra. El borrado arrastra también el chat de esas partidas.</p>
         <div class="row">
-          <select id="purgeStatus"><option value="">Cualquier estado</option><option value="waiting">waiting</option><option value="active">active</option><option value="finished">finished</option><option value="cancelled">cancelled</option></select>
+          <select id="purgeStatus"><option value="">Cualquier estado</option><option value="waiting">waiting</option><option value="active">active</option><option value="finished">finished</option><option value="cancelled">cancelled</option><option value="expired">expired</option><option value="inactive">inactive</option></select>
           <input id="purgeDays" type="number" min="0" step="1" placeholder="Días sin actividad" style="width:190px">
           <button id="purgeCount">Contar</button>
           <span id="purgeInfo" class="muted"></span>
@@ -246,7 +258,33 @@ const at=v=>{const local=zoned(v,ADMIN_TZ);return local?`<time datetime="${esc(v
 const flag=cc=>/^[a-z]{2}$/i.test(String(cc||''))?String(cc).toUpperCase().replace(/./g,c=>String.fromCodePoint(0x1F1E6+c.charCodeAt(0)-65)):'';
 $('adminZone').textContent=`horas en ${ADMIN_TZ} (${utcOffset(ADMIN_TZ)})`;
 const loaded=new Set();
-const state={users:[],games:[],threads:[],lobby:null,feedback:[]};
+const state={users:[],games:[],arenas:[],threads:[],lobby:null,feedback:[]};
+/* Las reglas de una partida o de una arena, en una línea. Desde la 3.7.0 el
+   reloj tiene cuatro formas y hay que poder distinguirlas de un vistazo. */
+const days=s=>s%86400===0?`${s/86400} d`:s%3600===0?`${s/3600} h`:`${s} s`;
+function clockText(x){
+  const mode=x.time_mode||'turn';
+  if(mode==='correspondence')return `correspondencia ${days(Number(x.turn_seconds)||86400)}/jugada`;
+  if(mode==='bank')return `bolsa ${Math.round((Number(x.bank_seconds)||0)/60)} min${Number(x.bank_increment)?` +${x.bank_increment} s`:''}`;
+  return Number(x.turn_seconds)?`${x.turn_seconds} s por turno`:'sin reloj';
+}
+function rulesText(x,withClock=true){
+  const code=`${x.digits} ${x.mode==='colors'?`colores (${x.num_colors})`:'cifras'}${Number(x.allow_repeats)?' con repetición':''}`;
+  const parts=[code,Number(x.max_attempts)?`${x.max_attempts} intentos`:'sin límite'];
+  if(withClock)parts.push(clockText(x));
+  if(Number(x.notebook))parts.push('cuaderno');
+  if(x.is_public!==undefined)parts.push(Number(x.is_public)?'pública':'privada');
+  return parts.join(' · ');
+}
+const FINISH={timeout:'por tiempo',abandon:'por abandono','admin-correction':'corregida en el panel',admin:'cerrada en el panel',complete:'todos acabaron',host_left:'se fue el anfitrión'};
+const finishText=r=>r?(FINISH[r]||r):'';
+const ARENA_STATUS={waiting:'esperando',active:'en juego',finished:'terminada',expired:'caducada'};
+const BADGE={first_win:'Primera victoria',solved_4:'En 4 o menos',fast_finish:'Al límite del reloj',expert_rules:'Reglas más duras',wins_10:'10 victorias',wins_50:'50 victorias',days_7:'7 días seguidos'};
+/* Los avisos del chat se guardan como clave —`joined|Ana`, `react_gg|Ana`—
+   para que cada pantalla los lea en su idioma. El panel los lee en español. */
+const SYSTEM_TEXT={joined:'{name} entró en la partida.',paused:'{name} pausó la partida.',resumed:'{name} reanudó la partida.',abandoned:'{name} abandonó la partida.',rematch:'{name} propuso una revancha.',finished:'La partida terminó.',
+  react_luck:'{name}: ¡Suerte!',react_close:'{name}: ¡Casi!',react_wow:'{name}: ¡Vaya jugada!',react_gg:'{name}: ¡Buena partida!'};
+function systemText(body){const [event,name='']=String(body||'').split('|');const text=SYSTEM_TEXT[event];return text?text.replace('{name}',name):String(body||'');}
 
 async function api(action,payload={}){
   const r=await fetch('/api',{method:'POST',headers:{'content-type':'application/json',...(token?{authorization:'Bearer '+token}:{})},body:JSON.stringify({action,...payload})});
@@ -281,7 +319,7 @@ function showGate(email){
 }
 
 /* ---- pestañas: cada una pide sus datos la primera vez que se abre ---- */
-const loaders={resumen:loadSummary,usuarios:loadUsers,partidas:loadGames,chat:loadThreads,moderacion:loadReports,feedback:loadFeedback,mantenimiento:loadRecipes,auditoria:loadAudit};
+const loaders={resumen:loadSummary,usuarios:loadUsers,partidas:loadGames,arenas:loadArenas,chat:loadThreads,moderacion:loadReports,feedback:loadFeedback,mantenimiento:loadRecipes,auditoria:loadAudit};
 async function openTab(name){
   for(const button of $('tabs').children)button.classList.toggle('on',button.dataset.tab===name);
   for(const key of Object.keys(loaders))$('tab-'+key).classList.toggle('hidden',key!==name);
@@ -303,6 +341,10 @@ async function loadSummary(){
     +card('Bloqueados',a.blocked,true)+card('Partidas (24 h)',a.gamesDay)+card('Mensajes (24 h)',a.messagesDay)
     +card('Reportes abiertos',a.openReports,true)+card('Feedback sin leer',a.openFeedback,true)+card('Feedback total',a.feedback)+card('Silenciados',a.mutes,true)+card('Conversaciones',a.threads)+card('Sesiones vivas',a.sessions)
     +s.games.map(x=>card(x.status,x.count)).join('');
+  $('summaryPlay').innerHTML=card('Correspondencias en curso',a.correspondence)+card('Públicas que se pueden mirar',a.watchable)
+    +card('Arenas abiertas',a.arenasOpen)+card('Arenas (24 h)',a.arenasDay)
+    +card(`Código del día (${esc(s.today||'')})`,`${a.dailySolvedToday??0} / ${a.dailyToday??0}`)
+    +card(`Jugadores de la temporada ${esc(s.season||'')}`,a.seasonPlayers)+card('Insignias ganadas',a.badges)+card('Aparatos con avisos push',a.pushDevices);
   $('countries').innerHTML=(s.countries||[]).map(c=>`<div class="card">${flag(c.country)} ${esc(String(c.country).toUpperCase())}<b>${c.count}</b></div>`).join('')||'<div class="muted">Todavía no hay países registrados.</div>';
 }
 
@@ -336,10 +378,42 @@ function renderUsers(){
 async function loadGames(){state.games=(await api('adminGames')).games;renderGames();}
 function renderGames(){
   const needle=$('gameFilter').value.trim().toLowerCase();
-  const rows=state.games.filter(x=>!needle||[x.game_id,x.p1,x.p2].join(' ').toLowerCase().includes(needle));
-  $('games').innerHTML=rows.map(x=>`<tr><td data-label="Código" class="nowrap"><code>${esc(x.game_id)}</code></td><td data-label="Estado">${esc(x.status)}</td>
-    <td data-label="Jugadores">${esc(x.p1)} / ${esc(x.p2||'—')}</td><td data-label="Ganador">${esc(x.winner||'—')}</td><td data-label="Actualizada" class="nowrap">${at(x.updated_at)}</td>
-    <td data-label="Acción" class="acts nowrap">${['waiting','active'].includes(x.status)?`<button class="tiny danger" data-game="${esc(x.game_id)}">Cerrar</button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="muted empty">Sin resultados.</td></tr>';
+  const rows=state.games.filter(x=>!needle||[x.game_id,x.p1,x.p2,rulesText(x),finishText(x.finish_reason)].join(' ').toLowerCase().includes(needle));
+  $('games').innerHTML=rows.map(x=>`<tr><td data-label="Código" class="nowrap"><code>${esc(x.game_id)}</code></td>
+    <td data-label="Estado"><span>${esc(x.status)}${x.finish_reason?` <span class="muted small">${esc(finishText(x.finish_reason))}</span>`:''}</span></td>
+    <td data-label="Jugadores">${esc(x.p1)} / ${esc(x.p2||'—')}</td><td data-label="Reglas" class="small">${esc(rulesText(x))}</td>
+    <td data-label="Ganador">${x.status==='finished'?esc(x.winner||'empate'):'—'}</td><td data-label="Actualizada" class="nowrap">${at(x.updated_at)}</td>
+    <td data-label="Acción" class="acts nowrap">${x.status==='active'&&x.p2?`<button class="tiny" data-result="${esc(x.game_id)}">Resultado</button> `:''}${['waiting','active'].includes(x.status)?`<button class="tiny danger" data-game="${esc(x.game_id)}">Cerrar</button>`:''}</td></tr>`).join('')||'<tr><td colspan="7" class="muted empty">Sin resultados.</td></tr>';
+}
+
+/* ---- arenas ---- */
+async function loadArenas(){state.arenas=(await api('adminArenas')).arenas;renderArenas();}
+function renderArenas(){
+  const needle=$('arenaFilter').value.trim().toLowerCase();
+  const rows=state.arenas.filter(x=>!needle||[x.arena_id,x.host].join(' ').toLowerCase().includes(needle));
+  $('arenas').innerHTML=rows.map(x=>`<tr><td data-label="Código" class="nowrap"><code>${esc(x.arena_id)}</code></td>
+    <td data-label="Estado"><span>${esc(ARENA_STATUS[x.status]||x.status)}${x.finish_reason?` <span class="muted small">${esc(finishText(x.finish_reason))}</span>`:''}</span></td>
+    <td data-label="Anfitrión"><a class="user" data-detail="${esc(x.host)}">${esc(x.host)}</a></td>
+    <td data-label="Jugadores"><span>${x.players}${x.solved?` <span class="muted small">(${x.solved} lo descifraron)</span>`:''}</span></td>
+    <td data-label="Reglas" class="small">${esc(rulesText(x,false))}</td><td data-label="Actualizada" class="nowrap">${at(x.updated_at)}</td>
+    <td data-label="Acciones" class="acts nowrap"><button class="tiny" data-arena="${esc(x.arena_id)}">Ver</button>${['waiting','active'].includes(x.status)?` <button class="tiny danger" data-close-arena="${esc(x.arena_id)}" data-arena-status="${esc(x.status)}">Cerrar</button>`:''}</td></tr>`).join('')||'<tr><td colspan="7" class="muted empty">Todavía no se ha abierto ninguna arena.</td></tr>';
+}
+async function openArena(id){
+  const r=await api('adminArenaDetail',{target:id}),a=r.arena;
+  const line=(k,v)=>`<div>${k}</div><div>${v}</div>`;
+  openModal('Arena '+a.arena_id,`<div class="kv">
+      ${line('Estado',`${esc(ARENA_STATUS[a.status]||a.status)}${a.finish_reason?` <span class="muted small">· ${esc(finishText(a.finish_reason))}</span>`:''}`)}
+      ${line('Anfitrión',`<a class="user" data-detail="${esc(a.host)}">${esc(a.host)}</a>`)}
+      ${line('Reglas',esc(rulesText(a,false)))}
+      ${line('Abierta',at(a.created_at))}
+      ${line('Empezó',a.started_at?at(a.started_at):'<span class="muted">todavía no</span>')}
+      ${line('Código',a.secret?`<code>${esc(a.secret)}</code>`:'<span class="muted">no sale de la tabla hasta que la arena termina</span>')}
+    </div>
+    <h3>Clasificación</h3>
+    ${r.players.length?`<div class="scroll"><table><thead><tr><th>#</th><th>Jugador</th><th>Intentos</th><th>Mejor</th><th>Situación</th></tr></thead><tbody>
+      ${r.players.map(p=>`<tr><td>${p.position}</td><td>${flag(p.country)} <a class="user" data-detail="${esc(p.username)}">${esc(p.username)}</a></td><td>${p.attempts}</td><td>${p.bestFijas} F</td>
+        <td>${p.solvedAt?'lo descifró '+at(p.solvedAt):p.gaveUp?'se marchó':p.attempts>=Number(a.max_attempts)?'sin intentos':'jugando'}</td></tr>`).join('')}
+    </tbody></table></div>`:'<div class="muted">Nadie.</div>'}`);
 }
 
 /* ---- conversaciones ---- */
@@ -348,14 +422,14 @@ function renderThreads(){
   const needle=$('threadFilter').value.trim().toLowerCase();
   const lobby=state.lobby;
   const head=lobby&&!needle?`<tr><td data-label="Conversación"><b>Chat del lobby</b> <span class="muted small">· ${lobby.people} personas</span></td>
-    <td data-label="Mensajes">${lobby.messages}</td><td data-label="Zumbidos">—</td><td data-label="Borrados">${lobby.deleted}</td><td data-label="Reportes">—</td><td data-label="Última actividad" class="nowrap">${at(lobby.lastActivity)}</td>
+    <td data-label="Mensajes">${lobby.messages}</td><td data-label="Zumbidos">—</td><td data-label="Reacciones">—</td><td data-label="Borrados">${lobby.deleted}</td><td data-label="Reportes">—</td><td data-label="Última actividad" class="nowrap">${at(lobby.lastActivity)}</td>
     <td class="acts"><button class="tiny" data-thread="0">Ver</button></td></tr>`:'';
   const rows=state.threads.filter(t=>!needle||`${t.user1} ${t.user2}`.toLowerCase().includes(needle));
   $('threads').innerHTML=head+rows.map(t=>`<tr>
     <td data-label="Conversación"><span><a class="user" data-detail="${esc(t.user1)}">${esc(t.user1)}</a> · <a class="user" data-detail="${esc(t.user2)}">${esc(t.user2)}</a>${t.gameId?` <span class="muted small">${esc(t.gameId)}</span>`:''}</span></td>
-    <td data-label="Mensajes">${t.written}</td><td data-label="Zumbidos">${t.nudges}</td><td data-label="Borrados">${t.deleted}</td><td data-label="Reportes">${t.reports?`<span class="tag alert">${t.reports}</span>`:'0'}</td>
+    <td data-label="Mensajes">${t.written}</td><td data-label="Zumbidos">${t.nudges}</td><td data-label="Reacciones">${t.reactions||0}</td><td data-label="Borrados">${t.deleted}</td><td data-label="Reportes">${t.reports?`<span class="tag alert">${t.reports}</span>`:'0'}</td>
     <td data-label="Última actividad" class="nowrap">${at(t.lastActivity)}</td><td class="acts"><button class="tiny" data-thread="${t.id}">Ver</button></td></tr>`).join('');
-  if(!$('threads').innerHTML)$('threads').innerHTML='<tr><td colspan="7" class="muted empty">Sin conversaciones.</td></tr>';
+  if(!$('threads').innerHTML)$('threads').innerHTML='<tr><td colspan="8" class="muted empty">Sin conversaciones.</td></tr>';
 }
 async function openThread(id){
   const r=await api('adminChatThread',{threadId:id});
@@ -363,7 +437,7 @@ async function openThread(id){
     <div class="row"><span class="who">${esc(m.sender||'sistema')}</span><span class="muted small">${at(m.createdAt)}</span>
     ${m.reportCount?`<span class="tag alert">${m.reportCount} reporte(s)</span>`:''}<span class="grow"></span>
     ${!m.deleted&&m.kind==='user'?`<button class="tiny danger" data-delete-message="${m.id}">Borrar</button> <button class="tiny" data-mute-user="${esc(m.sender)}">Silenciar</button>`:''}</div>
-    <div>${m.deleted?'[mensaje eliminado'+(m.deletedBy?' por '+esc(m.deletedBy):'')+']':m.kind==='nudge'?'<i>zumbido</i>':esc(m.body)}</div></div>`).join('')||'<div class="muted">Esta conversación no tiene mensajes.</div>');
+    <div>${m.deleted?'[mensaje eliminado'+(m.deletedBy?' por '+esc(m.deletedBy):'')+']':m.kind==='nudge'?'<i>zumbido</i>':m.kind==='system'?`<i>${esc(systemText(m.body))}</i>`:esc(m.body)}</div></div>`).join('')||'<div class="muted">Esta conversación no tiene mensajes.</div>');
 }
 
 /* ---- moderación ---- */
@@ -422,6 +496,7 @@ async function loadAudit(){
 }
 
 /* ---- ficha de usuario ---- */
+const scoreText=x=>x?`<b>${x.points}</b> pts <span class="muted small">(${x.played} jugadas: ${x.wins} G · ${x.losses} P · ${x.draws} E)</span>`:'<span class="muted">0 pts</span>';
 async function openUser(name){
   const d=await api('adminUserDetail',{target:name});
   const u=d.user,s=d.stats||{};
@@ -443,6 +518,11 @@ async function openUser(name){
       ${line('Presencia',d.presence?`${esc(d.presence.location)}${d.presence.game_id?' · '+esc(d.presence.game_id):''} <span class="muted small">${at(d.presence.last_seen_at)}</span>`:'—')}
       ${line('Chat',d.mute?`silenciado ${d.mute.muted_until?'hasta '+at(d.mute.muted_until):'de forma permanente'} por ${esc(d.mute.created_by)}`:'sin restricciones')}
       ${line('Juego',`${s.played||0} partidas · ${s.wins||0} ganadas · ${s.draws||0} empates`)}
+      ${line('Puntos',`${scoreText(d.allTimeScore)} desde siempre · ${scoreText(d.seasonScore)} en ${esc(d.season||'')}`)}
+      ${line('Rachas',d.progress?`${d.progress.day_streak} días seguidos (mejor ${d.progress.best_day_streak}) · ${d.progress.win_streak} victorias seguidas (mejor ${d.progress.best_win_streak})`:'<span class="muted">—</span>')}
+      ${line('Insignias',d.badges.length?d.badges.map(b=>`<span class="tag" title="${esc(zoned(b.earned_at,ADMIN_TZ)||'')}${b.game_id?' · '+esc(b.game_id):''}">${esc(BADGE[b.code]||b.code)}</span>`).join(' '):'<span class="muted">ninguna</span>')}
+      ${line('Código del día',d.daily.played?`${d.daily.solved} resueltos de ${d.daily.played}${d.daily.bestAttempts?` · mejor en ${d.daily.bestAttempts}`:''} · último ${esc(d.daily.lastDay)}`:'<span class="muted">nunca</span>')}
+      ${line('Avisos',`${d.push.length?`${d.push.length} aparato(s) con push (${d.push.map(p=>esc(p.lang)).join(', ')})`:'sin push: los turnos de correspondencia van al correo'} · idioma ${esc(u.notification_lang||'es')}`)}
       ${line('Mensajes',`${s.messages||0} enviados · ${s.reportsGot||0} reportados · ${s.reportsMade||0} reportes hechos`)}
     </div>
     <div class="row" style="margin-top:14px">
@@ -460,9 +540,11 @@ async function openUser(name){
     ${d.threads.length?d.threads.map(t=>`<div class="row"><a class="user" data-detail="${esc(t.opponent)}">${esc(t.opponent)}</a>
       <span class="muted small">${t.messages} mensajes · ${at(t.lastActivity)}</span><button class="tiny" data-thread="${t.id}">Ver</button></div>`).join(''):'<div class="muted">Ninguna.</div>'}
     <h3>Últimas partidas</h3>
-    ${d.games.length?`<div class="scroll"><table><thead><tr><th>Código</th><th>Estado</th><th>Rivales</th><th>Ganador</th><th>Actualizada</th></tr></thead><tbody>
-      ${d.games.map(g=>`<tr><td class="nowrap"><code>${esc(g.game_id)}</code></td><td>${esc(g.status)}</td><td>${esc(g.p1)} / ${esc(g.p2||'—')}</td><td>${esc(g.winner||'—')}</td><td class="nowrap">${at(g.updated_at)}</td></tr>`).join('')}
-    </tbody></table></div>`:'<div class="muted">Ninguna.</div>'}`);
+    ${d.games.length?`<div class="scroll"><table><thead><tr><th>Código</th><th>Estado</th><th>Rivales</th><th>Reloj</th><th>Ganador</th><th>Actualizada</th></tr></thead><tbody>
+      ${d.games.map(g=>`<tr><td class="nowrap"><code>${esc(g.game_id)}</code></td><td>${esc(g.status)}${g.finish_reason?` <span class="muted small">${esc(finishText(g.finish_reason))}</span>`:''}</td><td>${esc(g.p1)} / ${esc(g.p2||'—')}</td><td class="small">${esc(clockText(g))}</td><td>${g.status==='finished'?esc(g.winner||'empate'):'—'}</td><td class="nowrap">${at(g.updated_at)}</td></tr>`).join('')}
+    </tbody></table></div>`:'<div class="muted">Ninguna.</div>'}
+    <h3>Arenas (${d.arenas.length})</h3>
+    ${d.arenas.length?d.arenas.map(a=>`<div class="row"><code>${esc(a.arenaId)}</code><span class="muted small">${esc(ARENA_STATUS[a.status]||a.status)} · ${a.attempts} intentos${a.solved?' · lo descifró':a.gaveUp?' · se marchó':''}${a.host===u.username?' · anfitrión':''} · ${at(a.createdAt)}</span><button class="tiny" data-arena="${esc(a.arenaId)}">Ver</button></div>`).join(''):'<div class="muted">Ninguna.</div>'}`);
 }
 
 /* ---- consola SQL ---- */
@@ -470,7 +552,11 @@ const RECIPES=[
   ['Cuentas con la misma IP',"SELECT last_ip,COUNT(*) cuentas,GROUP_CONCAT(username,', ') usuarios FROM users WHERE last_ip<>'' GROUP BY last_ip HAVING cuentas>1 ORDER BY cuentas DESC"],
   ['Usuarios sin jugar nunca',"SELECT username,last_country,created_at FROM users u WHERE NOT EXISTS(SELECT 1 FROM games g WHERE g.p1=u.username OR g.p2=u.username) ORDER BY created_at DESC"],
   ['Partidas abandonadas',"SELECT game_id,status,p1,p2,updated_at FROM games WHERE status IN ('waiting','active') AND updated_at<datetime('now','-7 days') ORDER BY updated_at"],
-  ['Ranking real',"SELECT username,(SELECT COUNT(*) FROM games WHERE winner=u.username) ganadas,(SELECT COUNT(*) FROM games WHERE p1=u.username OR p2=u.username) jugadas FROM users u ORDER BY ganadas DESC LIMIT 25"],
+  ['Ranking del mes',"SELECT username,points,played,wins,draws,losses FROM player_scores WHERE season=strftime('%Y-%m','now') ORDER BY points DESC,wins DESC LIMIT 25"],
+  ['Partidas sin contar',"SELECT g.game_id,g.p1,g.p2,g.winner,g.finish_reason,g.updated_at FROM games g WHERE g.status='finished' AND g.p2<>'' AND NOT EXISTS(SELECT 1 FROM game_scores s WHERE s.game_id=g.game_id) ORDER BY g.updated_at DESC"],
+  ['Código del día de hoy',"SELECT username,attempts,solved,finished,duration_ms FROM daily_results WHERE day=date('now') ORDER BY solved DESC,attempts,duration_ms"],
+  ['Correspondencias en curso',"SELECT game_id,p1,p2,turn,turn_seconds/86400 dias,turn_started_at FROM games WHERE status='active' AND time_mode='correspondence' ORDER BY turn_started_at"],
+  ['Avisos push por idioma',"SELECT lang,COUNT(*) aparatos FROM push_subscriptions GROUP BY lang ORDER BY aparatos DESC"],
   ['Tablas de la base',"SELECT name,type FROM sqlite_master WHERE type IN ('table','index') ORDER BY type,name"],
   ['Columnas de users',"SELECT sql FROM sqlite_master WHERE name='users'"],
 ];
@@ -559,6 +645,8 @@ async function handleAction(e){
   if(detail)return openUser(detail.dataset.detail).catch(reportFailure);
   const thread=hit('data-thread');
   if(thread)return openThread(Number(thread.dataset.thread)).catch(reportFailure);
+  const arena=hit('data-arena');
+  if(arena)return openArena(arena.dataset.arena).catch(reportFailure);
   try{
     const block=hit('data-user');
     if(block){
@@ -626,11 +714,31 @@ async function handleAction(e){
         confirmLabel:'Cerrar la partida',danger:true});
       if(!go)return;
       await api('adminCloseGame',{target:game.dataset.game});return afterChange();}
+    const result=hit('data-result');
+    if(result){
+      const g=state.games.find(x=>x.game_id===result.dataset.result);if(!g)return;
+      const answer=await ask({title:'Dar por terminada la partida '+g.game_id,
+        body:'Para una partida que se quedó colgada con los dos jugadores dentro. Termina con el resultado que elijas, reparte sus puntos e insignias como cualquier final y avisa en su chat.\n\nUna partida que ya se contó no se vuelve a contar: su recibo lo impide.',
+        fields:[{name:'winner',type:'select',label:'Resultado',value:'',options:[
+          {value:'',label:'Empate'},{value:g.p1,label:'Gana '+g.p1},{value:g.p2,label:'Gana '+g.p2}]}],
+        confirmLabel:'Terminar la partida',danger:true});
+      if(!answer)return;
+      await api('adminSetGameResult',{target:g.game_id,winner:answer.winner});return afterChange();}
+    const closeArena=hit('data-close-arena');
+    if(closeArena){
+      const waiting=closeArena.dataset.arenaStatus==='waiting';
+      const go=await confirmAsk('Cerrar la arena '+closeArena.dataset.closeArena,{
+        body:waiting
+          ? 'Todavía esperaba jugadores: caducará y nadie podrá entrar.'
+          : 'Se da por terminada tal como está: quien seguía jugando ya no podrá probar, lo jugado se queda en su clasificación y el código se revela.',
+        confirmLabel:'Cerrar la arena',danger:true});
+      if(!go)return;
+      await api('adminCloseArena',{target:closeArena.dataset.closeArena});return afterChange();}
     const drop=hit('data-delete-user');
     if(drop){
       const name=drop.dataset.deleteUser;
       const answer=await ask({title:'Borrar la cuenta de '+name,
-        bodyHtml:'<p>Se eliminará definitivamente la cuenta y todos sus datos: partidas e historial, chats, reportes, sesiones, recuperación y rastros técnicos asociados. No se puede recuperar ni quedará una entrada de auditoría con su nombre.</p>',
+        bodyHtml:'<p>Se eliminará definitivamente la cuenta y todos sus datos: partidas e historial, chats, reportes, sesiones, recuperación, puntos, insignias y rachas, sus resultados del código del día, sus arenas (y enteras las que abrió), sus aparatos de avisos y los rastros técnicos asociados. Una partida o una arena compartida desaparece también para los demás. No se puede recuperar ni quedará una entrada de auditoría con su nombre.</p>',
         fields:[
           {name:'confirm',type:'text',label:'Escribe «'+name+'» para confirmar',match:name,required:true}],
         confirmLabel:'Borrar la cuenta',danger:true});
@@ -672,7 +780,7 @@ document.addEventListener('click',handleAction);
 
 /* ---- enganches sueltos ---- */
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b)openTab(b.dataset.tab)});
-$('userFilter').oninput=renderUsers;$('gameFilter').oninput=renderGames;$('threadFilter').oninput=renderThreads;
+$('userFilter').oninput=renderUsers;$('gameFilter').oninput=renderGames;$('arenaFilter').oninput=renderArenas;$('threadFilter').oninput=renderThreads;
 const reloadFeedback=async()=>{try{await loadFeedback()}catch(e){reportFailure(e)}};
 $('fbStatus').onchange=reloadFeedback;$('fbKind').onchange=reloadFeedback;
 // El estado se cambia desde el propio desplegable: es la accion mas repetida

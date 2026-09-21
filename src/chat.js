@@ -560,6 +560,7 @@ export async function adminChat(db, action, p, user) {
             (SELECT COUNT(*) FROM chat_messages m WHERE m.thread_id=t.id) messages,
             (SELECT COUNT(*) FROM chat_messages m WHERE m.thread_id=t.id AND m.kind='user') written,
             (SELECT COUNT(*) FROM chat_messages m WHERE m.thread_id=t.id AND m.kind='nudge') nudges,
+            (SELECT COUNT(*) FROM chat_messages m WHERE m.thread_id=t.id AND m.kind='system' AND substr(m.body,1,6)='react_') reactions,
             (SELECT COUNT(*) FROM chat_messages m WHERE m.thread_id=t.id AND m.deleted_at IS NOT NULL) deleted,
             (SELECT COUNT(*) FROM chat_reports r JOIN chat_messages m ON m.id=r.message_id
               WHERE m.thread_id=t.id AND r.status='open') reports,
@@ -595,6 +596,7 @@ export async function adminChat(db, action, p, user) {
         messages: Number(t.messages) || 0,
         written: Number(t.written) || 0,
         nudges: Number(t.nudges) || 0,
+        reactions: Number(t.reactions) || 0,
         deleted: Number(t.deleted) || 0,
         reports: Number(t.reports) || 0,
         lastActivity:

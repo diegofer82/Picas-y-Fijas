@@ -335,7 +335,7 @@ Antes hay que activar **Email Routing** en `picasyfijas.fans` y verificar la dir
 - `src/daily.js`: el código del día. Deriva el secreto del día con HMAC-SHA256 y `DAILY_SECRET`, resuelve los intentos y arma la clasificación del día.
 - `src/maintenance.js`: mantenimiento horario fuera del camino crítico de las peticiones.
 - `src/push.js`: suscripciones y avisos de turno. Firma VAPID y cifra `aes128gcm` con Web Crypto, sin dependencias; si una correspondencia no tiene push válido, usa el correo verificado.
-- `src/admin.js`: herramientas de mantenimiento del panel: ficha de usuario, detección de cuentas repetidas, fusión, borrado, limpieza de partidas y consola SQL.
+- `src/admin.js`: herramientas de mantenimiento del panel: resumen, ficha de usuario, lista de partidas con sus reglas, arenas —lista, clasificación y cierre—, borrado, limpieza de partidas y consola SQL.
 - `src/rename.js`: el cambio de nombre de usuario y su reescritura en todas las tablas que guardan el nombre —partidas, chat, ranking, insignias, arena y código del día—. También es donde se decide cuándo **no** se puede cambiar: con una partida o una arena abiertas, no.
 - `src/recovery.js`: los enlaces de un solo uso que llegan por correo —verificar la dirección y reponer el PIN—, su emisión, su caducidad y el correo que los lleva en los tres idiomas.
 - `src/feedback.js`: el buzón de sugerencias y errores: validación, barandillas del endpoint público, consultas del panel y el aviso por correo.
@@ -510,7 +510,7 @@ La regla vive en un solo sitio: en `routeApi`, justo después de `authenticate`,
 
 El navegador no decide nada: `api()` reconoce ese código y enseña `s-verify`, la pantalla que bloquea. Dice dos cosas distintas según el caso —no hay correo apuntado, o lo hay y falta abrir el enlace—, porque lo que tiene que hacer la persona también es distinto. Desde ahí se pide el enlace y, con «Ya lo he validado», se vuelve a preguntar por la ficha: si el correo consta, se entra al lobby **con la misma sesión**, sin volver a escribir el PIN. Abrir el enlace en ese mismo navegador hace lo mismo sin pulsar nada.
 
-`/admin` no tiene pantalla propia para esto: detecta `emailPending` en la respuesta de `loginUser` y ni siquiera guarda la sesión, porque un panel cuyas ocho pestañas responderían `403` no le sirve a nadie. Manda al juego, que es donde se arregla.
+`/admin` no tiene pantalla propia para esto: detecta `emailPending` en la respuesta de `loginUser` y ni siquiera guarda la sesión, porque un panel cuyas nueve pestañas responderían `403` no le sirve a nadie. Manda al juego, que es donde se arregla.
 
 `test/email-gate.test.js` fija las tres mitades: lo que queda cerrado, lo que queda abierto y que validar el correo desbloquea la sesión que ya existía.
 
@@ -599,20 +599,25 @@ El toro azul de la esquina superior cierra el panel en ese navegador y devuelve 
 
 | Pestaña | Qué resuelve |
 | --- | --- |
-| Resumen | Usuarios, gente en línea, altas y activos de la semana, partidas y mensajes del día, moderación pendiente y los países de donde entra la gente. |
+| Resumen | Usuarios, gente en línea, altas y activos de la semana, partidas y mensajes del día, moderación pendiente y los países de donde entra la gente. Debajo, el juego: correspondencias en curso, partidas públicas que se pueden mirar, arenas abiertas y del día, el código del día (resueltos / jugados, en UTC), jugadores de la temporada, insignias ganadas y aparatos con avisos push. |
 | Usuarios | La lista completa con un punto verde/gris de presencia junto al nombre, país, última IP, partidas y mensajes. Bloquear, cambiar el PIN, dar o quitar el rol `admin`, cerrar sesiones, reactivar el chat y borrar. |
-| Partidas | Las últimas 200, con filtro, y el cierre de las que siguen abiertas. |
-| Conversaciones | Una fila por chat, no un río de mensajes: quiénes hablan, cuántos mensajes, cuántos zumbidos y cuántos reportes. El histórico se abre aparte, en su propia ventana. |
+| Partidas | Las últimas 200, con sus reglas en una línea —código, intentos, reloj (por turno, bolsa o correspondencia), cuaderno, pública o privada— y cómo terminaron. El filtro busca también en las reglas: «correspondencia» las encuentra todas. Se cierran las que siguen abiertas y, a una partida colgada con sus dos jugadores dentro, se le puede **dar un resultado**. |
+| Arenas | Las últimas 100: anfitrión, jugadores, cuántos la descifraron y reglas. La ficha enseña la clasificación en directo; el código, solo cuando la arena ha terminado. Una arena colgada se cierra: si esperaba gente caduca, si ya se jugaba termina y lo jugado se queda. |
+| Conversaciones | Una fila por chat, no un río de mensajes: quiénes hablan, cuántos mensajes, cuántos zumbidos, cuántas reacciones rápidas y cuántos reportes. El histórico se abre aparte, en su propia ventana, y los avisos de la partida y las reacciones se leen en español, no como la clave que guarda la base (`react_gg|Ana`). |
 | Moderación | Los reportes del chat, con borrar y silenciar a mano. |
 | Feedback | Las sugerencias y los errores que llegan del juego. Filtro por estado y por tipo, cambio de estado desde la propia fila, respuesta, nota interna y borrado. |
-| Mantenimiento | Limpieza de partidas por estado y antigüedad, y la consola SQL. |
+| Mantenimiento | Limpieza de partidas por estado —también `expired` e `inactive`, que deja el mantenimiento— y antigüedad, y la consola SQL con recetas para el ranking del mes, las partidas terminadas que no entraron en la temporada, el código del día, las correspondencias y los avisos push. |
 | Auditoría | Todo lo que la administración ha cambiado, con fecha, objetivo y detalle. |
 
 Al pulsar un nombre se abre su ficha, que empieza por el **usuario**, su **nombre anterior** (`users.previous_username`, migración `0010`, que `changeUsername` rellena en cada cambio), la fecha del **último cambio de nombre** y el **email**, marcado como verificado o sin verificar. Solo se guarda un nombre anterior, no la lista entera. El correo solo viaja en la ficha (`adminUserDetail`); la lista no lo carga.
 
+La ficha cuenta también lo que trajo la 4.0.0: puntos de siempre y de la temporada, rachas, insignias, el código del día (resueltos, mejor marca, último día), sus arenas y cuántos aparatos reciben avisos push y en qué idioma; si no tiene ninguno, lo dice, porque entonces sus turnos de correspondencia le llegan por correo. El endpoint de un aparato no viaja a la ficha: basta con saber que existe.
+
+**Dar un resultado** (`adminSetGameResult`) es el quinto final de una partida y pasa por `settleFinishedGame()`, como los otros cuatro: reparte puntos e insignias y avisa en el chat. Solo se ofrece para una partida en juego con sus dos jugadores; una partida sin rival se cierra, no se decide. Una partida ya contada no se vuelve a contar, porque su recibo lo impide.
+
 Toda acción que cambia algo queda en `audit_log`, también borrar un mensaje del chat, silenciar o reactivar a alguien y responder al buzón; leer el chat no se audita. Bloquear o cambiar el rol de un nombre que no existe responde «Usuario no encontrado.» en lugar de dejar una línea de auditoría sobre nadie. Bloquear borra además la presencia de la cuenta.
 
-La exportación es la copia de seguridad del panel: `schemaVersion: 5` incluye el correo, su verificación, la zona horaria, el nombre anterior, la lengua de avisos y las suscripciones push. El endpoint de una suscripción identifica un aparato y la exportación sigue siendo un archivo privado.
+La exportación es la copia de seguridad del panel: `schemaVersion: 6` incluye el correo, su verificación, la zona horaria, el nombre anterior, la lengua de avisos y las suscripciones push, y además todo lo que trajo la 4.0.0 —puntos por temporada y sus recibos, insignias, rachas, el código del día y las tres tablas de la arena—. Sin los recibos de `game_scores`, una copia restaurada dejaría partidas terminadas que nadie podría volver a contar. El endpoint de una suscripción identifica un aparato y la exportación sigue siendo un archivo privado.
 
 El punto de cada fila reutiliza la tabla `presence` y el mismo umbral del contador general: verde significa actividad autenticada en los últimos 2 minutos y gris, desconectado. El texto accesible y el título del punto expresan también el estado, de modo que la información no depende únicamente del color. La consulta es parte de `adminUsers`, no genera escrituras adicionales y no cambia la versión de la aplicación.
 
@@ -855,7 +860,7 @@ Nunca se deben subir a GitHub:
 
 Estas exclusiones están definidas en `.gitignore`. Los PIN se almacenan con hash SHA-256 y una sal individual. No se deben registrar PIN, tokens de sesión, secretos de partida ni contenido privado en logs o documentación.
 
-El contacto que alguien deja en el buzón de sugerencias es un dato personal y recibe el mismo trato que la IP: se guarda para poder responder, solo se ve dentro de `/admin`, no aparece en ninguna respuesta del juego y sí va en la exportación, que pasó a `schemaVersion: 3` al incluir el buzón, a `schemaVersion: 4` al incluir el correo de las cuentas y a `schemaVersion: 5` al incluir la lengua de avisos y las suscripciones push. El endpoint y las claves públicas de una suscripción identifican un aparato: no salen del panel ni deben publicarse.
+El contacto que alguien deja en el buzón de sugerencias es un dato personal y recibe el mismo trato que la IP: se guarda para poder responder, solo se ve dentro de `/admin`, no aparece en ninguna respuesta del juego y sí va en la exportación, que pasó a `schemaVersion: 3` al incluir el buzón, a `schemaVersion: 4` al incluir el correo de las cuentas y a `schemaVersion: 5` al incluir la lengua de avisos y las suscripciones push y a `schemaVersion: 6` al incluir puntos, insignias, rachas, código del día y arena. El endpoint y las claves públicas de una suscripción identifican un aparato: no salen del panel ni deben publicarse.
 
 La IP y el país de cada cuenta son datos personales. Se guardan para poder investigar un abuso —quién creó una partida, desde dónde entró una cuenta bloqueada— y por eso solo se ven dentro de `/admin`: no aparecen en ninguna respuesta del juego, no viajan al navegador de ningún jugador y no se escriben en logs. Sí van en la exportación, que por lo tanto es un archivo con datos personales y nunca debe subirse al repositorio.
 

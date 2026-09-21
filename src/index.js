@@ -24,7 +24,11 @@ import {
 import { changeUsername } from "./rename.js";
 import { accountProfile, authenticate, changePin, hashPin, login, lookupName, register, requestOrigin, validPin, verifyTurnstile } from "./security.js";
 import {
+  adminArenaDetail,
+  adminArenas,
+  adminCloseArena,
   adminDeleteUser,
+  adminGames,
   adminPurgeGames,
   adminSql,
   adminSummary,
@@ -132,6 +136,9 @@ const ADMIN_ACTIONS = new Set([
   "adminPurgeGames",
   "adminCloseSessions",
   "adminSql",
+  "adminArenas",
+  "adminArenaDetail",
+  "adminCloseArena",
   "adminFeedback",
   "adminUpdateFeedback",
   "adminReplyFeedback",
@@ -1376,14 +1383,9 @@ async function adminAction(db, action, params, user, env) {
       await logAudit(db, user, action, String(params.id || ""), { id: params.id, subject: params.subject });
     return result;
   }
-  if (action === "adminGames") {
-    const { results } = await db
-      .prepare(
-        "SELECT game_id,status,p1,p2,winner,created_at,updated_at,version FROM games ORDER BY updated_at DESC LIMIT 200",
-      )
-      .all();
-    return { ok: true, games: results };
-  }
+  if (action === "adminGames") return adminGames(db);
+  if (action === "adminArenas") return adminArenas(db);
+  if (action === "adminArenaDetail") return adminArenaDetail(db, params.target);
   if (action === "adminAudit") {
     const { results } = await db
       .prepare("SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 200")
@@ -1391,7 +1393,8 @@ async function adminAction(db, action, params, user, env) {
     return { ok: true, audit: results };
   }
   if (action === "adminExport") {
-    const [users, games, audit, chatMessages, chatReports, chatMutes, feedback, pushSubscriptions] =
+    const [users, games, audit, chatMessages, chatReports, chatMutes, feedback, pushSubscriptions,
+      playerScores, gameScores, badges, playerProgress, dailyResults, arenas, arenaPlayers, arenaGuesses] =
       await Promise.all([
         db
           .prepare(
@@ -1406,11 +1409,22 @@ async function adminAction(db, action, params, user, env) {
         db.prepare("SELECT * FROM chat_mutes ORDER BY username_key").all(),
         db.prepare("SELECT * FROM feedback ORDER BY id").all(),
         db.prepare("SELECT user_id,endpoint,p256dh,auth,lang,created_at,updated_at FROM push_subscriptions ORDER BY id").all(),
+        // Desde la 6, la copia lleva tambien lo que trajo la 4.0.0: sin los
+        // puntos y sus recibos, restaurarla dejaria un ranking vacio con
+        // partidas que ya no se pueden volver a contar.
+        db.prepare("SELECT * FROM player_scores ORDER BY season,username_key").all(),
+        db.prepare("SELECT * FROM game_scores ORDER BY game_id").all(),
+        db.prepare("SELECT * FROM badges ORDER BY username_key,code").all(),
+        db.prepare("SELECT * FROM player_progress ORDER BY username_key").all(),
+        db.prepare("SELECT * FROM daily_results ORDER BY day,username_key").all(),
+        db.prepare("SELECT * FROM arenas ORDER BY created_at").all(),
+        db.prepare("SELECT * FROM arena_players ORDER BY arena_id,username_key").all(),
+        db.prepare("SELECT * FROM arena_guesses ORDER BY id").all(),
       ]);
     return {
       ok: true,
       exportedAt: now(),
-      schemaVersion: 5,
+      schemaVersion: 6,
       users: users.results,
       games: games.results,
       audit: audit.results,
@@ -1419,6 +1433,14 @@ async function adminAction(db, action, params, user, env) {
       chatMutes: chatMutes.results,
       feedback: feedback.results,
       pushSubscriptions: pushSubscriptions.results,
+      playerScores: playerScores.results,
+      gameScores: gameScores.results,
+      badges: badges.results,
+      playerProgress: playerProgress.results,
+      dailyResults: dailyResults.results,
+      arenas: arenas.results,
+      arenaPlayers: arenaPlayers.results,
+      arenaGuesses: arenaGuesses.results,
     };
   }
   // Las herramientas de mantenimiento devuelven su propio detalle, asi que
@@ -1449,7 +1471,10 @@ async function adminAction(db, action, params, user, env) {
   // sujet : elle ne crée donc pas de ligne dans audit_log.
   if (action === "adminDeleteUser") return adminDeleteUser(db, params, user);
   const target = String(params.target || "");
-  if (action === "adminCloseSessions") {
+  if (action === "adminCloseArena") {
+    const result = await adminCloseArena(db, target);
+    if (!result.ok) return result;
+  } else if (action === "adminCloseSessions") {
     const targetUser = await db
       .prepare("SELECT id FROM users WHERE username_key=?")
       .bind(usernameKey(target))
@@ -1511,6 +1536,10 @@ async function adminAction(db, action, params, user, env) {
   } else if (action === "adminSetGameResult") {
     const game = await getGame(db, target);
     if (!game) return { ok: false, error: "Partida no encontrada." };
+    // Sin rival no hay resultado que dar: una partida en espera se cierra, no
+    // se decide.
+    if (!game.p2)
+      return { ok: false, error: "Esa partida no tiene rival: ciérrala en lugar de darle un resultado." };
     const winner = cleanName(params.winner);
     if (winner && winner !== game.p1 && winner !== game.p2)
       return {
@@ -1528,8 +1557,9 @@ async function adminAction(db, action, params, user, env) {
     });
     // Una correccion no reescribe los puntos de una partida que ya se conto:
     // el recibo la reconoce y la deja como estaba. Lo que arregla es la
-    // partida que nunca llego a contarse.
-    await recordFinishedGame(db, corrected);
+    // partida que nunca llego a contarse. Pasa por `settleFinishedGame`, como
+    // los otros cuatro finales, para que su chat tambien reciba el aviso.
+    await settleFinishedGame(db, corrected);
   } else return { ok: false, error: "Acción administrativa desconocida." };
   await logAudit(db, user, action, target, params);
   return { ok: true };
