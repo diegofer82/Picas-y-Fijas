@@ -4071,6 +4071,20 @@ async function shareCard(){
    secreto que ensenar. Si las reglas abren un espacio demasiado grande para
    rehacerlo en el telefono, `gradeGame` lo dice y aqui no se pinta nada: mejor
    nada que una nota lenta o inventada. */
+const analysisOpen=new Set();
+document.addEventListener('toggle',e=>{
+  const el=e.target;
+  if(!el.classList||!el.classList.contains('analysis')||!el.dataset.key) return;
+  if(el.open) analysisOpen.add(el.dataset.key); else analysisOpen.delete(el.dataset.key);
+},true);
+/* El clic se apunta en el acto: si el repintado llega antes que el evento
+   toggle (que es asincrono), el bloque nuevo ya nace abierto. */
+document.addEventListener('click',e=>{
+  const sum=e.target.closest&&e.target.closest('.analysis>summary');
+  if(!sum) return;
+  const el=sum.parentElement; if(!el.dataset.key) return;
+  if(el.open) analysisOpen.delete(el.dataset.key); else analysisOpen.add(el.dataset.key);
+},true);
 function analysisBlock(rules,guesses){
   if(typeof Deduce==='undefined'||!Deduce) return '';
   let report;
@@ -4084,7 +4098,10 @@ function analysisBlock(rules,guesses){
       +`<span class="an-tag ${note.label}">${t('analysis_'+note.label)}</span></div>`
       +(decisive?`<div class="an-decisive"><span>${t('analysis_decisive')}</span></div>`:'');
   }).join('');
-  return `<details class="analysis"><summary>${t('analysis_title')}</summary>`
+  /* La pantalla final se repinta con cada sondeo (chat, revancha): sin esta
+     memoria el desplegable se cerraba solo un instante despues de abrirlo. */
+  const key=[rules.digits,rules.mode,guesses.map(g=>g.guess).join(',')].join('|');
+  return `<details class="analysis" data-key="${esc(key)}"${analysisOpen.has(key)?' open':''}><summary>${t('analysis_title')}</summary>`
     +`<div class="an-body">${rows}<p class="an-foot">${t('analysis_foot')}</p></div></details>`;
 }
 async function shareDaily(){
