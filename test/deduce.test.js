@@ -85,6 +85,44 @@ test("repetir un intento que ya no ensena nada se nota como desperdiciado", () =
   assert.equal(report.notes[1].before, report.notes[1].after, "no descarto ni un codigo");
 });
 
+/* 4.1.0. La nota pasa del peor caso a la media: el peor caso castigaba jugar
+   un codigo que todavia podia ser el bueno y el primer intento, que medido
+   sobre una muestra salia distinto de otro identico con los simbolos
+   cambiados de sitio. */
+test("la media rapida cuenta lo mismo que evaluate() y la victoria no deja nada", () => {
+  const rules = { mode: "numbers", digits: 4, allowRepeats: true };
+  const codes = Deduce.sample(Deduce.enumerate(rules), 400, () => 0.3);
+  for (const guess of ["0000", "0012", "1234", "9909"]) {
+    const { buckets } = Deduce.split(codes, guess);
+    let squares = 0;
+    for (const [key, size] of buckets) if (key !== "4:0") squares += size * size;
+    assert.ok(Math.abs(Deduce.expectedLeft(codes, guess, 4) - squares / codes.length) < 1e-9, guess);
+  }
+});
+
+test("sin repetidos, cualquier primer intento es optimo", () => {
+  const rules = { mode: "numbers", digits: 3, allowRepeats: false };
+  for (const guess of ["123", "098", "546"]) {
+    const report = Deduce.gradeGame(rules, [{ guess, ...Deduce.evaluate("457", guess) }, { guess: "457", fijas: 3, picas: 0 }]);
+    assert.equal(report.notes[0].label, "optimal", guess);
+  }
+});
+
+test("acertar con un codigo que aun era posible no es desperdiciado, y la nota trae su porque", () => {
+  const rules = { mode: "numbers", digits: 3, allowRepeats: false };
+  const guesses = ["123", "456", "457"].map((guess) => ({ guess, ...Deduce.evaluate("457", guess) }));
+  const report = Deduce.gradeGame(rules, guesses);
+  const last = report.notes[2];
+  assert.equal(last.possible, true);
+  assert.notEqual(last.label, "wasted");
+  assert.ok(last.bestExpected <= last.expected, "la referencia nunca es peor que lo jugado");
+  assert.equal(typeof last.bestGuess, "string");
+  const ruled = Deduce.gradeGame(COLORS6, [{ guess: "0123", fijas: 0, picas: 1 }, { guess: "0123", fijas: 0, picas: 1 }]);
+  assert.equal(ruled.notes[1].possible, false, "un intento ya descartado no podia ganar");
+  for (const key of ["analysis_why_optimal", "analysis_why_other", "analysis_why_ruled", "analysis_why_last_ok", "analysis_why_last_bad"])
+    assert.equal((html.match(new RegExp(key + ":", "g")) || []).length, 3, `falta ${key} en alguno de los tres idiomas`);
+});
+
 test("un turno perdido al tiempo no recibe nota, y sin espacio abarcable no hay analisis", () => {
   const secret = "5042";
   const guesses = [{ missed: true, reason: "timeout" }, { guess: "0123", ...Deduce.evaluate(secret, "0123") }];

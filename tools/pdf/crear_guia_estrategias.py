@@ -197,9 +197,9 @@ story += [box("El aviso de contradicción no dice cuál es el código ni cuánto
 story += [p("El análisis de la partida", "H2PF"), p("Al terminar cualquier partida, el juego vuelve sobre los intentos y los puntúa. No juzga la suerte, juzga la decisión: compara lo que se jugó con lo que habría jugado el mejor intento posible <b>sobre la misma lista de candidatos</b>, y por eso un intento que parte bien la lista es bueno aunque el resultado saliera flojo.")]
 story += [table([
     ["Nota", "Qué significa"],
-    ["Óptimo", "En el peor caso, ese intento dejaba tan pocos candidatos como el mejor intento disponible."],
+    ["Óptimo", "De media, contando todas las respuestas posibles, ese intento dejaba tan pocos candidatos como el mejor intento disponible."],
     ["Correcto", "Se queda cerca del mejor: divide bien, aunque no del todo."],
-    ["Desperdiciado", "Deja muchos más candidatos de los necesarios. Casi siempre es un intento que repite información que ya se tenía."],
+    ["Desperdiciado", "De media deja muchos más candidatos de los necesarios. Casi siempre es un intento que repite información que ya se tenía. Un intento sin fijas ni picas no lo es por eso: la nota mira lo que podía enseñar, no lo que salió. Tocar la nota enseña cuántos dejaba y qué intento habría dejado menos."],
     ["La jugada decisiva", "Aquella tras la cual solo quedaba un código compatible: ahí la partida ya estaba ganada y lo demás fue escribirlo."],
 ], [32*mm, 142*mm])]
 story += [p("Leer el análisis después de perder es más útil que después de ganar: la nota señala el turno exacto en el que se dejó de dividir el espacio y se empezó a adivinar.")]

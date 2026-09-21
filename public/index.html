@@ -444,6 +444,10 @@
 .an-tag.optimal{color:var(--fija);border-color:rgba(79,201,124,.55)}
 .an-tag.good{color:var(--accent);border-color:rgba(91,141,239,.55)}
 .an-tag.wasted{color:var(--pink);border-color:rgba(224,104,90,.55)}
+button.an-tag{background:none;font-family:inherit;cursor:pointer;min-height:26px}
+button.an-tag::after{content:' ?';opacity:.6}
+.an-why{margin:0 0 8px 29px;padding:9px 11px;border-radius:10px;background:var(--ink);border:1px solid var(--edge);color:var(--text);font-size:12px;line-height:1.5}
+.an-why .code-view,.an-why .n{vertical-align:middle}
 .an-decisive{display:flex;gap:7px;align-items:center;color:var(--pica);font-size:12px;font-weight:700;padding:2px 0 6px 29px}
 .an-decisive::before{content:'◆'}
 .an-foot{color:var(--muted);font-size:11px;line-height:1.45;margin:10px 0 0}
@@ -1352,7 +1356,7 @@
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v4.0.1';
+const APP_VERSION = 'v4.1.0';
 /* Enlace de invitación: ...?game=SZ93
    La invitación sobrevive al registro: se guarda en el navegador, porque entre
    abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
@@ -2286,9 +2290,9 @@ Object.assign(I18N.en,{share_card_btn:"Share my game",share_card_copied:"Card co
 Object.assign(I18N.fr,{share_card_btn:"Partager ma partie",share_card_copied:"Carte copiée",share_card_solved:"J'ai percé un code de {digits} en {n} essais",share_card_solved_one:"J'ai percé un code de {digits} en un seul essai",share_card_failed:"Je n'ai pas réussi à percer un code de {digits}"});
 /* E4-T2: la partida que se explica. Las notas juzgan la decision, no la
    suerte, y por eso el pie lo dice con todas las letras. */
-Object.assign(I18N.es,{analysis_title:"Cómo se jugó",analysis_optimal:"Óptimo",analysis_good:"Correcto",analysis_wasted:"Desperdiciado",analysis_left:"{before} posibles → {after}",analysis_decisive:"Aquí se decidió la partida",analysis_foot:"Antes de cada intento quedaban tantos códigos compatibles con tus pistas. La nota compara tu intento con el que más habría reducido esa lista: mide la decisión, no la suerte."});
-Object.assign(I18N.en,{analysis_title:"How it played out",analysis_optimal:"Optimal",analysis_good:"Solid",analysis_wasted:"Wasted",analysis_left:"{before} possible → {after}",analysis_decisive:"This is where the game was decided",analysis_foot:"Before each try, this many codes still matched your clues. The grade compares your try with the one that would have cut that list the most: it judges the decision, not the luck."});
-Object.assign(I18N.fr,{analysis_title:"Comment ça s'est joué",analysis_optimal:"Optimal",analysis_good:"Correct",analysis_wasted:"Gâché",analysis_left:"{before} possibles → {after}",analysis_decisive:"C'est ici que la partie s'est jouée",analysis_foot:"Avant chaque essai, il restait ce nombre de codes compatibles avec tes indices. La note compare ton essai à celui qui aurait le plus réduit cette liste : elle juge la décision, pas la chance."});
+Object.assign(I18N.es,{analysis_title:"Cómo se jugó",analysis_optimal:"Óptimo",analysis_good:"Correcto",analysis_wasted:"Desperdiciado",analysis_left:"{before} posibles → {after}",analysis_decisive:"Aquí se decidió la partida",analysis_foot:"Antes de cada intento quedaban tantos códigos compatibles con tus pistas. La nota mide cuántos habría dejado tu intento de media, contando todas las respuestas posibles, y lo compara con el mejor intento: juzga la decisión, no la suerte. Por eso un intento sin fijas ni picas puede ser excelente o flojo: lo que cuenta es lo que podía enseñar antes de jugarlo. Toca una nota para ver por qué.",analysis_why_optimal:"Ningún intento dejaba menos: de media quedaban {mine} posibles, saliera lo que saliera.",analysis_why_other:"De media dejaba {mine} posibles, saliera lo que saliera. Con {best} habrían quedado {ref}.",analysis_why_ruled:"Tus pistas ya lo descartaban: no podía ser el código, así que no podía ganar.",analysis_why_last_ok:"Solo quedaba un código y lo escribiste.",analysis_why_last_bad:"Solo quedaba un código, {best}, y jugaste otro."});
+Object.assign(I18N.en,{analysis_title:"How it played out",analysis_optimal:"Optimal",analysis_good:"Solid",analysis_wasted:"Wasted",analysis_left:"{before} possible → {after}",analysis_decisive:"This is where the game was decided",analysis_foot:"Before each try, this many codes still matched your clues. The grade measures how many your try would leave on average, over every possible answer, and compares it with the best try: it judges the decision, not the luck. That is why a try with no fijas and no picas can be excellent or weak: what counts is what it could teach before you played it. Tap a grade to see why.",analysis_why_optimal:"No try left fewer: on average {mine} possible codes remained, whatever the answer.",analysis_why_other:"On average it left {mine} possible codes, whatever the answer. {best} would have left {ref}.",analysis_why_ruled:"Your clues had already ruled it out: it could not be the code, so it could not win.",analysis_why_last_ok:"Only one code was left and you played it.",analysis_why_last_bad:"Only one code was left, {best}, and you played another."});
+Object.assign(I18N.fr,{analysis_title:"Comment ça s'est joué",analysis_optimal:"Optimal",analysis_good:"Correct",analysis_wasted:"Gâché",analysis_left:"{before} possibles → {after}",analysis_decisive:"C'est ici que la partie s'est jouée",analysis_foot:"Avant chaque essai, il restait ce nombre de codes compatibles avec tes indices. La note mesure combien ton essai en aurait laissé en moyenne, sur toutes les réponses possibles, et la compare au meilleur essai : elle juge la décision, pas la chance. C'est pourquoi un essai sans fija ni pica peut être excellent ou faible : ce qui compte, c'est ce qu'il pouvait apprendre avant d'être joué. Touche une note pour voir pourquoi.",analysis_why_optimal:"Aucun essai ne laissait moins : en moyenne, il restait {mine} codes possibles, quelle que soit la réponse.",analysis_why_other:"En moyenne, il laissait {mine} codes possibles, quelle que soit la réponse. Avec {best}, il en serait resté {ref}.",analysis_why_ruled:"Tes indices l'avaient déjà écarté : ce ne pouvait pas être le code, donc il ne pouvait pas gagner.",analysis_why_last_ok:"Il ne restait qu'un code et tu l'as joué.",analysis_why_last_bad:"Il ne restait qu'un code, {best}, et tu en as joué un autre."});
 /* El cuaderno, el ordenador que se explica y los enigmas (E4-T3, E4-T4, E4-T5). */
 Object.assign(I18N.es,{lbl_notebook:"Cuaderno de deducción",nb_off:"Sin cuaderno",nb_on:"Con cuaderno",nb_option_hint:"Una cuadrícula para marcar símbolos descartados y confirmados, y un aviso cuando un intento contradice tus propias pistas. Se elige aquí para que los dos jueguen con las mismas reglas.",nb_title:"Cuaderno",nb_clear:"Borrar marcas",nb_hint:"Toca un símbolo para marcarlo: una vez descartado, dos veces confirmado. Las marcas son tuyas y viven solo en este aparato.",nb_contradiction:"Ese intento contradice tus pistas: ya sabes que no puede ser el código del rival.",rl_notebook:"con cuaderno",computer_thinking_left:"El computador está pensando… le quedan {n} códigos posibles",think_line:"Le quedaban {before} posibles → ahora {after}",think_groups:"parte la lista en {n} grupos",lobby_puzzles:"Enigmas",pz_open:"Enigmas de deducción 🧩",pz_badge:"Sin rival y sin reloj",pz_title:"Enigmas de deducción 🧩",pz_hint:"Aquí tienes las pistas de una partida que no jugaste: deduce el código. Cada enigma tiene una única solución.",pz_level:"Dificultad",pz_check:"Comprobar",pz_back_list:"Volver a la lista",pz_reveal:"Ver la solución",pz_progress:"{done} de {total} resueltos",pz_clues_count:"{n} pistas",pz_play_title:"Enigma {n}",pz_clue_head:"Las pistas",pz_solved:"¡Código deducido! 🎉",pz_solved_text:"Era la única combinación compatible con estas pistas.",pz_wrong:"Ese código no encaja con las pistas.",pz_revealed:"La solución era:",pz_loading:"Cargando enigmas…",pz_offline:"No pudimos cargar los enigmas. Inténtalo de nuevo con conexión.",pz_already:"Resuelto"});
 Object.assign(I18N.en,{lbl_notebook:"Deduction notebook",nb_off:"No notebook",nb_on:"With notebook",nb_option_hint:"A grid to mark symbols as ruled out or confirmed, plus a warning when a try contradicts your own clues. It is chosen here so both players play by the same rules.",nb_title:"Notebook",nb_clear:"Clear marks",nb_hint:"Tap a symbol to mark it: once for ruled out, twice for confirmed. The marks are yours and live only on this device.",nb_contradiction:"That try contradicts your clues: you already know it cannot be your opponent's code.",rl_notebook:"with notebook",computer_thinking_left:"The computer is thinking… {n} codes still possible",think_line:"{before} were possible → now {after}",think_groups:"splits the list into {n} groups",lobby_puzzles:"Puzzles",pz_open:"Deduction puzzles 🧩",pz_badge:"No opponent, no clock",pz_title:"Deduction puzzles 🧩",pz_hint:"Here are the clues from a game you did not play: deduce the code. Every puzzle has exactly one solution.",pz_level:"Difficulty",pz_check:"Check",pz_back_list:"Back to the list",pz_reveal:"Show the solution",pz_progress:"{done} of {total} solved",pz_clues_count:"{n} clues",pz_play_title:"Puzzle {n}",pz_clue_head:"The clues",pz_solved:"Code deduced! 🎉",pz_solved_text:"It was the only combination matching these clues.",pz_wrong:"That code does not match the clues.",pz_revealed:"The solution was:",pz_loading:"Loading puzzles…",pz_offline:"We could not load the puzzles. Try again when you are online.",pz_already:"Solved"});
@@ -4071,7 +4075,19 @@ async function shareCard(){
    secreto que ensenar. Si las reglas abren un espacio demasiado grande para
    rehacerlo en el telefono, `gradeGame` lo dice y aqui no se pinta nada: mejor
    nada que una nota lenta o inventada. */
-const analysisOpen=new Set();
+const analysisOpen=new Set(), analysisWhyOpen=new Set(), analysisCache=new Map();
+let analysisSeq=0;
+function toggleAnalysisWhy(btn){
+  /* La explicacion va justo debajo de su fila; el id no basta, porque el dia y
+     la practica pueden tener cada uno su analisis en la misma pagina. */
+  const box=btn.parentElement.nextElementSibling;
+  const details=btn.closest('.analysis');
+  if(!box||!details) return;
+  const open=box.classList.toggle('hidden')===false;
+  btn.setAttribute('aria-expanded',open?'true':'false');
+  const id=details.dataset.key+'#'+btn.dataset.why;
+  if(open) analysisWhyOpen.add(id); else analysisWhyOpen.delete(id);
+}
 document.addEventListener('toggle',e=>{
   const el=e.target;
   if(!el.classList||!el.classList.contains('analysis')||!el.dataset.key) return;
@@ -4087,20 +4103,36 @@ document.addEventListener('click',e=>{
 },true);
 function analysisBlock(rules,guesses){
   if(typeof Deduce==='undefined'||!Deduce) return '';
-  let report;
-  try{ report=Deduce.gradeGame(rules,guesses); }catch(e){ return ''; }
+  /* Mismas reglas e intentos, misma nota: el repintado de cada sondeo no
+     vuelve a recorrer la lista entera en el telefono. */
+  const key=[rules.digits,rules.mode,rules.numColors,rules.allowRepeats,guesses.map(g=>g.missed?'-':g.guess+':'+g.fijas+':'+g.picas).join(',')].join('|');
+  let report=analysisCache.get(key);
+  if(!report){
+    try{ report=Deduce.gradeGame(rules,guesses); }catch(e){ return ''; }
+    analysisCache.set(key,report);
+  }
   if(!report.available||report.notes.length<2) return '';
+  const num=v=>(Math.round(v*10)/10).toLocaleString(lang,{maximumFractionDigits:1});
   const rows=report.notes.map(note=>{
     const decisive=note.index===report.decisiveIndex;
+    /* El porque de la nota: cuantos dejaba de media y cual habria dejado
+       menos. Todo sale de las pistas propias, igual que la nota. */
+    let why;
+    if(note.before<=1) why=note.possible?t('analysis_why_last_ok'):t('analysis_why_last_bad',{best:codeViewHTML(note.bestGuess,rules.mode)});
+    else if(note.label==='optimal') why=t('analysis_why_optimal',{mine:num(note.expected)});
+    else why=t('analysis_why_other',{mine:num(note.expected),best:codeViewHTML(note.bestGuess,rules.mode),ref:num(note.bestExpected)});
+    if(note.before>1&&!note.possible) why+=' '+t('analysis_why_ruled');
+    const whyId='an-why-'+(++analysisSeq), whyOpen=analysisWhyOpen.has(key+'#'+note.index);
     return `<div class="an-row"><span class="an-n">${note.index+1}</span>`
       +`<span class="an-code">${codeViewHTML(note.guess,rules.mode)}</span>`
       +`<span class="an-left">${t('analysis_left',{before:note.before,after:note.after})}</span>`
-      +`<span class="an-tag ${note.label}">${t('analysis_'+note.label)}</span></div>`
+      +`<button type="button" class="an-tag ${note.label}" aria-expanded="${whyOpen}" aria-controls="${whyId}" data-why="${note.index}" onclick="toggleAnalysisWhy(this)">${t('analysis_'+note.label)}</button></div>`
+      +`<div class="an-why${whyOpen?'':' hidden'}" id="${whyId}">${why}</div>`
       +(decisive?`<div class="an-decisive"><span>${t('analysis_decisive')}</span></div>`:'');
   }).join('');
   /* La pantalla final se repinta con cada sondeo (chat, revancha): sin esta
-     memoria el desplegable se cerraba solo un instante despues de abrirlo. */
-  const key=[rules.digits,rules.mode,guesses.map(g=>g.guess).join(',')].join('|');
+     memoria el desplegable, y cada explicacion abierta, se cerraban solos un
+     instante despues de abrirlos. */
   return `<details class="analysis" data-key="${esc(key)}"${analysisOpen.has(key)?' open':''}><summary>${t('analysis_title')}</summary>`
     +`<div class="an-body">${rows}<p class="an-foot">${t('analysis_foot')}</p></div></details>`;
 }

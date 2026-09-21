@@ -170,12 +170,67 @@
   /* La partida que se explica (E4-T2).
      Se rehace la partida desde fuera, sin el secreto: antes de cada intento se
      sabe cuantos codigos seguian en pie, y se compara lo que hizo quien jugaba
-     con lo que habria hecho el mejor intento que encuentra `bestProbe` sobre
-     la misma muestra. La nota juzga la decision, no la suerte: un intento que
-     parte bien la lista es bueno aunque el resultado saliera flojo.
+     con el mejor intento que se encuentra sobre la misma lista. La nota juzga
+     la decision, no la suerte: un intento que parte bien la lista es bueno
+     aunque el resultado saliera flojo, y uno que la parte mal es flojo aunque
+     saliera bien.
+     La vara es cuantos codigos quedan **de media** tras el intento, contando
+     todas las respuestas posibles y no solo la que salio. Hasta la 4.0.1 era
+     el peor caso, y castigaba dos cosas que no lo merecen: jugar un codigo
+     que todavia podia ser el bueno (que puede ganar en el sitio, y por eso
+     acertar cuenta como cero restantes) y el primer intento, que al medirse
+     sobre una muestra salia distinto de otro identico con los simbolos
+     cambiados de sitio. Por eso la lista se recorre entera mientras cabe.
      La jugada decisiva es aquella tras la cual solo quedaba un codigo: ahi la
      partida ya estaba ganada y lo que vino despues fue escribirlo. */
   var GRADE_LIMIT = 200000;
+  var GRADE_EXACT = 6000, GRADE_SECRETS = 1500, GRADE_PROBES = 120, GRADE_OUTSIDE = 60;
+
+  /* Codigos que quedan de media tras jugar `guess` contra `secrets`: cada
+     respuesta deja su grupo, y el grupo de las fijas completas es la victoria,
+     que no deja nada por deducir. */
+  function expectedLeft(secrets, guess, digits) {
+    /* Se llama cientos de miles de veces por partida en el telefono de quien
+       juega: mismas cuentas que evaluate(), pero sin crear objetos. */
+    const width = digits + 1, counts = new Int32Array(width * width);
+    const g = new Int32Array(digits), seen = new Int32Array(64);
+    for (let i = 0; i < digits; i++) g[i] = guess.charCodeAt(i) - 48;
+    for (let s = 0; s < secrets.length; s++) {
+      const code = secrets[s];
+      let fijas = 0, picas = 0;
+      seen.fill(0);
+      for (let i = 0; i < digits; i++) { const c = code.charCodeAt(i) - 48; if (c === g[i]) fijas++; else seen[c]++; }
+      for (let i = 0; i < digits; i++) { const c = g[i]; if (code.charCodeAt(i) - 48 !== c && seen[c] > 0) { seen[c]--; picas++; } }
+      counts[fijas * width + picas]++;
+    }
+    let squares = 0;
+    for (let k = 0; k < counts.length; k++) squares += counts[k] * counts[k];
+    const win = counts[digits * width];
+    return (squares - win * win) / secrets.length;
+  }
+
+  function gradeTurn(candidates, all, guess, digits, random) {
+    const secrets = candidates.length <= GRADE_EXACT ? candidates : sample(candidates, GRADE_SECRETS, random);
+    const probes = candidates.length <= GRADE_PROBES * 2 ? candidates.slice() : sample(candidates, GRADE_PROBES, random);
+    const candidateProbeCount = probes.length;
+    probes.push(...sample(all, GRADE_OUTSIDE, random));
+    let best = null, bestValue = Infinity, bestCandidate = false;
+    for (let index = 0; index < probes.length; index++) {
+      const probe = probes[index];
+      const value = expectedLeft(secrets, probe, digits);
+      const isCandidate = index < candidateProbeCount;
+      if (value < bestValue - 1e-9 || (Math.abs(value - bestValue) <= 1e-9 && isCandidate && !bestCandidate)) {
+        best = probe; bestValue = value; bestCandidate = isCandidate;
+      }
+    }
+    const mine = expectedLeft(secrets, guess, digits);
+    if (mine < bestValue) { best = guess; bestValue = mine; }
+    let label;
+    if (mine <= bestValue * 1.1 + 0.05) label = 'optimal';
+    else if (mine <= Math.max(bestValue * 2, bestValue + 1) + 1e-9) label = 'good';
+    else label = 'wasted';
+    return { label, expected: mine, bestExpected: bestValue, bestGuess: best };
+  }
 
   function gradeGame(rules, guesses, options) {
     const opts = options || {};
@@ -193,20 +248,20 @@
       const turn = played[index];
       const score = { fijas: Number(turn.fijas) || 0, picas: Number(turn.picas) || 0 };
       const before = candidates.length;
-      let label;
+      /* Si el intento ya estaba descartado por las pistas propias no podia
+         ganar: se dice en la explicacion, porque suele ser el porque. */
+      const possible = candidates.includes(turn.guess);
+      let grade;
       if (before <= 1) {
-        label = candidates[0] === turn.guess ? 'optimal' : 'wasted';
+        grade = { label: possible ? 'optimal' : 'wasted', expected: possible ? 0 : before, bestExpected: 0, bestGuess: candidates[0] || null };
       } else {
-        const reference = bestProbe(candidates, all, random);
-        const mine = split(reference.secrets, turn.guess).worst;
-        if (mine <= reference.worst) label = 'optimal';
-        else if (mine <= Math.max(reference.worst * 1.5, reference.worst + 1)) label = 'good';
-        else label = 'wasted';
+        grade = gradeTurn(candidates, all, turn.guess, digits, random);
       }
       candidates = filter(candidates, turn.guess, score);
       const after = candidates.length;
       if (decisiveIndex < 0 && before > 1 && after === 1) decisiveIndex = index;
-      notes.push({ index, guess: turn.guess, label, before, after, fijas: score.fijas, picas: score.picas });
+      notes.push({ index, guess: turn.guess, label: grade.label, before, after, fijas: score.fijas, picas: score.picas,
+        possible, expected: grade.expected, bestExpected: grade.bestExpected, bestGuess: grade.bestGuess });
     }
     if (decisiveIndex < 0) {
       let bestIndex = -1, bestRatio = 1;
@@ -219,7 +274,7 @@
 
   root.Deduce = Object.freeze({
     evaluate, sameScore, symbolCount, spaceSize, enumerate, compatible,
-    filter, split, sample, bestProbe, contradicts, createSolver, gradeGame,
+    filter, split, sample, bestProbe, contradicts, createSolver, gradeGame, expectedLeft,
     GRADE_LIMIT, EXPLAIN_LIMIT,
   });
 })(typeof globalThis !== 'undefined' ? globalThis : window);
