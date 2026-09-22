@@ -798,6 +798,170 @@ body.in-shell .toast{bottom:calc(var(--dock-h,0px) + 14px)}
   .key{height:42px}.key.c{height:44px}
   .dock-erase,.gdock .dock-go{height:48px;min-height:48px}
 }
+/* ==========================================================================
+   Serie Plaza, lote 5: el ordenador. Una sola interfaz y tres anchos. Por
+   debajo de 720 px, el telefono de siempre. De 720 a 1100, la marca se hace un
+   rail de iconos y la partida se abre en dos columnas: jugar a la izquierda y
+   el diario a la derecha. Por encima de 1100, el rail lleva sus nombres, la
+   partida gana una tercera columna con el chat siempre abierto, los dos
+   diarios se ponen uno al lado del otro cuando caben, y el vestibulo lleva su
+   chat al lado. Hasta 1600 px todo ocupa el navegador; despues se centra.
+   ========================================================================== */
+body{--rail-w:0px}
+.rail-nav,.rail-me,.jhead,.gchat-slot,.lobby-side,.tb-kbd{display:none}
+.chat-threads{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:8px 12px;border-bottom:2px solid var(--linea-2);background:var(--papel)}
+.chat-threads::-webkit-scrollbar{display:none}
+.chat-thread{position:relative;flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 11px 0 5px;border:2px solid var(--linea);border-radius:11px;background:var(--papel);color:var(--tinta);font:700 12px 'Figtree',system-ui,sans-serif;cursor:pointer}
+.chat-thread>.ico{margin-left:5px}
+.chat-thread .avatar.sm{width:24px;height:24px;border-radius:8px;font-size:11px;border:0}
+.chat-thread.on{border-color:var(--tinta);background:var(--tinta);color:var(--sobre-tinta)}
+.chat-thread.unread::after{content:"";position:absolute;right:-4px;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--coral);border:2px solid var(--papel)}
+/* El chat anclado es el mismo panel, sacado de su esquina y puesto en su columna. */
+.chat-panel.docked{position:relative;left:auto;right:auto;bottom:auto;z-index:auto;width:auto;height:100%;flex:1 1 auto;min-height:0;box-shadow:none;border-color:var(--linea-2);padding-bottom:0}
+.chat-panel.docked .chat-close{display:none}
+body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .private-chat-bubbles,body.chat-docked .private-chat-menu{display:none!important}
+/* Los dos diarios a la vista: los decide renderJournal por el ancho que tiene
+   (clase duo), no la ventana, porque el chat y el rail se comen su parte. */
+.jhead{margin:0;padding:14px 16px 8px;background:var(--papel);border:2px solid var(--linea-2);border-bottom:0;border-radius:24px 24px 0 0;
+  flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 10px;font:800 18px/1.15 'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.02em;min-width:0}
+.jhead small{font:700 12px/1.3 'Figtree',system-ui,sans-serif;letter-spacing:0;color:var(--bruma)}
+.journal.duo:not(.solo){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto minmax(0,1fr);column-gap:16px;row-gap:0;
+  background:none;border:0;border-radius:0;padding:0;overflow:hidden}
+.journal.duo:not(.solo) .jstick{display:none}
+.journal.duo:not(.solo) .jhead{display:flex;grid-row:1}
+.journal.duo:not(.solo) .glog{display:flex!important;grid-row:2;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  background:var(--papel);border:2px solid var(--linea-2);border-top:0;border-radius:0 0 24px 24px;padding:4px 12px 14px}
+.journal.duo:not(.solo) [data-side=mine]{grid-column:1}
+.journal.duo:not(.solo) [data-side=theirs]{grid-column:2}
+.journal.duo .jt{width:34px;height:40px;font-size:18px}
+@media (min-width:720px){
+  body.has-rail{--rail-w:72px;padding-left:var(--rail-w)}
+  body.has-rail .wrap{max-width:calc(1600px - var(--rail-w));padding:28px 32px 48px}
+  body.has-rail .wrap>section:not(#s-lobby):not(.gshell){max-width:600px;margin-left:auto;margin-right:auto}
+  /* La marca se hace rail: fija a la izquierda, oscura de dia y de noche. */
+  body.has-rail .brand{position:fixed;top:0;bottom:0;left:0;z-index:25;width:var(--rail-w);margin:0;flex-direction:column;align-items:center;gap:6px;
+    padding:calc(16px + env(safe-area-inset-top)) 0 calc(14px + env(safe-area-inset-bottom));background:#1B1638;color:#FFF5E8}
+  body.has-rail.in-shell .brand{display:flex!important}
+  body.has-rail .brand-text{display:none}
+  body.has-rail .rail-nav{display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:10px}
+  .rail-item{width:52px;height:48px;padding:0;border:0;border-radius:14px;background:transparent;color:#A79FC4;cursor:pointer;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:5px;font:700 11px/1.1 'Figtree',system-ui,sans-serif;text-align:center;transition:background .15s,color .15s}
+  .rail-item:hover{color:#FFF5E8;background:rgba(255,255,255,.06)}
+  .rail-item[aria-current=page]{color:#FFF5E8;background:rgba(255,255,255,.12)}
+  .rail-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  body.has-rail .gearwrap{margin:auto 0 0}
+  body.has-rail .gearbtn{background:transparent;border-color:#3A3260;color:#FFF5E8;box-shadow:none}
+  body.has-rail .gearbtn:hover,body.has-rail .gearbtn[aria-expanded=true]{border-color:#7D9BFF}
+  body.has-rail .gearmenu{top:auto;bottom:0;right:auto;left:calc(100% + 12px);color:var(--tinta)}
+  body.has-rail .rail-me{display:grid;width:40px;height:40px;border-radius:13px;font-size:16px;margin-top:6px}
+  /* El vestibulo en dos columnas: crear a la izquierda; unirse y el codigo del
+     dia a la derecha; los modos en una fila. */
+  body.has-rail #s-lobby{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:16px;row-gap:0;align-items:start}
+  body.has-rail #s-lobby>*{grid-column:1/-1;min-width:0;margin:0 0 16px}
+  body.has-rail #s-lobby>.lobby-create{grid-column:1;grid-row:span 2;align-self:stretch;justify-content:flex-end;min-height:168px}
+  body.has-rail #s-lobby>.join-row{grid-column:2;margin-bottom:12px}
+  body.has-rail #s-lobby>.daily-tile{grid-column:2}
+  body.has-rail #s-lobby>#experience-card{grid-column:1}
+  body.has-rail #s-lobby>#install-card{grid-column:2}
+  body.has-rail #s-lobby:has(>#install-card.hidden)>#experience-card{grid-column:1/-1}
+  body.has-rail #s-lobby>.foot{margin-bottom:0}
+  body.has-rail #s-lobby .mode-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  body.has-rail .lobby-head h2{font-size:30px}
+  /* La partida: la capa fija se abre en columnas y ya no hay muelle abajo.
+     La cabecera y el cuerpo ceden sus piezas a la rejilla (display:contents)
+     y el orden lo pone el CSS, asi el telefono conserva su orden de lectura. */
+  body.in-shell .toast{bottom:26px}
+  .gshell{--gx:24px;--play-w:clamp(290px,calc(42vw - 30px),380px);left:var(--rail-w);max-width:none;margin:0;display:grid;
+    grid-template-columns:var(--play-w) minmax(0,1fr);grid-template-rows:auto repeat(12,auto) minmax(0,1fr);column-gap:20px;
+    padding:0 var(--gx) 20px;overflow-y:auto;overscroll-behavior:contain}
+  .gshell .gbar,.gshell .gbody{display:contents}
+  .gshell .gbody::before{display:none}
+  .gshell .gbar-row{grid-column:1/-1;grid-row:1;position:sticky;top:0;z-index:4;min-height:64px;margin:0 calc(var(--gx) * -1) 18px;
+    padding:calc(11px + env(safe-area-inset-top)) var(--gx) 11px;background:var(--papel);border-bottom:2px solid var(--linea-2)}
+  .gshell .gbar-name{font-size:15px}
+  .gshell .gbar-rules{-webkit-line-clamp:1}
+  .gshell .gbar>:not(.gbar-row),.gshell .gbody>:not(.journal),.gshell>.gdock{grid-column:1;min-width:0;margin:0 0 12px}
+  .gshell .banks,.gshell .gbar .statusrow{order:1}
+  .gshell .practice-badge{order:2}
+  #g-banner,#practice-banner{order:3}
+  #guest-invite{order:4}
+  #g-rematch-zone,#practice-actions{order:5}
+  .gshell .turnbar{order:6}
+  .gshell>.gdock{order:7}
+  .gshell .secret-row{order:8}
+  .gshell .nb{order:9}
+  .gshell .legend{order:10}
+  .gshell .gfoot{order:11}
+  #practice-credits{order:12}
+  .gshell .journal{grid-column:2;grid-row:2/-1;min-height:0;margin:0;overflow-y:auto;overscroll-behavior:contain;
+    background:var(--papel);border:2px solid var(--linea-2);border-radius:24px;padding:0 14px 14px}
+  /* El diario y el chat miden lo que la ventana, siempre. Si la columna de
+     jugar no cabe —el final, con su tarjeta y su analisis— es ella la que se
+     desplaza, y ellos se quedan quietos debajo de la cabecera. */
+  .gshell .journal,#s-game .gchat-slot{align-self:start;position:sticky;top:calc(82px + env(safe-area-inset-top));
+    height:calc(100dvh - 102px - env(safe-area-inset-top))}
+  .gshell .jstick{margin:0 -14px;padding:12px 14px 8px;background:var(--papel)}
+  .gshell .glog .g.jrow{background:var(--crema);border-color:var(--crema)}
+  .gshell .glog .g.jrow.new{border-color:var(--tinta)}
+  .gshell .glog .g.jrow.missed{background:var(--pica-suave);border-color:var(--pica)}
+  .gshell .jt{background:var(--papel)}
+  /* Los dos relojes, en tarjetas: la inicial grande, el nombre y el tiempo. */
+  .gshell .banks{gap:10px}
+  .gshell .bank{height:auto;min-height:64px;padding:10px 12px;border-radius:18px;background:var(--papel);display:grid;grid-template-columns:auto minmax(0,1fr);
+    column-gap:10px;row-gap:3px;align-items:center;align-content:center}
+  .gshell .bank .avatar{grid-row:1/3;width:40px;height:40px;border-radius:13px;font-size:16px}
+  .gshell .bank .who{grid-column:2;align-self:end}
+  .gshell .bank .clock{grid-column:2;margin:0;align-self:start;font-size:22px;line-height:1}
+  .gshell .bank:has(.clock:empty) .who{grid-row:1/3;align-self:center}
+  .gshell .bank.running{background:var(--papel);box-shadow:0 0 0 3px var(--azul-suave)}
+  .gshell .turnbar{padding:12px 16px;border-radius:18px}
+  .gshell .turnbar.mine .vaca{width:46px;height:auto}
+  /* El muelle pasa a ser una tarjeta de la columna de jugar, con el teclado
+     siempre a la vista: aqui no hay teclado del sistema que tape nada. */
+  .gshell>.gdock{border:2px solid var(--linea-2);border-radius:24px;padding:14px;box-shadow:none}
+  .gshell .dock-pull{display:none}
+  .gshell .dock-top:not(:has(.contradiction:not(.hidden),.val.err)){display:none}
+  .gshell .gdock.folded .dock-tiles{flex:1 1 100%;justify-content:center;gap:8px}
+  .gshell .gdock.folded .dock-tiles .tile{width:52px;height:60px;border-radius:16px;font-size:26px}
+  .gshell .gdock.folded .dock-pad{display:grid}
+  .gshell .gdock.folded .dock-erase{display:grid}
+  .gshell .gdock.folded .dock-go{flex:1 1 0;padding:13px 20px}
+  .gshell .gdock.off .dock-tiles,.gshell .gdock.off .dock-pad,.gshell .gdock.off .dock-erase{opacity:.45}
+  .gshell .nb{background:var(--papel);border:2px solid var(--linea-2);border-radius:20px;padding:12px 14px}
+  .gshell .nb-grid{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:5px}
+  .gshell .nb-cell{min-width:0;height:34px;padding:0;border-radius:8px;font-size:14px}
+  .gshell #g-nb-link{display:none!important}
+}
+@media (min-width:1100px){
+  body.has-rail{--rail-w:92px}
+  .rail-item{width:78px;height:62px}
+  .rail-label{position:static;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal;max-width:74px;overflow-wrap:anywhere}
+  /* El vestibulo: cuatro columnas y, a la derecha, el chat siempre abierto. */
+  body.has-rail #s-lobby{--side-w:clamp(300px,26vw,380px);grid-template-columns:repeat(4,minmax(0,1fr)) var(--side-w);grid-template-rows:repeat(10,auto) minmax(0,1fr);column-gap:20px}
+  body.has-rail #s-lobby>*{grid-column:1/5}
+  body.has-rail #s-lobby>.lobby-create{grid-column:1/3}
+  body.has-rail #s-lobby>.join-row,body.has-rail #s-lobby>.daily-tile{grid-column:3/5}
+  body.has-rail #s-lobby>#mine-card,body.has-rail #s-lobby>#experience-card{grid-column:1/3}
+  body.has-rail #s-lobby>#public-card,body.has-rail #s-lobby>#install-card{grid-column:3/5}
+  body.has-rail #s-lobby:has(>#install-card.hidden)>#experience-card{grid-column:1/5}
+  body.has-rail #s-lobby>.lobby-side{display:flex;flex-direction:column;grid-column:5;grid-row:1/-1;align-self:start;position:sticky;top:28px;
+    height:calc(100dvh - 56px);min-height:420px;margin:0}
+  /* La partida: jugar, los diarios y el chat. */
+  .gshell{--gx:max(28px,calc((100vw - 1600px) / 2));--play-w:clamp(300px,26vw,380px);--chat-w:clamp(280px,24vw,340px)}
+  body.chat-docked #s-game.gshell{grid-template-columns:var(--play-w) minmax(0,1fr) var(--chat-w)}
+  body.chat-docked #s-game .gchat-slot{display:flex;flex-direction:column;grid-column:3;grid-row:2/-1;min-height:0;margin:0}
+  #s-game:has(#g-guess-btn:not(:disabled)) .turnbar.mine .tb-kbd{display:block;font-size:12px;font-weight:600;opacity:.8}
+}
+@media (min-width:1100px) and (hover:none){
+  #s-game .turnbar .tb-kbd{display:none!important}
+}
+/* Una ventana baja: el rail no se desplaza —recortaria el menu de ajustes—,
+   asi que se compacta y se queda en iconos. */
+@media (min-width:720px) and (max-height:640px){
+  .rail-item{height:40px}
+  body.has-rail .rail-nav{gap:2px;margin-top:4px}
+  .rail-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]) .mode-tile.noche{border-color:var(--linea)}}
 :root[data-theme=dark] .mode-tile.noche{border-color:var(--linea)}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
@@ -817,7 +981,17 @@ body.in-shell .toast{bottom:calc(var(--dock-h,0px) + 14px)}
 
   <div class="brand">
     <button type="button" class="logo" id="brand-home" onclick="brandHome()"><svg width="34" height="30" viewBox="0 2 96 84" fill="none" aria-hidden="true"><path d="M27 27c-9-3-14-11-12-20 7 2 12 8 14 16Z" fill="#FFC531" stroke="#1B1638" stroke-width="4" stroke-linejoin="round"></path><path d="M69 27c9-3 14-11 12-20-7 2-12 8-14 16Z" fill="#FFC531" stroke="#1B1638" stroke-width="4" stroke-linejoin="round"></path><path d="M22 41c-9-3-17 0-19 6 5 6 13 6 19 1Z" fill="#FFF5E8" stroke="#1B1638" stroke-width="4" stroke-linejoin="round"></path><path d="M74 41c9-3 17 0 19 6-5 6-13 6-19 1Z" fill="#FFF5E8" stroke="#1B1638" stroke-width="4" stroke-linejoin="round"></path><path d="M9 46c3-1 6-1 9 0M87 46c-3-1-6-1-9 0" stroke="#FF6B5E" stroke-width="3" stroke-linecap="round"></path><path d="M48 20c18 0 30 11 30 27 0 18-12 32-30 32S18 65 18 47c0-16 12-27 30-27Z" fill="#FFF5E8" stroke="#1B1638" stroke-width="5"></path><path d="M50 26c5-4 12-3 15 2-1 5-5 8-10 7-5-1-7-5-5-9Z" fill="#1B1638"></path><path d="M21 55c3-3 8-2 9 2 0 4-4 6-8 4-2-1-3-4-1-6Z" fill="#1B1638"></path><path d="M41 22c1-5 4-8 8-8M48 20c2-4 5-6 9-5" stroke="#1B1638" stroke-width="3.5" stroke-linecap="round"></path><rect x="27" y="57" width="42" height="23" rx="11.5" fill="#FFD3C2" stroke="#1B1638" stroke-width="4"></rect><ellipse cx="39" cy="67" rx="3.6" ry="2.4" fill="#1B1638"></ellipse><ellipse cx="57" cy="67" rx="3.6" ry="2.4" fill="#1B1638"></ellipse><circle cx="38" cy="46" r="4" fill="#1B1638"></circle><circle cx="58" cy="46" r="4" fill="#1B1638"></circle><path d="M43 75c2 2 8 2 10 0" stroke="#1B1638" stroke-width="2.5" stroke-linecap="round"></path></svg></button>
-    <div><h1>Picas y Fijas</h1><div class="sub" data-i18n="brand_sub">Duelo de deducción online</div><div class="aka" data-i18n="brand_alias">También conocido como “Bulls and Cows” · inspirado en “Mastermind”</div></div>
+    <div class="brand-text"><h1>Picas y Fijas</h1><div class="sub" data-i18n="brand_sub">Duelo de deducción online</div><div class="aka" data-i18n="brand_alias">También conocido como “Bulls and Cows” · inspirado en “Mastermind”</div></div>
+    <!-- Serie Plaza, L5: desde 720 px la marca es un rail de navegacion. En el
+         telefono estas entradas no existen; la marca sigue siendo cabecera. -->
+    <nav class="rail-nav" id="rail-nav" aria-label="Navegación principal">
+      <button type="button" class="rail-item" data-rail="lobby" onclick="railGo('lobby')" data-i18n-title="rail_home"><span data-ico="casa" data-ico-size="22"></span><span class="rail-label" data-i18n="rail_home">Inicio</span></button>
+      <button type="button" class="rail-item" data-rail="play" onclick="railGo('play')" data-i18n-title="rail_play"><span data-ico="partida" data-ico-size="22"></span><span class="rail-label" data-i18n="rail_play">Jugar</span></button>
+      <button type="button" class="rail-item" data-rail="practice" onclick="railGo('practice')" data-i18n-title="rail_practice"><span data-ico="diana" data-ico-size="22"></span><span class="rail-label" data-i18n="rail_practice">Práctica</span></button>
+      <button type="button" class="rail-item" data-rail="arena" onclick="railGo('arena')" data-i18n-title="rail_arena"><span data-ico="gente" data-ico-size="22"></span><span class="rail-label" data-i18n="rail_arena">Arena</span></button>
+      <button type="button" class="rail-item" data-rail="puzzles" onclick="railGo('puzzles')" data-i18n-title="rail_puzzles"><span data-ico="enigma" data-ico-size="22"></span><span class="rail-label" data-i18n="rail_puzzles">Enigmas</span></button>
+      <button type="button" class="rail-item" data-rail="rank" onclick="railGo('rank')" data-i18n-title="rail_rank"><span data-ico="podio" data-ico-size="22"></span><span class="rail-label" data-i18n="rail_rank">Ranking</span></button>
+    </nav>
     <div class="gearwrap hidden" id="settings-wrap">
       <button type="button" class="gearbtn" id="settings-btn" aria-haspopup="true" aria-expanded="false" aria-controls="settings-menu" data-i18n-title="menu_settings" onclick="toggleSettingsMenu()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"></circle><path d="M19.1 14.6a1.5 1.5 0 0 0 .3 1.66l.05.05a1.85 1.85 0 1 1-2.62 2.62l-.05-.05a1.5 1.5 0 0 0-1.66-.3 1.5 1.5 0 0 0-.91 1.37v.15a1.85 1.85 0 1 1-3.7 0v-.08a1.5 1.5 0 0 0-.98-1.37 1.5 1.5 0 0 0-1.66.3l-.05.05A1.85 1.85 0 1 1 4.2 16.3l.05-.05a1.5 1.5 0 0 0 .3-1.66 1.5 1.5 0 0 0-1.37-.91h-.15a1.85 1.85 0 1 1 0-3.7h.08a1.5 1.5 0 0 0 1.37-.98 1.5 1.5 0 0 0-.3-1.66l-.05-.05A1.85 1.85 0 1 1 6.75 4.67l.05.05a1.5 1.5 0 0 0 1.66.3h.07a1.5 1.5 0 0 0 .91-1.37v-.15a1.85 1.85 0 1 1 3.7 0v.08a1.5 1.5 0 0 0 .91 1.37 1.5 1.5 0 0 0 1.66-.3l.05-.05a1.85 1.85 0 1 1 2.62 2.62l-.05.05a1.5 1.5 0 0 0-.3 1.66v.07a1.5 1.5 0 0 0 1.37.91h.15a1.85 1.85 0 1 1 0 3.7h-.08a1.5 1.5 0 0 0-1.37.91Z"></path></svg></button>
       <div class="gearmenu hidden" id="settings-menu" role="menu">
@@ -832,6 +1006,7 @@ body.in-shell .toast{bottom:calc(var(--dock-h,0px) + 14px)}
         <button type="button" class="gearitem" id="settings-logout" role="menuitem" onclick="menuLogout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4.8h3.7a1.5 1.5 0 0 1 1.5 1.5v11.4a1.5 1.5 0 0 1-1.5 1.5H14"></path><path d="M9.6 15.6 5.2 12l4.4-3.6"></path><path d="M5.2 12h9"></path></svg><span data-i18n="menu_logout">Cerrar sesión</span></button>
       </div>
     </div>
+    <button type="button" class="avatar coral rail-me" id="rail-me" onclick="railGo('me')" data-i18n-title="lobby_my_profile"></button>
   </div>
 
   <!-- LOGIN -->
@@ -1065,6 +1240,8 @@ body.in-shell .toast{bottom:calc(var(--dock-h,0px) + 14px)}
     </div>
 
     <div class="foot"><span class="link" id="sound-link" onclick="toggleSound()"></span> · <a class="link" data-rules-link href="/como-se-juega" onclick="openRules();return false" data-i18n="rules_link">¿Cómo se juega?</a> · <span class="link" onclick="openFeedback()" data-i18n="feedback_link">Sugerencias y errores</span></div>
+    <!-- L5: en el ordenador el chat del vestibulo vive aqui, siempre abierto. -->
+    <aside class="lobby-side" id="lobby-chat-slot"></aside>
   </section>
 
   <section id="s-account" class="hidden">
@@ -1242,8 +1419,10 @@ body.in-shell .toast{bottom:calc(var(--dock-h,0px) + 14px)}
           </div>
           <nav class="frieze" id="practice-frieze"></nav>
         </div>
-        <div class="glog" id="practice-log" role="tabpanel" aria-labelledby="practice-tab-mine"></div>
-        <div class="glog hidden" id="practice-computer-log" role="tabpanel" aria-labelledby="practice-tab-theirs"></div>
+        <h3 class="jhead" id="practice-head-mine" data-side="mine"></h3>
+        <h3 class="jhead" id="practice-head-theirs" data-side="theirs"></h3>
+        <div class="glog" id="practice-log" data-side="mine" role="tabpanel" aria-labelledby="practice-tab-mine"></div>
+        <div class="glog hidden" id="practice-computer-log" data-side="theirs" role="tabpanel" aria-labelledby="practice-tab-theirs"></div>
       </div>
 
       <div class="legend"><span><i class="pip f"></i><span data-i18n="legend_fija">F = posición correcta</span></span><span><i class="pip p"></i><span data-i18n="legend_pica">P = presente, mal colocada</span></span></div>
@@ -1658,7 +1837,7 @@ body.in-shell .toast{bottom:calc(var(--dock-h,0px) + 14px)}
     <div class="gbody" id="g-body">
       <div id="g-banner"></div>
       <div id="g-rematch-zone"></div>
-      <div class="turnbar theirs" id="g-turn"><span class="dot"></span><span data-vaca="alert" data-vaca-size="34"></span><span class="tb-main"><span class="tb-title" id="g-turn-txt"></span><span class="tb-sub" id="g-turn-sub"></span></span></div>
+      <div class="turnbar theirs" id="g-turn"><span class="dot"></span><span data-vaca="alert" data-vaca-size="34"></span><span class="tb-main"><span class="tb-title" id="g-turn-txt"></span><span class="tb-sub" id="g-turn-sub"></span><span class="tb-kbd" data-i18n="turn_kbd">Enter para adivinar</span></span></div>
 
       <div class="journal" id="g-journal">
         <div class="jstick">
@@ -1671,8 +1850,11 @@ body.in-shell .toast{bottom:calc(var(--dock-h,0px) + 14px)}
           </div>
           <nav class="frieze" id="g-frieze"></nav>
         </div>
-        <div class="glog" id="g-mylog" role="tabpanel" aria-labelledby="g-tab-mine"></div>
-        <div class="glog hidden" id="g-theirlog" role="tabpanel" aria-labelledby="g-tab-theirs"></div>
+        <!-- L5: con sitio para los dos diarios, cada uno lleva su titulo. -->
+        <h3 class="jhead" id="g-head-mine" data-side="mine"></h3>
+        <h3 class="jhead" id="g-head-theirs" data-side="theirs"></h3>
+        <div class="glog" id="g-mylog" data-side="mine" role="tabpanel" aria-labelledby="g-tab-mine"></div>
+        <div class="glog hidden" id="g-theirlog" data-side="theirs" role="tabpanel" aria-labelledby="g-tab-theirs"></div>
       </div>
 
       <div class="legend" id="g-legend">
@@ -1703,6 +1885,8 @@ body.in-shell .toast{bottom:calc(var(--dock-h,0px) + 14px)}
       <button type="button" class="dock-erase" id="g-erase" onclick="padG.pop()" data-ico="borrar" data-ico-size="22" data-i18n-title="dock_erase"></button>
       <button type="button" class="btn dock-go" id="g-guess-btn" onclick="submitGuess()" data-i18n="guess_btn">Adivinar</button>
     </div>
+    <!-- L5: en el ordenador, la tercera columna. placeChat() trae aqui el chat. -->
+    <div class="gchat-slot" id="g-chat-slot"></div>
     <div class="pause-cover hidden" id="g-pause-cover">
       <div class="pause-box">
         <div class="pause-icon" data-ico="pausa" data-ico-size="42"></div>
@@ -1719,7 +1903,9 @@ body.in-shell .toast{bottom:calc(var(--dock-h,0px) + 14px)}
 <button class="chat-launch hidden" id="chat-launch" type="button" onclick="openPrimaryChat()" aria-label="Chat"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.4 12c0-3.7 3.5-6.7 7.7-6.7s7.6 3 7.5 6.7c-.1 3.7-3.4 6.6-7.6 6.6-.9 0-1.8-.1-2.6-.4-1.3.9-2.7 1.5-4 1.9.6-1.2 1-2.4 1.2-3.5-1.4-1.2-2.2-2.8-2.2-4.6Z"></path></svg><span class="chat-badge hidden" id="chat-badge">0</span></button>
 <div class="private-chat-bubbles hidden" id="private-chat-bubbles"></div><div class="private-chat-menu hidden" id="private-chat-menu"></div>
 <aside class="chat-panel hidden" id="chat-panel" aria-label="Chat">
-  <div class="chat-head"><strong id="chat-title">Chat</strong><button class="chat-icon-btn hidden" id="chat-nudge" type="button" onclick="sendChatNudge()" data-ico="rayo"></button><button class="chat-icon-btn hidden" id="chat-nudge-toggle" type="button" onclick="toggleNudges()"></button><button class="chat-icon-btn" id="chat-muted-btn" type="button" onclick="toggleMutedPanel()" data-ico="mudo"></button><button class="chat-icon-btn" type="button" onclick="closeChat()" data-ico="cerrar" data-ico-size="18"></button></div>
+  <div class="chat-head"><strong id="chat-title">Chat</strong><button class="chat-icon-btn hidden" id="chat-nudge" type="button" onclick="sendChatNudge()" data-ico="rayo"></button><button class="chat-icon-btn hidden" id="chat-nudge-toggle" type="button" onclick="toggleNudges()"></button><button class="chat-icon-btn" id="chat-muted-btn" type="button" onclick="toggleMutedPanel()" data-ico="mudo"></button><button class="chat-icon-btn chat-close" type="button" onclick="closeChat()" data-ico="cerrar" data-ico-size="18"></button></div>
+  <!-- L5: anclado en el vestibulo, las conversaciones privadas son pestañas. -->
+  <div class="chat-threads hidden" id="chat-threads"></div>
   <div class="chat-muted-panel hidden" id="chat-muted-panel"></div>
   <div class="chat-messages" id="chat-messages"><div class="chat-empty">Cargando…</div></div>
   <div class="chat-readonly hidden" id="chat-readonly"></div>
@@ -1737,7 +1923,7 @@ body.in-shell .toast{bottom:calc(var(--dock-h,0px) + 14px)}
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v4.5.0';
+const APP_VERSION = 'v4.6.0';
 /* Enlace de invitación: ...?game=SZ93
    La invitación sobrevive al registro: se guarda en el navegador, porque entre
    abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
@@ -2674,6 +2860,9 @@ Object.assign(I18N.fr,{home_title:"Devine le code avant ton adversaire.",home_le
 Object.assign(I18N.es,{tab_new_computer:"Intento nuevo del computador",turn_mine:"Te toca: adivina el código de {name}",turn_sub_attempt:"Intento {n}",turn_sub_attempt_max:"Intento {n} de {max}",turn_sub_turnclock:"el turno pasa si el reloj llega a cero",turn_sub_bank_inc:"+{n} s tras cada jugada",turn_sub_bank:"sin pausa: quien agota su tiempo pierde",turn_sub_corr:"el plazo corre aunque cierres el juego",game_attempt_no:"intento {n}",clock_you:"Tú",clock_your_turn:"Te toca",tab_mine:"Tus intentos · {n}",tab_player:"{name} · {n}",tab_computer:"Computador · {n}",tab_new:"Intento nuevo de {name}",journal_order:"Lo más reciente arriba",frieze_label:"Ir a un intento",jrow_aria:"Intento {n}: {code}, {f} fijas y {p} picas",jrow_missed_aria:"Intento {n}: perdido por tiempo",dock_pad_show:"Teclado",dock_pad_hide:"Plegar",dock_pad_show_aria:"Desplegar el teclado",dock_pad_hide_aria:"Plegar el teclado",dock_erase:"Borrar",dock_keys:"Teclado de símbolos",dock_live:"Tu intento: {code}",dock_live_empty:"Tu intento está vacío",secret_row:"Tu código secreto",secret_show:"Ver tu código",secret_hide:"Ocultar tu código",computer_chip:"Computador: {n}",computer_code:"Código del computador:",sym_0:"círculo rojo",sym_1:"cuadrado naranja",sym_2:"triángulo amarillo",sym_3:"triángulo invertido verde",sym_4:"rombo turquesa",sym_5:"estrella azul",sym_6:"cruz violeta",sym_7:"anillo rosa"});
 Object.assign(I18N.en,{tab_new_computer:"New try from the computer",turn_mine:"Your turn: crack {name}’s code",turn_sub_attempt:"Try {n}",turn_sub_attempt_max:"Try {n} of {max}",turn_sub_turnclock:"the turn passes if the clock hits zero",turn_sub_bank_inc:"+{n} s after each move",turn_sub_bank:"no pauses: whoever runs out of time loses",turn_sub_corr:"the clock keeps running even if you close the game",game_attempt_no:"try {n}",clock_you:"You",clock_your_turn:"Your turn",tab_mine:"Your tries · {n}",tab_player:"{name} · {n}",tab_computer:"Computer · {n}",tab_new:"New try from {name}",journal_order:"Newest first",frieze_label:"Jump to a try",jrow_aria:"Try {n}: {code}, {f} F and {p} P",jrow_missed_aria:"Try {n}: lost on time",dock_pad_show:"Keypad",dock_pad_hide:"Fold",dock_pad_show_aria:"Open the keypad",dock_pad_hide_aria:"Fold the keypad",dock_erase:"Delete",dock_keys:"Symbol keypad",dock_live:"Your try: {code}",dock_live_empty:"Your try is empty",secret_row:"Your secret code",secret_show:"Show your code",secret_hide:"Hide your code",computer_chip:"Computer: {n}",computer_code:"Computer’s code:",sym_0:"red circle",sym_1:"orange square",sym_2:"yellow triangle",sym_3:"green upside-down triangle",sym_4:"turquoise diamond",sym_5:"blue star",sym_6:"purple cross",sym_7:"pink ring"});
 Object.assign(I18N.fr,{tab_new_computer:"Nouvel essai de l’ordinateur",turn_mine:"À toi : devine le code de {name}",turn_sub_attempt:"Essai {n}",turn_sub_attempt_max:"Essai {n} sur {max}",turn_sub_turnclock:"le tour passe si l’horloge tombe à zéro",turn_sub_bank_inc:"+{n} s après chaque coup",turn_sub_bank:"sans pause : qui épuise son temps perd",turn_sub_corr:"le délai court même si tu fermes le jeu",game_attempt_no:"essai {n}",clock_you:"Toi",clock_your_turn:"À toi",tab_mine:"Tes essais · {n}",tab_player:"{name} · {n}",tab_computer:"Ordinateur · {n}",tab_new:"Nouvel essai de {name}",journal_order:"Le plus récent en haut",frieze_label:"Aller à un essai",jrow_aria:"Essai {n} : {code}, {f} F et {p} P",jrow_missed_aria:"Essai {n} : perdu au temps",dock_pad_show:"Pavé",dock_pad_hide:"Replier",dock_pad_show_aria:"Déplier le pavé",dock_pad_hide_aria:"Replier le pavé",dock_erase:"Effacer",dock_keys:"Pavé de symboles",dock_live:"Ton essai : {code}",dock_live_empty:"Ton essai est vide",secret_row:"Ton code secret",secret_show:"Voir ton code",secret_hide:"Masquer ton code",computer_chip:"Ordinateur : {n}",computer_code:"Code de l’ordinateur :",sym_0:"rond rouge",sym_1:"carré orange",sym_2:"triangle jaune",sym_3:"triangle inversé vert",sym_4:"losange turquoise",sym_5:"étoile bleue",sym_6:"croix violette",sym_7:"anneau rose"});
+Object.assign(I18N.es,{rail_nav:"Navegación principal",rail_home:"Inicio",rail_play:"Jugar",rail_practice:"Práctica",rail_arena:"Arena",rail_puzzles:"Enigmas",rail_rank:"Ranking",turn_kbd:"Enter para adivinar",jhead_toward:"hacia el código de {name}",jhead_toward_you:"hacia tu código",jhead_toward_computer:"hacia el código del computador"});
+Object.assign(I18N.en,{rail_nav:"Main navigation",rail_home:"Home",rail_play:"Play",rail_practice:"Practice",rail_arena:"Arena",rail_puzzles:"Puzzles",rail_rank:"Ranking",turn_kbd:"Enter to guess",jhead_toward:"toward {name}’s code",jhead_toward_you:"toward your code",jhead_toward_computer:"toward the computer’s code"});
+Object.assign(I18N.fr,{rail_nav:"Navigation principale",rail_home:"Accueil",rail_play:"Jouer",rail_practice:"Entraînement",rail_arena:"Arène",rail_puzzles:"Énigmes",rail_rank:"Classement",turn_kbd:"Entrée pour valider",jhead_toward:"vers le code de {name}",jhead_toward_you:"vers ton code",jhead_toward_computer:"vers le code de l’ordinateur"});
 
 /* La primera visita, en el idioma del navegador. Es lo unico que evita que
    quien llega desde un enlace compartido y no lee espanol tenga que buscar
@@ -2752,7 +2941,14 @@ const ICONS={
   globo:'<path class="dl" d="M4.4 11.4c0-3.7 3.4-6.6 7.6-6.6s7.5 2.9 7.4 6.6c-.1 3.6-3.3 6.5-7.5 6.5-.9 0-1.8-.1-2.6-.4-1.3.9-2.7 1.5-4 1.9.6-1.2 1-2.4 1.2-3.5-1.3-1.2-2.1-2.8-2.1-4.5Z"></path>',
   /* 4.5.0: la partida en telefono */
   atras:'<path class="dl" style="stroke-width:2.4" d="M19 12H6M11 6l-6 6 6 6"></path>',
-  borrar:'<path class="dl" d="M8.5 5h10A2.5 2.5 0 0 1 21 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-10L3 12z"></path><path class="dl" d="M11 9.5l5 5M16 9.5l-5 5"></path>'
+  borrar:'<path class="dl" d="M8.5 5h10A2.5 2.5 0 0 1 21 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-10L3 12z"></path><path class="dl" d="M11 9.5l5 5M16 9.5l-5 5"></path>',
+  /* 4.6.0: el rail del ordenador, trazo por trazo del lienzo */
+  casa:'<path class="dl" d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"></path>',
+  partida:'<rect class="dl" x="3" y="4" width="8" height="10" rx="2"></rect><rect class="dl" x="13" y="10" width="8" height="10" rx="2"></rect>',
+  diana:'<circle class="dl" cx="12" cy="12" r="8.5"></circle><circle class="dl" cx="12" cy="12" r="4.5"></circle><circle cx="12" cy="12" r="1.2" fill="currentColor"></circle>',
+  gente:'<circle cx="6" cy="9" r="3" fill="currentColor"></circle><circle cx="18" cy="9" r="3" fill="currentColor"></circle><circle cx="12" cy="6" r="3" fill="currentColor"></circle><rect x="5" y="15" width="14" height="5" rx="2.5" fill="currentColor"></rect>',
+  enigma:'<rect class="dl" x="4" y="3" width="16" height="18" rx="3"></rect><path class="dl" d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7"></path><circle cx="12" cy="17" r=".9" fill="currentColor"></circle>',
+  podio:'<rect x="3" y="12" width="5" height="9" rx="1.5" fill="currentColor"></rect><rect x="9.5" y="5" width="5" height="16" rx="1.5" fill="currentColor"></rect><rect x="16" y="9" width="5" height="12" rx="1.5" fill="currentColor"></rect>'
 };
 function ico(nombre,tam){
   const p=ICONS[nombre]; if(!p) return '';
@@ -2825,6 +3021,9 @@ function applyI18n(){
   if(typeof renderPracticeResumeCard==='function'&&$('practice-resume-card')) renderPracticeResumeCard();
   if(typeof renderPuzzleList==='function'&&$('pz-grid')) renderPuzzleList();
   if(typeof renderOpenPuzzle==='function'&&$('pz-play')) renderOpenPuzzle();
+  const railNav=$('rail-nav'); if(railNav) railNav.setAttribute('aria-label',t('rail_nav'));
+  if(typeof syncRail==='function') syncRail();
+  if(currentView==='practice-game'&&typeof renderPracticeJournal==='function') renderPracticeJournal();
   pintarIconos();
   setCredits();
 }
@@ -3012,6 +3211,39 @@ function brandHome(){
   if(currentView==='feedback') closeFeedback();
   else enterLobby();
 }
+/* -------------------- el rail (serie Plaza, L5) --------------------
+   En el ordenador la marca se convierte en un rail con los sitios del juego.
+   Salir de una partida o de una practica por el rail pasa por la misma puerta
+   que su boton de volver: la partida sigue abierta, con el aviso de presencia
+   de siempre, y la practica queda guardada. Nada se pierde por cambiar de
+   pantalla. */
+const RAIL_GROUPS={lobby:['lobby'], play:['create','join','wait','rematch','game'], practice:['practice','practice-game'],
+  arena:['arena-new','arena'], puzzles:['puzzles'], rank:['rank']};
+function railCurrent(){
+  for(const key in RAIL_GROUPS) if(RAIL_GROUPS[key].includes(currentView)) return key;
+  if(currentView==='profile'&&$('profile-name')&&$('profile-name').textContent===user) return 'me';
+  return '';
+}
+function syncRail(){
+  const current=railCurrent();
+  document.querySelectorAll('#rail-nav .rail-item').forEach(b=>{
+    if(b.dataset.rail===current) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current');
+  });
+  const me=$('rail-me'); if(me) me.textContent=initialOf(user);
+}
+async function railGo(dest){
+  closeSettingsMenu();
+  if(railCurrent()===dest) return;
+  if(currentView==='game'){
+    if(reviewingHistory){ reviewingHistory=false; stopPoll(); stopTick(); }
+    else await quitGame();
+  }else if(currentView==='practice-game'&&practice&&!practice.finished){
+    pauseActivePractice(); toast(t('practice_saved_toast'));
+  }
+  const go={lobby:enterLobby, play:()=>show('create'), practice:openPractice, arena:openArenaCreate,
+    puzzles:openPuzzles, rank:openRank, me:()=>openProfile(user,'lobby')}[dest];
+  if(go) go();
+}
 let publicPulseData=null, publicPulseLoading=false;
 function renderPublicPulse(){
   const el=$('public-pulse'); if(!el) return;
@@ -3046,6 +3278,10 @@ function show(name){
   // La partida y la practica son una capa fija con su propia cabecera: la
   // pagina de debajo ni se ve ni se desplaza.
   document.body.classList.toggle('in-shell', name==='game'||name==='practice-game');
+  // El rail es para quien tiene cuenta: la portada, la puerta del correo y el
+  // invitado siguen con la marca de siempre.
+  document.body.classList.toggle('has-rail', !!sessionToken && name!=='login' && name!=='verify');
+  syncRail();
   measureDock();
   if(name!=='game') stopTick();
   if(name!=='practice-game') stopPracticeTick();
@@ -3138,7 +3374,7 @@ function chatUserKey(value){return String(value||'').trim().toLocaleLowerCase();
 function currentChatRoom(){if(!$('s-game').classList.contains('hidden')&&game.spectator)return{roomType:'game',gameId:game.id};if(!$('s-game').classList.contains('hidden')&&gState?.chatThreadId)return{roomType:'private',threadId:gState.chatThreadId};if(selectedPrivateThread)return{roomType:'private',threadId:selectedPrivateThread.id};return{roomType:'lobby',gameId:''};}
 function openPrivateChat(id){selectedPrivateThread=privateThreads.find(x=>x.id===Number(id))||{id:Number(id),opponent:''};chatRoom='';chatItems=[];chatLastId=0;updateChatLabels();$('chat-panel').classList.remove('hidden');pollChat();}
 function openPrimaryChat(){if($('s-game').classList.contains('hidden'))selectedPrivateThread=null;toggleChat();}
-function renderPrivateThreads(){const host=$('private-chat-bubbles'),menu=$('private-chat-menu'),inLobby=!$('s-lobby').classList.contains('hidden');host.classList.toggle('hidden',!inLobby||!privateThreads.length);if(!inLobby)return;const visible=privateThreads.slice(0,3),rest=privateThreads.slice(3);host.innerHTML=visible.map(x=>`<button class="private-chat-bubble ${Number(x.lastMessageId)>Number(localStorage.getItem('pf_chat_read_'+x.id)||0)?'unread':''}" onclick="openPrivateChat(${x.id})" title="${esc(x.opponent)}">${esc([...x.opponent][0]?.toUpperCase()||'?')}</button>`).join('')+(rest.length?`<button class="private-chat-bubble" onclick="$('private-chat-menu').classList.toggle('hidden')">+${rest.length}</button>`:'');menu.innerHTML=rest.map(x=>`<button onclick="openPrivateChat(${x.id});$('private-chat-menu').classList.add('hidden')">💬 ${esc(x.opponent)}</button>`).join('');}
+function renderPrivateThreads(){renderChatThreads();const host=$('private-chat-bubbles'),menu=$('private-chat-menu'),inLobby=!$('s-lobby').classList.contains('hidden');host.classList.toggle('hidden',!inLobby||!privateThreads.length);if(!inLobby)return;const visible=privateThreads.slice(0,3),rest=privateThreads.slice(3);host.innerHTML=visible.map(x=>`<button class="private-chat-bubble ${Number(x.lastMessageId)>Number(localStorage.getItem('pf_chat_read_'+x.id)||0)?'unread':''}" onclick="openPrivateChat(${x.id})" title="${esc(x.opponent)}">${esc([...x.opponent][0]?.toUpperCase()||'?')}</button>`).join('')+(rest.length?`<button class="private-chat-bubble" onclick="$('private-chat-menu').classList.toggle('hidden')">+${rest.length}</button>`:'');menu.innerHTML=rest.map(x=>`<button onclick="openPrivateChat(${x.id});$('private-chat-menu').classList.add('hidden')">💬 ${esc(x.opponent)}</button>`).join('');}
 async function refreshPrivateThreads(force=false){if(!sessionToken||privateThreadsBusy||(!force&&Date.now()-privateThreadsFetchedAt<15000))return;privateThreadsBusy=true;privateThreadsFetchedAt=Date.now();try{const r=await api('chatList',{listThreads:true});if(r.ok){privateThreads=r.threads||[];renderPrivateThreads();}}catch(e){}finally{privateThreadsBusy=false;}}
 function setChatContext(view){
   /* Mirando una partida (E6-T1) el chat existe, pero solo para leerlo: la
@@ -3147,12 +3383,62 @@ function setChatContext(view){
   const allowed=!!sessionToken&&(view==='lobby'||watching||(view==='game'&&gState&&gState.youAre>0&&gState.p2));
   // En la partida el chat vive en la cabecera: el boton flotante taparia el muelle.
   chatEnabled=allowed;$('chat-launch').classList.toggle('hidden',!allowed||view==='game');$('g-chat-btn').classList.toggle('hidden',!allowed||view!=='game');
-  if(!allowed){$('chat-panel').classList.add('hidden');stopChatPoll();return;}
+  if(!allowed){$('chat-panel').classList.add('hidden');stopChatPoll();placeChat();return;}
   if(view==='lobby')selectedPrivateThread=null;
   const room=watching?'watch:'+game.id:view==='game'?'private:'+(gState?.chatThreadId||game.id):'lobby';
   if(room!==chatRoom){chatRoom=room;chatItems=[];chatLastId=0;chatUnread=0;renderChat();updateChatBadge();}
+  placeChat();
   updateChatLabels();startChatPoll();if(view==='lobby')refreshPrivateThreads(true);renderPrivateThreads();
 }
+/* L5: en el ordenador el chat no se abre ni se cierra: vive en su columna, en
+   el vestibulo y en la partida. Es el mismo panel —las mismas funciones y el
+   mismo sondeo—, cambiado de sitio. Siempre a la vista no significa sondear
+   mas: mientras nadie lo usa, pregunta al ritmo del chat cerrado (D1 Free), y
+   solo acelera cuando se escribe en el o se acaba de usar. */
+const WIDE=window.matchMedia?matchMedia('(min-width:1100px)'):{matches:false};
+let chatTouchedAt=0;
+function chatDockSlot(){
+  if(!WIDE.matches||!chatEnabled) return null;
+  return currentView==='lobby'?$('lobby-chat-slot'):currentView==='game'?$('g-chat-slot'):null;
+}
+function placeChat(){
+  const panel=$('chat-panel'), slot=chatDockSlot();
+  if(slot){
+    if(panel.parentNode!==slot) slot.appendChild(panel);
+    panel.classList.add('docked');
+    if(panel.classList.contains('hidden')){ panel.classList.remove('hidden'); chatUnread=0; updateChatBadge(); }
+  }else if(panel.classList.contains('docked')){
+    panel.classList.remove('docked'); panel.classList.add('hidden'); $('chat-muted-panel').classList.add('hidden');
+    document.body.insertBefore(panel,$('toast'));
+  }
+  document.body.classList.toggle('chat-docked',!!slot);
+  renderChatThreads();
+}
+if(WIDE.addEventListener) WIDE.addEventListener('change',()=>placeChat()); else if(WIDE.addListener) WIDE.addListener(()=>placeChat());
+function chatLive(){
+  const panel=$('chat-panel'); if(panel.classList.contains('hidden')) return false;
+  if(!panel.classList.contains('docked')) return true;
+  return document.activeElement===$('chat-input')||Date.now()-chatTouchedAt<60000;
+}
+/* Anclado en el vestibulo no hay burbujas flotantes: las conversaciones
+   privadas son pestañas encima de los mensajes, con la del vestibulo delante. */
+function renderChatThreads(){
+  const box=$('chat-threads'); if(!box) return;
+  const on=$('chat-panel').classList.contains('docked')&&currentView==='lobby'&&privateThreads.length>0;
+  box.classList.toggle('hidden',!on);
+  if(!on){ if(box.innerHTML){ box.innerHTML=''; box.dataset.html=''; } return; }
+  const room=currentChatRoom();
+  // El sondeo pasa por aqui cada pocos segundos: rehacer los botones sin que
+  // nada cambie podria comerse un clic a medias.
+  const html=`<button type="button" class="chat-thread${room.roomType==='lobby'?' on':''}" onclick="openLobbyChat()">${ico('globo',16)}<span>${esc(t('chat_lobby'))}</span></button>`
+    +privateThreads.map(x=>{
+      const unread=Number(x.lastMessageId)>Number(localStorage.getItem('pf_chat_read_'+x.id)||0);
+      const current=room.roomType==='private'&&Number(room.threadId)===Number(x.id);
+      return `<button type="button" class="chat-thread${current?' on':''}${unread&&!current?' unread':''}" onclick="openPrivateChat(${Number(x.id)})">${avatarHTML(x.opponent,{sm:true})}<span>${esc(x.opponent)}</span></button>`;
+    }).join('');
+  if(box.dataset.html!==html){ box.dataset.html=html; box.innerHTML=html; }
+}
+function openLobbyChat(){ selectedPrivateThread=null; chatRoom=''; setChatContext(currentView); }
 function updateChatLabels(){
   if(!$('chat-title'))return;const room=currentChatRoom();
   const watching=room.roomType==='game';
@@ -3167,6 +3453,7 @@ function updateChatLabels(){
   $('chat-nudge').classList.toggle('hidden',room.roomType!=='private');$('chat-nudge-toggle').classList.toggle('hidden',room.roomType!=='private');
   renderReactionBar();
   const mutedCount=chatMutedUsers().size;$('chat-muted-btn').innerHTML=ico('mudo',16)+(mutedCount?`<span class="chat-muted-count">${mutedCount}</span>`:'');$('chat-muted-btn').title=t('chat_manage_muted');$('chat-muted-btn').setAttribute('aria-label',t('chat_manage_muted'));
+  renderChatThreads();
 }
 function closeChat(){
   $('chat-panel').classList.add('hidden');
@@ -3174,6 +3461,8 @@ function closeChat(){
 }
 function toggleChat(){
   const panel=$('chat-panel');
+  // Anclado no se cierra: pulsar el chat es ir a escribir en el.
+  if(panel.classList.contains('docked')){$('chat-input').focus();return;}
   if(!panel.classList.contains('hidden')){closeChat();return;}
   if(!chatEnabled)return;
   chatUnread=0;updateChatBadge();panel.classList.remove('hidden');pollChat();setTimeout(()=>$('chat-input').focus(),50);startChatPoll();
@@ -3229,10 +3518,14 @@ async function pollChat(scrollToLatest=false){
     renderChat(scrollToLatest||incoming.length>0);
   }catch(e){}
 }
-function startChatPoll(){stopChatPoll();if(!chatEnabled)return;const generation=chatPollGeneration;const run=async()=>{await pollChat();if(chatEnabled&&generation===chatPollGeneration)chatTimer=setTimeout(run,$('chat-panel').classList.contains('hidden')?(currentChatRoom().roomType==='private'?3000:10000):2500);};run();}
+function startChatPoll(){stopChatPoll();if(!chatEnabled)return;const generation=chatPollGeneration;const run=async()=>{await pollChat();if(chatEnabled&&generation===chatPollGeneration)chatTimer=setTimeout(run,chatLive()?2500:(currentChatRoom().roomType==='private'?3000:10000));};run();}
 function stopChatPoll(){chatPollGeneration++;if(chatTimer){clearTimeout(chatTimer);chatTimer=null;}}
 async function sendChatMessage(){const input=$('chat-input'),body=input.value.trim();if(!body)return;$('chat-send').disabled=true;try{const res=await api('chatSend',{...currentChatRoom(),body});if(!res.ok){toast(te(res.error),true);return;}input.value='';await pollChat(true);}catch(e){toast(t('net_error'),true);}finally{$('chat-send').disabled=false;}}
-$('chat-form').addEventListener('submit',e=>{e.preventDefault();sendChatMessage();});
+$('chat-form').addEventListener('submit',e=>{e.preventDefault();chatTouchedAt=Date.now();sendChatMessage();});
+/* Escribir en el chat anclado lo pone al ritmo rapido en el acto; Escape
+   devuelve el teclado al muelle —anclado— o cierra el panel flotante. */
+$('chat-input').addEventListener('focus',()=>{const docked=$('chat-panel').classList.contains('docked');chatTouchedAt=Date.now();if(docked)startChatPoll();});
+$('chat-input').addEventListener('keydown',e=>{chatTouchedAt=Date.now();if(e.key!=='Escape')return;e.preventDefault();if($('chat-panel').classList.contains('docked'))e.target.blur();else closeChat();});
 async function sendChatNudge(){try{const res=await api('chatNudge',currentChatRoom());if(!res.ok){toast(te(res.error),true);return;}playChatAudio(wizzAudio);const target=$('chat-panel');target.classList.remove('chat-shake');void target.offsetWidth;target.classList.add('chat-shake');await pollChat(true);}catch(e){toast(t('net_error'),true);}}
 function toggleNudges(){chatNudgesOn=!chatNudgesOn;localStorage.setItem('pf_chat_nudges',chatNudgesOn?'1':'0');updateChatLabels();toast(t(chatNudgesOn?'chat_nudges_on':'chat_nudges_off'));}
 function toggleMutedPanel(){const panel=$('chat-muted-panel'),opening=panel.classList.contains('hidden');panel.classList.toggle('hidden',!opening);if(opening)renderMutedPanel();}
@@ -3569,6 +3862,8 @@ function makeDockPad(o){
     const dock=$(o.dock); if(!dock) return;
     const open=dockOpen&&!disabled;
     dock.classList.toggle('folded',!open);
+    // En el ordenador el teclado no se pliega: apagado, se queda en su sitio.
+    dock.classList.toggle('off',disabled);
     const pull=dock.querySelector('.dock-pull'); if(!pull) return;
     pull.classList.toggle('hidden',disabled);
     pull.setAttribute('aria-expanded',open?'true':'false');
@@ -3665,9 +3960,21 @@ document.addEventListener('keydown', event=>{
    el sondeo llega cada dos segundos y rehacerla en cada vuelta movia lo que
    se estaba leyendo. */
 const JOURNAL={
-  g:{tabs:'g-tabs', mine:'g-tab-mine', theirs:'g-tab-theirs', logs:{mine:'g-mylog', theirs:'g-theirlog'}, frieze:'g-frieze'},
-  p:{tabs:'practice-tabs', mine:'practice-tab-mine', theirs:'practice-tab-theirs', logs:{mine:'practice-log', theirs:'practice-computer-log'}, frieze:'practice-frieze'}
+  g:{root:'g-journal', tabs:'g-tabs', mine:'g-tab-mine', theirs:'g-tab-theirs', logs:{mine:'g-mylog', theirs:'g-theirlog'}, heads:{mine:'g-head-mine', theirs:'g-head-theirs'}, frieze:'g-frieze'},
+  p:{root:'practice-logs', tabs:'practice-tabs', mine:'practice-tab-mine', theirs:'practice-tab-theirs', logs:{mine:'practice-log', theirs:'practice-computer-log'}, heads:{mine:'practice-head-mine', theirs:'practice-head-theirs'}, frieze:'practice-frieze'}
 };
+/* L5: en el ordenador, los dos diarios a la vista, uno al lado del otro, en
+   cuanto su columna tiene sitio para los dos. Lo decide el ancho del diario y
+   no el de la ventana, porque el rail y el chat se comen su parte; con menos,
+   se quedan las pestañas del telefono. */
+const DUO_MIN=480;
+function syncJournalWidth(){
+  for(const ctx of ['g','p']){
+    const el=$(JOURNAL[ctx].root); if(!el) continue;
+    const duo=WIDE.matches&&el.clientWidth>=DUO_MIN;
+    if(el.classList.contains('duo')!==duo){ el.classList.toggle('duo',duo); if(duo&&journalData[ctx]) renderJournal(ctx,journalData[ctx]); }
+  }
+}
 const journalTab={g:'mine',p:'mine'}, journalSeen={g:-1,p:-1}, journalData={g:null,p:null};
 const FRIEZE_FROM=4;
 function resetJournal(ctx){
@@ -3718,9 +4025,16 @@ function renderJournal(ctx,data){
   const J=JOURNAL[ctx]; journalData[ctx]=data;
   const both=!!data.theirs;
   if(!both) journalTab[ctx]='mine';
-  const tab=journalTab[ctx];
-  if(tab==='theirs'||journalSeen[ctx]<0) journalSeen[ctx]=both?data.theirs.list.length:0;
+  const tab=journalTab[ctx], root=$(J.root), duo=both&&root.classList.contains('duo');
+  // Con los dos a la vista no hay pestaña cerrada: lo del rival ya se ve.
+  if(tab==='theirs'||duo||journalSeen[ctx]<0) journalSeen[ctx]=both?data.theirs.list.length:0;
   $(J.tabs).classList.toggle('solo',!both);
+  root.classList.toggle('solo',!both);
+  for(const side of ['mine','theirs']){
+    const head=$(J.heads[side]), d=data[side]; if(!head) continue;
+    const html=d?`<span>${esc(d.label)}</span>${d.sub?`<small>${esc(d.sub)}</small>`:''}`:'';
+    if(head.dataset.html!==html){ head.dataset.html=html; head.innerHTML=html; }
+  }
   const mineBtn=$(J.mine), theirsBtn=$(J.theirs);
   mineBtn.textContent=data.mine.label;
   mineBtn.setAttribute('aria-selected',tab==='mine'?'true':'false');
@@ -3748,6 +4062,8 @@ function renderJournal(ctx,data){
     fz.setAttribute('aria-label',t('frieze_label'));
   }
 }
+if(window.ResizeObserver){ const journalWatch=new ResizeObserver(syncJournalWidth); ['g','p'].forEach(ctx=>journalWatch.observe($(JOURNAL[ctx].root))); }
+if(WIDE.addEventListener) WIDE.addEventListener('change',syncJournalWidth); else if(WIDE.addListener) WIDE.addListener(syncJournalWidth);
 function pickJournal(ctx,side){
   if(journalTab[ctx]===side) return;
   journalTab[ctx]=side;
@@ -5393,8 +5709,8 @@ function renderPracticeJournal(){
   if(!practice) return;
   const computer=practiceCfg.type==='computer';
   renderJournal('p',{mode:practiceCfg.mode, digits:practiceCfg.digits,
-    mine:{label:t('tab_mine',{n:practice.guesses.length}), list:practice.guesses, empty:t('log_empty_mine'), missed:t('practice_missed_timeout')},
-    theirs:computer?{label:t('tab_computer',{n:practice.computerGuesses.length}), newLabel:t('tab_new_computer'), list:practice.computerGuesses,
+    mine:{label:t('tab_mine',{n:practice.guesses.length}), sub:computer?t('jhead_toward_computer'):'', list:practice.guesses, empty:t('log_empty_mine'), missed:t('practice_missed_timeout')},
+    theirs:computer?{label:t('tab_computer',{n:practice.computerGuesses.length}), sub:t('jhead_toward_you'), newLabel:t('tab_new_computer'), list:practice.computerGuesses,
       empty:t('log_empty_theirs'), missed:t('missed_timeout'), extra:thinkLine}:null});
 }
 function expireSoloAttempt(){if(!practice||practice.finished||practiceCfg.type!=='solo')return;
@@ -5884,9 +6200,13 @@ function renderGame(st){
   const mine=st.guesses.filter(g=>g.by===(spectator?st.p1:user));
   const theirs=st.guesses.filter(g=>g.by===(spectator?st.p2:oppName));
   const rivalName=spectator?st.p2:oppLabel;
+  // Con los dos diarios a la vista, cada uno dice hacia que codigo apunta.
+  const toward=name=>tElide('jhead_toward',{name},{name});
   renderJournal('g',{mode:game.mode, digits:game.digits,
-    mine:{label:spectator?t('tab_player',{name:st.p1,n:mine.length}):t('tab_mine',{n:mine.length}), list:mine, empty:t('log_empty_mine'), missed:t('missed_timeout')},
-    theirs:{label:t('tab_player',{name:rivalName,n:theirs.length}), name:rivalName, list:theirs, empty:t('log_empty_theirs'), missed:t('missed_timeout')}});
+    mine:{label:spectator?t('tab_player',{name:st.p1,n:mine.length}):t('tab_mine',{n:mine.length}), sub:spectator?toward(st.p2||''):toward(oppLabel),
+      list:mine, empty:t('log_empty_mine'), missed:t('missed_timeout')},
+    theirs:{label:t('tab_player',{name:rivalName,n:theirs.length}), sub:spectator?toward(st.p1||''):t('jhead_toward_you'),
+      name:rivalName, list:theirs, empty:t('log_empty_theirs'), missed:t('missed_timeout')}});
   renderClocks(st);
 
   const banner=$('g-banner'); const rz=$('g-rematch-zone'); const turn=$('g-turn');
@@ -6113,10 +6433,12 @@ async function submitGuess(){
     if(res.state){ gameRequestSeq++; renderGame(res.state); } else refreshGame();
   }catch(e){ guessSubmitting=false; if(gState) renderGame(gState); toast(t('net_error'),true); refreshGame(); }
 }
-async function leaveGame(){
+async function leaveGame(){ await quitGame(); enterLobby(); }
+/* Irse de la partida sin cerrarla: el servidor se entera de que ya no estas
+   (con reloj por turno, eso detiene el reloj hasta que vuelvan los dos). */
+async function quitGame(){
   const id=game.id, watching=!!game.spectator; localStorage.removeItem('pf_current_game'); stopPoll(); stopTick();
   try{ if(id&&!watching) await api('gamePresence',{gameId:id,username:user,connected:false,reason:'lobby'}); }catch(e){}
-  enterLobby();
 }
 function leaveHistoryGame(){
   reviewingHistory=false; stopPoll(); stopTick(); openHistory();

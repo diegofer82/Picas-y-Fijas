@@ -79,14 +79,21 @@ const SHOTS = [
       fr: 'Picas y Fijas sur ordinateur',
     },
     form: 'wide',
+    // Desde la 4.6.0 el ordenador tiene su propia forma: el rail, la columna
+    // de jugar y los dos diarios a la vista. Contra el computador se ven los
+    // dos, con lo que penso en cada jugada.
     setup: `
-      hideCards();
-      Object.assign(practiceCfg,{type:'solo',mode:'numbers',digits:4,allowRepeats:false,maxAttempts:0,turnSeconds:0});
-      syncPracticeControls(); startPractice(false);
+      await signIn('Ana'); clearSavedPractice(); hideCards();
+      Object.assign(practiceCfg,{type:'computer',mode:'numbers',digits:4,allowRepeats:false,maxAttempts:10,turnSeconds:0,timeMode:'turn',bankSeconds:0,difficulty:'normal'});
+      // Desde el vestibulo: en la pantalla de reglas, empezar leeria los controles.
+      document.getElementById('practice-player-secret').value='5821';
+      startPractice(false);
       practice.secret='4071';
-      for(const guess of ['1234','5061','4571'])
-        practice.guesses.push({guess,...evaluatePractice(practice.secret,guess)});
-      renderPracticeLog(); renderPracticeStatus(); practicePad.set('40');
+      for(const guess of ['1234','5061','4571']){
+        practicePad.set(guess); submitPracticeGuess();
+        await new Promise(r => setTimeout(r, 1500));
+      }
+      practicePad.set('40');
     `,
   },
 ];
