@@ -105,9 +105,10 @@ const HELPERS = `
       document.getElementById(id)?.classList.add('hidden');
   };
   window.signIn = async (name) => {
-    document.getElementById('uname').value = name;
-    document.getElementById('upin').value = '1234';
-    await doLogin();
+    // El formulario de entrada de la 3.0.0: nombre o correo y contrasena.
+    document.getElementById('login-id').value = name;
+    document.getElementById('login-pin').value = '1234';
+    await loginAccount();
     await new Promise(r => setTimeout(r, 1200));
   };
   lang = 'es'; localStorage.setItem('pf_lang','es'); applyI18n();
@@ -175,6 +176,11 @@ async function main() {
     const cdp = await client(await connect());
     await cdp.send('Page.enable');
     await cdp.send('Runtime.enable');
+    // Las capturas son las del juego de dia, que es la cara de la identidad
+    // Plaza, aunque la maquina que las toma tenga el sistema en modo oscuro.
+    await cdp.send('Emulation.setEmulatedMedia', {
+      features: [{ name: 'prefers-color-scheme', value: 'light' }],
+    });
 
     for (const shot of SHOTS) {
       await cdp.send('Emulation.setDeviceMetricsOverride', SIZES[shot.form]);

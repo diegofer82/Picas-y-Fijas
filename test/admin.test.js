@@ -307,10 +307,10 @@ test('ninguna herramienta nueva responde sin rol de administrador', async () => 
 
 test('el panel abre las conversaciones aparte y ofrece la vuelta al juego', async () => {
   const html = await readFile(new URL('../public/admin.html', import.meta.url), 'utf8');
-  assert.match(html, /id="backToGame"/, 'el toro azul devuelve al juego');
+  assert.match(html, /id="backToGame"/, 'el boton de la vaca devuelve al juego');
   assert.match(html, /\$\('backToGame'\)\.onclick=\(\)=>\{signOut\(\);location\.href='\/'\}/,
     'volver al juego cierra tambien la sesion del panel');
-  assert.match(html, /class="toro"/, 'la mascota es la misma del juego');
+  assert.match(html, /class="vaca"/, 'la mascota es la misma del juego');
   assert.doesNotMatch(html, /Mensajes recientes/, 'ya no hay un listado plano de mensajes');
   assert.match(html, /adminChatThreads/);
   assert.match(html, /adminChatThread'/);

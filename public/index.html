@@ -378,10 +378,8 @@
 
   .foot{text-align:center;color:var(--bruma);font-size:12px;font-weight:600;margin-top:24px;letter-spacing:0}
   /* ---- Capa informal: mascota, subrayados y iconos a mano ---- */
-  .toro{display:block;flex:0 0 auto}
-  .toro .t-fill{fill:#FFF5E8;stroke:#1B1638;stroke-width:2.6;stroke-linejoin:round}
-  .toro .t-line{fill:none;stroke:#1B1638;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
-  .toro .t-dot{fill:#1B1638}
+  /* La vaca lleva sus colores escritos en el SVG: es la misma de dia y de noche. */
+  .vaca{display:block;flex:0 0 auto}
   .dl{fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
   .ico{display:block;flex:0 0 auto}
   /* Las fichas de color se distinguen por forma, no solo por color. Se dibujan
@@ -400,10 +398,10 @@
   .btn{display:flex;align-items:center;justify-content:center;gap:9px}
   .chipbtn{display:flex;align-items:center;justify-content:center;gap:6px}
   /* En la barra de turno la mascota sustituye al punto, y solo cuando te toca. */
-  .turnbar .toro{display:none}
-  .turnbar.mine .toro{display:block;margin:-6px 0}
+  .turnbar .vaca{display:none}
+  .turnbar.mine .vaca{display:block;margin:-6px 0}
   .turnbar.mine .dot{display:none}
-  .banner .toro{margin:0 auto 4px}
+  .banner .vaca{margin:0 auto 4px}
   .banner .rule{display:block;margin:0 auto 10px;color:var(--coral)}
   .banner.lose .rule{color:var(--bruma)}
   /* 2.5: el buzon de sugerencias */
@@ -553,7 +551,7 @@ button.an-tag::after{content:' ?';opacity:.6}
 <div class="wrap">
 
   <div class="brand">
-    <button type="button" class="logo" id="brand-home" onclick="brandHome()"><svg width="30" height="19" viewBox="-4 3 100 62" aria-hidden="true"><path d="M19 21C12.5 16.5 4.5 11 -2 5c0 9.5 4.5 18.5 12.5 25C13 27.5 16 24 19 21Z" fill="#F5EFE3" stroke="#12100C" stroke-width="2.6" stroke-linejoin="round"></path><path d="M69 21C75.5 16.5 83.5 11 90 5c0 9.5-4.5 18.5-12.5 25C75 27.5 72 24 69 21Z" fill="#F5EFE3" stroke="#12100C" stroke-width="2.6" stroke-linejoin="round"></path><path d="M15 32c0-11.6 13-20.6 29-20.6s29 9 29 20.6c0 7-1.6 12.8-4.8 17.6C64.6 57 55.4 61.6 44 61.6S23.4 57 19.8 49.6C16.6 44.8 15 39 15 32Z" fill="#F5EFE3" stroke="#12100C" stroke-width="2.6" stroke-linejoin="round"></path><path d="M32.5 54c0-3.4 5.2-5.6 11.5-5.6s11.5 2.2 11.5 5.6-5.2 5.6-11.5 5.6-11.5-2.2-11.5-5.6Z" fill="none" stroke="#12100C" stroke-width="2.4"></path><circle cx="32" cy="34" r="3.4" fill="#12100C"></circle><circle cx="56" cy="34" r="3.4" fill="#12100C"></circle><circle cx="40" cy="53.6" r="1.8" fill="#12100C"></circle><circle cx="48" cy="53.6" r="1.8" fill="#12100C"></circle></svg></button>
+    <button type="button" class="logo" id="brand-home" onclick="brandHome()"><svg width="34" height="30" viewBox="0 2 96 84" fill="none" aria-hidden="true"><path d="M27 27c-9-3-14-11-12-20 7 2 12 8 14 16Z" fill="#FFC531" stroke="#1B1638" stroke-width="4" stroke-linejoin="round"></path><path d="M69 27c9-3 14-11 12-20-7 2-12 8-14 16Z" fill="#FFC531" stroke="#1B1638" stroke-width="4" stroke-linejoin="round"></path><path d="M22 41c-9-3-17 0-19 6 5 6 13 6 19 1Z" fill="#FFF5E8" stroke="#1B1638" stroke-width="4" stroke-linejoin="round"></path><path d="M74 41c9-3 17 0 19 6-5 6-13 6-19 1Z" fill="#FFF5E8" stroke="#1B1638" stroke-width="4" stroke-linejoin="round"></path><path d="M9 46c3-1 6-1 9 0M87 46c-3-1-6-1-9 0" stroke="#FF6B5E" stroke-width="3" stroke-linecap="round"></path><path d="M48 20c18 0 30 11 30 27 0 18-12 32-30 32S18 65 18 47c0-16 12-27 30-27Z" fill="#FFF5E8" stroke="#1B1638" stroke-width="5"></path><path d="M50 26c5-4 12-3 15 2-1 5-5 8-10 7-5-1-7-5-5-9Z" fill="#1B1638"></path><path d="M21 55c3-3 8-2 9 2 0 4-4 6-8 4-2-1-3-4-1-6Z" fill="#1B1638"></path><path d="M41 22c1-5 4-8 8-8M48 20c2-4 5-6 9-5" stroke="#1B1638" stroke-width="3.5" stroke-linecap="round"></path><rect x="27" y="57" width="42" height="23" rx="11.5" fill="#FFD3C2" stroke="#1B1638" stroke-width="4"></rect><ellipse cx="39" cy="67" rx="3.6" ry="2.4" fill="#1B1638"></ellipse><ellipse cx="57" cy="67" rx="3.6" ry="2.4" fill="#1B1638"></ellipse><circle cx="38" cy="46" r="4" fill="#1B1638"></circle><circle cx="58" cy="46" r="4" fill="#1B1638"></circle><path d="M43 75c2 2 8 2 10 0" stroke="#1B1638" stroke-width="2.5" stroke-linecap="round"></path></svg></button>
     <div><h1>Picas y Fijas</h1><div class="sub" data-i18n="brand_sub">Duelo de deducción online</div><div class="aka" data-i18n="brand_alias">También conocido como “Bulls and Cows” · inspirado en “Mastermind”</div></div>
     <div class="gearwrap hidden" id="settings-wrap">
       <button type="button" class="gearbtn" id="settings-btn" aria-haspopup="true" aria-expanded="false" aria-controls="settings-menu" data-i18n-title="menu_settings" onclick="toggleSettingsMenu()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"></circle><path d="M19.1 14.6a1.5 1.5 0 0 0 .3 1.66l.05.05a1.85 1.85 0 1 1-2.62 2.62l-.05-.05a1.5 1.5 0 0 0-1.66-.3 1.5 1.5 0 0 0-.91 1.37v.15a1.85 1.85 0 1 1-3.7 0v-.08a1.5 1.5 0 0 0-.98-1.37 1.5 1.5 0 0 0-1.66.3l-.05.05A1.85 1.85 0 1 1 4.2 16.3l.05-.05a1.5 1.5 0 0 0 .3-1.66 1.5 1.5 0 0 0-1.37-.91h-.15a1.85 1.85 0 1 1 0-3.7h.08a1.5 1.5 0 0 0 1.37-.98 1.5 1.5 0 0 0-.3-1.66l-.05-.05A1.85 1.85 0 1 1 6.75 4.67l.05.05a1.5 1.5 0 0 0 1.66.3h.07a1.5 1.5 0 0 0 .91-1.37v-.15a1.85 1.85 0 1 1 3.7 0v.08a1.5 1.5 0 0 0 .91 1.37 1.5 1.5 0 0 0 1.66-.3l.05-.05a1.85 1.85 0 1 1 2.62 2.62l-.05.05a1.5 1.5 0 0 0-.3 1.66v.07a1.5 1.5 0 0 0 1.37.91h.15a1.85 1.85 0 1 1 0 3.7h-.08a1.5 1.5 0 0 0-1.37.91Z"></path></svg></button>
@@ -685,7 +683,7 @@ button.an-tag::after{content:' ?';opacity:.6}
           <span id="lobby-rule"></span>
           <p class="hint" data-i18n="lobby_hint">Crea una partida y comparte el código, o únete a una pública abierta.</p>
         </div>
-        <span id="lobby-toro"></span>
+        <span id="lobby-vaca"></span>
       </div>
       <button class="btn" onclick="show('create')"><svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" style="stroke-width:2.4" d="M12 4.4c.4 4.9.5 9.9.2 15M4.3 11.5c5.1.5 10.2.5 15.4.2"></path></svg><span data-i18n="lobby_create">Crear partida</span></button>
       <div style="height:10px"></div>
@@ -933,7 +931,7 @@ button.an-tag::after{content:' ?';opacity:.6}
       <div class="mysecret"><span data-i18n="practice_secret">Código secreto:</span><span id="practice-secret" class="n">•••</span></div>
       <div class="statusrow" id="practice-status"><span class="chip" id="practice-attempts"></span><span class="chip hidden" id="practice-computer-attempts"></span><span class="chip hidden" id="practice-difficulty"></span><span class="chip hidden" id="practice-timer"></span></div>
       <div id="practice-banner"></div>
-      <div class="turnbar mine hidden" id="practice-turn"><span class="dot"></span><svg class="toro" width="34" height="29" viewBox="-8 -16 104 90" aria-hidden="true"><path class="t-fill" d="M19 21C12.5 16.5 4.5 11 -2 5c0 9.5 4.5 18.5 12.5 25C13 27.5 16 24 19 21Z"></path><path class="t-fill" d="M69 21C75.5 16.5 83.5 11 90 5c0 9.5-4.5 18.5-12.5 25C75 27.5 72 24 69 21Z"></path><path class="t-fill" d="M15 32c0-11.6 13-20.6 29-20.6s29 9 29 20.6c0 7-1.6 12.8-4.8 17.6C64.6 57 55.4 61.6 44 61.6S23.4 57 19.8 49.6C16.6 44.8 15 39 15 32Z"></path><path class="t-line" d="M32.5 54c0-3.4 5.2-5.6 11.5-5.6s11.5 2.2 11.5 5.6-5.2 5.6-11.5 5.6-11.5-2.2-11.5-5.6Z"></path><circle class="t-dot" cx="40" cy="53.6" r="1.8"></circle><circle class="t-dot" cx="48" cy="53.6" r="1.8"></circle><circle class="t-line" cx="32" cy="33.6" r="5"></circle><circle class="t-dot" cx="32.9" cy="34.6" r="2.4"></circle><circle class="t-line" cx="56" cy="33.6" r="5"></circle><circle class="t-dot" cx="56.9" cy="34.6" r="2.4"></circle></svg><span id="practice-turn-txt"></span></div>
+      <div class="turnbar mine hidden" id="practice-turn"><span class="dot"></span><span data-vaca="alert" data-vaca-size="34"></span><span id="practice-turn-txt"></span></div>
       <div class="guessarea" id="practice-guessarea">
         <div class="field"><input type="text" id="practice-guess" class="code" inputmode="numeric" placeholder="•••"><div class="pad hidden" id="practice-pad"><div class="slots" id="practice-slots"></div><div class="palette" id="practice-palette"></div></div></div>
         <button class="btn" id="practice-guess-btn" onclick="submitPracticeGuess()" data-i18n="guess_btn">Adivinar</button>
@@ -1340,7 +1338,7 @@ button.an-tag::after{content:' ?';opacity:.6}
       <div id="g-banner"></div>
       <div id="g-rematch-zone"></div>
 
-      <div class="turnbar theirs" id="g-turn"><span class="dot"></span><svg class="toro" width="34" height="29" viewBox="-8 -16 104 90" aria-hidden="true"><path class="t-fill" d="M19 21C12.5 16.5 4.5 11 -2 5c0 9.5 4.5 18.5 12.5 25C13 27.5 16 24 19 21Z"></path><path class="t-fill" d="M69 21C75.5 16.5 83.5 11 90 5c0 9.5-4.5 18.5-12.5 25C75 27.5 72 24 69 21Z"></path><path class="t-fill" d="M15 32c0-11.6 13-20.6 29-20.6s29 9 29 20.6c0 7-1.6 12.8-4.8 17.6C64.6 57 55.4 61.6 44 61.6S23.4 57 19.8 49.6C16.6 44.8 15 39 15 32Z"></path><path class="t-line" d="M32.5 54c0-3.4 5.2-5.6 11.5-5.6s11.5 2.2 11.5 5.6-5.2 5.6-11.5 5.6-11.5-2.2-11.5-5.6Z"></path><circle class="t-dot" cx="40" cy="53.6" r="1.8"></circle><circle class="t-dot" cx="48" cy="53.6" r="1.8"></circle><circle class="t-line" cx="32" cy="33.6" r="5"></circle><circle class="t-dot" cx="32.9" cy="34.6" r="2.4"></circle><circle class="t-line" cx="56" cy="33.6" r="5"></circle><circle class="t-dot" cx="56.9" cy="34.6" r="2.4"></circle></svg><span id="g-turn-txt"></span></div>
+      <div class="turnbar theirs" id="g-turn"><span class="dot"></span><span data-vaca="alert" data-vaca-size="34"></span><span id="g-turn-txt"></span></div>
       <div class="statusrow hidden" id="g-statusrow">
         <span class="chip hidden" id="g-timer"></span>
         <button class="pause-chip pause-inline" id="g-pause-btn" onclick="requestGamePause()" aria-label="Pausar partida" title="Pausar partida"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9.6 5.5c.3 4.4.3 8.8 0 13.2M14.5 5.5c.3 4.4.3 8.8 0 13.2"></path></svg></button>
@@ -1415,7 +1413,7 @@ button.an-tag::after{content:' ?';opacity:.6}
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v4.2.0';
+const APP_VERSION = 'v4.3.0';
 /* Enlace de invitación: ...?game=SZ93
    La invitación sobrevive al registro: se guarda en el navegador, porque entre
    abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
@@ -2146,7 +2144,7 @@ const RULES = {
   <div class="note"><b>Juego asíncrono:</b> sin tiempo por turno, puedes volver al lobby y continuar minutos u horas después; el rival también puede jugar cuando esté disponible.</div>
   <div class="note"><b>Cronómetro:</b> al llegar a 0 el turno pasa automáticamente al rival y cuenta como un intento usado cuando la partida tiene límite de intentos. Si alguien vuelve al lobby, el reloj se detiene hasta que ambos regresen. La pausa manual temporal solo está disponible en partidas con tiempo.</div>
   <div class="note"><b>Salir o cancelar:</b> volver al lobby no elimina la partida. El creador puede cancelar una partida que aún espera rival. Abandonar una partida iniciada concede la victoria al rival y registra una derrota.</div>
-  <div class="note strategy-download"><b>¿Llegaste hasta el final? Ya tienes ventaja.</b><br>Descubre estrategias para cada tipo de partida.<br><a href="/guia-estrategias-picas-y-fijas-es.pdf" download>📘 Descargar guía de estrategias (PDF)</a></div>`,
+  <div class="note strategy-download"><b>¿Llegaste hasta el final? Ya tienes ventaja.</b><br>Descubre estrategias para cada tipo de partida.<br><a href="/guia-estrategias-picas-y-fijas-es.pdf" download>Descargar guía de estrategias (PDF)</a></div>`,
   en:`<ol>
     <li>Each player registers a <b>username</b> and protects it with a <b>4-to-8-digit PIN</b>. The name is also used in the ranking.</li>
     <li>One player <b>creates the game</b> and picks the rules:
@@ -2171,7 +2169,7 @@ const RULES = {
   <div class="note"><b>Asynchronous play:</b> without a turn timer, you can return to the lobby and continue minutes or hours later; your opponent can also play when available.</div>
   <div class="note"><b>Timer:</b> when it reaches 0, the turn automatically passes to the opponent and counts as a used attempt when the game has an attempt limit. If someone returns to the lobby, the clock stops until both return. A temporary manual pause is only available in timed games.</div>
   <div class="note"><b>Leaving or cancelling:</b> returning to the lobby does not delete the game. The creator can cancel a game that is still waiting for an opponent. Abandoning a game in progress awards the win to the opponent and records a loss.</div>
-  <div class="note strategy-download"><b>Made it to the end? You already have an advantage.</b><br>Discover strategies for every game type.<br><a href="/picas-y-fijas-strategy-guide-en.pdf" download>📘 Download the strategy guide (PDF)</a></div>`,
+  <div class="note strategy-download"><b>Made it to the end? You already have an advantage.</b><br>Discover strategies for every game type.<br><a href="/picas-y-fijas-strategy-guide-en.pdf" download>Download the strategy guide (PDF)</a></div>`,
   fr:`<ol>
     <li>Chaque joueur enregistre un <b>nom d'utilisateur</b> et le protège avec un <b>PIN de 4 à 8 chiffres</b>. Le nom sert aussi au classement.</li>
     <li>Un joueur <b>crée la partie</b> et choisit les règles :
@@ -2196,7 +2194,7 @@ const RULES = {
   <div class="note"><b>Jeu asynchrone :</b> sans temps par tour, tu peux retourner au lobby et continuer quelques minutes ou heures plus tard ; ton adversaire peut aussi jouer lorsqu'il est disponible.</div>
   <div class="note"><b>Chrono :</b> à 0, le tour passe automatiquement à l'adversaire et compte comme un essai utilisé lorsque la partie a une limite d'essais. Si quelqu'un retourne au lobby, le chrono s'arrête jusqu'au retour des deux joueurs. La pause manuelle temporaire n'est disponible que dans les parties chronométrées.</div>
   <div class="note"><b>Quitter ou annuler :</b> retourner au lobby ne supprime pas la partie. Le créateur peut annuler une partie qui attend encore un adversaire. Abandonner une partie commencée attribue la victoire à l'adversaire et enregistre une défaite.</div>
-  <div class="note strategy-download"><b>Tu es arrivé jusqu'à la fin ? Tu as déjà un avantage.</b><br>Découvre des stratégies pour chaque type de partie.<br><a href="/guide-strategies-picas-y-fijas-fr.pdf" download>📘 Télécharger le guide stratégique (PDF)</a></div>`
+  <div class="note strategy-download"><b>Tu es arrivé jusqu'à la fin ? Tu as déjà un avantage.</b><br>Découvre des stratégies pour chaque type de partie.<br><a href="/guide-strategies-picas-y-fijas-fr.pdf" download>Télécharger le guide stratégique (PDF)</a></div>`
 };
 
 const URL_LANG = {'/es':'es','/en':'en','/fr':'fr'}[location.pathname] || null;
@@ -2393,20 +2391,21 @@ function te(msg){
   for(const [pattern, text] of ERR_PATTERNS[lang]||[]) if(pattern.test(String(msg||''))) return String(msg).replace(pattern, text);
   return msg;
 }
-/* -------------------- la mascota: El Toro, por "Bulls and Cows" --------------------
-   Se dibuja desde JS para poder inyectarla en los sitios que se pintan con
-   innerHTML (banner de fin de partida) y desde el marcado en los estaticos.
-   Los mismos trazados estan en el logo y en tools/make-icons.mjs. */
-const TORO_HORNS='<path class="t-fill" d="M19 21C12.5 16.5 4.5 11 -2 5c0 9.5 4.5 18.5 12.5 25C13 27.5 16 24 19 21Z"></path><path class="t-fill" d="M69 21C75.5 16.5 83.5 11 90 5c0 9.5-4.5 18.5-12.5 25C75 27.5 72 24 69 21Z"></path>';
-const TORO_HEAD='<path class="t-fill" d="M15 32c0-11.6 13-20.6 29-20.6s29 9 29 20.6c0 7-1.6 12.8-4.8 17.6C64.6 57 55.4 61.6 44 61.6S23.4 57 19.8 49.6C16.6 44.8 15 39 15 32Z"></path>';
-const TORO_MUZZLE='<path class="t-line" d="M32.5 54c0-3.4 5.2-5.6 11.5-5.6s11.5 2.2 11.5 5.6-5.2 5.6-11.5 5.6-11.5-2.2-11.5-5.6Z"></path><circle class="t-dot" cx="40" cy="53.6" r="1.8"></circle><circle class="t-dot" cx="48" cy="53.6" r="1.8"></circle>';
-const TORO_FACE={
-  calm:'<circle class="t-dot" cx="32" cy="34" r="3.4"></circle><circle class="t-dot" cx="56" cy="34" r="3.4"></circle>',
-  alert:'<circle class="t-line" cx="32" cy="33.6" r="5"></circle><circle class="t-dot" cx="32.9" cy="34.6" r="2.4"></circle><circle class="t-line" cx="56" cy="33.6" r="5"></circle><circle class="t-dot" cx="56.9" cy="34.6" r="2.4"></circle>',
-  happy:'<path class="t-line" d="M27.6 35c1.2-2.8 2.7-4.2 4.4-4.2s3.2 1.4 4.4 4.2"></path><path class="t-line" d="M51.6 35c1.2-2.8 2.7-4.2 4.4-4.2s3.2 1.4 4.4 4.2"></path><path class="t-line" d="M39 55.4c1.5 1.7 3.1 2.5 5 2.5s3.5-.8 5-2.5"></path>',
-  sad:'<path class="t-line" d="M29.5 31.5l5 5M34.5 31.5l-5 5"></path><path class="t-line" d="M53.5 31.5l5 5M58.5 31.5l-5 5"></path><path class="t-line" d="M39.4 56.4c.9-1 1.8-1 2.7 0s1.8 1 2.7 0 1.8-1 2.7 0"></path>'
+/* -------------------- la mascota: la vaca, por "Bulls and Cows" --------------------
+   Desde la 4.3.0 (serie Plaza) es una vaca pequena y risuena: un solo trazado y
+   cuatro humores. Lleva sus colores escritos en el propio SVG y no en la hoja de
+   estilos, porque es la misma sobre crema y sobre noche y porque asi se copia tal
+   cual al logo de la cabecera, a /admin y a tools/make-icons.mjs, que dibujan los
+   mismos trazados (test/vaca.test.js comprueba que no se separan). Se dibuja desde
+   JS para poder inyectarla donde se pinta con innerHTML (el banner final); las
+   barras de turno la piden con data-vaca y la rellena pintarIconos(). */
+const VACA_BODY='<path d="M27 27c-9-3-14-11-12-20 7 2 12 8 14 16Z" fill="#FFC531" stroke="#1B1638" stroke-width="4" stroke-linejoin="round"></path><path d="M69 27c9-3 14-11 12-20-7 2-12 8-14 16Z" fill="#FFC531" stroke="#1B1638" stroke-width="4" stroke-linejoin="round"></path><path d="M22 41c-9-3-17 0-19 6 5 6 13 6 19 1Z" fill="#FFF5E8" stroke="#1B1638" stroke-width="4" stroke-linejoin="round"></path><path d="M74 41c9-3 17 0 19 6-5 6-13 6-19 1Z" fill="#FFF5E8" stroke="#1B1638" stroke-width="4" stroke-linejoin="round"></path><path d="M9 46c3-1 6-1 9 0M87 46c-3-1-6-1-9 0" stroke="#FF6B5E" stroke-width="3" stroke-linecap="round"></path><path d="M48 20c18 0 30 11 30 27 0 18-12 32-30 32S18 65 18 47c0-16 12-27 30-27Z" fill="#FFF5E8" stroke="#1B1638" stroke-width="5"></path><path d="M50 26c5-4 12-3 15 2-1 5-5 8-10 7-5-1-7-5-5-9Z" fill="#1B1638"></path><path d="M21 55c3-3 8-2 9 2 0 4-4 6-8 4-2-1-3-4-1-6Z" fill="#1B1638"></path><path d="M41 22c1-5 4-8 8-8M48 20c2-4 5-6 9-5" stroke="#1B1638" stroke-width="3.5" stroke-linecap="round"></path><rect x="27" y="57" width="42" height="23" rx="11.5" fill="#FFD3C2" stroke="#1B1638" stroke-width="4"></rect><ellipse cx="39" cy="67" rx="3.6" ry="2.4" fill="#1B1638"></ellipse><ellipse cx="57" cy="67" rx="3.6" ry="2.4" fill="#1B1638"></ellipse>';
+const VACA_FACE={
+  calm:'<circle cx="38" cy="46" r="4" fill="#1B1638"></circle><circle cx="58" cy="46" r="4" fill="#1B1638"></circle><path d="M43 75c2 2 8 2 10 0" stroke="#1B1638" stroke-width="2.5" stroke-linecap="round"></path>',
+  alert:'<path d="M31 37c4-3 9-3 13 0M52 37c4-3 9-3 13 0" stroke="#1B1638" stroke-width="3.5" stroke-linecap="round"></path><circle cx="38" cy="47" r="5" fill="#1B1638"></circle><circle cx="58" cy="47" r="5" fill="#1B1638"></circle><circle cx="40" cy="45" r="1.6" fill="#fff"></circle><circle cx="60" cy="45" r="1.6" fill="#fff"></circle><circle cx="48" cy="75" r="2.2" fill="#1B1638"></circle>',
+  happy:'<path d="M32 48c3-5 9-5 12 0M52 48c3-5 9-5 12 0" stroke="#1B1638" stroke-width="4" stroke-linecap="round"></path><path d="M40 73c3 5 13 5 16 0" stroke="#1B1638" stroke-width="3" stroke-linecap="round"></path><circle cx="12" cy="18" r="3.5" fill="#FFC531"></circle><circle cx="86" cy="12" r="3" fill="#FF6B5E"></circle><circle cx="90" cy="72" r="3.5" fill="#5FE0C9"></circle><circle cx="8" cy="76" r="2.5" fill="#B18CFF"></circle>',
+  sad:'<path d="M31 41c4 1 9 2 13 4M65 41c-4 1-9 2-13 4" stroke="#1B1638" stroke-width="3.5" stroke-linecap="round"></path><circle cx="38" cy="50" r="3.5" fill="#1B1638"></circle><circle cx="58" cy="50" r="3.5" fill="#1B1638"></circle><path d="M42 76c3-2 9-2 12 0" stroke="#1B1638" stroke-width="2.5" stroke-linecap="round"></path>'
 };
-const TORO_SPARKS='<g style="color:var(--pica)"><path class="dl" d="M-4 -2c1.6-1.6 3-3.4 4.2-5.4"></path><path class="dl" d="M22 -8c.4-2.4.6-4.8.6-7.2"></path><path class="dl" d="M66 -8c-.4-2.4-.6-4.8-.6-7.2"></path><path class="dl" d="M92 -2c-1.6-1.6-3-3.4-4.2-5.4"></path></g><g style="color:var(--accent)"><path class="dl" d="M-4 26c-2.2.6-4.4.8-6.6.6"></path><path class="dl" d="M92 26c2.2.6 4.4.8 6.6.6"></path></g>';
 /* -------------------- iconos dibujados --------------------
    Un solo juego, en trazo de rotulador como el resto de la interfaz. Los
    botones estaticos se rellenan por data-ico para no repetir los trazados. */
@@ -2438,6 +2437,10 @@ function pintarIconos(raiz){
   (raiz||document).querySelectorAll('[data-ico]').forEach(el=>{
     el.innerHTML=ico(el.dataset.ico, Number(el.dataset.icoSize)||16);
   });
+  /* El hueco se sustituye por la vaca entera, asi que pintar dos veces no hace nada. */
+  (raiz||document).querySelectorAll('[data-vaca]').forEach(el=>{
+    el.outerHTML=vacaSVG(el.dataset.vaca, Number(el.dataset.vacaSize)||34);
+  });
 }
 /* Ocho formas con el mismo peso optico sobre una rejilla de 24. Son lo que
    permite leer un codigo de colores sin distinguirlos: la forma manda. */
@@ -2455,8 +2458,8 @@ function symbolSVG(idx,tam){
   const d=SYMBOL_D[idx]; if(d===undefined) return '';
   return `<svg class="sym" width="${tam}" height="${tam}" viewBox="0 0 24 24" aria-hidden="true"><path d="${d}" fill="currentColor" fill-rule="evenodd"></path></svg>`;
 }
-function toroSVG(mood,width,sparks){
-  return `<svg class="toro" width="${width}" height="${Math.round(width*90/104)}" viewBox="-8 -16 104 90" aria-hidden="true">${sparks?TORO_SPARKS:''}${TORO_HORNS}${TORO_HEAD}${TORO_MUZZLE}${TORO_FACE[mood]||TORO_FACE.calm}</svg>`;
+function vacaSVG(mood,width){
+  return `<svg class="vaca" width="${width}" height="${Math.round(width*84/96)}" viewBox="0 2 96 84" fill="none" aria-hidden="true">${VACA_BODY}${VACA_FACE[mood]||VACA_FACE.calm}</svg>`;
 }
 /* Subrayado a dos pasadas, como trazado a rotulador. */
 function ruleSVG(width){
@@ -3563,7 +3566,7 @@ async function logout(){
   chatEnabled=false;stopChatPoll();$('chat-panel').classList.add('hidden');$('chat-launch').classList.add('hidden');
   show('login');
 }
-function enterLobby(){ if(!sessionToken) return exitGuest(); showWelcomeNote(); $('lobby-greet').textContent=t('lobby_greeting',{name:user}); $('lobby-rule').innerHTML=ruleSVG(112); $('lobby-toro').innerHTML=toroSVG('calm',54); updateSoundLabel(); show('lobby'); renderDailyCard(); renderPracticeResumeCard(); refreshLobby(); handleDeepLink(); }
+function enterLobby(){ if(!sessionToken) return exitGuest(); showWelcomeNote(); $('lobby-greet').textContent=t('lobby_greeting',{name:user}); $('lobby-rule').innerHTML=ruleSVG(112); $('lobby-vaca').innerHTML=vacaSVG('calm',54); updateSoundLabel(); show('lobby'); renderDailyCard(); renderPracticeResumeCard(); refreshLobby(); handleDeepLink(); }
 
 function showWelcomeNote(){
   const box=$('lobby-welcome'); if(!box) return;
@@ -5259,7 +5262,7 @@ function renderGame(st){
     if(st.isDraw){
       const solvedBy = n => st.guesses.some(x=>x.by===n && x.fijas===parseInt(st.digits,10));
       const bothSolved = solvedBy(st.p1) && solvedBy(st.p2);
-      banner.innerHTML=`<div class="banner draw">${toroSVG('calm',118,false)}<h2>${t('draw_title')}</h2><p>${bothSolved?t('draw_both'):t('draw_limit')}</p></div>`;
+      banner.innerHTML=`<div class="banner draw">${vacaSVG('calm',118)}<h2>${t('draw_title')}</h2><p>${bothSolved?t('draw_both'):t('draw_limit')}</p></div>`;
     }else if(spectator){
       banner.innerHTML=`<div class="banner"><h2>${t('spectator_winner',{name:esc(st.winner)})}</h2></div>`;
     }else{
@@ -5268,7 +5271,7 @@ function renderGame(st){
         : st.finishReason==='timeout'
           ? (won?t('win_timeout',{name:esc(oppLabel)}):t('lose_timeout'))
           : (won?t('win_msg',{name:esc(oppLabel)}):t('lose_msg',{name:esc(st.winner)}));
-      banner.innerHTML=`<div class="banner ${won?'win':'lose'}">${won?toroSVG('happy',150,true):toroSVG('sad',118,false)}<h2>${won?t('win_title'):t('lose_title')}</h2>${ruleSVG(won?150:118)}
+      banner.innerHTML=`<div class="banner ${won?'win':'lose'}">${won?vacaSVG('happy',150):vacaSVG('sad',118)}<h2>${won?t('win_title'):t('lose_title')}</h2>${ruleSVG(won?150:118)}
         <p>${resultMsg}</p></div>`;
     }
     if(!spectator&&st.opponentSecret){

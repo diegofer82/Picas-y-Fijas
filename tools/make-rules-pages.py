@@ -15,7 +15,7 @@ import io
 import os
 import re
 
-from site_style import NAMES, ORIGIN, STYLE
+from site_style import FONTS, NAMES, ORIGIN, STYLE, THEME_COLOR
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SOURCE = os.path.join(ROOT, "public", "index.html")
@@ -109,7 +109,7 @@ def build(lang, page, rules):
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#12100C">
+{theme_color}
 <title>{title}</title>
 <meta name="description" content="{description}">
 <meta name="robots" content="index,follow,max-image-preview:large">
@@ -132,14 +132,14 @@ def build(lang, page, rules):
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Instrument+Serif&display=swap" rel="stylesheet">
+{fonts}
 <style>{style}</style>
 <script type="application/ld+json">{breadcrumb_ld}</script>
 </head>
 <body>
 <div class="wrap">
   <header class="brand">
-    <a class="logo" href="{game}"><img src="/icon-192.png" alt="Picas y Fijas" width="46" height="46"></a>
+    <a class="logo" href="{game}"><img src="/icon-192.png" alt="Picas y Fijas" width="48" height="48"></a>
     <div>
       <a class="home" href="{game}">Picas y Fijas</a>
       <div class="sub">{tagline}</div>
@@ -162,6 +162,8 @@ def build(lang, page, rules):
         url=url,
         alternates=alternates(),
         style=STYLE,
+        fonts=FONTS,
+        theme_color=THEME_COLOR,
         breadcrumb_ld=breadcrumb_ld,
         nav=language_nav(lang),
         rules=rules.strip(),

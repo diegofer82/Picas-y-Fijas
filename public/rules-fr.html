@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#12100C">
+<meta name="theme-color" content="#FFF5E8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#120F24" media="(prefers-color-scheme: dark)">
 <title>Comment jouer à Bulls and Cows · règles de Picas y Fijas</title>
 <meta name="description" content="Les règles complètes de Picas y Fijas, le classique Bulls and Cows : ce que veulent dire les indices Fixe et Présent, comment créer une partie et comment gagner. Guide stratégique en PDF.">
 <meta name="robots" content="index,follow,max-image-preview:large">
@@ -29,66 +30,71 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Instrument+Serif&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Figtree:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root{--ink:#12100C;--panel:#231D16;--panel-2:#1A150F;--edge:#3B3229;
-    --text:#F5EFE3;--muted:#A3947E;--accent:#5B8DEF;--r:14px}
+  :root{--crema:#FFF5E8;--papel:#FFFFFF;--hueco:#F7F0E4;--linea:#E9DFD0;--linea-2:#F2ECE0;
+    --tinta:#1B1638;--bruma:#625B7A;--bruma-2:#A79FB8;
+    --azul:#2F5BFF;--azul-2:#1F3FB8;--azul-suave:#EEF2FF;--azul-texto:#1F3FB8;
+    --pica:#E0731A;--fija:#12A150;--r:22px;--r-md:16px}
+  @media (prefers-color-scheme:dark){:root{--crema:#120F24;--papel:#1D1838;--hueco:#171233;
+    --linea:#2E2850;--linea-2:#2A2448;--tinta:#F6F1FF;--bruma:#A79FC4;--bruma-2:#6E63A0;
+    --azul:#4F79FF;--azul-2:#2F4FC7;--azul-suave:#22305E;--azul-texto:#A9BDFF;
+    --pica:#F6A040;--fija:#39D37E}}
   *{box-sizing:border-box}
   html,body{margin:0}
-  body{font-family:'Archivo',system-ui,-apple-system,sans-serif;
-    background:radial-gradient(1200px 600px at 80% -10%,rgba(91,141,239,.10),transparent 60%),
-      radial-gradient(900px 500px at -10% 110%,rgba(224,104,90,.10),transparent 55%),var(--ink);
-    color:var(--text);min-height:100dvh}
+  body{font-family:'Figtree',system-ui,-apple-system,sans-serif;background:var(--crema);
+    color:var(--tinta);min-height:100dvh;-webkit-font-smoothing:antialiased}
   .wrap{max-width:640px;margin:0 auto;padding:20px 18px 40px}
   .brand{display:flex;align-items:center;gap:12px;margin:6px 0 22px}
-  .logo{width:46px;height:46px;border-radius:13px;flex:0 0 auto;overflow:hidden;
-    background:linear-gradient(150deg,#2C241A,#171208);border:1px solid #4A3E30;display:block;
-    box-shadow:0 8px 22px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,236,206,.09)}
+  .logo{width:48px;height:48px;border-radius:15px;flex:0 0 auto;overflow:hidden;display:block;
+    box-shadow:0 4px 0 var(--azul-2)}
   .logo img{width:100%;height:100%;display:block}
-  /* El toro tambien lleva de vuelta al juego aqui, asi que debe responder igual
-     que dentro: el marco azul al pasar por encima es lo que lo delata como
-     boton. Las reglas gemelas estan en `button.logo`, en public/index.html. */
-  .logo{transition:border-color .15s,transform .06s}
-  .logo:hover{border-color:var(--accent)}
-  .logo:active{transform:translateY(1px)}
-  .logo:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .brand a.home{font-family:'Instrument Serif',Georgia,serif;font-size:25px;color:var(--text);
-    text-decoration:none;line-height:1.05}
-  .brand .sub{font-size:12px;color:var(--muted);margin-top:2px;letter-spacing:.14em;text-transform:uppercase}
-  .card{background:linear-gradient(180deg,var(--panel),var(--panel-2));
-    border:1px solid var(--edge);border-radius:var(--r);padding:22px;margin-bottom:16px;
-    box-shadow:0 10px 30px rgba(0,0,0,.25)}
-  h1{font-family:'Instrument Serif',Georgia,serif;margin:0 0 10px;font-size:27px;font-weight:400;line-height:1.15}
-  .intro{color:var(--muted);font-size:14px;line-height:1.6;margin:0 0 18px}
-  .intro b{color:var(--text);font-weight:600}
-  .rules{color:var(--text);font-size:14px;line-height:1.6}
+  /* La vaca tambien lleva de vuelta al juego aqui, asi que responde igual que
+     dentro: se hunde sobre su reborde al pulsarla. Las reglas gemelas estan en
+     `button.logo`, en public/index.html. */
+  .logo{transition:transform .08s,box-shadow .08s,filter .15s}
+  .logo:hover{filter:brightness(1.06)}
+  .logo:active{transform:translateY(4px);box-shadow:none}
+  .logo:focus-visible{outline:3px solid var(--azul);outline-offset:2px}
+  .brand a.home{font-family:'Bricolage Grotesque','Figtree',sans-serif;font-weight:800;font-size:24px;
+    letter-spacing:-.03em;color:var(--tinta);text-decoration:none;line-height:1}
+  .brand .sub{font-size:12px;color:var(--bruma);margin-top:3px;font-weight:600}
+  .card{background:var(--papel);border:2px solid var(--linea);border-radius:var(--r);padding:22px;margin-bottom:16px}
+  h1{font-family:'Bricolage Grotesque','Figtree',sans-serif;margin:0 0 10px;font-size:28px;font-weight:800;
+    letter-spacing:-.03em;line-height:1.1}
+  .intro{color:var(--bruma);font-size:15px;line-height:1.6;margin:0 0 18px}
+  .intro b{color:var(--tinta);font-weight:700}
+  .rules{color:var(--tinta);font-size:15px;line-height:1.6}
   .rules ol{padding-left:20px;margin:0 0 6px}
   .rules li{margin-bottom:11px}
-  .rules ul{padding-left:18px;margin:6px 0;color:var(--muted);font-size:13px}
+  .rules ul{padding-left:18px;margin:6px 0;color:var(--bruma);font-size:14px}
   .rules ul li{margin-bottom:4px}
-  .rules b{color:var(--text)}
-  .note{background:#0D0B07;border:1px solid var(--edge);border-left:3px solid var(--accent);
-    border-radius:10px;padding:12px 14px;margin:12px 0;font-size:13px;color:var(--muted)}
-  .note b{color:var(--text)}
-  .strategy-download{margin-top:16px;text-align:center;border-color:rgba(91,141,239,.45)!important;
-    background:rgba(91,141,239,.08)!important}
-  .strategy-download a{display:inline-block;margin-top:8px;color:var(--accent);font-weight:700;text-decoration:none}
+  .rules b{color:var(--tinta)}
+  .note{background:var(--hueco);border:2px solid var(--linea-2);border-radius:var(--r-md);
+    padding:12px 14px;margin:12px 0;font-size:14px;color:var(--bruma)}
+  .note b{color:var(--tinta)}
+  .strategy-download{margin-top:16px;text-align:center;border-color:var(--azul)!important;
+    background:var(--azul-suave)!important}
+  .strategy-download a{display:inline-block;margin-top:8px;color:var(--azul-texto);font-weight:700;text-decoration:none}
   .strategy-download a:hover,.strategy-download a:focus-visible{text-decoration:underline}
-  .btn{display:block;width:100%;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:600;
-    background:var(--accent);color:#0A1020;text-align:center;text-decoration:none;margin-top:20px}
-  .langs{display:flex;gap:14px;justify-content:center;margin:0 0 14px;font-size:13px}
-  .langs a{color:var(--accent);text-decoration:none}
+  .btn{display:block;width:100%;border:none;border-radius:var(--r-md);padding:16px;font-size:16px;font-weight:800;
+    background:var(--azul);color:#FFFFFF;text-align:center;text-decoration:none;margin-top:20px;
+    box-shadow:0 4px 0 var(--azul-2);transition:transform .08s,box-shadow .08s}
+  .btn:active{transform:translateY(4px);box-shadow:none}
+  .langs{display:flex;gap:14px;justify-content:center;margin:0 0 14px;font-size:14px;font-weight:600}
+  .langs a{color:var(--azul-texto);text-decoration:none}
   .langs a:hover{text-decoration:underline}
-  .langs span{color:var(--muted)}
-  .foot{text-align:center;color:var(--muted);font-size:11px;letter-spacing:.05em}
-  .foot a{color:var(--muted)}
+  .langs span{color:var(--bruma)}
+  .foot{text-align:center;color:var(--bruma);font-size:12px;font-weight:600}
+  .foot a{color:var(--bruma)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Accueil","item":"https://picasyfijas.fans/fr"},{"@type":"ListItem","position":2,"name":"Comment jouer","item":"https://picasyfijas.fans/fr/comment-jouer"}]}</script>
 </head>
 <body>
 <div class="wrap">
   <header class="brand">
-    <a class="logo" href="/fr"><img src="/icon-192.png" alt="Picas y Fijas" width="46" height="46"></a>
+    <a class="logo" href="/fr"><img src="/icon-192.png" alt="Picas y Fijas" width="48" height="48"></a>
     <div>
       <a class="home" href="/fr">Picas y Fijas</a>
       <div class="sub">Duel de déduction en ligne</div>
@@ -121,7 +127,7 @@
   <div class="note"><b>Jeu asynchrone :</b> sans temps par tour, tu peux retourner au lobby et continuer quelques minutes ou heures plus tard ; ton adversaire peut aussi jouer lorsqu'il est disponible.</div>
   <div class="note"><b>Chrono :</b> à 0, le tour passe automatiquement à l'adversaire et compte comme un essai utilisé lorsque la partie a une limite d'essais. Si quelqu'un retourne au lobby, le chrono s'arrête jusqu'au retour des deux joueurs. La pause manuelle temporaire n'est disponible que dans les parties chronométrées.</div>
   <div class="note"><b>Quitter ou annuler :</b> retourner au lobby ne supprime pas la partie. Le créateur peut annuler une partie qui attend encore un adversaire. Abandonner une partie commencée attribue la victoire à l'adversaire et enregistre une défaite.</div>
-  <div class="note strategy-download"><b>Tu es arrivé jusqu'à la fin ? Tu as déjà un avantage.</b><br>Découvre des stratégies pour chaque type de partie.<br><a href="/guide-strategies-picas-y-fijas-fr.pdf" download>📘 Télécharger le guide stratégique (PDF)</a></div></div>
+  <div class="note strategy-download"><b>Tu es arrivé jusqu'à la fin ? Tu as déjà un avantage.</b><br>Découvre des stratégies pour chaque type de partie.<br><a href="/guide-strategies-picas-y-fijas-fr.pdf" download>Télécharger le guide stratégique (PDF)</a></div></div>
     <a class="btn" href="/fr">Jouer maintenant</a>
   </main>
   <nav class="langs"><a href="/como-se-juega" hreflang="es">Español</a><a href="/en/how-to-play" hreflang="en">English</a><span>Français</span></nav>

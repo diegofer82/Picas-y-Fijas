@@ -14,9 +14,7 @@
     .topbar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--line)}
     .brand{display:flex;gap:10px;align-items:center;min-width:0}
     .grow{flex:1 1 auto}
-    .toro .t-fill{fill:var(--blue);stroke:#08203a;stroke-width:2.6;stroke-linejoin:round}
-    .toro .t-line{fill:none;stroke:#08203a;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
-    .toro .t-dot{fill:#08203a}
+    .vaca{display:block;flex:0 0 auto}
     .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;margin:16px 0}
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     @media (min-width:561px){.login-row input{flex:1 1 200px;min-width:0}}
@@ -94,12 +92,12 @@
 <body><main>
   <div class="topbar">
     <div class="brand">
-      <svg class="toro" width="42" height="36" viewBox="-8 -16 104 90" aria-hidden="true"><path class="t-fill" d="M19 21C12.5 16.5 4.5 11 -2 5c0 9.5 4.5 18.5 12.5 25C13 27.5 16 24 19 21Z"></path><path class="t-fill" d="M69 21C75.5 16.5 83.5 11 90 5c0 9.5-4.5 18.5-12.5 25C75 27.5 72 24 69 21Z"></path><path class="t-fill" d="M15 32c0-11.6 13-20.6 29-20.6s29 9 29 20.6c0 7-1.6 12.8-4.8 17.6C64.6 57 55.4 61.6 44 61.6S23.4 57 19.8 49.6C16.6 44.8 15 39 15 32Z"></path><path class="t-line" d="M32.5 54c0-3.4 5.2-5.6 11.5-5.6s11.5 2.2 11.5 5.6-5.2 5.6-11.5 5.6-11.5-2.2-11.5-5.6Z"></path><circle class="t-dot" cx="40" cy="53.6" r="1.8"></circle><circle class="t-dot" cx="48" cy="53.6" r="1.8"></circle><circle class="t-dot" cx="32" cy="34" r="3.4"></circle><circle class="t-dot" cx="56" cy="34" r="3.4"></circle></svg>
+      <svg class="vaca" width="42" height="37" viewBox="0 2 96 84" fill="none" aria-hidden="true"><path d="M27 27c-9-3-14-11-12-20 7 2 12 8 14 16Z" fill="#FFC531" stroke="#1B1638" stroke-width="4" stroke-linejoin="round"></path><path d="M69 27c9-3 14-11 12-20-7 2-12 8-14 16Z" fill="#FFC531" stroke="#1B1638" stroke-width="4" stroke-linejoin="round"></path><path d="M22 41c-9-3-17 0-19 6 5 6 13 6 19 1Z" fill="#FFF5E8" stroke="#1B1638" stroke-width="4" stroke-linejoin="round"></path><path d="M74 41c9-3 17 0 19 6-5 6-13 6-19 1Z" fill="#FFF5E8" stroke="#1B1638" stroke-width="4" stroke-linejoin="round"></path><path d="M9 46c3-1 6-1 9 0M87 46c-3-1-6-1-9 0" stroke="#FF6B5E" stroke-width="3" stroke-linecap="round"></path><path d="M48 20c18 0 30 11 30 27 0 18-12 32-30 32S18 65 18 47c0-16 12-27 30-27Z" fill="#FFF5E8" stroke="#1B1638" stroke-width="5"></path><path d="M50 26c5-4 12-3 15 2-1 5-5 8-10 7-5-1-7-5-5-9Z" fill="#1B1638"></path><path d="M21 55c3-3 8-2 9 2 0 4-4 6-8 4-2-1-3-4-1-6Z" fill="#1B1638"></path><path d="M41 22c1-5 4-8 8-8M48 20c2-4 5-6 9-5" stroke="#1B1638" stroke-width="3.5" stroke-linecap="round"></path><rect x="27" y="57" width="42" height="23" rx="11.5" fill="#FFD3C2" stroke="#1B1638" stroke-width="4"></rect><ellipse cx="39" cy="67" rx="3.6" ry="2.4" fill="#1B1638"></ellipse><ellipse cx="57" cy="67" rx="3.6" ry="2.4" fill="#1B1638"></ellipse><circle cx="38" cy="46" r="4" fill="#1B1638"></circle><circle cx="58" cy="46" r="4" fill="#1B1638"></circle><path d="M43 75c2 2 8 2 10 0" stroke="#1B1638" stroke-width="2.5" stroke-linecap="round"></path></svg>
       <div><h1>Administración</h1><div class="muted small">Picas y Fijas · acceso separado y reservado · <span id="adminZone" title="Pasa el ratón por una fecha para ver su hora UTC">horas locales</span></div></div>
     </div>
     <div class="grow"></div>
     <button class="back" id="backToGame" title="Cierra el panel y vuelve al juego">
-      <svg class="toro" width="30" height="26" viewBox="-8 -16 104 90" aria-hidden="true"><path class="t-fill" d="M19 21C12.5 16.5 4.5 11 -2 5c0 9.5 4.5 18.5 12.5 25C13 27.5 16 24 19 21Z"></path><path class="t-fill" d="M69 21C75.5 16.5 83.5 11 90 5c0 9.5-4.5 18.5-12.5 25C75 27.5 72 24 69 21Z"></path><path class="t-fill" d="M15 32c0-11.6 13-20.6 29-20.6s29 9 29 20.6c0 7-1.6 12.8-4.8 17.6C64.6 57 55.4 61.6 44 61.6S23.4 57 19.8 49.6C16.6 44.8 15 39 15 32Z"></path><path class="t-line" d="M32.5 54c0-3.4 5.2-5.6 11.5-5.6s11.5 2.2 11.5 5.6-5.2 5.6-11.5 5.6-11.5-2.2-11.5-5.6Z"></path><circle class="t-dot" cx="40" cy="53.6" r="1.8"></circle><circle class="t-dot" cx="48" cy="53.6" r="1.8"></circle><path class="t-line" d="M27.6 35c1.2-2.8 2.7-4.2 4.4-4.2s3.2 1.4 4.4 4.2"></path><path class="t-line" d="M51.6 35c1.2-2.8 2.7-4.2 4.4-4.2s3.2 1.4 4.4 4.2"></path><path class="t-line" d="M39 55.4c1.5 1.7 3.1 2.5 5 2.5s3.5-.8 5-2.5"></path></svg>
+      <svg class="vaca" width="30" height="26" viewBox="0 2 96 84" fill="none" aria-hidden="true"><path d="M27 27c-9-3-14-11-12-20 7 2 12 8 14 16Z" fill="#FFC531" stroke="#1B1638" stroke-width="4" stroke-linejoin="round"></path><path d="M69 27c9-3 14-11 12-20-7 2-12 8-14 16Z" fill="#FFC531" stroke="#1B1638" stroke-width="4" stroke-linejoin="round"></path><path d="M22 41c-9-3-17 0-19 6 5 6 13 6 19 1Z" fill="#FFF5E8" stroke="#1B1638" stroke-width="4" stroke-linejoin="round"></path><path d="M74 41c9-3 17 0 19 6-5 6-13 6-19 1Z" fill="#FFF5E8" stroke="#1B1638" stroke-width="4" stroke-linejoin="round"></path><path d="M9 46c3-1 6-1 9 0M87 46c-3-1-6-1-9 0" stroke="#FF6B5E" stroke-width="3" stroke-linecap="round"></path><path d="M48 20c18 0 30 11 30 27 0 18-12 32-30 32S18 65 18 47c0-16 12-27 30-27Z" fill="#FFF5E8" stroke="#1B1638" stroke-width="5"></path><path d="M50 26c5-4 12-3 15 2-1 5-5 8-10 7-5-1-7-5-5-9Z" fill="#1B1638"></path><path d="M21 55c3-3 8-2 9 2 0 4-4 6-8 4-2-1-3-4-1-6Z" fill="#1B1638"></path><path d="M41 22c1-5 4-8 8-8M48 20c2-4 5-6 9-5" stroke="#1B1638" stroke-width="3.5" stroke-linecap="round"></path><rect x="27" y="57" width="42" height="23" rx="11.5" fill="#FFD3C2" stroke="#1B1638" stroke-width="4"></rect><ellipse cx="39" cy="67" rx="3.6" ry="2.4" fill="#1B1638"></ellipse><ellipse cx="57" cy="67" rx="3.6" ry="2.4" fill="#1B1638"></ellipse><circle cx="38" cy="46" r="4" fill="#1B1638"></circle><circle cx="58" cy="46" r="4" fill="#1B1638"></circle><path d="M43 75c2 2 8 2 10 0" stroke="#1B1638" stroke-width="2.5" stroke-linecap="round"></path></svg>
       Volver al juego
     </button>
   </div>
@@ -813,7 +811,7 @@ $('export').onclick=async()=>{
   a.download='picas-y-fijas-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href);
 };
 $('logout').onclick=()=>{signOut();location.reload()};
-// El toro azul hace las dos cosas de una vez: cierra el panel en este navegador
+// El botón de la vaca hace las dos cosas de una vez: cierra el panel en este navegador
 // y devuelve a la persona al juego, que tiene su propia sesión aparte.
 $('backToGame').onclick=()=>{signOut();location.href='/'};
 $('loginForm').addEventListener('submit',e=>{e.preventDefault();login()});

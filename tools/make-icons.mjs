@@ -1,4 +1,4 @@
-// Genera los iconos PWA de Picas y Fijas (marca "El Toro") sin dependencias.
+// Genera los iconos PWA de Picas y Fijas (la vaca de la serie Plaza) sin dependencias.
 // Rasterizador propio: aplana curvas Bezier, rellena por scanline (nonzero)
 // y traza con capsulas, todo supermuestreado y volcado a PNG con zlib.
 import { deflateSync } from 'node:zlib';
@@ -117,6 +117,14 @@ class Canvas {
       }
     }
   }
+  ellipse(cx, cy, rx, ry, color) {
+    for (let y = Math.max(0, Math.floor(cy - ry)); y <= Math.min(this.W - 1, Math.ceil(cy + ry)); y++) {
+      for (let x = Math.max(0, Math.floor(cx - rx)); x <= Math.min(this.W - 1, Math.ceil(cx + rx)); x++) {
+        const dx = (x + 0.5 - cx) / rx, dy = (y + 0.5 - cy) / ry;
+        if (dx * dx + dy * dy <= 1) this.px(x, y, color);
+      }
+    }
+  }
   circle(cx, cy, r, color) {
     const r2 = r * r;
     for (let y = Math.max(0, Math.floor(cy - r)); y <= Math.min(this.W - 1, Math.ceil(cy + r)); y++) {
@@ -175,32 +183,54 @@ function crc32(buf) {
   return c ^ -1;
 }
 
-/* ---------- la marca ---------- */
-const BOARD = [0x12, 0x10, 0x0c];
-const CREAM = [0xf5, 0xef, 0xe3];
+/* ---------- la marca: la vaca de la serie Plaza ---------- */
+// Los trazados son los de VACA_BODY y VACA_FACE.calm en public/index.html, en
+// el mismo orden de pintado; test/vaca.test.js comprueba que no se separan.
+const AZUL = [0x2f, 0x5b, 0xff];
+const INK = [0x1b, 0x16, 0x38];
+const CREMA = [0xff, 0xf5, 0xe8];
+const SOL = [0xff, 0xc5, 0x31];
+const CORAL = [0xff, 0x6b, 0x5e];
+const HOCICO = [0xff, 0xd3, 0xc2];
 
-const HL = 'M19 21C12.5 16.5 4.5 11 -2 5c0 9.5 4.5 18.5 12.5 25C13 27.5 16 24 19 21Z';
-const HR = 'M69 21C75.5 16.5 83.5 11 90 5c0 9.5-4.5 18.5-12.5 25C75 27.5 72 24 69 21Z';
-const HEAD = 'M15 32c0-11.6 13-20.6 29-20.6s29 9 29 20.6c0 7-1.6 12.8-4.8 17.6C64.6 57 55.4 61.6 44 61.6S23.4 57 19.8 49.6C16.6 44.8 15 39 15 32Z';
-const TUFT = 'M37.6 12.4c1.4-4 3.5-6 6.4-6s5 2 6.4 6';
-const MUZ = 'M32.5 54c0-3.4 5.2-5.6 11.5-5.6s11.5 2.2 11.5 5.6-5.2 5.6-11.5 5.6-11.5-2.2-11.5-5.6Z';
+// [trazado, relleno, grosor del borde, color del borde]
+const SHAPES = [
+  ['M27 27c-9-3-14-11-12-20 7 2 12 8 14 16Z', SOL, 4, INK],
+  ['M69 27c9-3 14-11 12-20-7 2-12 8-14 16Z', SOL, 4, INK],
+  ['M22 41c-9-3-17 0-19 6 5 6 13 6 19 1Z', CREMA, 4, INK],
+  ['M74 41c9-3 17 0 19 6-5 6-13 6-19 1Z', CREMA, 4, INK],
+  ['M9 46c3-1 6-1 9 0M87 46c-3-1-6-1-9 0', null, 3, CORAL],
+  ['M48 20c18 0 30 11 30 27 0 18-12 32-30 32S18 65 18 47c0-16 12-27 30-27Z', CREMA, 5, INK],
+  ['M50 26c5-4 12-3 15 2-1 5-5 8-10 7-5-1-7-5-5-9Z', INK, 0, null],
+  ['M21 55c3-3 8-2 9 2 0 4-4 6-8 4-2-1-3-4-1-6Z', INK, 0, null],
+  ['M41 22c1-5 4-8 8-8M48 20c2-4 5-6 9-5', null, 3.5, INK],
+];
+const NOSTRILS = [[39, 67], [57, 67]];
+const EYES = [[38, 46, 4], [58, 46, 4]];
+const MOUTH = 'M43 75c2 2 8 2 10 0';
 
 function draw(size, frac) {
   const c = new Canvas(size);
-  c.clear(BOARD);
-  const s = (size * frac / 92) * SS;
-  const tx = (size * SS) / 2 - 44 * s, ty = (size * SS) / 2 - 33.5 * s;
-  const T = (subs) => subs.map((p) => p.map(([x, y]) => [x * s + tx, y * s + ty]));
-  for (const d of [HL, HR, HEAD]) {
+  c.clear(AZUL);
+  // Con su borde, la vaca va de x=1 a x=95 y de y=5 a y=82: se centra esa caja
+  // y `frac` es la parte del ancho del icono que ocupa.
+  const s = (size * frac / 94) * SS;
+  const tx = (size * SS) / 2 - 48 * s, ty = (size * SS) / 2 - 43.5 * s;
+  const P = (x, y) => [x * s + tx, y * s + ty];
+  const T = (subs) => subs.map((p) => p.map(([x, y]) => P(x, y)));
+  for (const [d, fill, width, line] of SHAPES) {
     const p = T(parsePath(d));
-    c.fill(p, CREAM);
-    c.stroke(p, 2.6 * s, BOARD);
+    if (fill) c.fill(p, fill);
+    if (width) c.stroke(p, width * s, line);
   }
-  c.stroke(T(parsePath(TUFT)), 2.4 * s, BOARD);
-  c.stroke(T(parsePath(MUZ)), 2.4 * s, BOARD);
-  for (const [ex, ey, er] of [[32, 34, 3.4], [56, 34, 3.4], [40, 53.6, 1.8], [48, 53.6, 1.8]]) {
-    c.circle(ex * s + tx, ey * s + ty, er * s, BOARD);
-  }
+  // El hocico es un rectangulo de 42x23 con esquinas de 11.5, es decir una
+  // capsula: el borde es la capsula gruesa y el relleno, la fina encima.
+  const muzzle = [[P(38.5, 68.5), P(57.5, 68.5)]];
+  c.stroke(muzzle, 27 * s, INK);
+  c.stroke(muzzle, 19 * s, HOCICO);
+  for (const [x, y] of NOSTRILS) c.ellipse(...P(x, y), 3.6 * s, 2.4 * s, INK);
+  for (const [x, y, r] of EYES) c.circle(...P(x, y), r * s, INK);
+  c.stroke(T(parsePath(MOUTH)), 2.5 * s, INK);
   return c.toPNG();
 }
 
@@ -208,7 +238,7 @@ const out = process.argv[2] || 'public';
 for (const [name, size, frac] of [
   ['icon-192.png', 192, 0.78],
   ['icon-512.png', 512, 0.78],
-  ['icon-maskable-512.png', 512, 0.58],
+  ['icon-maskable-512.png', 512, 0.66],
   ['apple-touch-icon.png', 180, 0.78],
 ]) {
   const png = draw(size, frac);

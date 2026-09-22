@@ -20,7 +20,7 @@ import io
 import os
 import re
 
-from site_style import NAMES, ORIGIN, STYLE
+from site_style import FONTS, NAMES, ORIGIN, STYLE, THEME_COLOR
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SOURCE = os.path.join(ROOT, "public", "index.html")
@@ -105,18 +105,19 @@ PAGES = {
 
 # Lo que anade esta pagina sobre la piel comun: los pasos con su dibujo.
 EXTRA_STYLE = """
-  h2{font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:20px;margin:26px 0 12px}
+  h2{font-family:'Bricolage Grotesque','Figtree',sans-serif;font-weight:800;font-size:20px;
+    letter-spacing:-.02em;margin:26px 0 12px}
   .steps{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
-  .step{display:flex;gap:13px;align-items:center;background:#0D0B07;border:1px solid var(--edge);
-    border-radius:12px;padding:12px 14px}
-  .step .num{flex:0 0 24px;width:24px;height:24px;border-radius:50%;background:var(--accent);
-    color:#0A1020;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
-  .step .txt{flex:1;font-size:14px;line-height:1.45;color:var(--muted)}
-  .step .txt b{color:var(--text)}
+  .step{display:flex;gap:13px;align-items:center;background:var(--papel);border:2px solid var(--linea-2);
+    border-radius:var(--r-md);padding:12px 14px}
+  .step .num{flex:0 0 24px;width:24px;height:24px;border-radius:50%;background:var(--azul);
+    color:#FFFFFF;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .step .txt{flex:1;font-size:14px;line-height:1.45;color:var(--bruma)}
+  .step .txt b{color:var(--tinta)}
   .step .shot{flex:0 0 auto}
   .step .shot svg{display:block}
-  .why{margin:0;padding-left:20px;color:var(--muted);font-size:14px;line-height:1.7}
-  .why b{color:var(--text)}
+  .why{margin:0;padding-left:20px;color:var(--bruma);font-size:15px;line-height:1.7}
+  .why b{color:var(--tinta)}
 """
 
 
@@ -200,7 +201,7 @@ def build(lang, page, texts, art):
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#12100C">
+{theme_color}
 <title>{title}</title>
 <meta name="description" content="{description}">
 <meta name="robots" content="index,follow,max-image-preview:large">
@@ -223,14 +224,14 @@ def build(lang, page, texts, art):
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Instrument+Serif&display=swap" rel="stylesheet">
+{fonts}
 <style>{style}{extra}</style>
 <script type="application/ld+json">{breadcrumb_ld}</script>
 </head>
 <body>
 <div class="wrap">
   <header class="brand">
-    <a class="logo" href="{game}"><img src="/icon-192.png" alt="Picas y Fijas" width="46" height="46"></a>
+    <a class="logo" href="{game}"><img src="/icon-192.png" alt="Picas y Fijas" width="48" height="48"></a>
     <div>
       <a class="home" href="{game}">Picas y Fijas</a>
       <div class="sub">{tagline}</div>
@@ -261,6 +262,8 @@ def build(lang, page, texts, art):
         url=url,
         alternates=alternates(),
         style=STYLE,
+        fonts=FONTS,
+        theme_color=THEME_COLOR,
         extra=EXTRA_STYLE,
         breadcrumb_ld=breadcrumb_ld,
         nav=language_nav(lang),
