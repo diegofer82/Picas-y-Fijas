@@ -50,8 +50,10 @@ test('la vaca tiene cuatro humores y el toro ya no esta en el juego', async () =
   const home = html.slice(html.indexOf('<section id="s-login"'), html.indexOf('<!-- BUZON DE SUGERENCIAS -->'));
   assert.match(home, /<div class="home-hero" aria-hidden="true">[\s\S]*<span data-vaca="alert" data-vaca-size="132"><\/span>/);
   assert.doesNotMatch(html, /lobby-vaca/);
-  assert.match(html, /vacaSVG\('calm',118\)/);
-  assert.match(html, /won\?vacaSVG\('happy',150\):vacaSVG\('sad',118\)/);
+  // Desde la 4.7.0 todos los finales pasan por la tarjeta de fin, que elige
+  // el humor por el resultado: contenta, decepcionada o tranquila.
+  assert.match(html, /const mood=\{win:'happy',lose:'sad',draw:'calm'\}\[o\.result\]\|\|'calm';/);
+  assert.match(html, /\+vacaSVG\(mood,/);
 });
 
 test('las barras de turno piden la vaca alerta y no repiten sus trazados', async () => {

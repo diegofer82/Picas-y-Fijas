@@ -58,7 +58,7 @@ test("la tarjeta se ofrece al acabar cualquier partida, no solo la del día", ()
   assert.ok(calls.length >= 3, "partida contra una persona, práctica contra el ordenador y práctica en solitario");
   // La partida entre dos personas: la tarjeta sale de mis intentos, y quien
   // solo mira una partida ajena no tiene nada que compartir.
-  const game = html.match(/if\(!spectator\)\{\n\s*const digits=parseInt\(st\.digits,10\);[\s\S]*?\}\)\);/);
+  const game = html.match(/if\(!spectator\)\{\n\s*const digits=parseInt\(st\.digits,10\);\n\s*after\+=shareCardBlock\(\{[\s\S]*?\}\);/);
   assert.ok(game, "la partida contra una persona arma la tarjeta con `mine`");
   assert.match(game[0], /guesses:mine/);
   assert.doesNotMatch(game[0], /theirs|opponentSecret|mySecret/);

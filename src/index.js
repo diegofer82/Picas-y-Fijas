@@ -66,6 +66,7 @@ import {
 } from "./arena.js";
 import { dailyGuess, dailyState } from "./daily.js";
 import { leaderboard, profile, recordFinishedGame, rivals } from "./season.js";
+import { scoreGame } from "./score.js";
 import { cleanupDatabase } from "./maintenance.js";
 import { deletePushSubscription, savePushSubscription, sendTurnNotification } from "./push.js";
 import { APP_VERSION } from "./version.js";
@@ -773,7 +774,7 @@ async function state(db, params, user) {
         if (game.status === "finished") await settleFinishedGame(db, game);
       }
     }
-    const response = sanitizeGame(game, user.username);
+    const response = gameView(game, user.username);
     if (participant && game.p2) {
       // El hilo es estable para la pareja. Tras la primera respuesta el
       // navegador devuelve su id y evita una lectura en cada polling de 2 s.
@@ -904,7 +905,7 @@ async function makeGuess(db, params, user, onTurnChanged) {
         error: isBankGame(game)
           ? "Se te acabó la bolsa de tiempo."
           : "El tiempo del turno terminó.",
-        state: sanitizeGame(updated, user.username),
+        state: gameView(updated, user.username),
       };
     }
     if (game.turn !== youAre) return { ok: false, error: "No es tu turno." };
@@ -980,7 +981,7 @@ async function makeGuess(db, params, user, onTurnChanged) {
     }
     if (changes.status === "finished") Object.assign(changes, finalClock(game));
     const updated = await saveGame(db, game, changes);
-    response.state = sanitizeGame(updated, user.username);
+    response.state = gameView(updated, user.username);
     if (updated.status === "finished") {
       // Los puntos y las insignias de la etapa 5 se cuentan aqui, con la
       // partida ya guardada, y una sola vez: el recibo de `game_scores` lo
@@ -1192,6 +1193,20 @@ async function history(db, user) {
         : "",
     },
   };
+}
+
+/* La tarjeta de fin cuenta los puntos de quien la mira (4.7.0). Salen de la
+   misma cuenta pura que los reparte, `scoreGame`, aplicada a la fila que ya
+   esta en la mano: ni una lectura mas en D1. La revision del historial no los
+   lleva, porque las partidas de antes de la 3.10.0 entraron solo con su base
+   y la cuenta de hoy diria otra cosa. */
+function gameView(game, username) {
+  const view = sanitizeGame(game, username);
+  if (game.status === "finished" && view.youAre) {
+    const row = scoreGame(game)?.players.find((player) => player.username === username);
+    if (row) view.points = row.points;
+  }
+  return view;
 }
 
 async function historyGame(db, params, user) {

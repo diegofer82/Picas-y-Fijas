@@ -514,18 +514,19 @@ button.an-tag::after{content:' ?';opacity:.6}
 .contradiction::before{content:'!';flex:0 0 auto;width:17px;height:17px;border-radius:50%;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px}
 /* Ver pensar al ordenador (E4-T4): una linea bajo cada intento suyo. */
 .think{color:var(--bruma);font-size:11px;line-height:1.4;padding:1px 2px 8px;border-bottom:2px solid var(--linea-2)}
-/* Enigmas de deduccion (E4-T5). */
-.pz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;margin:12px 0 0}
-.pz-cell{border:2px solid var(--linea);background:var(--papel);color:var(--tinta);border-radius:var(--r-sm);padding:10px 4px;cursor:pointer;font:800 15px 'Bricolage Grotesque','Figtree',sans-serif;text-align:center;box-shadow:0 3px 0 var(--linea)}
+/* Enigmas de deduccion (E4-T5), en rejilla desde la 4.7.0. Resuelto se dice
+   en verde y con una marca, no solo con el color. */
+.pz-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.pz-cell{position:relative;height:58px;padding:0;border:2px solid var(--linea);background:var(--papel);color:var(--tinta);border-radius:16px;cursor:pointer;
+  font:800 18px 'Bricolage Grotesque','Figtree',sans-serif;display:grid;place-items:center;box-shadow:0 3px 0 var(--linea);transition:transform .08s,box-shadow .08s}
 .pz-cell:active{transform:translateY(3px);box-shadow:none}
-.pz-cell small{display:block;margin-top:3px;color:var(--bruma);font-family:'Figtree',sans-serif;font-size:10px;font-weight:600}
+.pz-cell .ok{position:absolute;top:4px;right:5px}
 .pz-cell.done{border-color:var(--fija);background:var(--fija);color:#fff;box-shadow:0 3px 0 var(--fija-texto)}
-.pz-cell.done small{color:#fff;opacity:.85}
-.pz-cell.on{border-color:var(--azul);background:var(--azul);color:var(--sobre-azul);box-shadow:0 3px 0 var(--azul-2)}
-.pz-cell.on small{color:inherit;opacity:.85}
-.pz-clue{display:flex;align-items:center;gap:9px;padding:8px 0;border-top:2px solid var(--linea-2)}
-.pz-clue:first-child{border-top:0}
-.pz-clue .scoretxt{margin-left:auto}
+.pz-cell.on{border-color:var(--azul);background:var(--azul);color:var(--sobre-azul);box-shadow:0 3px 0 var(--azul-2);outline:3px solid var(--tinta);outline-offset:2px}
+.pz-clues{display:flex;flex-direction:column;gap:6px}
+.pz-clue{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:14px;background:var(--crema)}
+.pz-clue .jt{background:var(--papel);width:38px;height:42px}
+.pz-clue .jpips{margin-left:auto}
 /* ==========================================================================
    Serie Plaza, lote 3: la portada y el vestibulo. Los dibujos (la baldosa, las
    fichas, las pistas) llevan sus colores escritos, como la vaca: son la misma
@@ -885,7 +886,7 @@ body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .pri
   .gshell .practice-badge{order:2}
   #g-banner,#practice-banner{order:3}
   #guest-invite{order:4}
-  #g-rematch-zone,#practice-actions{order:5}
+  #g-rematch-zone,#g-after,#practice-actions{order:5}
   .gshell .turnbar{order:6}
   .gshell>.gdock{order:7}
   .gshell .secret-row{order:8}
@@ -962,6 +963,294 @@ body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .pri
   body.has-rail .rail-nav{gap:2px;margin-top:4px}
   .rail-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 }
+/* ==========================================================================
+   Serie Plaza, lote 6: volver cada dia. El codigo del dia, el ranking con su
+   podio, el perfil con las insignias dibujadas, los enigmas en rejilla, la
+   arena con sus barras y la tarjeta de fin. Lo que es ilustracion —el podio,
+   las insignias, los circulos de fondo, las tarjetas oscuras— lleva sus
+   colores escritos, como la vaca: es lo mismo de dia y de noche. Lo que es
+   interfaz sigue pidiendo tokens.
+   ========================================================================== */
+#s-daily,#s-rank,#s-profile,#s-rivals,#s-puzzles,#s-arena{display:flex;flex-direction:column;gap:12px}
+#s-daily>*,#s-rank>*,#s-profile>*,#s-rivals>*,#s-puzzles>*,#s-arena>*{margin:0}
+#s-daily .val,#s-puzzles .val,#s-arena .val{min-height:0;margin:0}
+#s-daily .val:not(.err),#s-puzzles .val:not(.err),#s-arena .val:not(.err){display:none}
+.ebanner:empty{display:none}
+.ebanner{display:flex;flex-direction:column;gap:12px}
+.ebanner>*{margin:0}
+/* La cabecera de cada pantalla: volver, el titulo y lo que haga falta. */
+.scr-head{display:flex;align-items:center;gap:10px;min-height:44px}
+.scr-back{flex:0 0 auto;width:44px;height:44px;display:grid;place-items:center;padding:0;border:2px solid var(--linea);border-radius:14px;background:var(--papel);
+  color:var(--tinta);box-shadow:0 3px 0 var(--linea);cursor:pointer;transition:transform .08s,box-shadow .08s}
+.scr-back:active{transform:translateY(3px);box-shadow:none}
+.scr-title{display:flex;flex-direction:column;min-width:0;flex:1 1 auto}
+.scr-title h2{margin:0;font:800 26px/1.05 'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.02em}
+.scr-sub{margin-top:4px;font-size:13px;font-weight:600;color:var(--bruma);line-height:1.35}
+.scr-sub:empty{display:none}
+.scr-label{font-size:13px;font-weight:700;color:var(--bruma)}
+.scr-end{margin-left:auto}
+.scr-pill{flex:0 0 auto;height:32px;padding:0 12px;border-radius:10px;display:inline-flex;align-items:center;font-size:13px;font-weight:700;white-space:nowrap}
+.scr-pill.sol{background:var(--sol-suave);color:var(--sol-texto)}
+.scr-aside{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;color:var(--bruma);text-align:right}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:4px 10px}
+.sec-head h3{margin:0;font:800 20px/1.1 'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.02em}
+.sec-head>span{font-size:13px;font-weight:700;color:var(--bruma)}
+/* Pestañas en pastilla: el ranking por temporada, los enigmas por nivel. */
+.tabs{display:flex;gap:4px;padding:4px;border-radius:16px;background:var(--linea)}
+.tabs button{flex:1 1 auto;min-height:40px;padding:0 10px;border:0;border-radius:12px;background:transparent;color:var(--bruma);font:700 14px 'Figtree',system-ui,sans-serif;cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--papel);color:var(--tinta);font-weight:800;box-shadow:0 2px 0 var(--linea-3)}
+/* El muelle en linea: las fichas con su boton y el teclado debajo. Es el
+   mismo makeDockPad de la partida, con la misma regla: no deduce nada. */
+.idock{display:flex;flex-direction:column;gap:12px}
+.idock-row{display:flex;align-items:center;gap:8px}
+.idock-row .dock-tiles{flex:1 1 auto;min-width:0;justify-content:flex-start;gap:6px;cursor:default}
+.idock-row .dock-tiles .tile{flex:0 1 46px;width:46px;height:52px;border-radius:13px;font-size:24px}
+.idock-row .btn{flex:0 0 auto;width:auto;min-height:52px;margin:0;padding:0 18px;border-radius:14px;font-weight:800}
+.ikeys{display:grid;grid-template-columns:minmax(0,1fr) 56px;gap:8px}
+.ikeys .key{height:46px;border-radius:13px;font-size:19px}
+.ikeys .key:not(.used):not(.out):not(.c){background:var(--papel)}
+.ikeys .dock-erase{width:56px;height:auto;min-height:46px;align-self:stretch}
+.idock.off .ikeys,.idock.off .dock-tiles{opacity:.5}
+/* El codigo del dia. */
+.daily-hero{position:relative;display:flex;align-items:center;gap:16px;padding:20px 20px 18px;border-radius:26px;background:var(--sol);color:#1B1638;overflow:hidden;box-shadow:0 5px 0 var(--sol-2)}
+.daily-hero .dh-spin{position:absolute;right:-40px;top:-30px;opacity:.35;animation:dhSpin 24s linear infinite}
+@keyframes dhSpin{to{transform:rotate(360deg)}}
+.dh-main{position:relative;flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:4px}
+.dh-kicker{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.7}
+.dh-title{margin:0;font:800 32px/1 'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.03em}
+.dh-hint{font-size:13px;font-weight:600;opacity:.85;line-height:1.4}
+.dh-ring{position:relative;flex:0 0 auto}
+.dh-ring svg{display:block}
+.dsheet{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:24px;background:var(--papel);border:2px solid var(--linea-2)}
+.drows{display:flex;flex-direction:column;gap:8px}
+.drows:empty{display:none}
+.drow{display:flex;align-items:center;gap:10px}
+.drow .jcode{gap:6px}
+.drow .jt{flex:0 1 46px;width:46px;height:52px;border-radius:13px;font-size:24px}
+.drow .jpips{margin-left:auto;grid-template-columns:repeat(2,16px);gap:5px}
+.drow .jpips.c3{grid-template-columns:repeat(3,16px)}
+.drow .jpips .pip{width:16px;height:16px}
+.drow .jpips .pip.p{border-width:3.5px}
+.dsheet #daily-guessarea{padding-top:4px}
+.dghosts{display:flex;flex-direction:column;gap:6px}
+.dghosts:empty{display:none}
+.dghost{display:flex;gap:6px;opacity:.45}
+.dghost span{flex:0 1 46px;height:14px;border-radius:7px;background:var(--linea-2)}
+.share-wrap{display:flex;flex-direction:column;gap:10px}
+.share-wrap .daily-grid{margin:0}
+.share-wrap .btn{margin:0}
+/* Las tarjetas oscuras: la clasificacion del dia, el podio y el heroe de los
+   enigmas. De noche llevan borde para no fundirse con el fondo. */
+.dboard,.podium,.pz-hero{background:#1B1638;color:#FFF5E8}
+.dboard{display:flex;flex-direction:column;gap:8px;padding:16px;border-radius:24px}
+.dboard .sec-head>span{color:#A79FC4;font-size:12px}
+.dboard .empty{color:#A79FC4}
+.dboard .list{gap:8px}
+.drank{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;background:rgba(255,255,255,.07)}
+.drank .pos{flex:0 0 24px;text-align:center;font:700 13px 'JetBrains Mono',monospace;color:#A79FC4}
+.drank.first .pos{color:#FFC531}
+.drank .avatar{width:32px;height:32px;border-radius:10px;font-size:13px}
+.drank .nm{flex:1 1 auto;min-width:0;font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drank .nm .pl b{color:inherit}
+.drank .wl{flex:0 0 auto;font-size:12px;font-weight:700;color:#A79FC4;white-space:nowrap}
+.drank.me{background:#FFC531;color:#1B1638}
+.drank.me .pos,.drank.me .wl{color:#1B1638}
+/* El ranking: el podio, la lista y donde estas tu. */
+.podium{position:relative;padding:22px 18px 0;border-radius:26px;overflow:hidden}
+.podium::before,.podium::after{content:"";position:absolute;border-radius:50%;opacity:.35}
+.podium::before{width:240px;height:240px;background:#7C5CFF;left:-90px;top:-150px}
+.podium::after{width:180px;height:180px;background:#2F5BFF;right:-60px;top:-100px}
+.pod-grid{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:end}
+.pod{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0}
+.pod .avatar{width:48px;height:48px;border-radius:16px;font-size:18px}
+.pod.p1 .avatar{width:56px;height:56px;border-radius:18px;font-size:20px;box-shadow:0 0 0 4px #FFC531}
+.pod .nmbtn{max-width:100%;color:#FFF5E8;font-weight:700;font-size:14px;border-bottom-color:rgba(255,255,255,.35)}
+.pod .nmbtn .pl b{color:inherit}
+.pod.p1 .nmbtn{font-weight:800;font-size:15px}
+.pod .you{font-size:11px;color:#FFC531}
+.pod .pts{font:700 13px 'JetBrains Mono',monospace;color:#A79FC4}
+.pod.p1 .pts{color:#FFC531}
+.pod-bar{width:100%;display:flex;justify-content:center;padding-top:10px;border-radius:14px 14px 0 0;background:#2E2850;font:800 22px 'Bricolage Grotesque',sans-serif;
+  color:#A79FC4;transform-origin:bottom;animation:podRise .7s cubic-bezier(.2,.9,.3,1.1) both}
+.pod.p1 .pod-bar{height:104px;background:#FFC531;color:#1B1638;font-size:26px}
+.pod.p2 .pod-bar{height:74px;animation-delay:.15s}
+.pod.p3 .pod-bar{height:56px;animation-delay:.3s}
+@keyframes podRise{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+#rank-list{gap:8px}
+.rrow{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:18px;background:var(--papel);border:2px solid var(--linea-2)}
+.rrow .pos{flex:0 0 26px;text-align:center;font:700 14px 'JetBrains Mono',monospace;color:var(--bruma)}
+.rrow .avatar{width:40px;height:40px;border-radius:13px;font-size:16px}
+.rrow-main{display:flex;flex-direction:column;flex:1 1 auto;min-width:0}
+.rrow-main .nmbtn{align-self:flex-start;font-weight:700;font-size:15px}
+.rrow-main small{font-size:12px;color:var(--bruma)}
+.rrow .pts{flex:0 0 auto;font:700 15px 'JetBrains Mono',monospace}
+.rrow.me{border-color:var(--azul);box-shadow:0 3px 0 var(--azul)}
+.howpts{display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-radius:20px;background:var(--papel);border:2px solid var(--linea-2)}
+.howpts>b{font-size:13px;font-weight:800}
+.howpts-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.howpts-grid div{display:flex;flex-direction:column;gap:2px;padding:10px;border-radius:14px;background:var(--crema);min-width:0}
+.howpts-grid b{font:700 18px 'JetBrains Mono',monospace;color:var(--azul-texto)}
+.howpts-grid span{font-size:11px;font-weight:600;line-height:1.3;color:var(--bruma)}
+.howpts p{margin:0;font-size:12px;line-height:1.45;color:var(--bruma)}
+.rank-me{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:18px;background:var(--azul);color:#fff;box-shadow:0 4px 0 var(--azul-2)}
+.rank-me .avatar{width:40px;height:40px;border-radius:13px;font-size:16px}
+.rank-me-main{display:flex;flex-direction:column;min-width:0}
+.rank-me-main b{font-size:15px;font-weight:800}
+.rank-me-main span{font-size:12px;line-height:1.35;opacity:.92}
+/* El perfil: la ficha coral, las cifras y las insignias. */
+.idcard{position:relative;display:flex;align-items:center;gap:16px;padding:22px 20px;border-radius:28px;background:var(--coral);color:#1B1638;overflow:hidden;box-shadow:0 5px 0 var(--coral-2)}
+.idcard .shine{position:absolute;left:0;top:-40px;width:60px;height:200%;background:rgba(255,255,255,.28);animation:idShine 3.6s ease-in-out infinite;pointer-events:none}
+@keyframes idShine{0%{transform:translateX(-120%) rotate(20deg)}100%{transform:translateX(760%) rotate(20deg)}}
+.idcard .sun{position:absolute;width:160px;height:160px;border-radius:50%;background:#FFC531;right:-60px;bottom:-80px}
+.id-av{position:relative;flex:0 0 auto;width:84px;height:84px;border-radius:26px;background:#1B1638;color:#FFF5E8;display:grid;place-items:center;font:800 40px 'Bricolage Grotesque',sans-serif}
+.id-main{position:relative;display:flex;flex-direction:column;gap:4px;min-width:0}
+.id-main h2{margin:0;font:800 32px/1 'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.03em;overflow-wrap:anywhere}
+.id-main .since{font-size:13px;font-weight:600;opacity:.8}
+.id-main .since:empty{display:none}
+.id-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.id-chips:empty{display:none}
+.id-chips span{height:26px;padding:0 10px;border-radius:8px;display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;background:rgba(27,22,56,.12)}
+.id-chips span.dark{background:#1B1638;color:#FFF5E8}
+.pbody{display:flex;flex-direction:column;gap:12px}
+.pstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.pstats div{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;padding:12px 6px;border-radius:18px;background:var(--papel);border:2px solid var(--linea-2);text-align:center}
+.pstats b{font:700 22px 'JetBrains Mono',monospace}
+.pstats b.az{color:var(--azul-texto)}
+.pstats span{font-size:11px;font-weight:700;color:var(--bruma)}
+.bgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.bcell{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;padding:12px 6px 10px;border-radius:18px;background:var(--papel);border:2px solid var(--linea-2);text-align:center}
+.bcell>span{font-size:11px;font-weight:700;line-height:1.2;overflow-wrap:anywhere}
+.bcell.off{background:var(--crema);border:2px dashed var(--linea-3)}
+.bcell.off>span{color:var(--bruma)}
+.bcell.off .bg{fill:var(--linea);stroke:none}
+.bcell.off .fg [fill]:not([fill=none]){fill:var(--papel)}
+.bcell.off .fg [stroke]{stroke:var(--papel)}
+.badge-art{display:block;flex:0 0 auto}
+.pnote{display:flex;flex-direction:column;gap:4px;padding:14px 16px;border-radius:20px;background:var(--papel);border:2px solid var(--linea-2);font-size:13px;line-height:1.5;color:var(--bruma)}
+.pnote b{color:var(--tinta)}
+.badgechip{gap:8px;padding:5px 13px 5px 5px}
+.badgechip .badge-art{width:28px;height:28px}
+/* Los rivales. */
+#rivals-list{gap:8px}
+.rvrow{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:18px;background:var(--papel);border:2px solid var(--linea-2)}
+.rvrow .av{position:relative;flex:0 0 auto}
+.rvrow .av .avatar{width:44px;height:44px;border-radius:14px;font-size:17px}
+.rvrow .av i{position:absolute;right:-3px;bottom:-3px;width:12px;height:12px;border-radius:50%;background:var(--fija);border:2px solid var(--papel)}
+.rvrow-main{display:flex;flex-direction:column;flex:1 1 auto;min-width:0}
+.rvrow-main .nmbtn{align-self:flex-start;font-weight:700;font-size:15px}
+.rvrow-main small{font-size:12px;color:var(--bruma)}
+.rvrow .btn{flex:0 0 auto;width:auto;margin:0}
+/* Los enigmas. */
+.pz-hero{position:relative;display:flex;flex-direction:column;gap:6px;padding:18px 20px;border-radius:24px;overflow:hidden}
+.pz-hero::before{content:"";position:absolute;width:140px;height:140px;border-radius:50%;background:#2F5BFF;opacity:.45;right:-40px;top:-60px}
+.pz-hero .tiles{position:absolute;right:18px;top:18px;gap:5px}
+.pz-hero .tiles span{width:28px;height:32px;border-radius:9px;border:0;font-size:16px;box-shadow:none;background:#FFF5E8}
+.pz-hero .tiles span.q{background:#FFC531}
+.pz-kicker{position:relative;max-width:calc(100% - 110px);font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#A79FC4}
+.pz-hero p{position:relative;margin:0;max-width:250px;font-size:14px;line-height:1.5}
+.pz-prog{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;font-weight:700;color:var(--bruma)}
+.pbar{flex:0 0 120px;height:8px;border-radius:4px;background:var(--linea);overflow:hidden}
+.pbar i{display:block;width:0;height:100%;border-radius:4px;background:var(--azul);transition:width .6s cubic-bezier(.2,.9,.3,1)}
+.pz-card{display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:24px;background:var(--papel);border:2px solid var(--linea-2);scroll-margin-top:12px}
+.pz-card .sec-head>span{font-size:12px}
+.pz-card .ikeys .key:not(.used):not(.out):not(.c){background:var(--crema)}
+.pz-links{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.linkbtn.danger{color:var(--error)}
+.linkbtn.soft{color:var(--bruma)}
+/* La arena. */
+.ar-name{font-weight:800;font-size:15px;line-height:1.3}
+.ar-name .gid{font-size:15px;letter-spacing:.12em;color:inherit}
+.ar-status{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:10px;background:var(--violeta-suave);color:var(--violeta-texto);font-size:13px;font-weight:700;white-space:nowrap}
+.ar-status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--violeta);animation:pulse 1.4s ease-in-out infinite}
+.ar-status.done::before{animation:none;background:var(--bruma-2)}
+.ar-status:empty{display:none}
+.ar-hero{position:relative;display:flex;flex-direction:column;gap:4px;padding:18px 20px;border-radius:24px;background:#7C5CFF;color:#fff;overflow:hidden}
+.ar-hero::before{content:"";position:absolute;width:180px;height:180px;border-radius:50%;background:#2F5BFF;opacity:.6;right:-60px;top:-80px}
+.ar-hero .art{position:absolute;right:16px;bottom:10px}
+.ar-k,.ar-t,.ar-p{position:relative}
+.ar-k{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.85}
+.ar-t{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font:800 26px/1.05 'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.03em}
+.ar-t .n{color:#fff;font-size:24px}
+.ar-p{max-width:230px;font-size:13px;font-weight:600;line-height:1.4;opacity:.92}
+.ar-p:empty{display:none}
+#arena-board{gap:8px}
+.arow{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:18px;background:var(--papel);border:2px solid var(--linea-2)}
+.arow.me{border-color:var(--azul);box-shadow:0 3px 0 var(--azul)}
+.arow.gone{opacity:.75}
+.arow .avatar{width:40px;height:40px;border-radius:13px;font-size:16px}
+.arow-main{display:flex;flex-direction:column;gap:5px;flex:1 1 auto;min-width:0}
+.arow-top{display:flex;justify-content:space-between;gap:8px;font-size:14px}
+.arow-top b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.arow-top>span{flex:0 0 auto;font:700 13px 'JetBrains Mono',monospace;color:var(--bruma)}
+.abar{height:8px;border-radius:4px;background:var(--linea-2);overflow:hidden}
+.abar i{display:block;height:100%;border-radius:4px;transition:width .6s cubic-bezier(.2,.9,.3,1)}
+.abar i.azul{background:var(--azul)}.abar i.coral{background:var(--coral)}.abar i.violeta{background:var(--violeta)}.abar i.sol{background:var(--sol)}
+.abar i.win{background:var(--fija)}.abar i.gone{background:var(--linea-3)}
+.apips{flex:0 0 auto;display:flex;gap:3px}
+.apips .pip{width:12px;height:12px}
+.aend{flex:0 0 auto;font-size:12px;font-weight:700;color:var(--bruma)}
+.ar-play{padding:14px;border-radius:24px;background:var(--papel);border:2px solid var(--linea-2);gap:10px}
+.ar-play-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 10px;font-size:13px;font-weight:700;color:var(--bruma)}
+.ar-play-head .last{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--azul-texto)}
+.ar-play-head .last:empty{display:none}
+.ar-play .ikeys .key:not(.used):not(.out):not(.c){background:var(--crema)}
+#btn-arena-guess{background:var(--violeta);color:#fff;box-shadow:0 4px 0 var(--violeta-2)}
+.afeed{display:flex;flex-direction:column;gap:6px}
+.afeed>span{font-size:13px;font-weight:700;color:var(--bruma)}
+.afeed-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--papel);border:2px solid var(--linea-2);font-size:13px;line-height:1.35}
+.afeed-row i{flex:0 0 auto;width:8px;height:8px;border-radius:50%;background:var(--sol)}
+.afeed-row.grey i{background:var(--linea)}
+.afeed-row small{margin-left:auto;flex:0 0 auto;font:600 11px 'JetBrains Mono',monospace;color:var(--bruma-2)}
+.amine{display:flex;flex-direction:column;gap:8px}
+#s-arena>.btn{margin:0}
+/* La tarjeta de fin: la vaca, el titulo, tres cifras y, debajo, el codigo
+   revelado. Ganar es oscuro, con confeti; perder y empatar, claros y quietos. */
+.endcard{position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;padding:24px 22px 22px;border-radius:28px;text-align:center;overflow:hidden}
+.endcard>*{position:relative}
+.endcard>.ec-b1,.endcard>.ec-b2{position:absolute;border-radius:50%;pointer-events:none}
+.endcard.win{background:#1B1638;color:#FFF5E8}
+.endcard.win>.ec-b1{width:260px;height:260px;background:#2F5BFF;opacity:.35;left:-120px;top:-140px}
+.endcard.win>.ec-b2{width:180px;height:180px;background:#7C5CFF;opacity:.4;right:-70px;bottom:-90px}
+.endcard.lose{background:var(--coral-suave);border:2px solid var(--coral)}
+.endcard.draw{background:var(--papel);border:2px solid var(--linea)}
+.endcard .vaca{margin:0 auto}
+.endcard.sm{gap:8px;padding:18px 18px 16px;border-radius:24px}
+.endcard.sm h2{font-size:28px}
+.endcard.win .vaca{animation:vacaWiggle 2.4s ease-in-out infinite;transform-origin:50% 90%}
+@keyframes vacaWiggle{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+.ec-kicker{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--bruma)}
+.endcard.win .ec-kicker{color:#FFC531}
+.ec-kicker .pl b{color:inherit}
+.endcard h2{margin:0;font:800 40px/1 'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.04em}
+.endcard p{margin:0;max-width:300px;font-size:14px;line-height:1.5;color:var(--bruma)}
+.endcard.win p{color:#C9C2E0}
+.ec-stats{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:8px;width:100%;margin-top:6px}
+.ec-stats div{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;padding:12px 8px;border-radius:16px;background:var(--papel)}
+.endcard.win .ec-stats div{background:rgba(255,255,255,.08)}
+.ec-stats b{font:700 24px 'JetBrains Mono',monospace;font-feature-settings:"zero" 1,"tnum" 1}
+.ec-stats span{font-size:11px;font-weight:700;color:var(--bruma)}
+.endcard.win .ec-stats span{color:#A79FC4}
+.ec-stats div.hot,.endcard.win .ec-stats div.hot{background:#FFC531;color:#1B1638}
+.ec-stats div.hot span,.endcard.win .ec-stats div.hot span{color:#1B1638;font-weight:800}
+.reveal{display:flex;flex-direction:column;gap:12px;padding:16px 18px;border-radius:24px;background:var(--papel);border:2px solid var(--linea-2)}
+.reveal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;font-weight:700;color:var(--bruma)}
+.reveal-head .pl b{color:inherit}
+.reveal-tag{flex:0 0 auto;height:26px;padding:0 10px;border-radius:8px;background:var(--azul-suave);color:var(--azul-texto);font-size:12px;display:inline-flex;align-items:center}
+.reveal-row{display:flex;align-items:center;flex-wrap:wrap;gap:10px 8px}
+.rtiles{display:flex;gap:8px;flex:0 1 auto;min-width:0}
+.rtile{flex:0 1 52px;width:52px;min-width:0;height:60px;border-radius:16px;display:grid;place-items:center;background:var(--tinta);color:var(--sobre-tinta);
+  font:700 28px 'JetBrains Mono',monospace;font-feature-settings:"zero" 1}
+.rtile.ok{background:var(--fija);color:#fff}
+.rtile.c{border:2px solid rgba(0,0,0,.08);color:#171225}
+.reveal-mine{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.reveal-mine>span{font-size:12px;font-weight:700;color:var(--bruma)}
+.reveal-mine .n{font-size:20px}
+/* El confeti: formas de la marca, tres segundos y silencio. */
+.confetti{position:fixed;inset:0;z-index:70;pointer-events:none;overflow:hidden}
+.confetti i{position:absolute;top:-24px;display:block;animation:confFall var(--d,3s) linear var(--w,0s) both}
+@keyframes confFall{0%{transform:translateY(-30px) rotate(0);opacity:0}10%{opacity:1}100%{transform:translateY(calc(100vh + 60px)) rotate(260deg);opacity:0}}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) :is(.dboard,.podium,.pz-hero,.endcard.win){box-shadow:inset 0 0 0 2px var(--linea)}}
+:root[data-theme=dark] :is(.dboard,.podium,.pz-hero,.endcard.win){box-shadow:inset 0 0 0 2px var(--linea)}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]) .mode-tile.noche{border-color:var(--linea)}}
 :root[data-theme=dark] .mode-tile.noche{border-color:var(--linea)}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
@@ -1445,112 +1734,146 @@ body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .pri
   </section>
 
   <!-- CODIGO DEL DIA -->
+  <!-- Serie Plaza, L6: la baldosa amarilla del vestibulo crece hasta ser la
+       cabecera; los intentos se leen de arriba abajo, como en una hoja, y el
+       teclado es el del muelle, que no deduce nada por nadie. -->
   <section id="s-daily" class="hidden">
-    <div class="card">
-      <span class="practice-badge" data-i18n="daily_badge">Nuevo cada día</span>
-      <h2 data-i18n="daily_title">El código del día</h2>
-      <p class="hint" id="daily-hint"></p>
-      <div class="statusrow" id="daily-status"><span class="chip" id="daily-number"></span><span class="chip" id="daily-attempts"></span><span class="chip" id="daily-next"></span></div>
-      <div id="daily-banner"></div>
-      <div class="guessarea" id="daily-guessarea">
-        <div class="field"><input type="text" id="daily-guess" class="code" inputmode="numeric" autocomplete="off" placeholder="••••"></div>
-        <button class="btn" id="daily-guess-btn" onclick="submitDailyGuess()" data-i18n="guess_btn">Adivinar</button>
-      </div>
-      <div class="val" id="daily-guess-val"></div>
-      <div class="legend"><span><i class="pip f"></i><span data-i18n="legend_fija">F = posición correcta</span></span><span><i class="pip p"></i><span data-i18n="legend_pica">P = presente, mal colocada</span></span></div>
-      <div style="height:16px"></div>
-      <div class="glog" id="daily-log"></div>
-      <div class="hidden" id="daily-share-wrap">
-        <div style="height:14px"></div>
-        <div class="daily-grid" id="daily-grid"></div>
-        <button class="btn green" onclick="shareDaily()" data-i18n="daily_share">Copiar mi rejilla</button>
-      </div>
-      <div style="height:14px"></div>
-      <button class="btn ghost" onclick="enterLobby()" data-i18n="back">Volver</button>
+    <div class="scr-head">
+      <button type="button" class="scr-back" onclick="enterLobby()" data-ico="atras" data-ico-size="20" data-i18n-title="back"></button>
+      <span class="scr-pill sol" data-i18n="daily_badge">Nuevo cada día</span>
+      <span class="scr-aside" id="daily-next"></span>
     </div>
-
-    <div class="card">
-      <h2 data-i18n="daily_board_title">Clasificación de hoy</h2>
-      <p class="hint" id="daily-players"></p>
+    <div class="daily-hero">
+      <svg class="dh-spin" width="150" height="150" viewBox="0 0 150 150" fill="none" aria-hidden="true"><circle cx="75" cy="75" r="70" stroke="#1B1638" stroke-width="3" stroke-dasharray="4 14"></circle><circle cx="75" cy="75" r="48" stroke="#1B1638" stroke-width="3" stroke-dasharray="10 8"></circle></svg>
+      <div class="dh-main">
+        <span class="dh-kicker" id="daily-number"></span>
+        <h2 class="dh-title" data-i18n="daily_title">El código del día</h2>
+        <span class="dh-hint" id="daily-hint"></span>
+      </div>
+      <span class="dh-ring" id="daily-hero-ring"></span>
+    </div>
+    <div class="ebanner" id="daily-banner"></div>
+    <div class="idock" id="daily-dock">
+      <div class="dsheet">
+        <div class="drows" id="daily-log"></div>
+        <div class="idock-row" id="daily-guessarea">
+          <div class="dock-tiles" id="daily-tiles" aria-hidden="true"></div>
+          <button type="button" class="btn dark" id="daily-guess-btn" onclick="submitDailyGuess()" data-i18n="guess_btn">Adivinar</button>
+        </div>
+        <span class="offscreen" id="daily-live" aria-live="polite"></span>
+        <div class="dghosts" id="daily-ghosts" aria-hidden="true"></div>
+      </div>
+      <div class="ikeys" id="daily-keys">
+        <div class="dock-pad" id="daily-pad" role="group"></div>
+        <button type="button" class="dock-erase" id="daily-erase" onclick="dailyPad.pop()" data-ico="borrar" data-ico-size="22" data-i18n-title="dock_erase"></button>
+      </div>
+    </div>
+    <div class="val" id="daily-guess-val"></div>
+    <div class="legend"><span><i class="pip f"></i><span data-i18n="legend_fija">F = posición correcta</span></span><span><i class="pip p"></i><span data-i18n="legend_pica">P = presente, mal colocada</span></span></div>
+    <div class="share-wrap hidden" id="daily-share-wrap">
+      <div class="daily-grid" id="daily-grid"></div>
+      <button class="btn green" onclick="shareDaily()" data-i18n="daily_share">Copiar mi rejilla</button>
+    </div>
+    <div class="dboard">
+      <div class="sec-head"><h3 data-i18n="daily_board_title">Clasificación de hoy</h3><span id="daily-players"></span></div>
       <div class="list" id="daily-board"><div class="empty">…</div></div>
-      <div class="scoretxt" id="daily-your-rank"></div>
     </div>
   </section>
 
   <!-- ENIGMAS -->
   <section id="s-puzzles" class="hidden">
-    <div class="card">
-      <span class="practice-badge" data-i18n="pz_badge">Sin rival y sin reloj</span>
-      <h2 data-i18n="pz_title">Enigmas de deducción</h2>
-      <p class="hint" data-i18n="pz_hint">Aquí tienes las pistas de una partida que no jugaste: deduce el código. Cada enigma tiene una única solución.</p>
-      <label data-i18n="pz_level">Dificultad</label>
-      <div class="seg" id="pz-seg-level">
-        <button data-l="easy" class="on" data-i18n="difficulty_easy">Fácil</button>
-        <button data-l="normal" data-i18n="difficulty_normal">Normal</button>
-        <button data-l="expert" data-i18n="difficulty_expert">Experto</button>
-      </div>
-      <div class="scoretxt" id="pz-progress"></div>
-      <div class="pz-grid" id="pz-grid"></div>
-      <div style="height:16px"></div>
-      <button class="btn ghost" onclick="closePuzzles()" data-i18n="back">Volver</button>
-      <div class="foot credits hidden" id="pz-credits"></div>
+    <div class="scr-head">
+      <button type="button" class="scr-back" onclick="closePuzzles()" data-ico="atras" data-ico-size="20" data-i18n-title="back"></button>
+      <div class="scr-title"><h2 data-i18n="pz_title">Enigmas de deducción</h2><span class="scr-sub" data-i18n="pz_badge">Sin rival y sin reloj</span></div>
     </div>
-
-    <div class="card hidden" id="pz-play">
-      <h2 id="pz-play-title"></h2>
-      <p class="hint" id="pz-play-rules"></p>
-      <div class="glog" id="pz-clues"></div>
-      <div style="height:12px"></div>
-      <div class="guessarea" id="pz-guessarea">
-        <div class="field"><input type="text" id="pz-guess" class="code" inputmode="numeric" placeholder="•••"></div>
-        <button class="btn" id="pz-guess-btn" onclick="submitPuzzle()" data-i18n="pz_check">Comprobar</button>
+    <div class="pz-hero">
+      <span class="tiles" aria-hidden="true"><span>5</span><span class="q">?</span><span>1</span></span>
+      <span class="pz-kicker" data-i18n="pz_kicker">Una partida que no jugaste</span>
+      <p data-i18n="pz_hint">Estas son sus pistas: deduce el código. Cada enigma tiene una sola solución.</p>
+    </div>
+    <div class="tabs" role="tablist" id="pz-seg-level" data-i18n-title="pz_level">
+      <button type="button" role="tab" data-l="easy" aria-selected="true" data-i18n="difficulty_easy">Fácil</button>
+      <button type="button" role="tab" data-l="normal" aria-selected="false" data-i18n="difficulty_normal">Normal</button>
+      <button type="button" role="tab" data-l="expert" aria-selected="false" data-i18n="difficulty_expert">Experto</button>
+    </div>
+    <div class="pz-prog"><span id="pz-progress"></span><span class="pbar" aria-hidden="true"><i id="pz-bar"></i></span></div>
+    <div class="pz-grid" id="pz-grid"></div>
+    <div class="pz-card hidden" id="pz-play">
+      <div class="sec-head"><h3 id="pz-play-title"></h3><span id="pz-play-rules"></span></div>
+      <div class="pz-clues" id="pz-clues"></div>
+      <div class="ebanner" id="pz-banner"></div>
+      <div class="idock" id="pz-dock">
+        <div class="idock-row" id="pz-guessarea">
+          <div class="dock-tiles" id="pz-tiles" aria-hidden="true"></div>
+          <button type="button" class="btn" id="pz-guess-btn" onclick="submitPuzzle()" data-i18n="pz_check">Comprobar</button>
+        </div>
+        <span class="offscreen" id="pz-live" aria-live="polite"></span>
+        <div class="ikeys" id="pz-keys">
+          <div class="dock-pad" id="pz-pad" role="group"></div>
+          <button type="button" class="dock-erase" id="pz-erase" onclick="puzzlePad.pop()" data-ico="borrar" data-ico-size="22" data-i18n-title="dock_erase"></button>
+        </div>
       </div>
       <div class="val" id="pz-guess-val"></div>
-      <div id="pz-banner"></div>
-      <div style="height:10px"></div>
-      <div class="row">
-        <button class="btn ghost" onclick="closePuzzle()" data-i18n="pz_back_list">Volver a la lista</button>
-        <button class="btn pink" id="pz-reveal-btn" onclick="revealPuzzle()" data-i18n="pz_reveal">Ver la solución</button>
+      <div class="pz-links">
+        <button type="button" class="linkbtn soft" onclick="closePuzzle()" data-i18n="pz_back_list">Volver a la lista</button>
+        <button type="button" class="linkbtn danger" id="pz-reveal-btn" onclick="revealPuzzle()" data-i18n="pz_reveal">Ver la solución</button>
       </div>
     </div>
+    <div class="foot credits hidden" id="pz-credits"></div>
   </section>
 
-  <!-- RANKING -->
+  <!-- RANKING: el podio con los tres primeros, la lista y, abajo, donde
+       estas tu y a cuanto del de delante (serie Plaza, L6). -->
   <section id="s-rank" class="hidden">
-    <div class="card">
-      <h2 data-i18n="rank_title">Ranking global</h2>
-      <p class="hint" data-i18n="rank_hint">Victorias totales por jugador. Se actualiza con cada partida terminada.</p>
-      <div class="seg" id="rank-seasons" aria-label="Temporada">
-        <button class="on" data-rank-season="month" onclick="setRankSeason('month')" data-i18n="rank_season_month">Esta temporada</button>
-        <button data-rank-season="all" onclick="setRankSeason('all')" data-i18n="rank_season_all">Desde siempre</button>
-      </div>
-      <div class="scoretxt" id="rank-total" style="margin:8px 0 12px"></div>
-      <div class="list" id="rank-list"><div class="empty">…</div></div>
-      <div style="height:16px"></div>
-      <button class="btn ghost" onclick="show('lobby')" data-i18n="back">Volver</button>
+    <div class="scr-head">
+      <button type="button" class="scr-back" onclick="show('lobby')" data-ico="atras" data-ico-size="20" data-i18n-title="back"></button>
+      <div class="scr-title"><h2 data-i18n="rank_title">Ranking</h2><span class="scr-sub" id="rank-total"></span></div>
     </div>
+    <div class="tabs" role="tablist" id="rank-seasons">
+      <button type="button" role="tab" aria-selected="true" data-rank-season="month" onclick="setRankSeason('month')" data-i18n="rank_season_month">Esta temporada</button>
+      <button type="button" role="tab" aria-selected="false" data-rank-season="all" onclick="setRankSeason('all')" data-i18n="rank_season_all">Desde siempre</button>
+    </div>
+    <div class="podium hidden" id="rank-podium"></div>
+    <div class="list" id="rank-list"><div class="empty">…</div></div>
+    <div class="howpts">
+      <b data-i18n="rank_how">Cómo se suman los puntos</b>
+      <div class="howpts-grid">
+        <div><b>+10</b><span data-i18n="rank_how_win">por victoria</span></div>
+        <div><b>+4</b><span data-i18n="rank_how_draw">por empate</span></div>
+        <div><b>+1</b><span data-i18n="rank_how_loss">por derrota</span></div>
+      </div>
+      <p data-i18n="rank_how_note">Ganar suma además la dificultad de las reglas y lo pronto que descubres el código. Abandonar no suma nada.</p>
+    </div>
+    <div class="rank-me hidden" id="rank-me"></div>
   </section>
 
-  <!-- PERFIL PUBLICO (E5-T2) -->
+  <!-- PERFIL PUBLICO (E5-T2): la ficha coral, las cifras y las insignias
+       dibujadas, las ganadas y las que faltan (serie Plaza, L6). -->
   <section id="s-profile" class="hidden">
-    <div class="card">
-      <h2 id="profile-name">Perfil</h2>
-      <p class="hint" id="profile-since"></p>
-      <div id="profile-body"><div class="empty">…</div></div>
-      <div style="height:16px"></div>
-      <button class="btn ghost" onclick="closeProfile()" data-i18n="back">Volver</button>
+    <div class="scr-head">
+      <button type="button" class="scr-back" onclick="closeProfile()" data-ico="atras" data-ico-size="20" data-i18n-title="back"></button>
+      <span class="scr-label" data-i18n="profile_public">Perfil público</span>
+      <button type="button" class="btn sm ghost scr-end hidden" id="profile-account" onclick="show('account')" data-i18n="account_title">Mi cuenta</button>
     </div>
+    <div class="idcard">
+      <span class="shine" aria-hidden="true"></span><span class="sun" aria-hidden="true"></span>
+      <span class="id-av" id="profile-initial" aria-hidden="true"></span>
+      <div class="id-main">
+        <h2 id="profile-name">Perfil</h2>
+        <span class="since" id="profile-since"></span>
+        <div class="id-chips" id="profile-chips"></div>
+      </div>
+    </div>
+    <div class="pbody" id="profile-body"><div class="empty">…</div></div>
   </section>
 
   <!-- RIVALES (E5-T4) -->
   <section id="s-rivals" class="hidden">
-    <div class="card">
-      <h2 data-i18n="rivals_title">Rivales</h2>
-      <p class="hint" data-i18n="rivals_hint">Con quién has jugado. El punto verde dice quién está conectado ahora.</p>
-      <div class="list" id="rivals-list"><div class="empty">…</div></div>
-      <div style="height:16px"></div>
-      <button class="btn ghost" onclick="show('lobby')" data-i18n="back">Volver</button>
+    <div class="scr-head">
+      <button type="button" class="scr-back" onclick="show('lobby')" data-ico="atras" data-ico-size="20" data-i18n-title="back"></button>
+      <div class="scr-title"><h2 data-i18n="rivals_title">Rivales</h2><span class="scr-sub" data-i18n="rivals_hint">Con quién has jugado. El punto verde dice quién está conectado ahora.</span></div>
     </div>
+    <div class="list" id="rivals-list"><div class="empty">…</div></div>
   </section>
 
   <!-- HISTORIAL -->
@@ -1791,27 +2114,40 @@ body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .pri
   </section>
 
   <!-- LA ARENA: JUGAR -->
+  <!-- La arena (serie Plaza, L6): la banda violeta, una barra por jugador que
+       dice lo cerca que esta —su mejor numero de fijas, nunca sus intentos— y
+       lo que acaba de pasar, sacado de comparar dos sondeos seguidos. -->
   <section id="s-arena" class="hidden">
-    <div class="card">
-      <div class="players"><span class="pill" id="arena-code">····</span><span class="pill" id="arena-status"></span></div>
-      <div class="scoretxt" id="arena-rules"></div>
-      <div id="arena-banner"></div>
-      <div class="list" id="arena-board"><div class="empty">…</div></div>
-      <div id="arena-play" class="hidden">
-        <div style="height:12px"></div>
-        <label data-i18n="arena_your_guess">Tu intento</label>
-        <input type="text" id="arena-guess" class="code" inputmode="numeric" maxlength="3" placeholder="•••">
-        <div class="pad hidden" id="pad-a"><div class="slots" id="slots-a"></div><div class="palette" id="palette-a"></div></div>
-        <div class="val" id="arena-guess-val"></div>
-        <button class="btn" id="btn-arena-guess" onclick="sendArenaGuess()" data-i18n="guess_btn">Adivinar</button>
-      </div>
-      <div style="height:12px"></div>
-      <div class="list" id="arena-log"></div>
-      <div style="height:12px"></div>
-      <button class="btn green hidden" id="btn-arena-start" onclick="startArena()" data-i18n="arena_start">Empezar la arena</button>
-      <div style="height:8px"></div>
-      <button class="btn ghost" id="btn-arena-leave" onclick="leaveArena()" data-i18n="arena_leave">Salir de la arena</button>
+    <div class="scr-head">
+      <button type="button" class="scr-back" onclick="leaveArena()" data-ico="atras" data-ico-size="20" data-i18n-title="arena_leave"></button>
+      <div class="scr-title"><span class="ar-name"><span data-i18n="arena_word">Arena</span> <b class="gid" id="arena-code">····</b></span><span class="scr-sub" id="arena-rules"></span></div>
+      <span class="ar-status" id="arena-status"></span>
     </div>
+    <div class="ar-hero" id="arena-hero">
+      <svg class="art" width="120" height="60" viewBox="0 0 120 60" fill="none" aria-hidden="true"><circle cx="16" cy="40" r="10" fill="#fff" fill-opacity=".9"></circle><circle cx="42" cy="26" r="10" fill="#FFC531"></circle><circle cx="68" cy="40" r="10" fill="#FF6B5E"></circle><circle cx="94" cy="26" r="10" fill="#fff" fill-opacity=".9"></circle><circle cx="55" cy="52" r="7" fill="#5FE0C9"></circle></svg>
+      <span class="ar-k" id="arena-hero-k"></span>
+      <span class="ar-t" id="arena-hero-t"></span>
+      <span class="ar-p" id="arena-hero-p"></span>
+    </div>
+    <div id="arena-banner"></div>
+    <div class="list" id="arena-board"><div class="empty">…</div></div>
+    <div class="ar-play idock hidden" id="arena-play">
+      <div class="ar-play-head"><span id="arena-try"></span><span class="last" id="arena-last"></span></div>
+      <div class="idock-row">
+        <div class="dock-tiles" id="arena-tiles" aria-hidden="true"></div>
+        <button type="button" class="btn" id="btn-arena-guess" onclick="sendArenaGuess()" data-i18n="guess_btn">Adivinar</button>
+      </div>
+      <span class="offscreen" id="arena-live" aria-live="polite"></span>
+      <div class="ikeys">
+        <div class="dock-pad" id="arena-pad" role="group"></div>
+        <button type="button" class="dock-erase" id="arena-erase" onclick="arenaPad.pop()" data-ico="borrar" data-ico-size="22" data-i18n-title="dock_erase"></button>
+      </div>
+      <div class="val" id="arena-guess-val"></div>
+    </div>
+    <div class="afeed hidden" id="arena-feed"></div>
+    <div class="amine hidden" id="arena-mine"><div class="sec-head"><h3 id="arena-mine-title"></h3></div><div class="glog" id="arena-log"></div></div>
+    <button class="btn green hidden" id="btn-arena-start" onclick="startArena()" data-i18n="arena_start">Empezar la arena</button>
+    <button class="btn ghost" id="btn-arena-leave" onclick="leaveArena()" data-i18n="arena_leave">Salir de la arena</button>
   </section>
 
   <!-- JUEGO -->
@@ -1837,6 +2173,7 @@ body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .pri
     <div class="gbody" id="g-body">
       <div id="g-banner"></div>
       <div id="g-rematch-zone"></div>
+      <div class="ebanner" id="g-after"></div>
       <div class="turnbar theirs" id="g-turn"><span class="dot"></span><span data-vaca="alert" data-vaca-size="34"></span><span class="tb-main"><span class="tb-title" id="g-turn-txt"></span><span class="tb-sub" id="g-turn-sub"></span><span class="tb-kbd" data-i18n="turn_kbd">Enter para adivinar</span></span></div>
 
       <div class="journal" id="g-journal">
@@ -1923,7 +2260,7 @@ body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .pri
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v4.6.0';
+const APP_VERSION = 'v4.7.0';
 /* Enlace de invitación: ...?game=SZ93
    La invitación sobrevive al registro: se guarda en el navegador, porque entre
    abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
@@ -1985,7 +2322,7 @@ const I18N = {
     loading:"Cargando…", load_error:"No se pudo cargar",
     join_btn:"Unirse", lobby_code_ph:"Código de partida", code_invalid:"Escribe el código de la partida (4 caracteres).",
     mine_waiting:"Esperando rival", mine_rematch_from:"Revancha de {name}", see_btn:"Ver", continue_btn:"Continuar", private_tag:"privada",
-    rank_title:"Ranking global", rank_hint:"Victorias totales por jugador. Se actualiza con cada partida terminada.",
+    rank_title:"Ranking", rank_hint:"Victorias totales por jugador. Se actualiza con cada partida terminada.",
     rank_empty:"Aún no hay partidas terminadas.", rank_wl:"{wins} victorias · {played} jug.", rank_total:"Ranking global · {n} jugadores", rank_your_pos:"… tu posición: #{n}", back:"Volver",
     rules_title:"Cómo se juega", rules_link:"¿Cómo se juega?", wait_share:"Compartir",
     share_text:"¡Únete a mi partida de Picas y Fijas! Código: {code}",
@@ -2002,7 +2339,7 @@ const I18N = {
     pub_hint_public:"Aparece en el lobby: cualquiera puede unirse.",
     pub_hint_private:"No aparece en el lobby: solo se entra con el código.",
     lbl_secret:"Tu código secreto", create_btn:"Crear y esperar rival", create_random:"Partida aleatoria", random_secret:"Proponer un código aleatorio",
-    practice_unranked:"Práctica · no afecta al ranking", practice_title:"Práctica", practice_hint:"Escoge cómo quieres practicar. Los resultados se guardan solo en este dispositivo.", practice_type:"Tipo de práctica", practice_solo:"Solo", practice_computer:"Contra el computador", practice_difficulty:"Dificultad", difficulty_easy:"Fácil", difficulty_normal:"Normal", difficulty_expert:"Experto", practice_time:"Tiempo total", practice_turn_time:"Tiempo por turno", practice_start:"Comenzar práctica", practice_random:"Partida aleatoria", practice_secret:"Código secreto:", practice_again:"Jugar otra vez", practice_settings:"Cambiar reglas", practice_won:"¡Código descubierto!", practice_lost:"Fin de la práctica", practice_reveal:"El código era:", practice_played:"Partidas", practice_wins:"Resueltas", practice_streak:"Racha", practice_attempts_used:"Lo resolviste en {n} intentos y {time}.", practice_time_up:"Se terminó el tiempo.", practice_attempts_up:"Agotaste los intentos.", computer_title:"Contra el computador", computer_hint:"Ambos intentan descubrir el código rival por turnos.", computer_thinking:"El computador está pensando…", computer_your_turn:"Tu turno — descubre el código del computador", computer_last_turn:"Último intento para empatar: el computador descubrió tu código.", computer_attempts:"Intentos del computador", computer_your_attempts:"Tus intentos", computer_difficulty:"Dificultad: {level}", computer_wins:"Victorias", computer_losses:"Derrotas", computer_draws:"Empates", computer_result_win:"¡Ganaste!", computer_result_loss:"Ganó el computador", computer_result_draw:"Empate", computer_both_codes:"Tu código: {yours} · Código del computador: {computer}", computer_timeout:"Se agotó tu tiempo; el turno pasa al computador.", computer_stats_detail:"{level}: {wins}V · {losses}D · {draws}E", computer_invalid_secret:"Revisa tu código secreto.",
+    practice_unranked:"Práctica · no afecta al ranking", practice_title:"Práctica", practice_hint:"Escoge cómo quieres practicar. Los resultados se guardan solo en este dispositivo.", practice_type:"Tipo de práctica", practice_solo:"Solo", practice_computer:"Contra el computador", practice_difficulty:"Dificultad", difficulty_easy:"Fácil", difficulty_normal:"Normal", difficulty_expert:"Experto", practice_time:"Tiempo total", practice_turn_time:"Tiempo por turno", practice_start:"Comenzar práctica", practice_random:"Partida aleatoria", practice_secret:"Código secreto:", practice_again:"Jugar otra vez", practice_settings:"Cambiar reglas", practice_won:"¡Código descubierto!", practice_lost:"Fin de la práctica", practice_reveal:"El código era", practice_played:"Partidas", practice_wins:"Resueltas", practice_streak:"Racha", practice_attempts_used:"Lo resolviste en {n} intentos y {time}.", practice_time_up:"Se terminó el tiempo.", practice_attempts_up:"Agotaste los intentos.", computer_title:"Contra el computador", computer_hint:"Ambos intentan descubrir el código rival por turnos.", computer_thinking:"El computador está pensando…", computer_your_turn:"Tu turno — descubre el código del computador", computer_last_turn:"Último intento para empatar: el computador descubrió tu código.", computer_attempts:"Intentos del computador", computer_your_attempts:"Tus intentos", computer_difficulty:"Dificultad: {level}", computer_wins:"Victorias", computer_losses:"Derrotas", computer_draws:"Empates", computer_result_win:"¡Ganaste!", computer_result_loss:"Ganó el computador", computer_result_draw:"Empate", computer_both_codes:"Tu código: {yours} · Código del computador: {computer}", computer_timeout:"Se agotó tu tiempo; el turno pasa al computador.", computer_stats_detail:"{level}: {wins}V · {losses}D · {draws}E", computer_invalid_secret:"Revisa tu código secreto.",
     practice_saved_badge:"Práctica guardada", practice_resume_title:"Práctica en curso", practice_resume:"Continuar práctica", practice_discard:"Descartar", practice_discard_confirm:"¿Descartar esta práctica y todo su progreso?", practice_replace_confirm:"Ya tienes una práctica guardada. ¿Descartarla y comenzar una nueva?", practice_save_lobby:"Guardar y volver al lobby", practice_resume_progress:"{yours} intentos tuyos · {computer} del computador", practice_resume_solo_progress:"{n} intentos realizados", practice_saved_toast:"Práctica guardada. Puedes continuarla desde el lobby.", practice_cancel:"Cancelar", practice_cancel_confirm:"¿Cancelar esta práctica? Se eliminará todo el progreso y no se guardará ningún resultado.", practice_surrender:"Rendirse", practice_surrender_confirm:"¿Rendirse? La práctica terminará y se revelará el código.", practice_surrendered:"Te rendiste", practice_surrender_detail:"El código queda revelado. Puedes revisar tus intentos y las pistas.",
     wait_title:"Partida creada", wait_hint:"Comparte este código con tu rival. Empieza en cuanto se una.",
     wait_copy:"Copiar código", wait_waiting:"Esperando a que alguien se una…", wait_cancel:"Cancelar partida", wait_back:"Volver atrás",
@@ -2011,7 +2348,7 @@ const I18N = {
     rematch_title:"Revancha", rematch_hint:"Mismas reglas, mismo rival. Define tu nuevo código secreto.",
     rematch_rules:"Reglas: {rules}. Define tu nuevo código.", lbl_newsecret:"Tu nuevo código secreto",
     rematch_send:"Enviar revancha", back_home:"Volver al inicio", result_lobby:"Volver al lobby",
-    game_match:"Partida", game_yourcode:"Tu código:", opponent_code:"Código secreto de {name}:", vs:"vs {name}", waiting_short:"esperando…",
+    game_match:"Partida", game_yourcode:"Tu código:", opponent_code:"Código secreto de {name}", vs:"vs {name}", waiting_short:"esperando…",
     spectator_confirm:"La partida está llena. ¿Deseas continuar como espectador?", spectator_mode:"Espectador", spectator_p1:"Intentos de {name} → código de {opp}", spectator_p2:"Intentos de {name} → código de {opp}", spectator_winner:"Ganó {name}",
     arena_title:"La arena", arena_join:"Entrar", arena_new_title:"Abrir una arena", arena_new_hint:"El código lo sortea el servidor. Tú eliges las reglas y compartes el código de la arena con quien quieras.", arena_create_btn:"Abrir la arena", arena_start:"Empezar la arena", arena_leave:"Salir de la arena", arena_leave_confirm:"¿Salir de la arena? Si ya ha empezado, tus intentos se quedan en la clasificación.", arena_your_guess:"Tu intento", arena_players:"{n}/{max} jugadores", arena_status_waiting:"Esperando jugadores", arena_status_active:"En juego", arena_status_finished:"Terminada", arena_need:"Faltan {n} para poder empezar.", arena_ready:"Ya se puede empezar. Comparte el código para que entre más gente.", arena_solved:"Descifrado en {n}", arena_attempts:"{n} intentos", arena_attempts_one:"1 intento", arena_attempts_none:"Todavía no ha probado", arena_best:"mejor {n}F", arena_gaveup:"Se marchó", arena_nomore:"Sin intentos", arena_secret:"El código era {code}", arena_you_solved:"¡Lo descifraste en {n} intentos!", arena_over:"Arena terminada", arena_log_empty:"Todavía no has probado nada.", arena_empty_board:"Aquí aparecerá quien entre.",
     watch_hint:"Mira jugar a otros: los códigos secretos no se ven hasta que la partida termina.", watch_btn:"Mirar", watch_attempts:"{a} · {b} intentos", spectator_chat_readonly:"Estás mirando: puedes leer el chat de la partida, no escribir.", spectator_leave:"Dejar de mirar",
@@ -2044,7 +2381,7 @@ const I18N = {
     daily_number:"Código #{n}", daily_attempts_chip:"Intento {n} de {max}", daily_next:"Nuevo código en {time}",
     daily_solved_title:"¡Descifrado!", daily_solved_detail:"Lo resolviste en {n} intentos y {time}.",
     daily_failed_title:"Hoy no salió", daily_failed_detail:"Se acabaron los intentos del día.",
-    daily_reveal:"El código era:", daily_done_today:"Ya jugaste el código de hoy.",
+    daily_reveal:"El código de hoy era", daily_done_today:"Ya jugaste el código de hoy.",
     daily_board_title:"Clasificación de hoy", daily_board_empty:"Todavía nadie ha resuelto el código de hoy.",
     daily_board_line:"{n} intentos · {time}", daily_players:"{players} jugando hoy · {solved} resueltos",
     daily_your_rank:"Tu posición de hoy: #{n}", daily_share:"Copiar mi rejilla", daily_shared:"Rejilla copiada",
@@ -2077,7 +2414,7 @@ const I18N = {
     loading:"Loading…", load_error:"Couldn't load",
     join_btn:"Join", lobby_code_ph:"Game code", code_invalid:"Enter the game code (4 characters).",
     mine_waiting:"Waiting for opponent", mine_rematch_from:"Rematch from {name}", see_btn:"View", continue_btn:"Continue", private_tag:"private",
-    rank_title:"Global ranking", rank_hint:"Total wins per player. Updates after each finished game.",
+    rank_title:"Ranking", rank_hint:"Total wins per player. Updates after each finished game.",
     rank_empty:"No finished games yet.", rank_wl:"{wins} wins · {played} games", rank_total:"Global ranking · {n} players", rank_your_pos:"… your position: #{n}", back:"Back",
     rules_title:"How to play", rules_link:"How to play?", wait_share:"Share",
     share_text:"Join my Picas y Fijas game! Code: {code}",
@@ -2094,7 +2431,7 @@ const I18N = {
     pub_hint_public:"Shown in the lobby: anyone can join.",
     pub_hint_private:"Not shown in the lobby: join only with the code.",
     lbl_secret:"Your secret code", create_btn:"Create and wait for opponent", create_random:"Random game", random_secret:"Suggest a random code",
-    practice_unranked:"Practice · does not affect ranking", practice_title:"Practice", practice_hint:"Choose how you want to practice. Results are saved only on this device.", practice_type:"Practice type", practice_solo:"Solo", practice_computer:"Against the computer", practice_difficulty:"Difficulty", difficulty_easy:"Easy", difficulty_normal:"Normal", difficulty_expert:"Expert", practice_time:"Total time", practice_turn_time:"Time per turn", practice_start:"Start practice", practice_random:"Random game", practice_secret:"Secret code:", practice_again:"Play again", practice_settings:"Change rules", practice_won:"Code discovered!", practice_lost:"Practice over", practice_reveal:"The code was:", practice_played:"Games", practice_wins:"Solved", practice_streak:"Streak", practice_attempts_used:"Solved in {n} attempts and {time}.", practice_time_up:"Time is up.", practice_attempts_up:"No attempts remaining.", computer_title:"Against the computer", computer_hint:"Take turns trying to discover each other's code.", computer_thinking:"The computer is thinking…", computer_your_turn:"Your turn — discover the computer's code", computer_last_turn:"Last try to draw: the computer discovered your code.", computer_attempts:"Computer attempts", computer_your_attempts:"Your attempts", computer_difficulty:"Difficulty: {level}", computer_wins:"Wins", computer_losses:"Losses", computer_draws:"Draws", computer_result_win:"You won!", computer_result_loss:"The computer won", computer_result_draw:"Draw", computer_both_codes:"Your code: {yours} · Computer code: {computer}", computer_timeout:"Your time ran out; the turn passes to the computer.", computer_stats_detail:"{level}: {wins}W · {losses}L · {draws}D", computer_invalid_secret:"Check your secret code.",
+    practice_unranked:"Practice · does not affect ranking", practice_title:"Practice", practice_hint:"Choose how you want to practice. Results are saved only on this device.", practice_type:"Practice type", practice_solo:"Solo", practice_computer:"Against the computer", practice_difficulty:"Difficulty", difficulty_easy:"Easy", difficulty_normal:"Normal", difficulty_expert:"Expert", practice_time:"Total time", practice_turn_time:"Time per turn", practice_start:"Start practice", practice_random:"Random game", practice_secret:"Secret code:", practice_again:"Play again", practice_settings:"Change rules", practice_won:"Code discovered!", practice_lost:"Practice over", practice_reveal:"The code was", practice_played:"Games", practice_wins:"Solved", practice_streak:"Streak", practice_attempts_used:"Solved in {n} attempts and {time}.", practice_time_up:"Time is up.", practice_attempts_up:"No attempts remaining.", computer_title:"Against the computer", computer_hint:"Take turns trying to discover each other's code.", computer_thinking:"The computer is thinking…", computer_your_turn:"Your turn — discover the computer's code", computer_last_turn:"Last try to draw: the computer discovered your code.", computer_attempts:"Computer attempts", computer_your_attempts:"Your attempts", computer_difficulty:"Difficulty: {level}", computer_wins:"Wins", computer_losses:"Losses", computer_draws:"Draws", computer_result_win:"You won!", computer_result_loss:"The computer won", computer_result_draw:"Draw", computer_both_codes:"Your code: {yours} · Computer code: {computer}", computer_timeout:"Your time ran out; the turn passes to the computer.", computer_stats_detail:"{level}: {wins}W · {losses}L · {draws}D", computer_invalid_secret:"Check your secret code.",
     practice_saved_badge:"Saved practice", practice_resume_title:"Practice in progress", practice_resume:"Continue practice", practice_discard:"Discard", practice_discard_confirm:"Discard this practice and all its progress?", practice_replace_confirm:"You already have a saved practice. Discard it and start a new one?", practice_save_lobby:"Save and return to lobby", practice_resume_progress:"{yours} of your attempts · {computer} by the computer", practice_resume_solo_progress:"{n} attempts made", practice_saved_toast:"Practice saved. You can continue it from the lobby.", practice_cancel:"Cancel", practice_cancel_confirm:"Cancel this practice? All progress will be deleted and no result will be saved.", practice_surrender:"Surrender", practice_surrender_confirm:"Surrender? The practice will end and the code will be revealed.", practice_surrendered:"You surrendered", practice_surrender_detail:"The code is now revealed. You can review your attempts and clues.",
     wait_title:"Game created", wait_hint:"Share this code with your opponent. It starts as soon as they join.",
     wait_copy:"Copy code", wait_waiting:"Waiting for someone to join…", wait_cancel:"Cancel game", wait_back:"Go back",
@@ -2103,7 +2440,7 @@ const I18N = {
     rematch_title:"Rematch", rematch_hint:"Same rules, same opponent. Choose your new secret code.",
     rematch_rules:"Rules: {rules}. Choose your new code.", lbl_newsecret:"Your new secret code",
     rematch_send:"Send rematch", back_home:"Back to home", result_lobby:"Back to lobby",
-    game_match:"Game", game_yourcode:"Your code:", opponent_code:"{name}'s secret code:", vs:"vs {name}", waiting_short:"waiting…",
+    game_match:"Game", game_yourcode:"Your code:", opponent_code:"{name}’s secret code", vs:"vs {name}", waiting_short:"waiting…",
     spectator_confirm:"This game is full. Continue as a spectator?", spectator_mode:"Spectator", spectator_p1:"{name}'s guesses → {opp}'s code", spectator_p2:"{name}'s guesses → {opp}'s code", spectator_winner:"{name} won",
     arena_title:"The arena", arena_join:"Enter", arena_new_title:"Open an arena", arena_new_hint:"The server draws the code. You choose the rules and share the arena code with whoever you like.", arena_create_btn:"Open the arena", arena_start:"Start the arena", arena_leave:"Leave the arena", arena_leave_confirm:"Leave the arena? If it has already started, your guesses stay on the board.", arena_your_guess:"Your guess", arena_players:"{n}/{max} players", arena_status_waiting:"Waiting for players", arena_status_active:"Playing", arena_status_finished:"Finished", arena_need:"{n} more needed to start.", arena_ready:"Ready to start. Share the code so more people can join.", arena_solved:"Cracked in {n}", arena_attempts:"{n} guesses", arena_attempts_one:"1 guess", arena_attempts_none:"No guesses yet", arena_best:"best {n}F", arena_gaveup:"Left", arena_nomore:"Out of guesses", arena_secret:"The code was {code}", arena_you_solved:"You cracked it in {n} guesses!", arena_over:"Arena over", arena_log_empty:"You have not tried anything yet.", arena_empty_board:"Whoever joins will show up here.",
     watch_hint:"Watch others play: the secret codes stay hidden until the game ends.", watch_btn:"Watch", watch_attempts:"{a} · {b} guesses", spectator_chat_readonly:"You are watching: you can read the game chat, not write in it.", spectator_leave:"Stop watching",
@@ -2136,7 +2473,7 @@ const I18N = {
     daily_number:"Code #{n}", daily_attempts_chip:"Try {n} of {max}", daily_next:"New code in {time}",
     daily_solved_title:"Cracked!", daily_solved_detail:"You got it in {n} tries and {time}.",
     daily_failed_title:"Not today", daily_failed_detail:"You used up today's tries.",
-    daily_reveal:"The code was:", daily_done_today:"You already played today's code.",
+    daily_reveal:"Today’s code was", daily_done_today:"You already played today's code.",
     daily_board_title:"Today's ranking", daily_board_empty:"Nobody has cracked today's code yet.",
     daily_board_line:"{n} tries · {time}", daily_players:"{players} playing today · {solved} solved",
     daily_your_rank:"Your place today: #{n}", daily_share:"Copy my grid", daily_shared:"Grid copied",
@@ -2169,7 +2506,7 @@ const I18N = {
     loading:"Chargement…", load_error:"Échec du chargement",
     join_btn:"Rejoindre", lobby_code_ph:"Code de la partie", code_invalid:"Saisis le code de la partie (4 caractères).",
     mine_waiting:"En attente d'un adversaire", mine_rematch_from:"Revanche de {name}", see_btn:"Voir", continue_btn:"Continuer", private_tag:"privée",
-    rank_title:"Classement global", rank_hint:"Victoires totales par joueur. Mis à jour après chaque partie terminée.",
+    rank_title:"Classement", rank_hint:"Victoires totales par joueur. Mis à jour après chaque partie terminée.",
     rank_empty:"Aucune partie terminée pour l'instant.", rank_wl:"{wins} victoires · {played} parties", rank_total:"Classement global · {n} joueurs", rank_your_pos:"… ta position : #{n}", back:"Retour",
     rules_title:"Comment jouer", rules_link:"Comment jouer ?", wait_share:"Partager",
     share_text:"Rejoins ma partie de Picas y Fijas ! Code : {code}",
@@ -2186,7 +2523,7 @@ const I18N = {
     pub_hint_public:"Visible dans le lobby : tout le monde peut rejoindre.",
     pub_hint_private:"Absente du lobby : on rejoint uniquement avec le code.",
     lbl_secret:"Ton code secret", create_btn:"Créer et attendre l'adversaire", create_random:"Partie aléatoire", random_secret:"Proposer un code aléatoire",
-    practice_unranked:"Entraînement · sans effet sur le classement", practice_title:"Entraînement", practice_hint:"Choisis ton type d'entraînement. Les résultats restent sur cet appareil.", practice_type:"Type d'entraînement", practice_solo:"Solo", practice_computer:"Contre l'ordinateur", practice_difficulty:"Difficulté", difficulty_easy:"Facile", difficulty_normal:"Normal", difficulty_expert:"Expert", practice_time:"Temps total", practice_turn_time:"Temps par tour", practice_start:"Commencer", practice_random:"Partie aléatoire", practice_secret:"Code secret :", practice_again:"Rejouer", practice_settings:"Changer les règles", practice_won:"Code découvert !", practice_lost:"Fin de l'entraînement", practice_reveal:"Le code était :", practice_played:"Parties", practice_wins:"Résolues", practice_streak:"Série", practice_attempts_used:"Résolu en {n} essais et {time}.", practice_time_up:"Temps écoulé.", practice_attempts_up:"Plus aucun essai.", computer_title:"Contre l'ordinateur", computer_hint:"Chacun tente de découvrir le code adverse à tour de rôle.", computer_thinking:"L'ordinateur réfléchit…", computer_your_turn:"À toi — découvre le code de l'ordinateur", computer_last_turn:"Dernier essai pour égaliser : l'ordinateur a découvert ton code.", computer_attempts:"Essais de l'ordinateur", computer_your_attempts:"Tes essais", computer_difficulty:"Difficulté : {level}", computer_wins:"Victoires", computer_losses:"Défaites", computer_draws:"Nuls", computer_result_win:"Tu as gagné !", computer_result_loss:"L'ordinateur a gagné", computer_result_draw:"Match nul", computer_both_codes:"Ton code : {yours} · Code de l'ordinateur : {computer}", computer_timeout:"Temps écoulé ; le tour passe à l'ordinateur.", computer_stats_detail:"{level} : {wins}V · {losses}D · {draws}N", computer_invalid_secret:"Vérifie ton code secret.",
+    practice_unranked:"Entraînement · sans effet sur le classement", practice_title:"Entraînement", practice_hint:"Choisis ton type d'entraînement. Les résultats restent sur cet appareil.", practice_type:"Type d'entraînement", practice_solo:"Solo", practice_computer:"Contre l'ordinateur", practice_difficulty:"Difficulté", difficulty_easy:"Facile", difficulty_normal:"Normal", difficulty_expert:"Expert", practice_time:"Temps total", practice_turn_time:"Temps par tour", practice_start:"Commencer", practice_random:"Partie aléatoire", practice_secret:"Code secret :", practice_again:"Rejouer", practice_settings:"Changer les règles", practice_won:"Code découvert !", practice_lost:"Fin de l'entraînement", practice_reveal:"Le code était", practice_played:"Parties", practice_wins:"Résolues", practice_streak:"Série", practice_attempts_used:"Résolu en {n} essais et {time}.", practice_time_up:"Temps écoulé.", practice_attempts_up:"Plus aucun essai.", computer_title:"Contre l'ordinateur", computer_hint:"Chacun tente de découvrir le code adverse à tour de rôle.", computer_thinking:"L'ordinateur réfléchit…", computer_your_turn:"À toi — découvre le code de l'ordinateur", computer_last_turn:"Dernier essai pour égaliser : l'ordinateur a découvert ton code.", computer_attempts:"Essais de l'ordinateur", computer_your_attempts:"Tes essais", computer_difficulty:"Difficulté : {level}", computer_wins:"Victoires", computer_losses:"Défaites", computer_draws:"Nuls", computer_result_win:"Tu as gagné !", computer_result_loss:"L'ordinateur a gagné", computer_result_draw:"Match nul", computer_both_codes:"Ton code : {yours} · Code de l'ordinateur : {computer}", computer_timeout:"Temps écoulé ; le tour passe à l'ordinateur.", computer_stats_detail:"{level} : {wins}V · {losses}D · {draws}N", computer_invalid_secret:"Vérifie ton code secret.",
     practice_saved_badge:"Entraînement sauvegardé", practice_resume_title:"Entraînement en cours", practice_resume:"Continuer", practice_discard:"Supprimer", practice_discard_confirm:"Supprimer cet entraînement et toute sa progression ?", practice_replace_confirm:"Un entraînement est déjà sauvegardé. Le supprimer et en commencer un nouveau ?", practice_save_lobby:"Sauvegarder et retourner au lobby", practice_resume_progress:"{yours} de tes essais · {computer} de l'ordinateur", practice_resume_solo_progress:"{n} essais effectués", practice_saved_toast:"Entraînement sauvegardé. Tu peux le continuer depuis le lobby.", practice_cancel:"Annuler", practice_cancel_confirm:"Annuler cet entraînement ? Toute la progression sera supprimée et aucun résultat ne sera enregistré.", practice_surrender:"Abandonner", practice_surrender_confirm:"Abandonner ? L'entraînement prendra fin et le code sera révélé.", practice_surrendered:"Tu as abandonné", practice_surrender_detail:"Le code est maintenant révélé. Tu peux examiner tes essais et les indices.",
     wait_title:"Partie créée", wait_hint:"Partage ce code avec ton adversaire. La partie démarre dès qu'il rejoint.",
     wait_copy:"Copier le code", wait_waiting:"En attente d'un joueur…", wait_cancel:"Annuler la partie", wait_back:"Retour",
@@ -2195,7 +2532,7 @@ const I18N = {
     rematch_title:"Revanche", rematch_hint:"Mêmes règles, même adversaire. Choisis ton nouveau code secret.",
     rematch_rules:"Règles : {rules}. Choisis ton nouveau code.", lbl_newsecret:"Ton nouveau code secret",
     rematch_send:"Envoyer la revanche", back_home:"Retour à l'accueil", result_lobby:"Retour au lobby",
-    game_match:"Partie", game_yourcode:"Ton code :", opponent_code:"Code secret de {name} :", vs:"vs {name}", waiting_short:"en attente…",
+    game_match:"Partie", game_yourcode:"Ton code :", opponent_code:"Code secret de {name}", vs:"vs {name}", waiting_short:"en attente…",
     spectator_confirm:"Cette partie est complète. Continuer comme spectateur ?", spectator_mode:"Spectateur", spectator_p1:"Essais de {name} → code de {opp}", spectator_p2:"Essais de {name} → code de {opp}", spectator_winner:"{name} a gagné",
     arena_title:"L'arène", arena_join:"Entrer", arena_new_title:"Ouvrir une arène", arena_new_hint:"Le code est tiré par le serveur. Tu choisis les règles et tu partages le code de l'arène avec qui tu veux.", arena_create_btn:"Ouvrir l'arène", arena_start:"Lancer l'arène", arena_leave:"Quitter l'arène", arena_leave_confirm:"Quitter l'arène ? Si elle a déjà commencé, tes essais restent au classement.", arena_your_guess:"Ton essai", arena_players:"{n}/{max} joueurs", arena_status_waiting:"En attente de joueurs", arena_status_active:"En jeu", arena_status_finished:"Terminée", arena_need:"Il manque {n} pour commencer.", arena_ready:"On peut commencer. Partage le code pour que d'autres entrent.", arena_solved:"Trouvé en {n}", arena_attempts:"{n} essais", arena_attempts_one:"1 essai", arena_attempts_none:"Pas encore d'essai", arena_best:"meilleur {n}F", arena_gaveup:"A quitté", arena_nomore:"Plus d'essais", arena_secret:"Le code était {code}", arena_you_solved:"Tu l'as trouvé en {n} essais !", arena_over:"Arène terminée", arena_log_empty:"Tu n'as encore rien essayé.", arena_empty_board:"Ceux qui entrent apparaîtront ici.",
     watch_hint:"Regarde les autres jouer : les codes secrets restent cachés jusqu'à la fin de la partie.", watch_btn:"Regarder", watch_attempts:"{a} · {b} essais", spectator_chat_readonly:"Tu regardes : tu peux lire le chat de la partie, pas y écrire.", spectator_leave:"Arrêter de regarder",
@@ -2228,7 +2565,7 @@ const I18N = {
     daily_number:"Code n° {n}", daily_attempts_chip:"Essai {n} sur {max}", daily_next:"Nouveau code dans {time}",
     daily_solved_title:"Décrypté !", daily_solved_detail:"Trouvé en {n} essais et {time}.",
     daily_failed_title:"Pas aujourd’hui", daily_failed_detail:"Tu as épuisé les essais du jour.",
-    daily_reveal:"Le code était :", daily_done_today:"Tu as déjà joué le code du jour.",
+    daily_reveal:"Le code du jour était", daily_done_today:"Tu as déjà joué le code du jour.",
     daily_board_title:"Classement du jour", daily_board_empty:"Personne n’a encore décrypté le code du jour.",
     daily_board_line:"{n} essais · {time}", daily_players:"{players} en jeu aujourd’hui · {solved} réussis",
     daily_your_rank:"Ta place du jour : n° {n}", daily_share:"Copier ma grille", daily_shared:"Grille copiée",
@@ -2846,9 +3183,9 @@ Object.assign(I18N.es,{analysis_title:"Cómo se jugó",analysis_optimal:"Óptimo
 Object.assign(I18N.en,{analysis_title:"How it played out",analysis_optimal:"Optimal",analysis_good:"Solid",analysis_wasted:"Wasted",analysis_left:"{before} possible → {after}",analysis_decisive:"This is where the game was decided",analysis_foot:"Before each try, this many codes still matched your clues. The grade measures how many your try would leave on average, over every possible answer, and compares it with the best try: it judges the decision, not the luck. That is why a try with no fijas and no picas can be excellent or weak: what counts is what it could teach before you played it. Tap a grade to see why.",analysis_why_optimal:"No try left fewer: on average {mine} possible codes remained, whatever the answer.",analysis_why_other:"On average it left {mine} possible codes, whatever the answer. {best} would have left {ref}.",analysis_why_ruled:"Your clues had already ruled it out: it could not be the code, so it could not win.",analysis_why_last_ok:"Only one code was left and you played it.",analysis_why_last_bad:"Only one code was left, {best}, and you played another."});
 Object.assign(I18N.fr,{analysis_title:"Comment ça s'est joué",analysis_optimal:"Optimal",analysis_good:"Correct",analysis_wasted:"Gâché",analysis_left:"{before} possibles → {after}",analysis_decisive:"C'est ici que la partie s'est jouée",analysis_foot:"Avant chaque essai, il restait ce nombre de codes compatibles avec tes indices. La note mesure combien ton essai en aurait laissé en moyenne, sur toutes les réponses possibles, et la compare au meilleur essai : elle juge la décision, pas la chance. C'est pourquoi un essai sans fija ni pica peut être excellent ou faible : ce qui compte, c'est ce qu'il pouvait apprendre avant d'être joué. Touche une note pour voir pourquoi.",analysis_why_optimal:"Aucun essai ne laissait moins : en moyenne, il restait {mine} codes possibles, quelle que soit la réponse.",analysis_why_other:"En moyenne, il laissait {mine} codes possibles, quelle que soit la réponse. Avec {best}, il en serait resté {ref}.",analysis_why_ruled:"Tes indices l'avaient déjà écarté : ce ne pouvait pas être le code, donc il ne pouvait pas gagner.",analysis_why_last_ok:"Il ne restait qu'un code et tu l'as joué.",analysis_why_last_bad:"Il ne restait qu'un code, {best}, et tu en as joué un autre."});
 /* El cuaderno, el ordenador que se explica y los enigmas (E4-T3, E4-T4, E4-T5). */
-Object.assign(I18N.es,{lbl_notebook:"Cuaderno de deducción",nb_off:"Sin cuaderno",nb_on:"Con cuaderno",nb_option_hint:"Una cuadrícula para marcar símbolos descartados y confirmados, y un aviso cuando un intento contradice tus propias pistas. Se elige aquí para que los dos jueguen con las mismas reglas.",nb_title:"Cuaderno",nb_clear:"Borrar marcas",nb_hint:"Toca un símbolo para marcarlo: una vez descartado, dos veces confirmado. Las marcas son tuyas y viven solo en este aparato.",nb_contradiction:"Ese intento contradice tus pistas: ya sabes que no puede ser el código del rival.",rl_notebook:"con cuaderno",computer_thinking_left:"El computador está pensando… le quedan {n} códigos posibles",think_line:"Le quedaban {before} posibles → ahora {after}",think_groups:"parte la lista en {n} grupos",lobby_puzzles:"Enigmas",pz_open:"Enigmas de deducción",pz_badge:"Sin rival y sin reloj",pz_title:"Enigmas de deducción",pz_hint:"Aquí tienes las pistas de una partida que no jugaste: deduce el código. Cada enigma tiene una única solución.",pz_level:"Dificultad",pz_check:"Comprobar",pz_back_list:"Volver a la lista",pz_reveal:"Ver la solución",pz_progress:"{done} de {total} resueltos",pz_clues_count:"{n} pistas",pz_play_title:"Enigma {n}",pz_clue_head:"Las pistas",pz_solved:"¡Código deducido!",pz_solved_text:"Era la única combinación compatible con estas pistas.",pz_wrong:"Ese código no encaja con las pistas.",pz_revealed:"La solución era:",pz_loading:"Cargando enigmas…",pz_offline:"No pudimos cargar los enigmas. Inténtalo de nuevo con conexión.",pz_already:"Resuelto"});
-Object.assign(I18N.en,{lbl_notebook:"Deduction notebook",nb_off:"No notebook",nb_on:"With notebook",nb_option_hint:"A grid to mark symbols as ruled out or confirmed, plus a warning when a try contradicts your own clues. It is chosen here so both players play by the same rules.",nb_title:"Notebook",nb_clear:"Clear marks",nb_hint:"Tap a symbol to mark it: once for ruled out, twice for confirmed. The marks are yours and live only on this device.",nb_contradiction:"That try contradicts your clues: you already know it cannot be your opponent's code.",rl_notebook:"with notebook",computer_thinking_left:"The computer is thinking… {n} codes still possible",think_line:"{before} were possible → now {after}",think_groups:"splits the list into {n} groups",lobby_puzzles:"Puzzles",pz_open:"Deduction puzzles",pz_badge:"No opponent, no clock",pz_title:"Deduction puzzles",pz_hint:"Here are the clues from a game you did not play: deduce the code. Every puzzle has exactly one solution.",pz_level:"Difficulty",pz_check:"Check",pz_back_list:"Back to the list",pz_reveal:"Show the solution",pz_progress:"{done} of {total} solved",pz_clues_count:"{n} clues",pz_play_title:"Puzzle {n}",pz_clue_head:"The clues",pz_solved:"Code deduced!",pz_solved_text:"It was the only combination matching these clues.",pz_wrong:"That code does not match the clues.",pz_revealed:"The solution was:",pz_loading:"Loading puzzles…",pz_offline:"We could not load the puzzles. Try again when you are online.",pz_already:"Solved"});
-Object.assign(I18N.fr,{lbl_notebook:"Carnet de déduction",nb_off:"Sans carnet",nb_on:"Avec carnet",nb_option_hint:"Une grille pour marquer les symboles écartés et confirmés, et un avertissement quand un essai contredit tes propres indices. Le choix se fait ici pour que les deux jouent avec les mêmes règles.",nb_title:"Carnet",nb_clear:"Effacer les marques",nb_hint:"Touche un symbole pour le marquer : une fois écarté, deux fois confirmé. Les marques sont à toi et restent sur cet appareil.",nb_contradiction:"Cet essai contredit tes indices : tu sais déjà qu'il ne peut pas être le code adverse.",rl_notebook:"avec carnet",computer_thinking_left:"L'ordinateur réfléchit… il lui reste {n} codes possibles",think_line:"{before} possibles → maintenant {after}",think_groups:"coupe la liste en {n} groupes",lobby_puzzles:"Énigmes",pz_open:"Énigmes de déduction",pz_badge:"Sans adversaire ni chrono",pz_title:"Énigmes de déduction",pz_hint:"Voici les indices d'une partie que tu n'as pas jouée : déduis le code. Chaque énigme a une seule solution.",pz_level:"Difficulté",pz_check:"Vérifier",pz_back_list:"Retour à la liste",pz_reveal:"Voir la solution",pz_progress:"{done} sur {total} résolues",pz_clues_count:"{n} indices",pz_play_title:"Énigme {n}",pz_clue_head:"Les indices",pz_solved:"Code déduit !",pz_solved_text:"C'était la seule combinaison compatible avec ces indices.",pz_wrong:"Ce code ne colle pas avec les indices.",pz_revealed:"La solution était :",pz_loading:"Chargement des énigmes…",pz_offline:"Impossible de charger les énigmes. Réessaie avec une connexion.",pz_already:"Résolue"});
+Object.assign(I18N.es,{lbl_notebook:"Cuaderno de deducción",nb_off:"Sin cuaderno",nb_on:"Con cuaderno",nb_option_hint:"Una cuadrícula para marcar símbolos descartados y confirmados, y un aviso cuando un intento contradice tus propias pistas. Se elige aquí para que los dos jueguen con las mismas reglas.",nb_title:"Cuaderno",nb_clear:"Borrar marcas",nb_hint:"Toca un símbolo para marcarlo: una vez descartado, dos veces confirmado. Las marcas son tuyas y viven solo en este aparato.",nb_contradiction:"Ese intento contradice tus pistas: ya sabes que no puede ser el código del rival.",rl_notebook:"con cuaderno",computer_thinking_left:"El computador está pensando… le quedan {n} códigos posibles",think_line:"Le quedaban {before} posibles → ahora {after}",think_groups:"parte la lista en {n} grupos",lobby_puzzles:"Enigmas",pz_open:"Enigmas de deducción",pz_badge:"Sin rival y sin reloj",pz_title:"Enigmas de deducción",pz_hint:"Estas son sus pistas: deduce el código. Cada enigma tiene una sola solución.",pz_level:"Dificultad",pz_check:"Comprobar",pz_back_list:"Volver a la lista",pz_reveal:"Ver la solución",pz_progress:"{done} de {total} resueltos",pz_clues_count:"{n} pistas",pz_play_title:"Enigma {n}",pz_clue_head:"Las pistas",pz_solved:"¡Código deducido!",pz_solved_text:"Era la única combinación compatible con estas pistas.",pz_wrong:"Ese código no encaja con las pistas.",pz_revealed:"La solución era",pz_loading:"Cargando enigmas…",pz_offline:"No pudimos cargar los enigmas. Inténtalo de nuevo con conexión.",pz_already:"Resuelto"});
+Object.assign(I18N.en,{lbl_notebook:"Deduction notebook",nb_off:"No notebook",nb_on:"With notebook",nb_option_hint:"A grid to mark symbols as ruled out or confirmed, plus a warning when a try contradicts your own clues. It is chosen here so both players play by the same rules.",nb_title:"Notebook",nb_clear:"Clear marks",nb_hint:"Tap a symbol to mark it: once for ruled out, twice for confirmed. The marks are yours and live only on this device.",nb_contradiction:"That try contradicts your clues: you already know it cannot be your opponent's code.",rl_notebook:"with notebook",computer_thinking_left:"The computer is thinking… {n} codes still possible",think_line:"{before} were possible → now {after}",think_groups:"splits the list into {n} groups",lobby_puzzles:"Puzzles",pz_open:"Deduction puzzles",pz_badge:"No opponent, no clock",pz_title:"Deduction puzzles",pz_hint:"Here are its clues: deduce the code. Every puzzle has exactly one solution.",pz_level:"Difficulty",pz_check:"Check",pz_back_list:"Back to the list",pz_reveal:"Show the solution",pz_progress:"{done} of {total} solved",pz_clues_count:"{n} clues",pz_play_title:"Puzzle {n}",pz_clue_head:"The clues",pz_solved:"Code deduced!",pz_solved_text:"It was the only combination matching these clues.",pz_wrong:"That code does not match the clues.",pz_revealed:"The solution was",pz_loading:"Loading puzzles…",pz_offline:"We could not load the puzzles. Try again when you are online.",pz_already:"Solved"});
+Object.assign(I18N.fr,{lbl_notebook:"Carnet de déduction",nb_off:"Sans carnet",nb_on:"Avec carnet",nb_option_hint:"Une grille pour marquer les symboles écartés et confirmés, et un avertissement quand un essai contredit tes propres indices. Le choix se fait ici pour que les deux jouent avec les mêmes règles.",nb_title:"Carnet",nb_clear:"Effacer les marques",nb_hint:"Touche un symbole pour le marquer : une fois écarté, deux fois confirmé. Les marques sont à toi et restent sur cet appareil.",nb_contradiction:"Cet essai contredit tes indices : tu sais déjà qu'il ne peut pas être le code adverse.",rl_notebook:"avec carnet",computer_thinking_left:"L'ordinateur réfléchit… il lui reste {n} codes possibles",think_line:"{before} possibles → maintenant {after}",think_groups:"coupe la liste en {n} groupes",lobby_puzzles:"Énigmes",pz_open:"Énigmes de déduction",pz_badge:"Sans adversaire ni chrono",pz_title:"Énigmes de déduction",pz_hint:"Voici ses indices : déduis le code. Chaque énigme a une seule solution.",pz_level:"Difficulté",pz_check:"Vérifier",pz_back_list:"Retour à la liste",pz_reveal:"Voir la solution",pz_progress:"{done} sur {total} résolues",pz_clues_count:"{n} indices",pz_play_title:"Énigme {n}",pz_clue_head:"Les indices",pz_solved:"Code déduit !",pz_solved_text:"C'était la seule combinaison compatible avec ces indices.",pz_wrong:"Ce code ne colle pas avec les indices.",pz_revealed:"La solution était",pz_loading:"Chargement des énigmes…",pz_offline:"Impossible de charger les énigmes. Réessaie avec une connexion.",pz_already:"Résolue"});
 Object.assign(I18N.es,{menu_settings:"Ajustes",menu_logout:"Cerrar sesión"});
 Object.assign(I18N.en,{menu_settings:"Settings",menu_logout:"Log out"});
 Object.assign(I18N.fr,{menu_settings:"Réglages",menu_logout:"Se déconnecter"});
@@ -2857,12 +3194,65 @@ Object.assign(I18N.es,{home_title:"Adivina el código antes que tu rival.",home_
 Object.assign(I18N.en,{home_title:"Crack the code before your opponent does.",home_lead:"The classic “Bulls and Cows” as a duel, in the arena or against the computer. Free, nothing to install.",lobby_my_profile:"My profile",lobby_season:"{month} season · {points} pts · {rank}",lobby_season_none:"{month} season · no points yet",lobby_create_hint:"Share the code, play live or by correspondence.",lobby_create_go:"New game",mode_practice_hint:"Solo or against the computer",mode_arena_hint:"3 to 8 players, one code",mode_puzzles_hint:"No opponent, no clock",mode_rank_hint:"Season points",lobby_mine_empty:"No games in progress. Create one or join a public one.",lobby_public:"Public games",lobby_public_empty:"No public games right now. Create one and it will show up here.",online_short:"{n} online",row_vs:"Against {name}",row_open:"{name} is looking for an opponent",row_match:"{a} vs {b}",row_arena:"{name}’s arena",row_your_turn:"Your turn",row_their_turn:"Their turn",row_rematch:"Rematch",daily_tile_fresh:"Renews in {time}",daily_tile_progress:"{n} of {max} tries · renews in {time}",daily_tile_solved:"Solved in {n} · next one in {time}",daily_tile_failed:"Not today · next one in {time}",activity_day_one:"Active 1 day ago"});
 Object.assign(I18N.fr,{home_title:"Devine le code avant ton adversaire.",home_lead:"Le classique « Bulls and Cows » en duel, en arène ou contre l’ordinateur. Gratuit, sans installer.",lobby_my_profile:"Mon profil",lobby_season:"Saison de {month} · {points} pts · {rank}",lobby_season_none:"Saison de {month} · pas encore de points",lobby_create_hint:"Partage le code, joue en direct ou par correspondance.",lobby_create_go:"Nouvelle partie",mode_practice_hint:"Solo ou contre l’ordinateur",mode_arena_hint:"3 à 8 joueurs, un seul code",mode_puzzles_hint:"Sans rival et sans horloge",mode_rank_hint:"Points de la saison",lobby_mine_empty:"Aucune partie en cours. Crées-en une ou rejoins une partie publique.",lobby_public:"Parties publiques",lobby_public_empty:"Aucune partie publique pour l’instant. Crées-en une : elle apparaîtra ici.",online_short:"{n} en ligne",row_vs:"Contre {name}",row_open:"{name} attend un adversaire",row_match:"{a} contre {b}",row_arena:"L’arène de {name}",row_your_turn:"À toi",row_their_turn:"Son tour",row_rematch:"Revanche",daily_tile_fresh:"Se renouvelle dans {time}",daily_tile_progress:"{n} essais sur {max} · se renouvelle dans {time}",daily_tile_solved:"Trouvé en {n} · le prochain dans {time}",daily_tile_failed:"Pas aujourd’hui · le prochain dans {time}",activity_day_one:"Actif il y a 1 jour"});
 /* Serie Plaza, lote 4 (4.5.0): la partida en telefono. */
-Object.assign(I18N.es,{tab_new_computer:"Intento nuevo del computador",turn_mine:"Te toca: adivina el código de {name}",turn_sub_attempt:"Intento {n}",turn_sub_attempt_max:"Intento {n} de {max}",turn_sub_turnclock:"el turno pasa si el reloj llega a cero",turn_sub_bank_inc:"+{n} s tras cada jugada",turn_sub_bank:"sin pausa: quien agota su tiempo pierde",turn_sub_corr:"el plazo corre aunque cierres el juego",game_attempt_no:"intento {n}",clock_you:"Tú",clock_your_turn:"Te toca",tab_mine:"Tus intentos · {n}",tab_player:"{name} · {n}",tab_computer:"Computador · {n}",tab_new:"Intento nuevo de {name}",journal_order:"Lo más reciente arriba",frieze_label:"Ir a un intento",jrow_aria:"Intento {n}: {code}, {f} fijas y {p} picas",jrow_missed_aria:"Intento {n}: perdido por tiempo",dock_pad_show:"Teclado",dock_pad_hide:"Plegar",dock_pad_show_aria:"Desplegar el teclado",dock_pad_hide_aria:"Plegar el teclado",dock_erase:"Borrar",dock_keys:"Teclado de símbolos",dock_live:"Tu intento: {code}",dock_live_empty:"Tu intento está vacío",secret_row:"Tu código secreto",secret_show:"Ver tu código",secret_hide:"Ocultar tu código",computer_chip:"Computador: {n}",computer_code:"Código del computador:",sym_0:"círculo rojo",sym_1:"cuadrado naranja",sym_2:"triángulo amarillo",sym_3:"triángulo invertido verde",sym_4:"rombo turquesa",sym_5:"estrella azul",sym_6:"cruz violeta",sym_7:"anillo rosa"});
-Object.assign(I18N.en,{tab_new_computer:"New try from the computer",turn_mine:"Your turn: crack {name}’s code",turn_sub_attempt:"Try {n}",turn_sub_attempt_max:"Try {n} of {max}",turn_sub_turnclock:"the turn passes if the clock hits zero",turn_sub_bank_inc:"+{n} s after each move",turn_sub_bank:"no pauses: whoever runs out of time loses",turn_sub_corr:"the clock keeps running even if you close the game",game_attempt_no:"try {n}",clock_you:"You",clock_your_turn:"Your turn",tab_mine:"Your tries · {n}",tab_player:"{name} · {n}",tab_computer:"Computer · {n}",tab_new:"New try from {name}",journal_order:"Newest first",frieze_label:"Jump to a try",jrow_aria:"Try {n}: {code}, {f} F and {p} P",jrow_missed_aria:"Try {n}: lost on time",dock_pad_show:"Keypad",dock_pad_hide:"Fold",dock_pad_show_aria:"Open the keypad",dock_pad_hide_aria:"Fold the keypad",dock_erase:"Delete",dock_keys:"Symbol keypad",dock_live:"Your try: {code}",dock_live_empty:"Your try is empty",secret_row:"Your secret code",secret_show:"Show your code",secret_hide:"Hide your code",computer_chip:"Computer: {n}",computer_code:"Computer’s code:",sym_0:"red circle",sym_1:"orange square",sym_2:"yellow triangle",sym_3:"green upside-down triangle",sym_4:"turquoise diamond",sym_5:"blue star",sym_6:"purple cross",sym_7:"pink ring"});
-Object.assign(I18N.fr,{tab_new_computer:"Nouvel essai de l’ordinateur",turn_mine:"À toi : devine le code de {name}",turn_sub_attempt:"Essai {n}",turn_sub_attempt_max:"Essai {n} sur {max}",turn_sub_turnclock:"le tour passe si l’horloge tombe à zéro",turn_sub_bank_inc:"+{n} s après chaque coup",turn_sub_bank:"sans pause : qui épuise son temps perd",turn_sub_corr:"le délai court même si tu fermes le jeu",game_attempt_no:"essai {n}",clock_you:"Toi",clock_your_turn:"À toi",tab_mine:"Tes essais · {n}",tab_player:"{name} · {n}",tab_computer:"Ordinateur · {n}",tab_new:"Nouvel essai de {name}",journal_order:"Le plus récent en haut",frieze_label:"Aller à un essai",jrow_aria:"Essai {n} : {code}, {f} F et {p} P",jrow_missed_aria:"Essai {n} : perdu au temps",dock_pad_show:"Pavé",dock_pad_hide:"Replier",dock_pad_show_aria:"Déplier le pavé",dock_pad_hide_aria:"Replier le pavé",dock_erase:"Effacer",dock_keys:"Pavé de symboles",dock_live:"Ton essai : {code}",dock_live_empty:"Ton essai est vide",secret_row:"Ton code secret",secret_show:"Voir ton code",secret_hide:"Masquer ton code",computer_chip:"Ordinateur : {n}",computer_code:"Code de l’ordinateur :",sym_0:"rond rouge",sym_1:"carré orange",sym_2:"triangle jaune",sym_3:"triangle inversé vert",sym_4:"losange turquoise",sym_5:"étoile bleue",sym_6:"croix violette",sym_7:"anneau rose"});
+Object.assign(I18N.es,{tab_new_computer:"Intento nuevo del computador",turn_mine:"Te toca: adivina el código de {name}",turn_sub_attempt:"Intento {n}",turn_sub_attempt_max:"Intento {n} de {max}",turn_sub_turnclock:"el turno pasa si el reloj llega a cero",turn_sub_bank_inc:"+{n} s tras cada jugada",turn_sub_bank:"sin pausa: quien agota su tiempo pierde",turn_sub_corr:"el plazo corre aunque cierres el juego",game_attempt_no:"intento {n}",clock_you:"Tú",clock_your_turn:"Te toca",tab_mine:"Tus intentos · {n}",tab_player:"{name} · {n}",tab_computer:"Computador · {n}",tab_new:"Intento nuevo de {name}",journal_order:"Lo más reciente arriba",frieze_label:"Ir a un intento",jrow_aria:"Intento {n}: {code}, {f} fijas y {p} picas",jrow_missed_aria:"Intento {n}: perdido por tiempo",dock_pad_show:"Teclado",dock_pad_hide:"Plegar",dock_pad_show_aria:"Desplegar el teclado",dock_pad_hide_aria:"Plegar el teclado",dock_erase:"Borrar",dock_keys:"Teclado de símbolos",dock_live:"Tu intento: {code}",dock_live_empty:"Tu intento está vacío",secret_row:"Tu código secreto",secret_show:"Ver tu código",secret_hide:"Ocultar tu código",computer_chip:"Computador: {n}",computer_code:"Código del computador",sym_0:"círculo rojo",sym_1:"cuadrado naranja",sym_2:"triángulo amarillo",sym_3:"triángulo invertido verde",sym_4:"rombo turquesa",sym_5:"estrella azul",sym_6:"cruz violeta",sym_7:"anillo rosa"});
+Object.assign(I18N.en,{tab_new_computer:"New try from the computer",turn_mine:"Your turn: crack {name}’s code",turn_sub_attempt:"Try {n}",turn_sub_attempt_max:"Try {n} of {max}",turn_sub_turnclock:"the turn passes if the clock hits zero",turn_sub_bank_inc:"+{n} s after each move",turn_sub_bank:"no pauses: whoever runs out of time loses",turn_sub_corr:"the clock keeps running even if you close the game",game_attempt_no:"try {n}",clock_you:"You",clock_your_turn:"Your turn",tab_mine:"Your tries · {n}",tab_player:"{name} · {n}",tab_computer:"Computer · {n}",tab_new:"New try from {name}",journal_order:"Newest first",frieze_label:"Jump to a try",jrow_aria:"Try {n}: {code}, {f} F and {p} P",jrow_missed_aria:"Try {n}: lost on time",dock_pad_show:"Keypad",dock_pad_hide:"Fold",dock_pad_show_aria:"Open the keypad",dock_pad_hide_aria:"Fold the keypad",dock_erase:"Delete",dock_keys:"Symbol keypad",dock_live:"Your try: {code}",dock_live_empty:"Your try is empty",secret_row:"Your secret code",secret_show:"Show your code",secret_hide:"Hide your code",computer_chip:"Computer: {n}",computer_code:"Computer’s code",sym_0:"red circle",sym_1:"orange square",sym_2:"yellow triangle",sym_3:"green upside-down triangle",sym_4:"turquoise diamond",sym_5:"blue star",sym_6:"purple cross",sym_7:"pink ring"});
+Object.assign(I18N.fr,{tab_new_computer:"Nouvel essai de l’ordinateur",turn_mine:"À toi : devine le code de {name}",turn_sub_attempt:"Essai {n}",turn_sub_attempt_max:"Essai {n} sur {max}",turn_sub_turnclock:"le tour passe si l’horloge tombe à zéro",turn_sub_bank_inc:"+{n} s après chaque coup",turn_sub_bank:"sans pause : qui épuise son temps perd",turn_sub_corr:"le délai court même si tu fermes le jeu",game_attempt_no:"essai {n}",clock_you:"Toi",clock_your_turn:"À toi",tab_mine:"Tes essais · {n}",tab_player:"{name} · {n}",tab_computer:"Ordinateur · {n}",tab_new:"Nouvel essai de {name}",journal_order:"Le plus récent en haut",frieze_label:"Aller à un essai",jrow_aria:"Essai {n} : {code}, {f} F et {p} P",jrow_missed_aria:"Essai {n} : perdu au temps",dock_pad_show:"Pavé",dock_pad_hide:"Replier",dock_pad_show_aria:"Déplier le pavé",dock_pad_hide_aria:"Replier le pavé",dock_erase:"Effacer",dock_keys:"Pavé de symboles",dock_live:"Ton essai : {code}",dock_live_empty:"Ton essai est vide",secret_row:"Ton code secret",secret_show:"Voir ton code",secret_hide:"Masquer ton code",computer_chip:"Ordinateur : {n}",computer_code:"Code de l’ordinateur",sym_0:"rond rouge",sym_1:"carré orange",sym_2:"triangle jaune",sym_3:"triangle inversé vert",sym_4:"losange turquoise",sym_5:"étoile bleue",sym_6:"croix violette",sym_7:"anneau rose"});
 Object.assign(I18N.es,{rail_nav:"Navegación principal",rail_home:"Inicio",rail_play:"Jugar",rail_practice:"Práctica",rail_arena:"Arena",rail_puzzles:"Enigmas",rail_rank:"Ranking",turn_kbd:"Enter para adivinar",jhead_toward:"hacia el código de {name}",jhead_toward_you:"hacia tu código",jhead_toward_computer:"hacia el código del computador"});
 Object.assign(I18N.en,{rail_nav:"Main navigation",rail_home:"Home",rail_play:"Play",rail_practice:"Practice",rail_arena:"Arena",rail_puzzles:"Puzzles",rail_rank:"Ranking",turn_kbd:"Enter to guess",jhead_toward:"toward {name}’s code",jhead_toward_you:"toward your code",jhead_toward_computer:"toward the computer’s code"});
 Object.assign(I18N.fr,{rail_nav:"Navigation principale",rail_home:"Accueil",rail_play:"Jouer",rail_practice:"Entraînement",rail_arena:"Arène",rail_puzzles:"Énigmes",rail_rank:"Classement",turn_kbd:"Entrée pour valider",jhead_toward:"vers le code de {name}",jhead_toward_you:"vers ton code",jhead_toward_computer:"vers le code de l’ordinateur"});
+
+/* Serie Plaza, lote 6 (4.7.0): volver cada dia. */
+Object.assign(I18N.es,{me_you:"Tú",daily_kicker:"Código nº {n} · {date}",daily_you_playing:"en curso · intento {n}",daily_you_failed:"hoy no salió",
+  ec_vs:"Partida {code} · contra {name}",ec_game:"Partida {code}",ec_attempts:"intentos",ec_attempt_one:"intento",ec_time:"de juego",ec_points:"puntos",ec_hours:"{h} h {m}",
+  ec_practice_solo:"Práctica en solitario",ec_practice_cpu:"Práctica contra el computador",reveal_tag:"Revelado",reveal_mine:"Tu código",
+  rank_sub_month:"Temporada de {month}",rank_days_left:"quedan {n} días",rank_day_left:"último día",rank_players:"{n} jugadores",rank_player_one:"1 jugador",
+  rank_row_games:"{n} partidas",rank_row_games_one:"1 partida",rank_row_wins:"{n} victorias",rank_row_wins_one:"1 victoria",rank_how:"Cómo se suman los puntos",rank_how_win:"por victoria",rank_how_draw:"por empate",rank_how_loss:"por derrota",
+  rank_how_note:"Ganar suma además la dificultad de las reglas y lo pronto que descubres el código. Abandonar no suma nada.",
+  rank_me_pos:"Tu posición: {rank}",rank_me_gap:"A {n} puntos de {name}, que va justo delante.",rank_me_gap_one:"A 1 punto de {name}, que va justo delante.",
+  rank_me_tie:"Empatado a puntos con {name}.",rank_me_first:"Vas en cabeza de la clasificación.",rank_me_title_none:"Todavía sin puesto",
+  rank_me_none:"Termina una partida para entrar en la clasificación.",rank_you:"(tú)",rank_place_aria:"{rank}: {name}, {points} puntos",
+  profile_public:"Perfil público",profile_chip_season:"{n} pts esta temporada",profile_chip_streak:"{n} victorias seguidas",profile_badges_count:"{n} de {max}",
+  profile_my_rivals:"Tus rivales",badge_missing:"todavía no",pz_kicker:"Una partida que no jugaste",pz_level_name:"Nivel {level}",
+  arena_word:"Arena",arena_hero_k_active:"Un solo código para {n} jugadores",arena_hero_t_active:"¿Quién lo descubre antes?",
+  arena_hero_p_active:"El servidor sorteó el código. Nadie espera su turno.",arena_hero_t_waiting:"Esperando a la gente",
+  arena_won_by:"Ganó {name} en {n} intentos.",arena_nobody:"Nadie lo descifró.",arena_try_of:"Tu intento {n} de {max}",arena_last:"Última pista",
+  arena_nomore_text:"La arena sigue: mira quién lo descubre.",arena_feed_title:"Lo que acaba de pasar",arena_ev_up:"{name} ya tiene {n} fijas.",
+  arena_ev_solved:"{name} lo ha descifrado en {n} intentos.",arena_ev_out:"{name} ha gastado sus {n} intentos.",arena_ev_left:"{name} se ha ido de la arena.",
+  arena_ev_join:"{name} ha entrado.",ago_s:"hace {n} s",ago_m:"hace {n} min"});
+Object.assign(I18N.en,{me_you:"You",daily_kicker:"Code #{n} · {date}",daily_you_playing:"playing · try {n}",daily_you_failed:"not today",
+  ec_vs:"Game {code} · vs {name}",ec_game:"Game {code}",ec_attempts:"tries",ec_attempt_one:"try",ec_time:"played",ec_points:"points",ec_hours:"{h} h {m}",
+  ec_practice_solo:"Solo practice",ec_practice_cpu:"Practice vs the computer",reveal_tag:"Revealed",reveal_mine:"Your code",
+  rank_sub_month:"{month} season",rank_days_left:"{n} days left",rank_day_left:"last day",rank_players:"{n} players",rank_player_one:"1 player",
+  rank_row_games:"{n} games",rank_row_games_one:"1 game",rank_row_wins:"{n} wins",rank_row_wins_one:"1 win",rank_how:"How points add up",rank_how_win:"per win",rank_how_draw:"per draw",rank_how_loss:"per loss",
+  rank_how_note:"A win also adds the difficulty of the rules and how soon you crack the code. Leaving a game adds nothing.",
+  rank_me_pos:"Your position: {rank}",rank_me_gap:"{n} points behind {name}, just ahead of you.",rank_me_gap_one:"1 point behind {name}, just ahead of you.",
+  rank_me_tie:"Level on points with {name}.",rank_me_first:"You are top of the table.",rank_me_title_none:"No position yet",
+  rank_me_none:"Finish a game to get on the board.",rank_you:"(you)",rank_place_aria:"{rank}: {name}, {points} points",
+  profile_public:"Public profile",profile_chip_season:"{n} pts this season",profile_chip_streak:"{n} wins in a row",profile_badges_count:"{n} of {max}",
+  profile_my_rivals:"Your rivals",badge_missing:"not yet",pz_kicker:"A game you did not play",pz_level_name:"{level} level",
+  arena_word:"Arena",arena_hero_k_active:"One code for {n} players",arena_hero_t_active:"Who cracks it first?",
+  arena_hero_p_active:"The server drew the code. Nobody waits for a turn.",arena_hero_t_waiting:"Waiting for people",
+  arena_won_by:"{name} won in {n} tries.",arena_nobody:"Nobody cracked it.",arena_try_of:"Your try {n} of {max}",arena_last:"Last clue",
+  arena_nomore_text:"The arena goes on: watch who cracks it.",arena_feed_title:"What just happened",arena_ev_up:"{name} is up to {n} fijas.",
+  arena_ev_solved:"{name} cracked it in {n} tries.",arena_ev_out:"{name} used up all {n} tries.",arena_ev_left:"{name} left the arena.",
+  arena_ev_join:"{name} joined.",ago_s:"{n} s ago",ago_m:"{n} min ago"});
+Object.assign(I18N.fr,{me_you:"Toi",daily_kicker:"Code nº {n} · {date}",daily_you_playing:"en cours · essai {n}",daily_you_failed:"pas aujourd’hui",
+  ec_vs:"Partie {code} · contre {name}",ec_game:"Partie {code}",ec_attempts:"essais",ec_attempt_one:"essai",ec_time:"de jeu",ec_points:"points",ec_hours:"{h} h {m}",
+  ec_practice_solo:"Entraînement en solo",ec_practice_cpu:"Entraînement contre l’ordinateur",reveal_tag:"Révélé",reveal_mine:"Ton code",
+  rank_sub_month:"Saison de {month}",rank_days_left:"encore {n} jours",rank_day_left:"dernier jour",rank_players:"{n} joueurs",rank_player_one:"1 joueur",
+  rank_row_games:"{n} parties",rank_row_games_one:"1 partie",rank_row_wins:"{n} victoires",rank_row_wins_one:"1 victoire",rank_how:"Comment on marque des points",rank_how_win:"par victoire",rank_how_draw:"par égalité",rank_how_loss:"par défaite",
+  rank_how_note:"Une victoire ajoute aussi la difficulté des règles et la rapidité avec laquelle tu trouves le code. Abandonner ne rapporte rien.",
+  rank_me_pos:"Ta position : {rank}",rank_me_gap:"À {n} points de {name}, juste devant toi.",rank_me_gap_one:"À 1 point de {name}, juste devant toi.",
+  rank_me_tie:"À égalité de points avec {name}.",rank_me_first:"Tu mènes le classement.",rank_me_title_none:"Pas encore classé",
+  rank_me_none:"Termine une partie pour entrer au classement.",rank_you:"(toi)",rank_place_aria:"{rank} : {name}, {points} points",
+  profile_public:"Profil public",profile_chip_season:"{n} pts cette saison",profile_chip_streak:"{n} victoires d’affilée",profile_badges_count:"{n} sur {max}",
+  profile_my_rivals:"Tes rivaux",badge_missing:"pas encore",pz_kicker:"Une partie que tu n’as pas jouée",pz_level_name:"Niveau {level}",
+  arena_word:"Arène",arena_hero_k_active:"Un seul code pour {n} joueurs",arena_hero_t_active:"Qui trouve d’abord ?",
+  arena_hero_p_active:"Le serveur a tiré le code. Personne n’attend son tour.",arena_hero_t_waiting:"On attend du monde",
+  arena_won_by:"{name} a gagné en {n} essais.",arena_nobody:"Personne ne l’a trouvé.",arena_try_of:"Ton essai {n} sur {max}",arena_last:"Dernier indice",
+  arena_nomore_text:"L’arène continue : regarde qui le trouve.",arena_feed_title:"Ce qui vient de se passer",arena_ev_up:"{name} passe à {n} fijas.",
+  arena_ev_solved:"{name} l’a trouvé en {n} essais.",arena_ev_out:"{name} a épuisé ses {n} essais.",arena_ev_left:"{name} a quitté l’arène.",
+  arena_ev_join:"{name} est entré dans l’arène.",ago_s:"il y a {n} s",ago_m:"il y a {n} min"});
 
 /* La primera visita, en el idioma del navegador. Es lo unico que evita que
    quien llega desde un enlace compartido y no lee espanol tenga que buscar
@@ -3024,6 +3414,10 @@ function applyI18n(){
   const railNav=$('rail-nav'); if(railNav) railNav.setAttribute('aria-label',t('rail_nav'));
   if(typeof syncRail==='function') syncRail();
   if(currentView==='practice-game'&&typeof renderPracticeJournal==='function') renderPracticeJournal();
+  // L6: las pantallas que pintan desde una respuesta ya recibida se repintan sin pedir nada.
+  if(currentView==='rank'&&typeof renderRank==='function') renderRank();
+  if(currentView==='profile'&&typeof profileData!=='undefined'&&profileData) renderProfile(profileData);
+  if(currentView==='arena'&&typeof arenaSt!=='undefined'&&arenaSt) renderArena(arenaSt);
   pintarIconos();
   setCredits();
 }
@@ -3120,6 +3514,14 @@ function initialOf(name){ return (Array.from(String(name||'').trim())[0]||'?').t
 function avatarTone(name){
   let h=0; for(const ch of String(name||'').toLowerCase()) h=(h*31+ch.codePointAt(0))>>>0;
   return name?AVATAR_TONES[h%AVATAR_TONES.length]:'vacio';
+}
+/* En las listas donde tambien estas tu —ranking, dia, arena, rivales— tu
+   inicial es coral, como en tu saludo, y nadie mas lo es: quien saldria coral
+   por su nombre pasa a violeta, igual que el rival en los relojes. */
+function toneFor(name){
+  if(name===user) return 'coral';
+  const tone=avatarTone(name);
+  return tone==='coral'?'violeta':tone;
 }
 function avatarHTML(name, opts={}){
   const tone=opts.tone||avatarTone(name);
@@ -3639,6 +4041,9 @@ function chord(notes){
   }catch(e){}
 }
 function endSound(kind){
+  // L6: la victoria trae su confeti; se lanza aqui porque es el unico sitio
+  // por el que pasan todos los finales, una sola vez cada uno.
+  if(kind==='win') rainConfetti();
   if(kind==='win') chord([[523.25,0,0.18],[659.25,0.14,0.18],[783.99,0.28,0.4]]);      // Do-Mi-Sol ascendente (alegre)
   else if(kind==='lose') chord([[440,0,0.32],[349.23,0.2,0.5]]);                        // La-Fa descendente (suave)
   else chord([[523.25,0,0.22],[523.25,0.18,0.32]]);                                     // empate: dos notas iguales
@@ -3824,7 +4229,6 @@ function makePad(slotsId, paletteId, getLen, getColors, onChange){
 const padC = makePad('slots-c','palette-c', ()=>cfg.digits, ()=>cfg.numColors, v=>setVal('secret-c-val', v, cfg.digits, cfg.allowRepeats));
 const padJ = makePad('slots-j','palette-j', ()=>joinMeta?joinMeta.digits:3, ()=>joinMeta?joinMeta.numColors:6, v=>setVal('secret-j-val', v, joinMeta.digits, joinMeta.allowRepeats));
 const padR = makePad('slots-r','palette-r', ()=>finishedMeta?finishedMeta.digits:3, ()=>finishedMeta?finishedMeta.numColors:6, v=>setVal('secret-r-val', v, finishedMeta.digits, finishedMeta.allowRepeats));
-const padA = makePad('slots-a','palette-a', ()=>arenaView.digits, ()=>arenaView.numColors||6, v=>setVal('arena-guess-val', v, arenaView.digits, arenaView.allowRepeats));
 const practiceSecretPad = makePad('practice-secret-slots','practice-secret-palette', ()=>practiceCfg.digits, ()=>practiceCfg.numColors, v=>setVal('practice-secret-val',v,practiceCfg.digits,practiceCfg.allowRepeats));
 function setVal(elId, v, digits, allowRepeats){
   const r=validateLive(v, digits, allowRepeats); $(elId).className='val '+r.cls; $(elId).textContent=r.msg;
@@ -3935,6 +4339,10 @@ if(window.ResizeObserver){ const dockWatch=new ResizeObserver(measureDock); ['g-
 function activeDock(){
   if(currentView==='game'&&!$('g-guessarea').classList.contains('hidden')) return {pad:padG, go:$('g-guess-btn')};
   if(currentView==='practice-game'&&!$('practice-guessarea').classList.contains('hidden')) return {pad:practicePad, go:$('practice-guess-btn')};
+  // L6: el codigo del dia, el enigma abierto y la arena usan el mismo muelle.
+  if(currentView==='daily'&&dailyData&&!dailyData.finished) return {pad:dailyPad, go:$('daily-guess-btn')};
+  if(currentView==='puzzles'&&puzzleOpen&&!puzzleOpen.finished) return {pad:puzzlePad, go:$('pz-guess-btn')};
+  if(currentView==='arena'&&!$('arena-play').classList.contains('hidden')) return {pad:arenaPad, go:$('btn-arena-guess')};
   return null;
 }
 document.addEventListener('keydown', event=>{
@@ -4487,9 +4895,7 @@ function renderLobbySeason(){
   const el=$('lobby-season'); if(!el) return;
   const d=lobbySeasonData;
   if(!d||d.user!==user){ el.textContent=''; return; }
-  const [y,m]=String(d.season||'').split('-').map(Number);
-  let month='';
-  try{ month=new Intl.DateTimeFormat(lang,{month:'long',timeZone:'UTC'}).format(new Date(Date.UTC(y,m-1,1))); }catch(e){}
+  const month=seasonMonth(d.season);
   if(!month){ el.textContent=''; return; }
   el.textContent=d.me
     ? tElide('lobby_season',{month,points:d.me.points,rank:ordinal(d.me.rank)},{month})
@@ -4684,8 +5090,11 @@ async function joinArena(arenaId){
 }
 function enterArena(arenaId){
   arenaView={...arenaView, id:arenaId};
-  arenaSt=null; $('arena-code').textContent=arenaId; $('arena-banner').innerHTML='';
-  $('arena-board').innerHTML=`<div class="empty">${t('loading')}</div>`; $('arena-log').innerHTML='';
+  arenaSt=null; arenaFeed=[]; arenaPrev=null; $('arena-code').textContent=arenaId; $('arena-banner').innerHTML='';
+  $('arena-board').innerHTML=`<div class="empty">${t('loading')}</div>`; $('arena-log').innerHTML=''; $('arena-log').dataset.key='';
+  $('arena-feed').classList.add('hidden'); $('arena-mine').classList.add('hidden');
+  ['arena-hero-k','arena-hero-t','arena-hero-p','arena-rules','arena-status'].forEach(id=>{ $(id).textContent=''; });
+  arenaPad.reset();
   show('arena'); refreshArena(); startArenaPoll();
 }
 function startArenaPoll(){ stopArenaPoll(); arenaPollTimer=setInterval(refreshArena, 4000); }
@@ -4709,53 +5118,117 @@ function arenaPlayerLine(row, st){
   if(!row.attempts) return t('arena_attempts_none');
   return t(row.attempts===1?'arena_attempts_one':'arena_attempts',{n:row.attempts})+' · '+t('arena_best',{n:row.bestFijas});
 }
+/* El teclado de la arena es el del muelle. Sirve a los dos modos: cifras o
+   fichas de color. */
+const arenaPad=makeDockPad({dock:'arena-play', tiles:'arena-tiles', pad:'arena-pad', erase:'arena-erase', live:'arena-live',
+  len:()=>arenaView.digits, mode:()=>arenaView.mode, colors:()=>arenaView.numColors||6, repeats:()=>!!arenaView.allowRepeats,
+  onChange:v=>setVal('arena-guess-val',v,arenaView.digits,arenaView.allowRepeats)});
+/* Lo que acaba de pasar no lo cuenta el servidor: sale de comparar dos
+   sondeos seguidos. Solo mira lo que la clasificacion ya ensena —mejor numero
+   de fijas, acertado, sin intentos, se fue—, asi que no dice nada del codigo
+   que no estuviera ya en pantalla, y no cuesta una lectura mas. */
+let arenaFeed=[], arenaPrev=null;
+function arenaEvents(prev, st){
+  if(!prev) return [];
+  const before=new Map(prev.map(row=>[row.username,row])), out=[];
+  for(const row of st.board||[]){
+    if(row.username===user) continue;
+    const was=before.get(row.username), name=row.username;
+    if(!was){ if(st.status==='waiting') out.push({key:'arena_ev_join',name,grey:true}); continue; }
+    if(row.solvedAt&&!was.solvedAt) out.push({key:'arena_ev_solved',name,n:row.attempts});
+    else if(row.gaveUp&&!was.gaveUp) out.push({key:'arena_ev_left',name,grey:true});
+    else if(!row.solvedAt&&row.attempts>=st.maxAttempts&&was.attempts<st.maxAttempts) out.push({key:'arena_ev_out',name,n:st.maxAttempts,grey:true});
+    else if((row.bestFijas||0)>(was.bestFijas||0)) out.push({key:'arena_ev_up',name,n:row.bestFijas});
+  }
+  return out;
+}
+function agoShort(ms){
+  const s=Math.max(1,Math.round(ms/1000));
+  return s<60?t('ago_s',{n:s}):t('ago_m',{n:Math.round(s/60)});
+}
+function renderArenaFeed(){
+  const box=$('arena-feed');
+  if(!arenaFeed.length){ box.classList.add('hidden'); box.innerHTML=''; return; }
+  const now=Date.now();
+  box.innerHTML=`<span>${esc(t('arena_feed_title'))}</span>`+arenaFeed.map(ev=>`<div class="afeed-row${ev.grey?' grey':''}"><i aria-hidden="true"></i>`
+    +`<span>${tElide(ev.key,{name:'<b>'+esc(ev.name)+'</b>',n:ev.n},{name:ev.name})}</span><small>${esc(agoShort(now-ev.at))}</small></div>`).join('');
+  box.classList.remove('hidden');
+}
+function arenaRowHTML(row, st){
+  const me=row.username===user, digits=st.digits;
+  const out=!row.solvedAt&&(row.gaveUp||row.attempts>=st.maxAttempts);
+  const tone=toneFor(row.username);
+  const pct=row.solvedAt?100:out?100:Math.round(100*Math.min(digits,row.bestFijas||0)/digits);
+  const bar=row.solvedAt?'win':out?'gone':tone;
+  const count=row.solvedAt?t('arena_solved',{n:row.attempts}):t(row.attempts===1?'arena_attempts_one':'arena_attempts',{n:row.attempts});
+  let end='';
+  if(row.gaveUp) end=`<span class="aend">${esc(t('arena_gaveup'))}</span>`;
+  else if(out) end=`<span class="aend">${esc(t('arena_nomore'))}</span>`;
+  else{ const f=row.solvedAt?digits:Math.min(digits,row.bestFijas||0); end=`<span class="apips" aria-hidden="true">${'<span class="pip f"></span>'.repeat(f)}${'<span class="pip"></span>'.repeat(digits-f)}</span>`; }
+  const label=`${row.position}. ${me?t('me_you'):row.username}: ${arenaPlayerLine(row,st)}`;
+  return `<div class="arow${me?' me':''}${out?' gone':''}" role="group" aria-label="${esc(label)}">${avatarHTML(row.username,{tone:out?'vacio':tone})}`
+    +`<div class="arow-main"><div class="arow-top"><b>${me?esc(t('me_you')):playerChip(row.country,row.username)}</b><span>${esc(count)}</span></div>`
+    +`<div class="abar" aria-hidden="true"><i class="${bar}" style="width:${pct}%"></i></div></div>${end}</div>`;
+}
 function renderArena(st){
   if(String(st.arenaId)!==String(arenaView.id)) return;
+  const fresh=arenaEvents(arenaPrev, st);
+  if(fresh.length){ const at=Date.now(); arenaFeed=fresh.map(ev=>({...ev,at})).concat(arenaFeed).slice(0,4); }
+  arenaPrev=(st.board||[]).map(row=>({username:row.username,attempts:row.attempts,bestFijas:row.bestFijas,solvedAt:row.solvedAt,gaveUp:row.gaveUp}));
+  const firstPaint=!arenaSt||String(arenaSt.arenaId)!==String(st.arenaId), wasSolved=!firstPaint&&!!arenaSt.solved;
   arenaSt=st;
   arenaView={id:st.arenaId, digits:st.digits, mode:st.mode, numColors:st.numColors, allowRepeats:st.allowRepeats, maxAttempts:st.maxAttempts};
   $('arena-code').textContent=st.arenaId;
-  $('arena-status').textContent=st.status==='waiting'?t('arena_status_waiting'):st.status==='active'?t('arena_status_active'):t('arena_status_finished');
-  $('arena-rules').textContent=arenaRules(st)+' · '+t('arena_players',{n:st.players,max:st.maxPlayers});
   const over=st.status==='finished'||st.status==='expired';
-  const box=$('arena-board'); box.innerHTML='';
-  (st.board||[]).forEach(row=>{
-    const el=document.createElement('div'); el.className='gitem'+(row.solvedAt?' invite':'');
-    el.innerHTML=`<div class="gid">${row.position}</div>
-      <div class="meta"><div class="who">${playerChip(row.country,row.username)}</div>
-      <div class="det">${esc(arenaPlayerLine(row,st))}</div></div>`;
-    box.appendChild(el);
-  });
-  if(!(st.board||[]).length) box.innerHTML=`<div class="empty">${t('arena_empty_board')}</div>`;
+  const status=$('arena-status');
+  status.textContent=st.status==='waiting'?t('arena_status_waiting'):st.status==='active'?t('arena_status_active'):t('arena_status_finished');
+  status.classList.toggle('done',over);
+  $('arena-rules').textContent=arenaRules(st);
+  // La banda violeta dice en que punto esta la arena.
+  const board=st.board||[], lead=board[0];
+  let k, title, text='';
+  if(st.status==='waiting'){
+    k=t('arena_players',{n:st.players,max:st.maxPlayers}); title=esc(t('arena_hero_t_waiting'));
+    text=st.players<st.minPlayers?t('arena_need',{n:st.minPlayers-st.players}):t('arena_ready');
+  }else if(over){
+    k=t('arena_over'); title=st.secret?tElide('arena_secret',{code:codeViewHTML(st.secret,st.mode)},{code:''}):esc(t('arena_over'));
+    text=lead&&lead.solvedAt?t('arena_won_by',{name:lead.username,n:lead.attempts}):t('arena_nobody');
+  }else{
+    k=t('arena_hero_k_active',{n:st.players}); title=esc(t('arena_hero_t_active')); text=t('arena_hero_p_active');
+  }
+  $('arena-hero-k').textContent=k; $('arena-hero-t').innerHTML=title; $('arena-hero-p').textContent=text;
+  const box=$('arena-board');
+  box.innerHTML=board.length?board.map(row=>arenaRowHTML(row,st)).join(''):`<div class="empty">${t('arena_empty_board')}</div>`;
   const playing=st.status==='active'&&st.youArePlaying&&!st.solved&&st.attemptsLeft>0;
   $('arena-play').classList.toggle('hidden',!playing);
+  arenaPad.setDisabled(!playing||arenaBusy);
   if(playing){
-    const input=$('arena-guess'); input.maxLength=st.digits; input.placeholder='•'.repeat(st.digits);
-    applyMode('a', st.mode, 'arena-guess', 'pad-a', padA);
+    arenaPad.refresh();
+    $('arena-try').textContent=t('arena_try_of',{n:Math.min(st.maxAttempts,st.attempts+1),max:st.maxAttempts});
+    const last=(st.guesses||[])[(st.guesses||[]).length-1];
+    $('arena-last').innerHTML=last?`${esc(t('arena_last'))} ${tryPipsHTML(last,st.digits).replace('class="jpips','class="apips')}`:'';
+    if(last) $('arena-last').setAttribute('aria-label',t('arena_last')+': '+t('toast_score',{f:last.fijas,p:last.picas})); else $('arena-last').removeAttribute('aria-label');
   }
   $('btn-arena-start').classList.toggle('hidden', !(st.status==='waiting'&&st.youAreHost));
   $('btn-arena-start').disabled = st.players<st.minPlayers;
   $('btn-arena-leave').textContent = over?t('back_home'):t('arena_leave');
   const banner=$('arena-banner');
-  if(st.status==='waiting') banner.innerHTML=`<div class="banner"><p>${esc(st.players<st.minPlayers?t('arena_need',{n:st.minPlayers-st.players}):t('arena_ready'))}</p></div>`;
-  else if(over) banner.innerHTML=`<div class="banner"><h2>${esc(t('arena_over'))}</h2><p>${esc(t('arena_secret',{code:st.secret}))}</p></div>`;
-  else if(st.solved) banner.innerHTML=`<div class="banner"><h2>${esc(t('arena_you_solved',{n:st.attempts}))}</h2></div>`;
-  else if(!st.attemptsLeft&&st.youArePlaying) banner.innerHTML=`<div class="banner"><p>${esc(t('arena_nomore'))}</p></div>`;
+  if(st.solved&&!over) banner.innerHTML=endCardHTML({result:'win', kicker:esc(t('arena_word')+' '+st.arenaId), title:esc(t('arena_you_solved',{n:st.attempts})), small:true});
+  else if(!over&&!st.attemptsLeft&&st.youArePlaying) banner.innerHTML=endCardHTML({result:'lose', title:esc(t('arena_nomore')), text:esc(t('arena_nomore_text')), small:true});
   else banner.innerHTML='';
+  if(st.solved&&!firstPaint&&!wasSolved) rainConfetti();
+  renderArenaFeed();
   renderArenaLog(st);
 }
 function renderArenaLog(st){
-  const box=$('arena-log'), rows=st.guesses||[];
-  if(!rows.length){ box.innerHTML=`<div class="empty">${t('arena_log_empty')}</div>`; return; }
-  box.innerHTML='';
-  rows.slice().reverse().forEach(g=>{
-    const el=document.createElement('div'); el.className='g';
-    let pips='';
-    for(let i=0;i<g.fijas;i++) pips+='<span class="pip f"></span>';
-    for(let i=0;i<g.picas;i++) pips+='<span class="pip p"></span>';
-    if(g.fijas+g.picas===0) pips=`<span class="scoretxt">${t('log_nada')}</span>`;
-    el.innerHTML=`${codeViewHTML(g.guess, st.mode)}<span class="scoretxt">${g.fijas}F · ${g.picas}P</span><span class="pips">${pips}</span>`;
-    box.appendChild(el);
-  });
+  const wrap=$('arena-mine'), box=$('arena-log'), rows=st.guesses||[];
+  wrap.classList.toggle('hidden',!rows.length);
+  if(!rows.length) return;
+  $('arena-mine-title').textContent=t('tab_mine',{n:rows.length});
+  const last=rows[rows.length-1], key=[lang,rows.length,JSON.stringify(last)].join('|');
+  if(box.dataset.key===key) return;
+  box.dataset.key=key;
+  box.innerHTML=journalRowsHTML('a','mine',{list:rows,empty:t('arena_log_empty'),missed:t('missed_timeout')},st.mode,st.digits);
 }
 async function startArena(){
   $('btn-arena-start').disabled=true;
@@ -4776,21 +5249,20 @@ async function leaveArena(){
 }
 async function sendArenaGuess(){
   if(arenaBusy) return;
-  const guess=arenaView.mode==='colors'?padA.get():$('arena-guess').value.trim();
+  const guess=arenaPad.get();
   const check=validateLive(guess, arenaView.digits, arenaView.allowRepeats);
   if(check.cls!=='ok'){ toast(t('check_code'),true); return; }
   arenaBusy=true; $('btn-arena-guess').disabled=true;
   try{
     const res=await api('arenaGuess',{arenaId:arenaView.id, guess, requestId:(crypto.randomUUID?crypto.randomUUID():[...crypto.getRandomValues(new Uint8Array(16))].map(byte=>byte.toString(16).padStart(2,'0')).join('')).replace(/[^A-Za-z0-9-]/g,'')});
     if(!res.ok){ toast(te(res.error),true); return; }
-    $('arena-guess').value=''; padA.reset(); $('arena-guess-val').textContent='';
+    arenaPad.reset(); $('arena-guess-val').textContent='';
     if(res.solved) toast(t('arena_you_solved',{n:res.attempts}));
     else toast(t('toast_score',{f:res.fijas,p:res.picas}));
     await refreshArena();
   }catch(e){ toast(t('net_error'),true); }
   finally{ arenaBusy=false; $('btn-arena-guess').disabled=false; }
 }
-$('arena-guess').addEventListener('input', e=>setVal('arena-guess-val', e.target.value, arenaView.digits, arenaView.allowRepeats));
 /* Las arenas abiertas, en el vestibulo. Salen de la misma respuesta del lobby,
    con su propia consulta indexada y un tope de doce. */
 function renderArenaList(list){
@@ -4820,41 +5292,111 @@ function nameButton(country, name, from){
   return b;
 }
 function rankRow(row, rank, mine){
-  const el=document.createElement('div'); el.className='rankrow'+(mine?' me':'');
-  const pos=document.createElement('div'); pos.className='pos'; pos.textContent=rank;
-  const nm=document.createElement('div'); nm.className='nm'; nm.appendChild(nameButton(row.country,row.user,'rank'));
-  const wl=document.createElement('div'); wl.className='wl';
-  wl.textContent=t('rank_line',{points:row.points,wins:row.wins,played:row.played});
-  el.appendChild(pos); el.appendChild(nm); el.appendChild(wl);
+  const el=document.createElement('div'); el.className='rrow'+(mine?' me':'');
+  el.innerHTML=`<span class="pos">${rank}</span>${avatarHTML(row.user,{tone:toneFor(row.user)})}`;
+  const main=document.createElement('div'); main.className='rrow-main';
+  main.appendChild(nameButton(row.country,row.user,'rank'));
+  const det=document.createElement('small');
+  det.textContent=t(row.played===1?'rank_row_games_one':'rank_row_games',{n:row.played})+' · '+t(row.wins===1?'rank_row_wins_one':'rank_row_wins',{n:row.wins});
+  main.appendChild(det);
+  const pts=document.createElement('span'); pts.className='pts'; pts.textContent=row.points;
+  pts.title=t('rank_points',{n:row.points});
+  el.appendChild(main); el.appendChild(pts);
   return el;
 }
 function shortDate(iso){
   try{ return new Date(iso).toLocaleDateString(LOCALE[lang]||'es',{day:'2-digit',month:'short',year:'numeric'}); }
   catch(e){ return String(iso||'').slice(0,10); }
 }
+/* El nombre del mes de una temporada ("2026-09" → septiembre), en el idioma
+   que se esta leyendo. Lo comparten el saludo del vestibulo y el ranking. */
+function seasonMonth(season){
+  const [y,m]=String(season||'').split('-').map(Number);
+  if(!y||!m) return '';
+  try{ return new Intl.DateTimeFormat(lang,{month:'long',timeZone:'UTC'}).format(new Date(Date.UTC(y,m-1,1))); }catch(e){ return ''; }
+}
+/* La temporada acaba con el mes en UTC: los dias que quedan, contando hoy. */
+function seasonDaysLeft(){
+  const now=new Date(), end=Date.UTC(now.getUTCFullYear(),now.getUTCMonth()+1,1);
+  return Math.max(1,Math.ceil((end-now.getTime())/86400000));
+}
+let rankData=null, rankSeq=0;
 function setRankSeason(which){
   if(rankSeason===which) return;
   rankSeason=which;
-  document.querySelectorAll('#rank-seasons button').forEach(b=>b.classList.toggle('on', b.dataset.rankSeason===which));
+  syncRankTabs();
   openRank();
 }
+function syncRankTabs(){
+  document.querySelectorAll('#rank-seasons button').forEach(b=>{
+    const on=b.dataset.rankSeason===rankSeason;
+    b.classList.toggle('on',on); b.setAttribute('aria-selected',on?'true':'false');
+  });
+}
 async function openRank(){
-  show('rank'); $('rank-total').textContent=''; $('rank-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
-  document.querySelectorAll('#rank-seasons button').forEach(b=>b.classList.toggle('on', b.dataset.rankSeason===rankSeason));
+  show('rank'); syncRankTabs(); rankData=null;
+  $('rank-total').textContent=''; $('rank-podium').classList.add('hidden'); $('rank-me').classList.add('hidden');
+  $('rank-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
+  const seq=++rankSeq, season=rankSeason;
   try{
-    const res=await api('leaderboard',{username:user, season:rankSeason==='all'?'all':''}); const list=res.ranking||[];
-    const label=rankSeason==='all'?t('rank_season_all_label'):t('rank_season_label',{season:res.season||''});
-    $('rank-total').textContent=label+' · '+t('rank_total',{n:res.total||0});
-    if(!list.length){ $('rank-list').innerHTML=`<div class="empty">${t('rank_empty')}</div>`; return; }
-    $('rank-list').innerHTML='';
-    list.forEach((r,i)=>{ $('rank-list').appendChild(rankRow(r, r.rank||i+1, r.user===user)); });
-    const me=res.me, visible=me&&list.some(r=>r.user===me.user);
-    if(me&&!visible){
-      const sep=document.createElement('div'); sep.className='rank-separator'; sep.textContent=t('rank_your_pos',{n:me.rank});
-      $('rank-list').appendChild(sep);
-      $('rank-list').appendChild(rankRow(me, me.rank, true));
-    }
-  }catch(e){ $('rank-list').innerHTML=`<div class="empty">${t('load_error')}</div>`; }
+    const res=await api('leaderboard',{username:user, season:season==='all'?'all':''});
+    if(seq!==rankSeq) return;
+    rankData={season, res}; renderRank();
+  }catch(e){ if(seq===rankSeq) $('rank-list').innerHTML=`<div class="empty">${t('load_error')}</div>`; }
+}
+/* El podio lleva a los tres primeros en el orden de siempre —segundo,
+   primero, tercero— y la lista sigue desde el cuarto. Abajo, la tarjeta azul
+   dice donde estas y a cuanto del de delante: todo sale de la misma respuesta. */
+function renderRank(){
+  if(!rankData) return;
+  const res=rankData.res, all=rankData.season==='all', list=res.ranking||[];
+  const month=seasonMonth(res.season);
+  const days=seasonDaysLeft();
+  const head=all?t('rank_season_all_label'):(month?tElide('rank_sub_month',{month},{month})+' · '+t(days===1?'rank_day_left':'rank_days_left',{n:days}):t('rank_season_label',{season:res.season||''}));
+  $('rank-total').textContent=head+' · '+t(res.total===1?'rank_player_one':'rank_players',{n:res.total||0});
+  const podium=$('rank-podium'), box=$('rank-list');
+  if(!list.length){ podium.classList.add('hidden'); box.innerHTML=`<div class="empty">${t('rank_empty')}</div>`; renderRankMe(res,list); return; }
+  const top=list.slice(0,3);
+  const order=[top[1],top[0],top[2]].filter(Boolean);
+  podium.innerHTML=`<div class="pod-grid" style="grid-template-columns:repeat(${order.length},minmax(0,1fr))"></div>`;
+  const grid=podium.firstChild;
+  order.forEach(row=>{
+    const place=(row.rank||list.indexOf(row)+1), el=document.createElement('div');
+    el.className='pod p'+place;
+    el.innerHTML=(place===1?'<svg width="28" height="22" viewBox="0 0 28 22" fill="#FFC531" aria-hidden="true"><path d="M3 18 1 5l7 5 6-9 6 9 7-5-2 13Z"></path><rect x="3" y="18" width="22" height="3.5" rx="1.5"></rect></svg>':'')
+      +avatarHTML(row.user,{tone:toneFor(row.user)});
+    const nb=nameButton(row.country,row.user,'rank');
+    el.appendChild(nb);
+    if(row.user===user) nb.insertAdjacentHTML('beforeend',` <span class="you">${esc(t('rank_you'))}</span>`);
+    el.insertAdjacentHTML('beforeend',`<span class="pts">${esc(t('rank_points',{n:row.points}))}</span><div class="pod-bar" aria-hidden="true">${place}</div>`);
+    el.setAttribute('role','group'); el.setAttribute('aria-label',t('rank_place_aria',{rank:ordinal(place),name:row.user,points:row.points}));
+    grid.appendChild(el);
+  });
+  podium.classList.remove('hidden');
+  box.innerHTML='';
+  list.slice(3).forEach((r,i)=>box.appendChild(rankRow(r, r.rank||i+4, r.user===user)));
+  const me=res.me, visible=me&&list.some(r=>r.user===me.user);
+  if(me&&!visible){
+    const sep=document.createElement('div'); sep.className='rank-separator'; sep.textContent=t('rank_your_pos',{n:me.rank});
+    box.appendChild(sep);
+    box.appendChild(rankRow(me, me.rank, true));
+  }
+  renderRankMe(res,list);
+}
+function renderRankMe(res,list){
+  const el=$('rank-me'), me=res.me;
+  let title, line;
+  if(!me){ title=t('rank_me_title_none'); line=t('rank_me_none'); }
+  else{
+    title=t('rank_me_pos',{rank:ordinal(me.rank)});
+    const ahead=me.rank>1?list.find(r=>(r.rank||0)===me.rank-1):null;
+    if(me.rank===1) line=t('rank_me_first');
+    else if(ahead){ const gap=Math.max(0,ahead.points-me.points);
+      line=gap?t(gap===1?'rank_me_gap_one':'rank_me_gap',{n:gap,name:ahead.user}):t('rank_me_tie',{name:ahead.user}); }
+    else line=t('rank_line',{points:me.points,wins:me.wins,played:me.played});
+  }
+  el.innerHTML=`${avatarHTML(user,{tone:'coral'})}<div class="rank-me-main"><b>${esc(title)}</b><span>${esc(line)}</span></div>`;
+  el.classList.remove('hidden');
 }
 
 /* -------------------- el perfil publico (E5-T2) y las insignias (E5-T3) ----
@@ -4862,12 +5404,29 @@ async function openRank(){
    de filas que se escribieron cuando las partidas terminaron: abrir el perfil
    de alguien no recorre su historial. Del jugador solo se enseña lo que ya era
    publico —el nombre, la bandera, lo que ha ganado—; el correo no viaja. */
-const BADGE_ICONS={first_win:'🥇',solved_4:'🎯',fast_finish:'⚡',expert_rules:'🧠',wins_10:'🏅',wins_50:'👑',days_7:'📅'};
+/* Las siete insignias, dibujadas (4.7.0): un disco de un color de la marca y
+   un trazo encima, con sus colores escritos como la vaca. Sustituyen a los
+   emoji de la 3.10.0, que cada sistema pintaba a su manera. El orden es el
+   de la rejilla del perfil. Ninguna usa verde ni naranja: son informacion. */
+const BADGE_ART={
+  first_win:{bg:'#2F5BFF', fg:'<path d="M14 22.5l5.5 5.5L30 17" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"></path>'},
+  solved_4:{bg:'#FFC531', fg:'<path d="M24 9 14 25h8l-2 10 10-16h-8Z" fill="#1B1638"></path>'},
+  fast_finish:{bg:'#FF6B5E', fg:'<circle cx="22" cy="23" r="10" fill="none" stroke="#1B1638" stroke-width="3.5"></circle><path d="M22 17.5v5.5l3.8 2.6M19 10h6" fill="none" stroke="#1B1638" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"></path>'},
+  expert_rules:{bg:'#7C5CFF', fg:'<circle cx="22" cy="22" r="9.5" fill="none" stroke="#fff" stroke-width="3.5"></circle><circle cx="22" cy="22" r="3.2" fill="#fff"></circle>'},
+  wins_10:{bg:'#5FE0C9', fg:'<path d="M22 10.5l3.4 6.9 7.6 1.1-5.5 5.4 1.3 7.6L22 27.9l-6.8 3.6 1.3-7.6-5.5-5.4 7.6-1.1Z" fill="#1B1638"></path>'},
+  wins_50:{bg:'#1B1638', ring:'#FFC531', fg:'<path d="M12 29 10 16l6.2 4.4L22 12l5.8 8.4L34 16l-2 13Z" fill="#FFC531"></path><rect x="12" y="30" width="20" height="3.6" rx="1.6" fill="#FFC531"></rect>'},
+  days_7:{bg:'#B18CFF', fg:'<rect x="12" y="14" width="20" height="18" rx="4" fill="#1B1638"></rect><path d="M17 11v5M27 11v5" fill="none" stroke="#1B1638" stroke-width="3" stroke-linecap="round"></path><path d="M16.5 21.5h11M16.5 26.5h6" fill="none" stroke="#FFF5E8" stroke-width="2.4" stroke-linecap="round"></path>'}
+};
+const BADGE_ORDER=Object.keys(BADGE_ART);
+function badgeSVG(code,size){
+  const art=BADGE_ART[code]||BADGE_ART.first_win;
+  const ring=art.ring?` stroke="${art.ring}" stroke-width="2"`:'';
+  return `<svg class="badge-art" width="${size}" height="${size}" viewBox="0 0 44 44" fill="none" aria-hidden="true"><circle class="bg" cx="22" cy="22" r="${art.ring?19:20}" fill="${art.bg}"${ring}></circle><g class="fg">${art.fg}</g></svg>`;
+}
 let profileReturn='lobby';
 function badgeChipHTML(code, fresh){
-  const icon=BADGE_ICONS[code]||'🏆';
   const name=t('badge_'+code), desc=t('badge_'+code+'_desc');
-  return `<span class="badgechip${fresh?' fresh':''}" title="${esc(desc)}"><span class="ic" aria-hidden="true">${icon}</span><b>${esc(name)}</b></span>`;
+  return `<span class="badgechip${fresh?' fresh':''}" title="${esc(desc)}">${badgeSVG(code,28)}<b>${esc(name)}</b></span>`;
 }
 function badgesBlockHTML(codes){
   if(!codes||!codes.length) return '';
@@ -4885,16 +5444,17 @@ function rulesFromKey(key){
   return [colors?t('rl_colors',{n:parseInt(parts[0].slice(1),10)||6}):t('rl_numbers'),
     t('rl_pos',{n:digits}), parts[2]==='rep'?t('rl_repeat'):t('rl_norepeat')].join(' · ');
 }
+let profileData=null;
 async function openProfile(name, from){
   profileReturn=from||currentView||'lobby';
+  profileData=null;
   show('profile');
-  $('profile-name').textContent=name||'';
-  $('profile-since').textContent='';
+  paintProfileHead({username:name||''});
   $('profile-body').innerHTML=`<div class="empty">${t('loading')}</div>`;
   try{
     const res=await api('profile',{player:name, username:user});
     if(!res.ok||!res.profile){ $('profile-body').innerHTML=`<div class="empty">${t('profile_not_found')}</div>`; return; }
-    renderProfile(res.profile);
+    profileData=res.profile; renderProfile(res.profile);
   }catch(e){ $('profile-body').innerHTML=`<div class="empty">${t('load_error')}</div>`; }
 }
 function closeProfile(){
@@ -4902,29 +5462,56 @@ function closeProfile(){
   else if(profileReturn==='rivals') openRivals();
   else show('lobby');
 }
+/* La ficha coral: la inicial, el nombre, desde cuando juega y dos pastillas
+   con lo que ya viene en la respuesta. El nombre va en claro en #profile-name,
+   porque el rail lo compara con el propio para saber si es «tu» perfil. */
+function paintProfileHead(p){
+  const own=p.username===user;
+  $('profile-name').textContent=p.username||'';
+  $('profile-initial').textContent=p.username?initialOf(p.username):'';
+  let since='';
+  if(p.since){ try{ since=new Intl.DateTimeFormat(lang,{month:'long',year:'numeric'}).format(new Date(p.since)); }catch(e){ since=shortDate(p.since); } }
+  $('profile-since').innerHTML=(p.country?flagHTML(p.country):'')+(since?esc(t('profile_since',{date:since})):'');
+  const chips=[];
+  if(p.season&&p.season.points) chips.push(`<span class="dark">${esc(t('profile_chip_season',{n:p.season.points}))}</span>`);
+  if(p.streaks&&p.streaks.wins>1) chips.push(`<span>${ico('llama',13)}${esc(t('profile_chip_streak',{n:p.streaks.wins}))}</span>`);
+  $('profile-chips').innerHTML=chips.join('');
+  $('profile-account').classList.toggle('hidden',!own);
+}
+function badgeProgress(code,p){
+  if(code==='wins_10') return `${Math.min(p.wins,10)}/10`;
+  if(code==='wins_50') return `${Math.min(p.wins,50)}/50`;
+  if(code==='days_7') return `${Math.min(p.streaks.days,7)}/7`;
+  return '';
+}
 function renderProfile(p){
-  $('profile-name').innerHTML=playerChip(p.country,p.username);
-  $('profile-since').textContent=p.since?t('profile_since',{date:shortDate(p.since)}):'';
-  if(!p.played){ $('profile-body').innerHTML=`<div class="empty">${t('profile_empty')}</div>`; return; }
-  const stats=`<div class="statgrid">
-      <div class="statbox"><b>${p.points}</b><span>${esc(t('profile_points'))}</span></div>
-      <div class="statbox"><b>${p.played}</b><span>${esc(t('profile_played'))}</span></div>
-      <div class="statbox"><b>${p.wins}</b><span>${esc(t('profile_wins'))}</span></div>
-      <div class="statbox"><b>${p.winRate}%</b><span>${esc(t('profile_winrate'))}</span></div>
+  paintProfileHead(p);
+  const own=p.username===user;
+  const earned=new Set((p.badges||[]).map(b=>b.code));
+  // Las siete, siempre: las ganadas con su color y las que faltan en blanco,
+  // con lo que queda cuando se puede contar sin preguntar nada mas.
+  const cells=BADGE_ORDER.map(code=>{
+    const got=earned.has(code), prog=got?'':badgeProgress(code,p);
+    const name=t('badge_'+code)+(prog?' · '+prog:'');
+    return `<div class="bcell${got?'':' off'}" title="${esc(t('badge_'+code+'_desc'))}" role="img" aria-label="${esc(name+(got?'':' — '+t('badge_missing')))}">${badgeSVG(code,44)}<span>${esc(name)}</span></div>`;
+  }).join('');
+  const badges=`<div class="sec-head"><h3>${esc(t('profile_badges'))}</h3><span>${esc(t('profile_badges_count',{n:earned.size,max:BADGE_ORDER.length}))}</span></div><div class="bgrid">${cells}</div>`;
+  const mine=own?`<button type="button" class="btn ghost" onclick="openRivals()">${ico('gente',18)}<span>${esc(t('profile_my_rivals'))}</span></button>`:'';
+  if(!p.played){ $('profile-body').innerHTML=`<div class="pnote">${esc(t('profile_empty'))}</div>`+badges+mine; return; }
+  const stats=`<div class="pstats">
+      <div><b class="az">${p.points}</b><span>${esc(t('profile_points'))}</span></div>
+      <div><b>${p.played}</b><span>${esc(t('profile_played'))}</span></div>
+      <div><b>${p.wins}</b><span>${esc(t('profile_wins'))}</span></div>
+      <div><b>${p.winRate}%</b><span>${esc(t('profile_winrate'))}</span></div>
     </div>`;
   const lines=[t('profile_record',{wins:p.wins,losses:p.losses,draws:p.draws}),
     t(p.season.played===1?'profile_season_one':'profile_season',{points:p.season.points,played:p.season.played}),
     p.bestAttempts?t(p.bestAttempts===1?'profile_best_one':'profile_best',{n:p.bestAttempts}):t('profile_best_none')];
   if(p.streaks.days>1) lines.push(t('profile_streak_days',{n:p.streaks.days}));
   if(p.streaks.wins>1) lines.push(t('profile_streak_wins',{n:p.streaks.wins}));
-  const rules=(p.rules||[]).length
-    ? `<h3 style="margin:16px 0 6px;font-size:15px">${esc(t('profile_rules'))}</h3>
-       <div class="det">${p.rules.map(r=>esc(rulesFromKey(r.code))).join('<br>')}</div>` : '';
-  const badges=`<h3 style="margin:16px 0 8px;font-size:15px">${esc(t('profile_badges'))}</h3>`
-    +((p.badges||[]).length
-      ? `<div class="badgelist">${p.badges.map(b=>badgeChipHTML(b.code,false)).join('')}</div>`
-      : `<div class="det">${esc(t('profile_badges_none'))}</div>`);
-  $('profile-body').innerHTML=stats+`<div class="det">${lines.map(esc).join('<br>')}</div>`+rules+badges;
+  const rules=(p.rules||[]).length?`<span><b>${esc(t('profile_rules'))}:</b> ${p.rules.map(r=>esc(rulesFromKey(r.code))).join(' / ')}</span>`:'';
+  $('profile-body').innerHTML=stats+badges
+    +`<div class="pnote">${lines.map(line=>`<span>${esc(line)}</span>`).join('')}${rules}</div>`+mine;
 }
 
 /* -------------------- la lista de rivales (E5-T4) --------------------
@@ -4941,21 +5528,24 @@ async function openRivals(){
     const list=res.rivals||[];
     if(!list.length){ $('rivals-list').innerHTML=`<div class="empty">${t('rivals_empty')}</div>`; return; }
     $('rivals-list').innerHTML='';
+    /* La inicial con su punto de presencia, el marcador de la pareja y el
+       desafio: lleno solo para el primero conectado, que es a quien de verdad
+       se le puede pedir una partida ahora; los demas, en blanco. */
+    let hot=false;
     list.forEach(r=>{
-      const el=document.createElement('div'); el.className='gitem';
-      const dot=document.createElement('span'); dot.className='dot'+(r.online?' on':'');
-      dot.setAttribute('role','img');
-      dot.setAttribute('aria-label', r.online?t('rivals_online'):t('rivals_offline'));
-      const meta=document.createElement('div'); meta.className='meta';
-      const who=document.createElement('div'); who.className='who';
-      who.appendChild(nameButton('', r.username, 'rivals'));
-      const det=document.createElement('div'); det.className='det';
+      const el=document.createElement('div'); el.className='rvrow';
+      const av=document.createElement('span'); av.className='av';
+      av.innerHTML=avatarHTML(r.username,{tone:toneFor(r.username)})+(r.online?`<i role="img" aria-label="${esc(t('rivals_online'))}"></i>`:'');
+      const main=document.createElement('div'); main.className='rvrow-main';
+      main.appendChild(nameButton('', r.username, 'rivals'));
+      const det=document.createElement('small');
       det.textContent=t(r.played===1?'rivals_record_one':'rivals_record',{wins:r.wins,losses:r.losses,played:r.played})
-        +(r.lastPlayedAt?' · '+relativeActivity(r.lastPlayedAt):'');
-      meta.appendChild(who); meta.appendChild(det);
-      const b=document.createElement('button'); b.className='btn sm green'; b.textContent=t('rivals_challenge');
+        +' · '+(r.online?t('rivals_online'):r.lastPlayedAt?relativeActivity(r.lastPlayedAt):t('rivals_offline'));
+      main.appendChild(det);
+      const lead=r.online&&!hot; if(lead) hot=true;
+      const b=document.createElement('button'); b.type='button'; b.className='btn sm '+(lead?'green':'ghost'); b.textContent=t('rivals_challenge');
       b.onclick=()=>challengeRival(r.lastGameId);
-      el.appendChild(dot); el.appendChild(meta); el.appendChild(b);
+      el.appendChild(av); el.appendChild(main); el.appendChild(b);
       $('rivals-list').appendChild(el);
     });
   }catch(e){ $('rivals-list').innerHTML=`<div class="empty">${t('load_error')}</div>`; }
@@ -4993,9 +5583,9 @@ function todayUTC(){ return new Date().toISOString().slice(0,10); }
    en src/daily.js. La cuenta atras es hasta la medianoche UTC, que es cuando
    cambia el codigo para todo el mundo. */
 const DAILY_MAX=8;
-function dailyRingSVG(done,max){
-  const c=2*Math.PI*23, frac=Math.min(1,done/max);
-  return `<svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="23" fill="none" stroke="#1B1638" stroke-opacity=".18" stroke-width="6"></circle>`
+function dailyRingSVG(done,max,size){
+  const c=2*Math.PI*23, frac=Math.min(1,done/max), px=size||56;
+  return `<svg width="${px}" height="${px}" viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="23" fill="none" stroke="#1B1638" stroke-opacity=".18" stroke-width="6"></circle>`
     +(frac>0?`<circle cx="28" cy="28" r="23" fill="none" stroke="#1B1638" stroke-width="6" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c*(1-frac)).toFixed(1)}" transform="rotate(-90 28 28)"></circle>`:'')
     +`<text x="28" y="33" text-anchor="middle" font-family="'Bricolage Grotesque',sans-serif" font-weight="800" font-size="17" fill="#1B1638">${done}/${max}</text></svg>`;
 }
@@ -5014,7 +5604,7 @@ function renderDailyCard(){
     : done ? t('daily_tile_progress',{n:done,max:DAILY_MAX,time}) : t('daily_tile_fresh',{time});
 }
 async function openDaily(){
-  show('daily');
+  show('daily'); dailyPad.reset();
   $('daily-board').innerHTML=`<div class="empty">${t('loading')}</div>`;
   stopDailyTick(); dailyTickTimer=setInterval(renderDailyCountdown,30000);
   await loadDaily();
@@ -5036,6 +5626,16 @@ function renderDailyCountdown(){
   const minutes=Math.max(1,Math.round(left/60000)), hours=Math.floor(minutes/60);
   $('daily-next').classList.remove('hidden');
   $('daily-next').innerHTML=ico('reloj',14)+'<span>'+t('daily_next',{time:hours?t('daily_hours',{h:hours,m:minutes%60}):t('daily_minutes',{m:minutes})})+'</span>';
+}
+/* El teclado del codigo del dia es el del muelle: tacha lo ya escrito, porque
+   hoy no se repite, y nada mas. */
+const dailyPad=makeDockPad({dock:'daily-dock', tiles:'daily-tiles', pad:'daily-pad', erase:'daily-erase', live:'daily-live',
+  len:()=>dailyData?dailyData.rules.digits:4, mode:()=>'numbers', colors:()=>10, repeats:()=>!!(dailyData&&dailyData.rules.allowRepeats),
+  onChange:v=>{ if(dailyData) setVal('daily-guess-val',v,dailyData.rules.digits,dailyData.rules.allowRepeats); }});
+function dailyDateLabel(day){
+  const [y,m,d]=String(day||'').split('-').map(Number);
+  if(!y||!m||!d) return '';
+  try{ return new Intl.DateTimeFormat(lang,{day:'numeric',month:'long',timeZone:'UTC'}).format(new Date(Date.UTC(y,m-1,d))); }catch(e){ return ''; }
 }
 function shareGridRows(guesses,digits){
   /* Un intento perdido al tiempo no tiene puntuacion: se dibuja vacio, que es
@@ -5060,6 +5660,67 @@ function dailyShareText(state){
    lo que vive la pantalla: no se guardan ni se vuelven a pedir. */
 let freshBadges=[];
 let shareCardData=null;
+/* -------------------- la tarjeta de fin (serie Plaza, L6) --------------------
+   Una sola forma para todos los finales —partida, practicas, codigo del dia,
+   enigma y arena—: la vaca con su humor, quien y donde, el titulo, una frase y
+   hasta tres cifras. Ganar es la tarjeta oscura; perder y empatar, claras.
+   o: {result:'win'|'lose'|'draw', kicker?, title, text?, stats?:[{v,label,hot}], small?}
+   kicker, title y text llegan ya escapados: pueden llevar una bandera. */
+function endCardHTML(o){
+  const mood={win:'happy',lose:'sad',draw:'calm'}[o.result]||'calm';
+  const stats=(o.stats||[]).filter(Boolean);
+  return `<div class="endcard ${o.result||'draw'}${o.small?' sm':''}"><span class="ec-b1" aria-hidden="true"></span><span class="ec-b2" aria-hidden="true"></span>`
+    +vacaSVG(mood,o.small?84:(o.result==='win'?128:104))
+    +(o.kicker?`<span class="ec-kicker">${o.kicker}</span>`:'')
+    +`<h2>${o.title}</h2>`+(o.text?`<p>${o.text}</p>`:'')
+    +(stats.length?`<div class="ec-stats" style="--n:${stats.length}">${stats.map(s=>`<div${s.hot?' class="hot"':''}><b${s.count!=null?` data-count="${s.count}"`:''}>${esc(s.v)}</b><span>${esc(s.label)}</span></div>`).join('')}</div>`:'')
+    +`</div>`;
+}
+/* El codigo revelado, en fichas grandes. En verde solo si quien mira lo
+   descubrio: el verde dice «fija», no decora. */
+function revealHTML(label, code, mode, solved, mine){
+  const tiles=[...String(code||'')].map(ch=>mode==='colors'
+    ?`<span class="rtile c" style="background:${(COLORS[+ch]||{c:'#555'}).c}">${symbolSVG(+ch,30)}</span>`
+    :`<span class="rtile${solved?' ok':''}">${esc(ch)}</span>`).join('');
+  return `<div class="reveal"><div class="reveal-head"><span>${label}</span><span class="reveal-tag">${esc(t('reveal_tag'))}</span></div>`
+    +`<div class="reveal-row"><span class="rtiles" role="img" aria-label="${esc(spokenCode(code,mode))}">${tiles}</span>`
+    +(mine?`<span class="reveal-mine"><span>${esc(t('reveal_mine'))}</span>${codeViewHTML(mine,mode)}</span>`:'')+`</div></div>`;
+}
+/* La pantalla final se repinta con cada sondeo. Rehacer la tarjeta volveria a
+   lanzar sus animaciones cada dos segundos, asi que solo se toca si cambia de
+   verdad. Los identificadores del analisis cambian en cada vuelta y no
+   cuentan como cambio. */
+function paintOnce(el, html){
+  const key=html.replace(/an-why-\d+/g,'');
+  if(el.dataset.paint===key) return false;
+  el.dataset.paint=key; el.innerHTML=html; return true;
+}
+/* Cuanto duro la partida, del primer intento al ultimo. Una correspondencia
+   se cuenta en dias y no cabe en la tarjeta: ahi no se dice. */
+function playedTime(guesses){
+  const stamps=(guesses||[]).map(g=>Date.parse(g.ts)).filter(Number.isFinite);
+  if(stamps.length<2) return '';
+  const ms=Math.max(...stamps)-Math.min(...stamps);
+  if(ms<=0||ms>=86400000) return '';
+  if(ms>=3600000) return t('ec_hours',{h:Math.floor(ms/3600000),m:String(Math.floor(ms%3600000/60000)).padStart(2,'0')});
+  return formatPracticeTime(ms);
+}
+/* El confeti de la victoria: formas de la marca, tres segundos y silencio. La
+   derrota no tiene: la vaca baja la cabeza y ya. Con «reducir movimiento» no
+   cae nada. */
+function rainConfetti(){
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const old=$('confetti'); if(old) old.remove();
+  const box=document.createElement('div'); box.id='confetti'; box.className='confetti'; box.setAttribute('aria-hidden','true');
+  const colors=['#2F5BFF','#FFC531','#FF6B5E','#7C5CFF','#5FE0C9'];
+  let html='';
+  for(let i=0;i<18;i++){
+    const round=i%3===1, w=round?11:9+(i%3), h=round?11:14+(i%4)*2;
+    html+=`<i style="left:${(i*37+7)%100}%;width:${w}px;height:${h}px;border-radius:${round?'50%':'3px'};background:${colors[i%colors.length]};--d:${(2.2+(i%5)*.2).toFixed(2)}s;--w:${((i%6)*.12).toFixed(2)}s"></i>`;
+  }
+  box.innerHTML=html; document.body.appendChild(box);
+  setTimeout(()=>box.remove(),3800);
+}
 function shareCardText(card){
   const head=card.solved
     ? (card.attempts===1?t('share_card_solved_one',{digits:card.digits}):t('share_card_solved',{digits:card.digits,n:card.attempts}))
@@ -5073,7 +5734,7 @@ function shareCardBlock(card){
   if(!rows.length) return '';
   shareCardData=card;
   return `<div class="share-card"><div class="daily-grid">${rows.join('\n')}</div>`
-    +`<button class="btn green" onclick="shareCard()">${t('share_card_btn')}</button></div>`;
+    +`<button class="btn ghost" onclick="shareCard()">${t('share_card_btn')}</button></div>`;
 }
 async function shareCard(){
   if(!shareCardData) return;
@@ -5155,54 +5816,66 @@ async function shareDaily(){
   try{ await navigator.clipboard.writeText(text); toast(t('daily_shared')); }
   catch(e){ toast(text); }
 }
+/* Los intentos del dia se leen de arriba abajo, como en una hoja: son pocos y
+   la hoja entera cabe. Debajo del ultimo, la fila que se esta escribiendo y
+   una raya por cada intento que queda. */
 function renderDailyLog(){
-  const rules=dailyData.rules;
-  $('daily-log').innerHTML=dailyData.guesses.length
-    ? dailyData.guesses.slice().reverse().map(g=>{
-        let pips='';
-        for(let i=0;i<g.fijas;i++) pips+='<span class="pip f"></span>';
-        for(let i=0;i<g.picas;i++) pips+='<span class="pip p"></span>';
-        if(!pips) pips=`<span class="scoretxt">${t('log_nada')}</span>`;
-        return `<div class="g">${codeViewHTML(g.guess,rules.mode)}<span class="scoretxt">${g.fijas}F · ${g.picas}P</span><span class="pips">${pips}</span></div>`;
-      }).join('')
-    : `<div class="empty">${t('log_empty_mine')}</div>`;
+  const rules=dailyData.rules, list=dailyData.guesses||[];
+  const key=[lang,list.length,list.length?JSON.stringify(list[list.length-1]):'',dailyData.finished].join('|');
+  const log=$('daily-log');
+  if(log.dataset.key!==key){
+    log.dataset.key=key;
+    log.innerHTML=list.map((g,i)=>`<div class="drow${i===list.length-1?' new':''}" role="group" aria-label="${esc(tryLabel(g,i+1,rules.mode))}">${tilesCodeHTML(g.guess,rules.mode)}${tryPipsHTML(g,rules.digits)}</div>`).join('');
+  }
+  const left=dailyData.finished?0:Math.max(0,rules.maxAttempts-list.length-1);
+  $('daily-ghosts').innerHTML=Array.from({length:left},()=>`<div class="dghost">${'<span></span>'.repeat(rules.digits)}</div>`).join('');
 }
+/* La clasificacion del dia, en su tarjeta oscura. Si no estas entre los que
+   ya lo resolvieron, tu fila va al final: jugando, o con tu puesto. */
 function renderDailyBoard(){
-  const list=dailyData.board||[];
+  const list=dailyData.board||[], rules=dailyData.rules;
   $('daily-players').textContent=t('daily_players',{players:dailyData.players||0,solved:dailyData.solvedCount||0});
-  $('daily-board').innerHTML=list.length?'':`<div class="empty">${t('daily_board_empty')}</div>`;
-  list.forEach(entry=>{
-    const row=document.createElement('div'); row.className='rankrow'+(entry.username===user?' me':'');
-    row.innerHTML=`<div class="pos">${entry.rank}</div><div class="nm">${playerChip(entry.country,entry.username)}</div>
-      <div class="wl">${t('daily_board_line',{n:entry.attempts,time:formatPracticeTime(entry.durationMs)})}</div>`;
-    $('daily-board').appendChild(row);
-  });
-  const rank=dailyData.yourRank||0, mine=$('daily-your-rank');
-  mine.textContent=rank&&!list.some(entry=>entry.username===user)?t('daily_your_rank',{n:rank}):'';
+  let html=list.map(entry=>`<div class="drank${entry.username===user?' me':''}${entry.rank===1?' first':''}"><span class="pos">${entry.rank}</span>${avatarHTML(entry.username,{tone:toneFor(entry.username)})}`
+    +`<span class="nm">${playerChip(entry.country,entry.username)}</span><span class="wl">${esc(t('daily_board_line',{n:entry.attempts,time:formatPracticeTime(entry.durationMs)}))}</span></div>`).join('');
+  if(!list.some(entry=>entry.username===user)){
+    const rank=dailyData.yourRank||0;
+    const line=!dailyData.finished?t('daily_you_playing',{n:Math.min(rules.maxAttempts,dailyData.attempts+1)})
+      :rank?t('daily_your_rank',{n:rank}):t('daily_you_failed');
+    html+=`<div class="drank me"><span class="pos">${rank||'—'}</span>${avatarHTML(user,{tone:'coral'})}<span class="nm"><b>${esc(t('me_you'))}</b></span><span class="wl">${esc(line)}</span></div>`;
+  }
+  $('daily-board').innerHTML=html||`<div class="empty">${t('daily_board_empty')}</div>`;
 }
 function renderDaily(){
   if(!dailyData) return;
-  const rules=dailyData.rules;
+  const rules=dailyData.rules, finished=dailyData.finished;
   $('daily-hint').textContent=t('daily_hint',{digits:rules.digits,max:rules.maxAttempts});
-  $('daily-number').textContent=t('daily_number',{n:dailyData.number});
-  $('daily-attempts').textContent=t('daily_attempts_chip',{n:Math.min(rules.maxAttempts,dailyData.attempts+(dailyData.finished?0:1)),max:rules.maxAttempts});
+  const date=dailyDateLabel(dailyData.day);
+  $('daily-number').textContent=date?t('daily_kicker',{n:dailyData.number,date}):t('daily_number',{n:dailyData.number});
+  const ring=$('daily-hero-ring');
+  ring.innerHTML=dailyRingSVG(Math.min(rules.maxAttempts,dailyData.attempts),rules.maxAttempts,72);
+  ring.setAttribute('role','img'); ring.setAttribute('aria-label',t('daily_attempts_chip',{n:Math.min(rules.maxAttempts,dailyData.attempts),max:rules.maxAttempts}));
   renderDailyCountdown();
-  const input=$('daily-guess'); input.maxLength=rules.digits; input.placeholder='•'.repeat(rules.digits);
-  $('daily-guessarea').classList.toggle('hidden',dailyData.finished);
-  if(dailyData.finished) $('daily-guess-val').textContent='';
+  $('daily-guessarea').classList.toggle('hidden',finished);
+  $('daily-keys').classList.toggle('hidden',finished);
+  if(finished){ $('daily-guess-val').textContent=''; dailyPad.reset(); }
+  dailyPad.setDisabled(finished);
+  dailyPad.refresh();
   renderDailyLog();
   const banner=$('daily-banner');
-  if(dailyData.finished){
+  if(finished){
     const detail=dailyData.solved
       ? t('daily_solved_detail',{n:dailyData.attempts,time:formatPracticeTime(dailyData.durationMs)})
       : t('daily_failed_detail');
-    banner.innerHTML=`<div class="banner ${dailyData.solved?'win':'lose'}"><h2>${dailyData.solved?t('daily_solved_title'):t('daily_failed_title')}</h2><p>${detail}</p></div>`
-      +(dailyData.secret?`<div class="note"><b>${t('daily_reveal')}</b> ${codeViewHTML(dailyData.secret,rules.mode)}</div>`:'')
-      +analysisBlock(rules,dailyData.guesses);
+    const stats=[{v:dailyData.attempts,label:t(dailyData.attempts===1?'ec_attempt_one':'ec_attempts')}];
+    if(dailyData.solved) stats.push({v:formatPracticeTime(dailyData.durationMs),label:t('ec_time')});
+    paintOnce(banner,endCardHTML({result:dailyData.solved?'win':'lose', kicker:esc($('daily-number').textContent),
+        title:dailyData.solved?t('daily_solved_title'):t('daily_failed_title'), text:detail, stats})
+      +(dailyData.secret?revealHTML(esc(t('daily_reveal')),dailyData.secret,rules.mode,dailyData.solved,''):'')
+      +analysisBlock(rules,dailyData.guesses));
     $('daily-grid').textContent=dailyGridRows(dailyData).join('\n');
     $('daily-share-wrap').classList.remove('hidden');
   }else{
-    banner.innerHTML=''; $('daily-share-wrap').classList.add('hidden');
+    paintOnce(banner,''); $('daily-share-wrap').classList.add('hidden');
   }
   renderDailyBoard();
   rememberDaily();
@@ -5210,7 +5883,7 @@ function renderDaily(){
 }
 async function submitDailyGuess(){
   if(!dailyData||dailyData.finished||dailySending) return;
-  const rules=dailyData.rules, guess=$('daily-guess').value.trim();
+  const rules=dailyData.rules, guess=dailyPad.get();
   if(validateLive(guess,rules.digits,rules.allowRepeats).cls!=='ok'){ toast(t('invalid_guess'),true); return; }
   const wasFinished=dailyData.finished;
   dailySending=true; $('daily-guess-btn').disabled=true;
@@ -5221,15 +5894,13 @@ async function submitDailyGuess(){
     const res=await api('dailyGuess',{guess,requestId},{timeoutMs:30000});
     if(res&&res.day) dailyData=res;
     if(res&&!res.ok) toast(res.code==='daily_done'?t('daily_done_today'):te(res.error||t('net_error')),true);
-    $('daily-guess').value=''; $('daily-guess-val').textContent='';
+    dailyPad.reset(); $('daily-guess-val').textContent='';
     renderDaily();
     if(!wasFinished&&dailyData.finished) endSound(dailyData.solved?'win':'lose');
   }catch(e){
     if(e.message!=='SESSION_EXPIRED'&&e.message!=='EMAIL_PENDING') toast(t('net_error'),true);
   }finally{ dailySending=false; $('daily-guess-btn').disabled=false; }
 }
-$('daily-guess').addEventListener('input',e=>setVal('daily-guess-val',e.target.value,dailyData?dailyData.rules.digits:4,false));
-bindEnterToButton('daily-guess','daily-guess-btn');
 
 /* -------------------- historial -------------------- */
 const LOCALE={es:'es',en:'en',fr:'fr'};
@@ -5288,22 +5959,30 @@ async function loadPuzzles(){
   puzzlesLoading=false;
   renderPuzzleList();
 }
+/* El teclado del enigma es el del muelle: tacha lo ya escrito cuando no se
+   repite, y nada mas. Las pistas estan a la vista y deducir es cosa tuya. */
+const puzzlePad=makeDockPad({dock:'pz-dock', tiles:'pz-tiles', pad:'pz-pad', erase:'pz-erase', live:'pz-live',
+  len:()=>puzzleOpen?puzzleOpen.rules.digits:3, mode:()=>puzzleOpen&&puzzleOpen.rules.mode||'numbers',
+  colors:()=>puzzleOpen&&puzzleOpen.rules.numColors||6, repeats:()=>!!(puzzleOpen&&puzzleOpen.rules.allowRepeats),
+  onChange:v=>{ if(puzzleOpen) setVal('pz-guess-val',v,puzzleOpen.rules.digits,puzzleOpen.rules.allowRepeats); }});
 function renderPuzzleList(){
   const grid=$('pz-grid'); if(!grid) return;
-  [...$('pz-seg-level').children].forEach(button=>button.classList.toggle('on',button.dataset.l===puzzleLevel));
+  [...$('pz-seg-level').children].forEach(button=>button.setAttribute('aria-selected',button.dataset.l===puzzleLevel?'true':'false'));
   const level=puzzleLevelData();
   if(!level){
-    grid.innerHTML='';
+    grid.innerHTML=''; $('pz-bar').style.width='0';
     $('pz-progress').textContent=puzzlesFailed?t('pz_offline'):t('pz_loading');
     return;
   }
-  const solved=solvedPuzzles();
-  $('pz-progress').textContent=t('pz_progress',{done:level.puzzles.filter(puzzle=>solved.has(puzzle.id)).length,total:level.puzzles.length});
+  const solved=solvedPuzzles(), done=level.puzzles.filter(puzzle=>solved.has(puzzle.id)).length;
+  const name=t('difficulty_'+puzzleLevel);
+  $('pz-progress').textContent=t('pz_level_name',{level:lang==='en'?name:name.toLocaleLowerCase(lang)})+' · '+t('pz_progress',{done,total:level.puzzles.length});
+  $('pz-bar').style.width=Math.round(100*done/Math.max(1,level.puzzles.length))+'%';
   grid.innerHTML=level.puzzles.map((puzzle,index)=>{
-    const done=solved.has(puzzle.id)?' done':'';
-    const open=(puzzleOpen&&puzzleOpen.id===puzzle.id)?' on':'';
-    return `<button type="button" class="pz-cell${done}${open}" onclick="openPuzzle('${puzzle.id}')">`
-      +`${done?'✓ ':''}${index+1}<small>${t('pz_clues_count',{n:puzzle.clues.length})}</small></button>`;
+    const ok=solved.has(puzzle.id), open=puzzleOpen&&puzzleOpen.id===puzzle.id;
+    const label=t('pz_play_title',{n:index+1})+(ok?', '+t('pz_already'):'')+' · '+t('pz_clues_count',{n:puzzle.clues.length});
+    return `<button type="button" class="pz-cell${ok?' done':''}${open?' on':''}" onclick="openPuzzle('${puzzle.id}')" aria-label="${esc(label)}"${open?' aria-current="true"':''}>`
+      +`${ok?`<span class="ok">${ico('estrella',11)}</span>`:''}${index+1}</button>`;
   }).join('');
 }
 function openPuzzle(id){
@@ -5311,13 +5990,13 @@ function openPuzzle(id){
   const index=level.puzzles.findIndex(puzzle=>puzzle.id===id);
   if(index<0) return;
   puzzleOpen={id,index,rules:level.rules,clues:level.puzzles[index].clues,finished:false};
-  const input=$('pz-guess');
-  input.maxLength=level.rules.digits; input.value=''; input.placeholder='•'.repeat(level.rules.digits);
-  $('pz-guess-val').textContent=''; $('pz-banner').innerHTML='';
-  $('pz-guessarea').classList.remove('hidden'); $('pz-reveal-btn').classList.remove('hidden');
+  puzzlePad.reset(); puzzlePad.setDisabled(false);
+  $('pz-guess-val').textContent=''; paintOnce($('pz-banner'),'');
+  $('pz-guessarea').classList.remove('hidden'); $('pz-keys').classList.remove('hidden'); $('pz-reveal-btn').classList.remove('hidden');
   $('pz-play').classList.remove('hidden');
-  renderPuzzleList(); renderOpenPuzzle();
-  $('pz-play').scrollIntoView({behavior:'smooth',block:'start'});
+  renderPuzzleList(); renderOpenPuzzle(); puzzlePad.refresh();
+  const calm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  $('pz-play').scrollIntoView({behavior:calm?'auto':'smooth',block:'start'});
 }
 function closePuzzle(){
   puzzleOpen=null;
@@ -5328,32 +6007,34 @@ function renderOpenPuzzle(){
   if(!puzzleOpen){ const play=$('pz-play'); if(play) play.classList.add('hidden'); return; }
   const rules=puzzleOpen.rules;
   $('pz-play-title').textContent=t('pz_play_title',{n:puzzleOpen.index+1});
-  $('pz-play-rules').textContent=t('pz_clue_head')+' · '+rulesLabel({...rules,revealSecrets:true});
-  $('pz-clues').innerHTML=puzzleOpen.clues.map(([guess,fijas,picas])=>{
-    let pips='';
-    for(let i=0;i<fijas;i++) pips+='<span class="pip f"></span>';
-    for(let i=0;i<picas;i++) pips+='<span class="pip p"></span>';
-    if(!pips) pips=`<span class="scoretxt">${t('log_nada')}</span>`;
-    return `<div class="pz-clue">${codeViewHTML(guess,rules.mode)}<span class="scoretxt">${fijas}F · ${picas}P</span><span class="pips">${pips}</span></div>`;
+  $('pz-play-rules').textContent=[rules.mode==='colors'?t('rl_colors',{n:rules.numColors||6}):t('rl_numbers'),t('rl_pos',{n:rules.digits}),rules.allowRepeats?t('rl_repeat'):t('rl_norepeat')].join(' · ');
+  $('pz-clues').setAttribute('aria-label',t('pz_clue_head'));
+  $('pz-clues').innerHTML=puzzleOpen.clues.map(([guess,fijas,picas],i)=>{
+    const g={guess,fijas,picas};
+    return `<div class="pz-clue" role="group" aria-label="${esc(tryLabel(g,i+1,rules.mode))}">${tilesCodeHTML(guess,rules.mode)}${tryPipsHTML(g,rules.digits)}</div>`;
   }).join('');
 }
 function puzzleClueTurns(){
   return puzzleOpen.clues.map(([guess,fijas,picas])=>({guess,fijas,picas}));
 }
+function puzzleDone(){
+  puzzleOpen.finished=true; puzzlePad.setDisabled(true);
+  $('pz-guessarea').classList.add('hidden'); $('pz-keys').classList.add('hidden'); $('pz-reveal-btn').classList.add('hidden');
+  $('pz-guess-val').textContent='';
+}
 function submitPuzzle(){
   if(!puzzleOpen||puzzleOpen.finished||typeof Deduce==='undefined'||!Deduce) return;
-  const rules=puzzleOpen.rules, code=$('pz-guess').value.trim();
+  const rules=puzzleOpen.rules, code=puzzlePad.get();
   if(validateLive(code,rules.digits,rules.allowRepeats).cls!=='ok'){ toast(t('invalid_guess'),true); return; }
   // Solucion unica: ser compatible con las pistas y ser la solucion son lo
   // mismo, asi que no hace falta guardar la respuesta para comprobarla.
   if(Deduce.contradicts(code,puzzleClueTurns())){
-    $('pz-banner').innerHTML=`<div class="banner lose"><h2>${t('pz_wrong')}</h2></div>`;
+    paintOnce($('pz-banner'),`<div class="contradiction">${esc(t('pz_wrong'))}</div>`);
     endSound('lose'); return;
   }
-  puzzleOpen.finished=true; markPuzzleSolved(puzzleOpen.id);
-  $('pz-guessarea').classList.add('hidden'); $('pz-reveal-btn').classList.add('hidden');
-  $('pz-banner').innerHTML=`<div class="banner win"><h2>${t('pz_solved')}</h2><p>${t('pz_solved_text')}</p></div>`
-    +`<div class="note"><b>${t('pz_revealed')}</b> ${codeViewHTML(code,rules.mode)}</div>`;
+  puzzleDone(); markPuzzleSolved(puzzleOpen.id);
+  paintOnce($('pz-banner'),endCardHTML({result:'win', kicker:esc(t('pz_play_title',{n:puzzleOpen.index+1})), title:t('pz_solved'), text:t('pz_solved_text'), small:true})
+    +revealHTML(esc(t('pz_revealed')),code,rules.mode,true,''));
   endSound('win'); renderPuzzleList();
 }
 function revealPuzzle(){
@@ -5361,18 +6042,13 @@ function revealPuzzle(){
   const rules=puzzleOpen.rules;
   let candidates=Deduce.enumerate(rules);
   for(const [guess,fijas,picas] of puzzleOpen.clues) candidates=Deduce.filter(candidates,guess,{fijas,picas});
-  puzzleOpen.finished=true;
-  $('pz-guessarea').classList.add('hidden'); $('pz-reveal-btn').classList.add('hidden');
-  $('pz-banner').innerHTML=`<div class="note"><b>${t('pz_revealed')}</b> ${codeViewHTML(candidates[0]||'',rules.mode)}</div>`;
+  puzzleDone();
+  paintOnce($('pz-banner'),revealHTML(esc(t('pz_revealed')),candidates[0]||'',rules.mode,false,''));
 }
 $('pz-seg-level').addEventListener('click',event=>{
   const button=event.target.closest('button'); if(!button) return;
   puzzleLevel=button.dataset.l; closePuzzle(); renderPuzzleList();
 });
-$('pz-guess').addEventListener('input',event=>{
-  if(puzzleOpen) setVal('pz-guess-val',event.target.value,puzzleOpen.rules.digits,puzzleOpen.rules.allowRepeats);
-});
-bindEnterToButton('pz-guess','pz-guess-btn');
 
 let historyEntries=[],historyStats=null,historyFilter='all';
 
@@ -5767,7 +6443,10 @@ function finishComputerPractice(result,reason=''){
   $('practice-secret').innerHTML=codeViewHTML(practice.playerSecret,practiceCfg.mode);$('practice-guessarea').classList.add('hidden');$('practice-attempt-no').textContent='';$('practice-turn').classList.add('hidden');$('practice-active-actions').classList.add('hidden');$('practice-actions').classList.remove('hidden');practiceExitChrome('result_lobby',true);
   const surrendered=reason==='surrender',title=surrendered?t('practice_surrendered'):t('computer_result_'+result),
     detail=surrendered?t('practice_surrender_detail'):reason==='timeout'?t('lose_timeout'):t('computer_both_codes',{yours:practice.playerSecret,computer:practice.secret});
-  $('practice-banner').innerHTML=`<div class="banner ${result==='win'?'win':result==='loss'?'lose':'draw'}"><h2>${title}</h2><p>${detail}</p></div><div class="note"><b>${t('practice_secret')}</b> ${codeViewHTML(practice.playerSecret,practiceCfg.mode)} · <b>${t('computer_code')}</b> ${codeViewHTML(practice.secret,practiceCfg.mode)}</div>`
+  const tries=practice.guesses.filter(g=>!g.missed).length;
+  $('practice-banner').innerHTML=endCardHTML({result:result==='win'?'win':result==='loss'?'lose':'draw', kicker:esc(t('ec_practice_cpu')), title, text:detail,
+      stats:[{v:tries,label:t(tries===1?'ec_attempt_one':'ec_attempts')},{v:formatPracticeTime(Date.now()-practice.startedAt),label:t('ec_time')}]})
+    +revealHTML(esc(t('computer_code')),practice.secret,practiceCfg.mode,practice.guesses.some(g=>g.fijas===practiceCfg.digits),practice.playerSecret)
     +shareCardBlock({guesses:practice.guesses, digits:practiceCfg.digits,
       solved:practice.guesses.some(g=>g.fijas===practiceCfg.digits), attempts:practice.guesses.filter(g=>!g.missed).length,
       durationMs:Date.now()-practice.startedAt})
@@ -5779,7 +6458,10 @@ function finishPractice(won,reason){
   localStorage.setItem('pf_practice_stats',JSON.stringify(s));
   $('practice-secret').className=''; $('practice-secret').innerHTML=codeViewHTML(practice.secret,practiceCfg.mode);
   const surrendered=reason==='surrender',detail=won?t('practice_attempts_used',{n:practice.guesses.length,time:formatPracticeTime(elapsed)}):t(surrendered?'practice_surrender_detail':reason==='time'?'practice_time_up':'practice_attempts_up');
-  $('practice-banner').innerHTML=`<div class="banner ${won?'win':'lose'}"><h2>${t(won?'practice_won':surrendered?'practice_surrendered':'practice_lost')}</h2><p>${detail}</p></div><div class="note"><b>${t('practice_reveal')}</b> ${codeViewHTML(practice.secret,practiceCfg.mode)}</div>`
+  const tries=practice.guesses.filter(g=>!g.missed).length;
+  $('practice-banner').innerHTML=endCardHTML({result:won?'win':'lose', kicker:esc(t('ec_practice_solo')), title:t(won?'practice_won':surrendered?'practice_surrendered':'practice_lost'), text:detail,
+      stats:[{v:tries,label:t(tries===1?'ec_attempt_one':'ec_attempts')},{v:formatPracticeTime(elapsed),label:t('ec_time')}]})
+    +revealHTML(esc(t('practice_reveal')),practice.secret,practiceCfg.mode,won,'')
     +shareCardBlock({guesses:practice.guesses, digits:practiceCfg.digits, solved:won,
       attempts:practice.guesses.filter(g=>!g.missed).length, durationMs:elapsed})
     +analysisBlock(practiceCfg,practice.guesses);
@@ -6106,7 +6788,7 @@ function resetClock(id){
 }
 function resetGameView(){
   hideToast();
-  $('g-banner').innerHTML=''; $('g-rematch-zone').innerHTML='';
+  paintOnce($('g-banner'),''); paintOnce($('g-after'),''); $('g-rematch-zone').innerHTML='';
   resetJournal('g');
   secretPeek=false; paintMySecret();
   $('g-secret-row').classList.toggle('hidden',!!game.spectator);
@@ -6223,38 +6905,54 @@ function renderGame(st){
     // viejo, se sube una vez para verlo.
     if(!finishSeen){ finishSeen=true; $('g-body').scrollTop=0; }
     const won = st.winner===user;
-    if(!endSoundPlayed&&!spectator){ endSoundPlayed=true; endSound(st.isDraw?'draw':(won?'win':'lose')); }
+    // Repasar una partida del historial no es volver a ganarla: ni sonido ni confeti.
+    if(!endSoundPlayed&&!spectator&&!reviewingHistory){ endSoundPlayed=true; endSound(st.isDraw?'draw':(won?'win':'lose')); }
+    /* L6: la tarjeta de fin. Quien y donde arriba, el resultado, y tres cifras
+       —mis intentos, lo que duro y los puntos que me llevo—; debajo, el codigo
+       del rival si se revela. Se pinta solo si cambia (paintOnce), porque el
+       sondeo sigue llegando y rehacerla relanzaria sus animaciones. */
+    const digits=parseInt(st.digits,10);
+    const kicker=spectator?esc(t('ec_game',{code:game.id}))
+      :tElide('ec_vs',{code:esc(game.id),name:playerChip(me===1?st.country2:st.country1,oppLabel)},{name:oppLabel});
+    const stats=spectator?[]:[{v:mine.length,label:t(mine.length===1?'ec_attempt_one':'ec_attempts')},
+      (()=>{ const time=playedTime(st.guesses); return time?{v:time,label:t('ec_time')}:null; })(),
+      typeof st.points==='number'&&!reviewingHistory?{v:'+'+st.points,label:t('ec_points'),hot:true,count:st.points}:null];
+    let html;
     if(st.isDraw){
-      const solvedBy = n => st.guesses.some(x=>x.by===n && x.fijas===parseInt(st.digits,10));
+      const solvedBy = n => st.guesses.some(x=>x.by===n && x.fijas===digits);
       const bothSolved = solvedBy(st.p1) && solvedBy(st.p2);
-      banner.innerHTML=`<div class="banner draw">${vacaSVG('calm',118)}<h2>${t('draw_title')}</h2><p>${bothSolved?t('draw_both'):t('draw_limit')}</p></div>`;
+      html=endCardHTML({result:'draw', kicker, title:t('draw_title'), text:bothSolved?t('draw_both'):t('draw_limit'), stats});
     }else if(spectator){
-      banner.innerHTML=`<div class="banner"><h2>${t('spectator_winner',{name:esc(st.winner)})}</h2></div>`;
+      html=endCardHTML({result:'draw', kicker, title:t('spectator_winner',{name:esc(st.winner)}), stats});
     }else{
       const resultMsg = st.finishReason==='abandon'
         ? (won?t('win_abandon',{name:esc(oppLabel)}):t('lose_abandon',{name:esc(st.winner)}))
         : st.finishReason==='timeout'
           ? (won?t('win_timeout',{name:esc(oppLabel)}):t('lose_timeout'))
           : (won?t('win_msg',{name:esc(oppLabel)}):t('lose_msg',{name:esc(st.winner)}));
-      banner.innerHTML=`<div class="banner ${won?'win':'lose'}">${won?vacaSVG('happy',150):vacaSVG('sad',118)}<h2>${won?t('win_title'):t('lose_title')}</h2>${ruleSVG(won?150:118)}
-        <p>${resultMsg}</p></div>`;
+      html=endCardHTML({result:won?'win':'lose', kicker, title:won?t('win_title'):t('lose_title'), text:resultMsg, stats});
     }
     if(!spectator&&st.opponentSecret){
-      banner.insertAdjacentHTML('beforeend',`<div class="note"><b>${t('opponent_code',{name:esc(oppLabel)})}</b> ${codeViewHTML(st.opponentSecret,game.mode)}</div>`);
+      html+=revealHTML(tElide('opponent_code',{name:esc(oppLabel)},{name:oppLabel}),st.opponentSecret,game.mode,mine.some(g=>g.fijas===digits),
+        localStorage.getItem('pf_secret_'+game.id)||st.yourSecret||'');
     }
-    /* E3-T3: la tarjeta sale de mis propios intentos, nunca de los del rival. */
+    /* E3-T3: la tarjeta sale de mis propios intentos, nunca de los del rival.
+       Va despues de la revancha (#g-after): lo primero que se ofrece al
+       terminar es volver a jugar. */
+    let after='';
     if(!spectator){
       const digits=parseInt(st.digits,10);
-      banner.insertAdjacentHTML('beforeend',shareCardBlock({
-        guesses:mine, digits, solved:mine.some(g=>g.fijas===digits), attempts:mine.length}));
+      after+=shareCardBlock({
+        guesses:mine, digits, solved:mine.some(g=>g.fijas===digits), attempts:mine.length});
       /* E4-T2: el analisis es de mis intentos contra el codigo del rival; los
          suyos no entran, igual que en la tarjeta. */
-      banner.insertAdjacentHTML('beforeend',analysisBlock(game,mine));
+      after+=analysisBlock(game,mine);
       /* E5-T3: las insignias que acaba de ganar esta jugada. Vienen en la
          respuesta del intento, no de una consulta aparte, y se enseñan una
          sola vez: al recargar la partida ya no son noticia. */
-      if(freshBadges.length){ banner.insertAdjacentHTML('beforeend',badgesBlockHTML(freshBadges)); }
+      if(freshBadges.length){ after+=badgesBlockHTML(freshBadges); }
     }
+    paintOnce(banner,html); paintOnce($('g-after'),after);
     if(reviewingHistory){
       rz.innerHTML=`<button class="btn ghost" onclick="leaveHistoryGame()">${t('back')}</button>`;
     }else if(spectator){
@@ -6267,7 +6965,7 @@ function renderGame(st){
     return;
   }
 
-  banner.innerHTML=''; rz.innerHTML=''; legend.style.display='flex';
+  paintOnce(banner,''); paintOnce($('g-after'),''); rz.innerHTML=''; legend.style.display='flex';
   const playing=st.status==='active'&&!spectator;
   $('g-abandon-wrap').classList.toggle('hidden',!playing);
   $('g-nb-link').classList.toggle('hidden',!(playing&&st.notebook));
