@@ -185,8 +185,10 @@ async function main() {
     await cdp.send('Runtime.enable');
     // Las capturas son las del juego de dia, que es la cara de la identidad
     // Plaza, aunque la maquina que las toma tenga el sistema en modo oscuro.
+    // Y quietas: desde la 4.8.0 las pantallas entran con un fundido, y una
+    // captura tomada a mitad de camino saldria medio transparente.
     await cdp.send('Emulation.setEmulatedMedia', {
-      features: [{ name: 'prefers-color-scheme', value: 'light' }],
+      features: [{ name: 'prefers-color-scheme', value: 'light' }, { name: 'prefers-reduced-motion', value: 'reduce' }],
     });
 
     for (const shot of SHOTS) {

@@ -410,9 +410,8 @@
   .bank.running .who{color:var(--azul-texto)}
   .bank.running .clock{color:var(--tinta)}
   .bank.running.warn{border-color:var(--pica)}.bank.running.warn .clock{color:var(--pica-texto)}
-  .bank.running.hot{border-color:var(--coral)}.bank.running.hot .clock{color:var(--error);animation:bankPulse 1s ease-in-out infinite}
+  .bank.running.hot{border-color:var(--coral)}.bank.running.hot .clock{color:var(--error)}
   .bank.out .clock{color:var(--error)}
-  @keyframes bankPulse{0%,100%{opacity:1}50%{opacity:.45}}
   .credits{margin-top:12px;line-height:1.7}
   .credits a{color:var(--azul-texto);text-decoration:none}
   .credits a:hover{text-decoration:underline}
@@ -1249,6 +1248,51 @@ body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .pri
 .confetti{position:fixed;inset:0;z-index:70;pointer-events:none;overflow:hidden}
 .confetti i{position:absolute;top:-24px;display:block;animation:confFall var(--d,3s) linear var(--w,0s) both}
 @keyframes confFall{0%{transform:translateY(-30px) rotate(0);opacity:0}10%{opacity:1}100%{transform:translateY(calc(100vh + 60px)) rotate(260deg);opacity:0}}
+/* ==========================================================================
+   Serie Plaza, lote 7: el movimiento. Nueve gestos del lienzo, cada uno con
+   su razon, cortos y con muelles ligeros: el resorte cubic-bezier(.34,1.56,
+   .64,1) para lo que llega y la salida cubic-bezier(.2,.9,.3,1) para lo que
+   se asienta. Todo se apaga con «reducir movimiento» (la regla del final de
+   la hoja) y lo que se mueve desde el script lo pregunta antes (calmMotion).
+   ========================================================================== */
+/* 01 · Pulsacion: todo control tactil baja 4 px y pierde el reborde, 80 ms. */
+.secret-peek,.private-chat-bubble,.tabs button,.pz-cell,.scr-back{transition:transform .08s ease,box-shadow .08s ease}
+.secret-peek:active{transform:translateY(2px);box-shadow:none}
+.private-chat-bubble:active{transform:translateY(3px);box-shadow:none}
+.tabs button:active{transform:translateY(2px);box-shadow:none}
+/* 02 · Entrada: cada ficha llega de arriba con un poco de rebote. */
+@keyframes tileDrop{0%{opacity:0;transform:translateY(-16px) scale(.9)}100%{opacity:1;transform:none}}
+.dock-tiles .tile.drop{animation:tileDrop .3s cubic-bezier(.34,1.56,.64,1)}
+/* 03 · Respuesta: los indicios del intento nuevo estallan uno a uno, las
+   fijas primero —tryPipsHTML ya las pone delante— y 80 ms entre cada uno. */
+@keyframes pipPop{0%{transform:scale(0)}60%{transform:scale(1.3)}100%{transform:scale(1)}}
+:is(.jrow.new,.drow.new) .jpips :is(.pip.f,.pip.p){animation:pipPop .35s cubic-bezier(.34,1.56,.64,1) backwards}
+:is(.jrow.new,.drow.new) .jpips .pip:nth-child(2){animation-delay:.08s}
+:is(.jrow.new,.drow.new) .jpips .pip:nth-child(3){animation-delay:.16s}
+:is(.jrow.new,.drow.new) .jpips .pip:nth-child(4){animation-delay:.24s}
+:is(.jrow.new,.drow.new) .jpips .pip:nth-child(5){animation-delay:.32s}
+:is(.jrow.new,.drow.new) .jpips .pip:nth-child(6){animation-delay:.4s}
+/* 04 · Turno: tu tarjeta y la pastilla «Te toca» respiran, nunca las del rival. */
+@keyframes turnWave{0%{box-shadow:0 0 0 0 rgba(47,91,255,.5)}70%{box-shadow:0 0 0 12px rgba(47,91,255,0)}100%{box-shadow:0 0 0 0 rgba(47,91,255,0)}}
+.bank.mine.running,.rpill.mine{animation:turnWave 1.6s ease-out infinite}
+/* 05 · Urgencia: por debajo de diez segundos el reloj tiembla. */
+@keyframes clockShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+.bank.running.hot .clock,.chip.hot{animation:clockShake .5s ease-in-out infinite}
+/* 07 · Espera: esqueletos con la forma de lo que va a llegar, no «…». */
+@keyframes skShimmer{0%{background-position:-160px 0}100%{background-position:160px 0}}
+.skel{display:flex;flex-direction:column;gap:10px}
+.skel-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border:2px solid var(--linea-2);border-radius:20px;background:var(--papel)}
+.sk{display:block;height:12px;border-radius:6px;background:linear-gradient(90deg,var(--linea-2) 0%,var(--papel-2) 50%,var(--linea-2) 100%);background-size:320px 100%;animation:skShimmer 1.4s linear infinite}
+.sk.av{flex:0 0 auto;width:44px;height:44px;border-radius:14px}
+.sk-lines{flex:1 1 auto;display:flex;flex-direction:column;gap:8px}
+.dboard .skel-row{background:rgba(255,255,255,.07);border:0}
+.dboard .sk{background:linear-gradient(90deg,rgba(255,255,255,.08) 0%,rgba(255,255,255,.18) 50%,rgba(255,255,255,.08) 100%);background-size:320px 100%}
+/* 08 · Navegacion: la pantalla nueva sube 24 px con un fundido, 220 ms; al
+   volver, lo contrario y mas corto. Nunca de lado. */
+@keyframes scrRise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+@keyframes scrSettle{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+.rise{animation:scrRise .22s cubic-bezier(.2,.9,.3,1) backwards}
+.settle{animation:scrSettle .16s cubic-bezier(.2,.9,.3,1) backwards}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]) :is(.dboard,.podium,.pz-hero,.endcard.win){box-shadow:inset 0 0 0 2px var(--linea)}}
 :root[data-theme=dark] :is(.dboard,.podium,.pz-hero,.endcard.win){box-shadow:inset 0 0 0 2px var(--linea)}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]) .mode-tile.noche{border-color:var(--linea)}}
@@ -1493,7 +1537,7 @@ body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .pri
         <h3 data-i18n="lobby_mine">Tus partidas en curso</h3>
         <span class="lobby-links"><button type="button" class="linkbtn" onclick="openHistory()" data-i18n="lobby_history">Historial</button><span aria-hidden="true">·</span><button type="button" class="linkbtn" onclick="openRivals()" data-i18n="lobby_rivals">Rivales</button></span>
       </div>
-      <div class="list" id="mine-list"><div class="empty">…</div></div>
+      <div class="list" id="mine-list"></div>
     </div>
 
     <!-- Lo publico: partidas que esperan rival, partidas que se pueden mirar
@@ -1507,7 +1551,7 @@ body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .pri
       <div class="list" id="open-list"></div>
       <div class="list" id="watch-list"></div>
       <div class="list" id="arena-list"></div>
-      <div class="empty" id="public-empty">…</div>
+      <div class="empty" id="public-empty"></div>
     </div>
 
     <div class="card experience-card" id="experience-card">
@@ -1776,7 +1820,7 @@ body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .pri
     </div>
     <div class="dboard">
       <div class="sec-head"><h3 data-i18n="daily_board_title">Clasificación de hoy</h3><span id="daily-players"></span></div>
-      <div class="list" id="daily-board"><div class="empty">…</div></div>
+      <div class="list" id="daily-board"></div>
     </div>
   </section>
 
@@ -1834,7 +1878,7 @@ body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .pri
       <button type="button" role="tab" aria-selected="false" data-rank-season="all" onclick="setRankSeason('all')" data-i18n="rank_season_all">Desde siempre</button>
     </div>
     <div class="podium hidden" id="rank-podium"></div>
-    <div class="list" id="rank-list"><div class="empty">…</div></div>
+    <div class="list" id="rank-list"></div>
     <div class="howpts">
       <b data-i18n="rank_how">Cómo se suman los puntos</b>
       <div class="howpts-grid">
@@ -1864,7 +1908,7 @@ body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .pri
         <div class="id-chips" id="profile-chips"></div>
       </div>
     </div>
-    <div class="pbody" id="profile-body"><div class="empty">…</div></div>
+    <div class="pbody" id="profile-body"></div>
   </section>
 
   <!-- RIVALES (E5-T4) -->
@@ -1873,7 +1917,7 @@ body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .pri
       <button type="button" class="scr-back" onclick="show('lobby')" data-ico="atras" data-ico-size="20" data-i18n-title="back"></button>
       <div class="scr-title"><h2 data-i18n="rivals_title">Rivales</h2><span class="scr-sub" data-i18n="rivals_hint">Con quién has jugado. El punto verde dice quién está conectado ahora.</span></div>
     </div>
-    <div class="list" id="rivals-list"><div class="empty">…</div></div>
+    <div class="list" id="rivals-list"></div>
   </section>
 
   <!-- HISTORIAL -->
@@ -1888,7 +1932,7 @@ body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .pri
         <button data-history-filter="loss" onclick="setHistoryFilter('loss')" data-i18n="hist_filter_losses">Perdidas</button>
         <button data-history-filter="draw" onclick="setHistoryFilter('draw')" data-i18n="hist_filter_draws">Empates</button>
       </div>
-      <div class="list" id="hist-list"><div class="empty">…</div></div>
+      <div class="list" id="hist-list"></div>
       <div style="height:16px"></div>
       <button class="btn ghost" onclick="show('lobby')" data-i18n="back">Volver</button>
     </div>
@@ -2130,7 +2174,7 @@ body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .pri
       <span class="ar-p" id="arena-hero-p"></span>
     </div>
     <div id="arena-banner"></div>
-    <div class="list" id="arena-board"><div class="empty">…</div></div>
+    <div class="list" id="arena-board"></div>
     <div class="ar-play idock hidden" id="arena-play">
       <div class="ar-play-head"><span id="arena-try"></span><span class="last" id="arena-last"></span></div>
       <div class="idock-row">
@@ -2260,7 +2304,7 @@ body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .pri
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v4.7.0';
+const APP_VERSION = 'v4.8.0';
 /* Enlace de invitación: ...?game=SZ93
    La invitación sobrevive al registro: se guarda en el navegador, porque entre
    abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
@@ -3668,15 +3712,50 @@ async function loadPublicPulse(){
   }catch(e){}
   finally{ publicPulseLoading=false; }
 }
+/* -------------------- el movimiento (serie Plaza, L7) --------------------
+   La hoja apaga todas las animaciones con «reducir movimiento»; lo que se
+   mueve desde el script —el confeti, los puntos que se cuentan, la entrada
+   de una pantalla— lo pregunta aqui antes de empezar. */
+function calmMotion(){
+  try{ return !!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches); }catch(e){ return false; }
+}
+/* 07 · Esqueletos: una lista que todavia no ha llegado dibuja su forma. */
+function skelHTML(n){
+  let html=`<div class="skel" role="status" aria-label="${esc(t('loading'))}">`;
+  for(let i=0;i<n;i++) html+=`<div class="skel-row" aria-hidden="true"><span class="sk av"></span><span class="sk-lines"><span class="sk" style="width:${[62,48,70][i%3]}%"></span><span class="sk" style="width:${[86,74,80][i%3]}%"></span></span></div>`;
+  return html+'</div>';
+}
+/* 08 · Navegacion: la pantalla nueva sube; al volver hacia el vestibulo, lo
+   contrario y mas corto. La profundidad dice cual es cual. */
+const VIEW_DEPTH={login:0, verify:0, lobby:1, game:3, 'practice-game':3, wait:3, arena:3};
+function viewDepth(name){ return VIEW_DEPTH[name]===undefined?2:VIEW_DEPTH[name]; }
+function animateScreen(el, back){
+  if(!el||calmMotion()) return;
+  el.classList.remove('rise','settle'); void el.offsetWidth; el.classList.add(back?'settle':'rise');
+}
+/* 09 · Los puntos se cuentan: en la tarjeta de fin, de cero a su cifra en
+   menos de un segundo. */
+function countUp(root){
+  if(!root||calmMotion()) return;
+  root.querySelectorAll('[data-count]').forEach(el=>{
+    const end=Number(el.dataset.count); if(!Number.isFinite(end)||end<=0) return;
+    const start=performance.now(), span=900;
+    const step=now=>{ const k=Math.min(1,(now-start)/span), eased=1-Math.pow(1-k,3);
+      el.textContent='+'+Math.round(end*eased); if(k<1) requestAnimationFrame(step); };
+    el.textContent='+0'; requestAnimationFrame(step);
+  });
+}
 function show(name){
   // Sin sesion abierta solo existen las pantallas publicas: ningun boton
   // olvidado puede dejar a un invitado delante del vestibulo o de la cuenta.
   if(!sessionToken && !GUEST_VIEWS.has(name)) name = 'login';
+  const previousView = currentView;
   currentView = name;
   if(name!=='game') gameViewEpoch++;
   ['login','verify','lobby','account','feedback','rank','profile','rivals','history','rules','practice','practice-game','puzzles','daily','create','wait','join','rematch','arena-new','arena','game'].forEach(s=>{
     $('s-'+s).classList.toggle('hidden', s!==name);
   });
+  if(previousView!==name) animateScreen($('s-'+name), viewDepth(name)<viewDepth(previousView));
   // La partida y la practica son una capa fija con su propia cabecera: la
   // pagina de debajo ni se ve ni se desplaza.
   document.body.classList.toggle('in-shell', name==='game'||name==='practice-game');
@@ -4305,6 +4384,9 @@ function makeDockPad(o){
     k=String(k);
     if(disabled||value.length>=o.len()||!(+k<symbols())||(!o.repeats()&&value.includes(k))) return;
     value+=k; changed();
+    // L7: solo la ficha nueva cae; el resto ya estaba en su sitio.
+    const box=$(o.tiles), tile=box&&box.children&&box.children[value.length-1];
+    if(tile&&tile.classList) tile.classList.add('drop');
   }
   function pop(){ if(disabled||!value) return; value=value.slice(0,-1); changed(); }
   $(o.pad).addEventListener('click',e=>{ const b=e.target.closest('button[data-k]'); if(b&&!b.disabled) push(b.dataset.k); });
@@ -4479,8 +4561,7 @@ function pickJournal(ctx,side){
 }
 function jumpToTry(ctx,side,n){
   const row=$(`${ctx}-${side}-e${n}`); if(!row) return;
-  const calm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
-  row.scrollIntoView({block:'start',behavior:calm?'auto':'smooth'});
+  row.scrollIntoView({block:'start',behavior:calmMotion()?'auto':'smooth'});
   row.classList.add('flash'); setTimeout(()=>row.classList.remove('flash'),1200);
 }
 
@@ -4927,7 +5008,7 @@ let lastLobbySnapshot = null;
 async function lobbyRefresh(detect){
   if(lobbyRefreshBusy) return;
   lobbyRefreshBusy=true;
-  if(!detect) lobbyListsNotice(t('loading'));
+  if(!detect) lobbyListsNotice(t('loading'), true);
   try{
     const snapshot=await api('lobbyState');
     if(!snapshot.ok)throw new Error('LOBBY_UNAVAILABLE');
@@ -4984,14 +5065,15 @@ function startLobbyPoll(){ stopLobbyPoll(); lobbyPollTimer=setInterval(lobbyTick
 function stopLobbyPoll(){ if(lobbyPollTimer){ clearInterval(lobbyPollTimer); lobbyPollTimer=null; } }
 /* Un cartel en lugar de las filas —«Cargando…», «No se pudo cargar»— solo
    donde no hay filas que ensenar: una recarga a mano no borra lo que se ve. */
-function lobbyListsNotice(text){
-  if(!$('mine-list').querySelector('.grow')) $('mine-list').innerHTML=`<div class="empty">${esc(text)}</div>`;
-  syncPublicEmpty(text);
+function lobbyListsNotice(text, loading){
+  if(!$('mine-list').querySelector('.grow')) $('mine-list').innerHTML=loading?skelHTML(2):`<div class="empty">${esc(text)}</div>`;
+  syncPublicEmpty(text, loading);
 }
-function syncPublicEmpty(text){
+function syncPublicEmpty(text, loading){
   const el=$('public-empty'); if(!el) return;
   const rows=['open-list','watch-list','arena-list'].some(id=>$(id).children.length);
-  el.textContent=text; el.classList.toggle('hidden', rows);
+  if(loading) el.innerHTML=skelHTML(2); else el.textContent=text;
+  el.classList.toggle('empty',!loading); el.classList.toggle('hidden', rows);
 }
 function renderOpen(games){
   const box=$('open-list'); const list=games.filter(g=>g.p1!==user);
@@ -5091,7 +5173,7 @@ async function joinArena(arenaId){
 function enterArena(arenaId){
   arenaView={...arenaView, id:arenaId};
   arenaSt=null; arenaFeed=[]; arenaPrev=null; $('arena-code').textContent=arenaId; $('arena-banner').innerHTML='';
-  $('arena-board').innerHTML=`<div class="empty">${t('loading')}</div>`; $('arena-log').innerHTML=''; $('arena-log').dataset.key='';
+  $('arena-board').innerHTML=skelHTML(3); $('arena-log').innerHTML=''; $('arena-log').dataset.key='';
   $('arena-feed').classList.add('hidden'); $('arena-mine').classList.add('hidden');
   ['arena-hero-k','arena-hero-t','arena-hero-p','arena-rules','arena-status'].forEach(id=>{ $(id).textContent=''; });
   arenaPad.reset();
@@ -5336,7 +5418,7 @@ function syncRankTabs(){
 async function openRank(){
   show('rank'); syncRankTabs(); rankData=null;
   $('rank-total').textContent=''; $('rank-podium').classList.add('hidden'); $('rank-me').classList.add('hidden');
-  $('rank-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
+  $('rank-list').innerHTML=skelHTML(4);
   const seq=++rankSeq, season=rankSeason;
   try{
     const res=await api('leaderboard',{username:user, season:season==='all'?'all':''});
@@ -5450,7 +5532,7 @@ async function openProfile(name, from){
   profileData=null;
   show('profile');
   paintProfileHead({username:name||''});
-  $('profile-body').innerHTML=`<div class="empty">${t('loading')}</div>`;
+  $('profile-body').innerHTML=skelHTML(3);
   try{
     const res=await api('profile',{player:name, username:user});
     if(!res.ok||!res.profile){ $('profile-body').innerHTML=`<div class="empty">${t('profile_not_found')}</div>`; return; }
@@ -5522,7 +5604,7 @@ function renderProfile(p){
    como invitacion en sus partidas y le llega el aviso. */
 async function openRivals(){
   show('rivals');
-  $('rivals-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
+  $('rivals-list').innerHTML=skelHTML(3);
   try{
     const res=await api('rivals',{username:user});
     const list=res.rivals||[];
@@ -5605,7 +5687,7 @@ function renderDailyCard(){
 }
 async function openDaily(){
   show('daily'); dailyPad.reset();
-  $('daily-board').innerHTML=`<div class="empty">${t('loading')}</div>`;
+  $('daily-board').innerHTML=skelHTML(3);
   stopDailyTick(); dailyTickTimer=setInterval(renderDailyCountdown,30000);
   await loadDaily();
 }
@@ -5709,7 +5791,7 @@ function playedTime(guesses){
    derrota no tiene: la vaca baja la cabeza y ya. Con «reducir movimiento» no
    cae nada. */
 function rainConfetti(){
-  if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if(calmMotion()) return;
   const old=$('confetti'); if(old) old.remove();
   const box=document.createElement('div'); box.id='confetti'; box.className='confetti'; box.setAttribute('aria-hidden','true');
   const colors=['#2F5BFF','#FFC531','#FF6B5E','#7C5CFF','#5FE0C9'];
@@ -5995,8 +6077,7 @@ function openPuzzle(id){
   $('pz-guessarea').classList.remove('hidden'); $('pz-keys').classList.remove('hidden'); $('pz-reveal-btn').classList.remove('hidden');
   $('pz-play').classList.remove('hidden');
   renderPuzzleList(); renderOpenPuzzle(); puzzlePad.refresh();
-  const calm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
-  $('pz-play').scrollIntoView({behavior:calm?'auto':'smooth',block:'start'});
+  $('pz-play').scrollIntoView({behavior:calmMotion()?'auto':'smooth',block:'start'});
 }
 function closePuzzle(){
   puzzleOpen=null;
@@ -6093,7 +6174,7 @@ function renderHistoryList(){
 }
 
 async function openHistory(){
-  show('history'); $('hist-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
+  show('history'); $('hist-list').innerHTML=skelHTML(4);
   $('hist-stats').classList.add('hidden'); $('hist-filters').classList.add('hidden');
   try{
     const res=await api('history',{username:user}); historyEntries=res.history||[]; historyStats=res.stats||null; historyFilter='all';
@@ -6952,7 +7033,8 @@ function renderGame(st){
          sola vez: al recargar la partida ya no son noticia. */
       if(freshBadges.length){ after+=badgesBlockHTML(freshBadges); }
     }
-    paintOnce(banner,html); paintOnce($('g-after'),after);
+    if(paintOnce(banner,html)) countUp(banner);
+    paintOnce($('g-after'),after);
     if(reviewingHistory){
       rz.innerHTML=`<button class="btn ghost" onclick="leaveHistoryGame()">${t('back')}</button>`;
     }else if(spectator){
@@ -7035,8 +7117,7 @@ function paintMySecret(){
 function toggleSecretPeek(){ secretPeek=!secretPeek; paintMySecret(); }
 function gameBack(){ if(reviewingHistory) leaveHistoryGame(); else leaveGame(); }
 function scrollToNotebook(){
-  const calm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
-  $('g-notebook').scrollIntoView({block:'start',behavior:calm?'auto':'smooth'});
+  $('g-notebook').scrollIntoView({block:'start',behavior:calmMotion()?'auto':'smooth'});
 }
 
 /* -------------------- el cuaderno y el aviso de contradiccion (E4-T3) -------
@@ -7228,8 +7309,12 @@ function paintClock(id,o){
   if(whoEl.dataset.html!==whoHTML){ whoEl.dataset.html=whoHTML; whoEl.innerHTML=whoHTML; }
   const clockEl=box.querySelector('.clock'), timeHTML=o.seconds==null?'':(o.paused?ico('pausa',14):'')+'<span>'+fmtClock(o.seconds)+'</span>';
   if(clockEl.dataset.html!==timeHTML){ clockEl.dataset.html=timeHTML; clockEl.innerHTML=timeHTML; }
-  const live=o.running&&o.seconds!=null&&!o.paused;
-  box.className='bank'+(o.running?' running':'')+(o.seconds!=null&&o.seconds<=0?' out':'')+(live?(o.seconds<=o.hot?' hot':(o.seconds<=o.warn?' warn':'')):'');
+  const live=o.running&&o.seconds!=null&&!o.paused, hot=live&&o.seconds>0&&o.seconds<=o.hot;
+  box.className='bank'+(o.mine?' mine':'')+(o.running?' running':'')+(o.seconds!=null&&o.seconds<=0?' out':'')+(live?(hot?' hot':(o.seconds<=o.warn?' warn':'')):'');
+  // L7: cuando tu propio reloj cruza los diez segundos, una vibracion corta,
+  // una sola vez por turno, si el aparato la tiene.
+  if(o.mine&&hot&&box.dataset.hot!=='1'){ try{ navigator.vibrate&&navigator.vibrate(60); }catch(e){} }
+  box.dataset.hot=hot?'1':'';
 }
 /* El primer reloj es siempre el propio. Un espectador no tiene reloj, asi que
    ve los dos con su nombre, en el orden de la partida. Sin reloj quedan la
@@ -7250,7 +7335,7 @@ function renderClocks(st){
     const tone=mine?'coral':(!spectator&&avatarTone(nameOf(side))==='coral'?'violeta':'');
     paintClock(id,{name:mine?user:nameOf(side), tone, cc:mine?'':ccOf(side),
       label:mine?t(running?'clock_your_turn':'clock_you'):(nameOf(side)||t('waiting_short')),
-      seconds, running, paused:running&&!!st.timerPaused, warn:bank?30:10, hot:bank?10:5});
+      seconds, running, mine, paused:running&&!!st.timerPaused, warn:bank?30:20, hot:10});
   }
 }
 function updateTimer(){

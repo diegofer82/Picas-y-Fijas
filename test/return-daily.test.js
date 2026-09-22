@@ -83,9 +83,9 @@ test('la arena solo cuenta lo que la clasificacion ya ensena', () => {
 
 test('la tarjeta de fin se pinta una vez y el confeti es solo de la victoria', () => {
   assert.match(fn('paintOnce'), /if\(el\.dataset\.paint===key\) return false;/, 'el sondeo no la relanza');
-  assert.match(fn('renderGame'), /paintOnce\(banner,html\); paintOnce\(\$\('g-after'\),after\);/);
+  assert.match(fn('renderGame'), /if\(paintOnce\(banner,html\)\) countUp\(banner\);\n\s*paintOnce\(\$\('g-after'\),after\);/);
   assert.match(fn('endSound'), /if\(kind==='win'\) rainConfetti\(\);/);
-  assert.match(fn('rainConfetti'), /prefers-reduced-motion: reduce\)'\)\.matches\) return;/, 'con reducir movimiento no cae nada');
+  assert.match(fn('rainConfetti'), /if\(calmMotion\(\)\) return;/, 'con reducir movimiento no cae nada');
   // Repasar una partida del historial no es volver a ganarla.
   assert.match(fn('renderGame'), /if\(!endSoundPlayed&&!spectator&&!reviewingHistory\)/);
   // La revancha va antes que la rejilla y el analisis.
