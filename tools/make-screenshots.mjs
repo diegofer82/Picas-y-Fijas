@@ -48,7 +48,7 @@ const SHOTS = [
       practice.secret='0325';
       for(const guess of ['0123','1420','3205'])
         practice.guesses.push({guess,...evaluatePractice(practice.secret,guess)});
-      renderPracticeLog(); renderPracticeStatus();
+      renderPracticeLog(); renderPracticeStatus(); practicePad.set('03');
     `,
   },
   {
@@ -86,7 +86,7 @@ const SHOTS = [
       practice.secret='4071';
       for(const guess of ['1234','5061','4571'])
         practice.guesses.push({guess,...evaluatePractice(practice.secret,guess)});
-      renderPracticeLog(); renderPracticeStatus();
+      renderPracticeLog(); renderPracticeStatus(); practicePad.set('40');
     `,
   },
 ];

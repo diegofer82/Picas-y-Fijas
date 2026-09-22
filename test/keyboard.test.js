@@ -16,7 +16,6 @@ test('every typed game action can be submitted with Enter', () => {
     ['secret-c', 'btn-create'],
     ['secret-j', 'btn-join'],
     ['secret-r', 'btn-rematch'],
-    ['g-guess', 'g-guess-btn'],
   ];
 
   for (const [input, button] of bindings) {
@@ -25,6 +24,24 @@ test('every typed game action can be submitted with Enter', () => {
   assert.match(publicHtml, /event\.key!==['"]Enter['"]/);
   assert.match(publicHtml, /event\.isComposing/);
   assert.match(publicHtml, /event\.repeat/);
+});
+
+test('the guess dock takes the physical keyboard: digits, backspace and Enter', () => {
+  // Desde la 4.5.0 el intento de la partida y de la practica no es un campo de
+  // texto —el telefono desplegaria su teclado encima del diario—, asi que es el
+  // documento quien escucha el teclado mientras el muelle esta en uso.
+  const start = publicHtml.indexOf("document.addEventListener('keydown', event=>{\n  const dock=activeDock();");
+  assert.ok(start >= 0, 'falta el oyente del teclado del muelle');
+  const handler = publicHtml.slice(start, publicHtml.indexOf('\n});', start));
+  assert.match(handler, /event\.isComposing/);
+  assert.match(handler, /if\(event\.key==='Enter'\)\{[\s\S]*event\.repeat[\s\S]*dock\.go\.click\(\)/);
+  assert.match(handler, /event\.key==='Backspace'[\s\S]*dock\.pad\.pop\(\)/);
+  assert.match(handler, /\/\^\[0-9\]\$\/\.test\(event\.key\)[\s\S]*dock\.pad\.push\(event\.key\)/);
+  // Un campo de texto con foco (el chat) se queda con sus teclas.
+  assert.match(handler, /INPUT\|TEXTAREA\|SELECT/);
+  assert.match(publicHtml, /return \{pad:padG, go:\$\('g-guess-btn'\)\}/);
+  assert.match(publicHtml, /return \{pad:practicePad, go:\$\('practice-guess-btn'\)\}/);
+  assert.doesNotMatch(publicHtml, /id="g-guess"|id="practice-guess"/);
 });
 
 test('admin credentials live in a real form: Enter submits and managers can save it', () => {

@@ -80,6 +80,7 @@
     --pica:#E0731A; --pica-suave:#FDEEDF; --pica-texto:#9A4B08;
     --error:#B23A31; --error-suave:#FFF1EF;
     --sobre-azul:#FFFFFF; --sobre-coral:#1B1638; --sobre-sol:#1B1638; --sobre-tinta:#FFF5E8;
+    --linea-3:#C9BEAE; --cursor:#2F5BFF; --fija-inv:#39D37E; --pica-inv:#F6A040;
     --r:22px; --r-md:16px; --r-sm:12px;
     --sombra:0 10px 30px rgba(27,22,56,.06);
     --sombra-alta:0 18px 50px rgba(27,22,56,.18);
@@ -101,6 +102,7 @@
       --pica:#F6A040; --pica-suave:#4A3020; --pica-texto:#F6A040;
       --error:#FF8A80; --error-suave:#4A2833;
       --sobre-tinta:#120F24;
+      --linea-3:#4A4272; --cursor:#FFC531; --fija-inv:#12A150; --pica-inv:#E0731A;
       --sombra:0 10px 30px rgba(0,0,0,.35);
       --sombra-alta:0 18px 50px rgba(0,0,0,.55);
     }
@@ -117,6 +119,7 @@
     --pica:#F6A040; --pica-suave:#4A3020; --pica-texto:#F6A040;
     --error:#FF8A80; --error-suave:#4A2833;
     --sobre-tinta:#120F24;
+    --linea-3:#4A4272; --cursor:#FFC531; --fija-inv:#12A150; --pica-inv:#E0731A;
     --sombra:0 10px 30px rgba(0,0,0,.35);
     --sombra-alta:0 18px 50px rgba(0,0,0,.55);
   }
@@ -393,12 +396,18 @@
   .charcount.hot{color:var(--error)}
   .linkbtn{display:inline-flex;align-items:center;gap:6px;background:none;border:0;padding:0;margin:0;color:var(--azul-texto);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
   .linkbtn:hover{text-decoration:underline}
-  /* 2.5: los dos relojes de la bolsa de tiempo, uno por jugador */
-  .banks{display:flex;gap:8px;margin:10px 0 4px}
-  .bank{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px;padding:9px 12px;border:2px solid var(--linea-2);border-radius:var(--r-md);background:var(--papel)}
-  .bank .who{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--bruma);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .bank .clock{display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--bruma)}
+  /* Los relojes compactos de la cabecera de la partida (4.5.0): uno por
+     jugador, con su inicial, su nombre y su tiempo. Sirven a las tres formas
+     de reloj; sin reloj se quedan en quien juega y a quien le toca. */
+  .banks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .bank{display:flex;align-items:center;gap:8px;min-width:0;height:42px;padding:0 10px 0 6px;border:2px solid var(--linea-2);border-radius:12px;background:var(--crema)}
+  .bank .avatar{width:26px;height:26px;border-radius:8px;font-size:12px}
+  .bank .who{flex:1 1 auto;min-width:0;font-size:12px;font-weight:700;color:var(--bruma);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bank .who .flag{margin-right:4px}
+  .bank .clock{flex:0 0 auto;margin-left:auto;display:flex;align-items:center;gap:4px;font:700 17px 'JetBrains Mono',monospace;color:var(--bruma);font-feature-settings:"zero" 1,"tnum" 1}
+  .bank .clock:empty{display:none}
   .bank.running{border-color:var(--azul);background:var(--azul-suave)}
+  .bank.running .who{color:var(--azul-texto)}
   .bank.running .clock{color:var(--tinta)}
   .bank.running.warn{border-color:var(--pica)}.bank.running.warn .clock{color:var(--pica-texto)}
   .bank.running.hot{border-color:var(--coral)}.bank.running.hot .clock{color:var(--error);animation:bankPulse 1s ease-in-out infinite}
@@ -663,6 +672,132 @@ button.grow:active{transform:translateY(4px);box-shadow:none}
 .rpill{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;min-height:30px;padding:0 10px;border-radius:9px;background:var(--linea-2);color:var(--bruma);font-size:12px;font-weight:700;white-space:nowrap}
 .rpill.mine{background:var(--azul);color:var(--sobre-azul);font-weight:800}
 .rpill.hot{background:var(--coral);color:var(--sobre-coral);font-weight:800}
+/* ==========================================================================
+   Serie Plaza, lote 4: la partida en telefono. La partida —y la practica— es
+   una capa fija de tres pisos: la cabecera con los relojes arriba, el muelle
+   con las fichas y «Adivinar» abajo, y en medio lo unico que se desplaza, el
+   diario de intentos con el mas reciente arriba. Asi una partida larga no
+   obliga a subir y bajar entre lo que se escribe y lo que ya se sabe.
+   ========================================================================== */
+body.in-shell{overflow:hidden}
+body.in-shell .brand,body.in-shell .chat-launch{display:none!important}
+body.in-shell .toast{bottom:calc(var(--dock-h,0px) + 14px)}
+.gshell{position:fixed;top:0;bottom:0;left:0;right:0;z-index:20;max-width:560px;margin:0 auto;display:flex;flex-direction:column;background:var(--crema)}
+.gbar{flex:0 0 auto;display:flex;flex-direction:column;gap:10px;padding:calc(12px + env(safe-area-inset-top)) 16px 10px;background:var(--papel);border-bottom:2px solid var(--linea-2)}
+.gbar-row{display:flex;align-items:center;gap:10px}
+.gbar-btn{position:relative;flex:0 0 auto;width:40px;height:40px;display:grid;place-items:center;padding:0;border:2px solid var(--linea);border-radius:12px;background:var(--papel);color:var(--tinta);cursor:pointer;transition:transform .08s}
+.gbar-btn:active{transform:translateY(2px)}
+.gbar-btn:disabled{opacity:.5;cursor:not-allowed}
+.gbar-btn.dark{border:0;background:var(--tinta);color:var(--sobre-tinta)}
+.gbar-btn.bump{animation:chatBump .5s ease}
+.gbar-btn .chat-badge{right:-6px;top:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;font-size:10px;border-color:var(--papel)}
+.gbar-title{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+.gbar-name{font-weight:800;font-size:14px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gbar-code{font-family:'JetBrains Mono',monospace;letter-spacing:.1em;font-weight:700}
+.gbar-rules{font-size:12px;font-weight:600;color:var(--bruma);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.gbar .statusrow{margin:0;gap:6px}
+.gbar .chip{padding:5px 10px}
+.gbar .statusrow:not(:has(>:not(.hidden))){display:none}
+.gbody{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:0 16px 22px;display:flex;flex-direction:column;gap:12px}
+.gbody::before{content:"";flex:0 0 0}
+.gbody>*{flex:0 0 auto;margin-top:0;margin-bottom:0}
+.gbody>:empty{display:none}
+#g-banner,#practice-banner,.practice-end{display:flex;flex-direction:column;gap:12px}
+#g-rematch-zone{display:flex;flex-direction:column;gap:10px}
+#g-banner>*,#practice-banner>*,.practice-end>*,#g-rematch-zone>*{margin:0}
+#g-banner:empty,#practice-banner:empty,#g-rematch-zone:empty{display:none}
+.gbody .practice-badge{align-self:flex-start}
+.turnbar .tb-main{display:flex;flex-direction:column;gap:2px;min-width:0}
+.turnbar .tb-sub{font-size:12px;font-weight:600;opacity:.9}
+.turnbar .tb-sub:empty{display:none}
+.turnbar.mine .tb-title{font:800 17px/1.1 'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.02em}
+/* El diario: pestanas y friso se quedan pegados arriba mientras se baja. */
+.journal{display:flex;flex-direction:column;gap:6px}
+.jstick{position:sticky;top:0;z-index:2;margin:0 -16px;padding:8px 16px 6px;background:var(--crema);display:flex;flex-direction:column;gap:8px}
+.jtabs-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px 10px}
+.jtabs{display:flex;gap:3px;min-width:0;max-width:100%;padding:3px;border-radius:12px;background:var(--linea)}
+.jtabs.solo{background:transparent;padding:0}
+.jtab{position:relative;flex:0 1 auto;min-width:0;height:30px;padding:0 12px;border:0;border-radius:9px;background:transparent;color:var(--bruma);font:700 12px 'Figtree',system-ui,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.jtab[aria-selected=true]{background:var(--papel);color:var(--tinta);font-weight:800}
+.jtabs.solo .jtab{padding:0;background:transparent;cursor:default}
+.jtab .jdot{position:absolute;top:5px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--coral)}
+.jhint{font-size:11px;font-weight:700;color:var(--bruma)}
+.frieze{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.frieze::-webkit-scrollbar{display:none}
+.frieze:empty{display:none}
+.fz{flex:0 0 auto;height:34px;padding:0 8px;border:2px solid var(--linea);border-radius:10px;background:var(--papel);color:var(--tinta);display:flex;align-items:center;gap:5px;font:700 11px 'JetBrains Mono',monospace;cursor:pointer;font-feature-settings:"zero" 1}
+.fz.new{background:var(--tinta);border-color:var(--tinta);color:var(--sobre-tinta)}
+.fz .ico{opacity:.7}
+.fzp{display:flex;gap:2px}
+.fzp i{display:block;width:7px;height:7px;border-radius:50%}
+.fzp .f{background:var(--fija)}
+.fzp .p{border:2px solid var(--pica)}
+.fz.new .fzp .f{background:var(--fija-inv)}
+.fz.new .fzp .p{border-color:var(--pica-inv)}
+.glog .g.jrow{gap:8px;padding:6px 10px 6px 6px;border-radius:16px;scroll-margin-top:104px;transition:box-shadow .2s}
+.glog .g.jrow.new{border-color:var(--tinta)}
+.glog .g.jrow.flash{box-shadow:0 0 0 3px var(--azul)}
+.jn{flex:0 0 22px;text-align:center;font:700 12px 'JetBrains Mono',monospace;color:var(--bruma-2)}
+.jrow.new .jn{color:var(--tinta)}
+.jcode{flex:0 1 auto;display:flex;gap:5px;min-width:0}
+.jt{flex:0 1 auto;width:36px;min-width:0;height:42px;border-radius:10px;background:var(--crema);border:2px solid var(--linea);display:grid;place-items:center;font:700 19px 'JetBrains Mono',monospace;color:var(--tinta);font-feature-settings:"zero" 1}
+.jt.c{border-color:rgba(0,0,0,.1);color:#171225}
+.jpips{flex:0 0 auto;margin-left:auto;display:grid;grid-template-columns:repeat(2,13px);gap:4px}
+.jpips.c3{grid-template-columns:repeat(3,13px)}
+.jpips .pip{width:13px;height:13px}
+.jpips .pip.p{border-width:3px}
+.jrow .think{flex:1 0 100%}
+.glog .g.jrow.has-think{flex-wrap:wrap}
+.glog .g.jrow.has-think .think{padding:0 2px 2px 30px;border:0}
+.secret-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-radius:16px;background:var(--papel);border:2px solid var(--linea-2)}
+.secret-row>span{font-size:13px;font-weight:700;color:var(--bruma)}
+.secret-peek{min-height:36px;padding:0 12px;border-radius:10px;border:2px solid var(--linea);background:var(--crema);color:var(--tinta);font:700 14px 'JetBrains Mono',monospace;letter-spacing:.3em;cursor:pointer;box-shadow:0 2px 0 var(--linea);display:inline-flex;align-items:center;gap:4px}
+.secret-peek[aria-pressed=true]{letter-spacing:0}
+.secret-peek .n{letter-spacing:.2em}
+.gfoot{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:6px 14px;color:var(--bruma);font-size:13px;font-weight:600}
+.gfoot .linkbtn{font-size:13px}
+.gfoot .linkbtn.soft{color:var(--bruma)}
+.gfoot .linkbtn.danger{color:var(--error)}
+/* El muelle: fichas y «Adivinar» siempre bajo el pulgar; el teclado se pliega. */
+.gdock{flex:0 0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 8px;padding:10px 16px calc(16px + env(safe-area-inset-bottom));background:var(--papel);border-top:2px solid var(--linea-2);box-shadow:0 -10px 30px rgba(27,22,56,.08)}
+.dock-top{flex:1 1 100%;display:flex;flex-direction:column;align-items:center;gap:8px}
+.dock-top:not(:has(.dock-pull:not(.hidden),.contradiction:not(.hidden),.val.err)){display:none}
+.dock-top .contradiction{align-self:stretch;margin:0}
+.dock-top .val{margin:0;min-height:0;text-align:center}
+.dock-top .val:not(.err){display:none}
+.dock-pull{height:22px;padding:0 14px;border:0;border-radius:11px;background:var(--linea-2);color:var(--bruma);display:flex;align-items:center;gap:6px;font:700 11px 'Figtree',system-ui,sans-serif;cursor:pointer}
+.dock-pull .ico{transform:rotate(90deg)}
+.gdock.folded .dock-pull .ico{transform:rotate(-90deg)}
+.dock-tiles{flex:1 1 100%;min-width:0;display:flex;justify-content:center;gap:8px;cursor:pointer}
+.dock-tiles .tile{flex:0 1 auto;width:52px;min-width:0;height:60px;border-radius:16px;border:3px dashed var(--linea-3);background:var(--crema);display:grid;place-items:center;font:700 26px 'JetBrains Mono',monospace;color:var(--tinta);font-feature-settings:"zero" 1}
+.dock-tiles .tile.on{border-style:solid;border-color:var(--tinta);background:var(--papel);box-shadow:0 3px 0 var(--tinta)}
+.dock-tiles .tile.c.on{color:#171225}
+.dock-tiles .caret{width:3px;height:26px;border-radius:2px;background:var(--cursor);animation:caretBlink 1s steps(1) infinite}
+@keyframes caretBlink{0%,100%{opacity:1}50%{opacity:0}}
+.dock-pad{flex:1 1 100%;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.dock-pad.c4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.dock-pad.c6{grid-template-columns:repeat(6,minmax(0,1fr))}
+.key{position:relative;height:48px;padding:0;border-radius:14px;border:2px solid var(--linea);background:var(--crema);color:var(--tinta);font:700 20px 'JetBrains Mono',monospace;box-shadow:0 3px 0 var(--linea);cursor:pointer;display:grid;place-items:center;font-feature-settings:"zero" 1;transition:transform .08s,box-shadow .08s}
+.key:active{transform:translateY(3px);box-shadow:none}
+.key.used,.key.out{text-decoration:line-through;text-decoration-thickness:2px;color:var(--linea-3);background:var(--papel);border-color:var(--linea-2);box-shadow:none}
+.key.out{color:var(--bruma-2);background:var(--crema);border-style:dashed;border-color:var(--linea-3)}
+.key:disabled{cursor:default;transform:none}
+.key.c{height:52px;border-color:rgba(0,0,0,.08);color:#171225;box-shadow:0 3px 0 rgba(0,0,0,.18)}
+.key.c.used,.key.c.out{opacity:.4;box-shadow:none}
+.key.c.used::after,.key.c.out::after{content:"";position:absolute;left:10px;right:10px;top:50%;height:3px;border-radius:2px;background:#1B1638;transform:rotate(-26deg)}
+.dock-erase{flex:0 0 64px;height:54px;padding:0;border-radius:14px;border:2px solid var(--linea);background:var(--papel);color:var(--tinta);box-shadow:0 4px 0 var(--linea);display:grid;place-items:center;cursor:pointer;transition:transform .08s,box-shadow .08s}
+.dock-erase:active{transform:translateY(4px);box-shadow:none}
+.dock-erase:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.gdock .dock-go{flex:1 1 0;width:auto;min-height:54px;height:54px;margin:0;border-radius:14px;font-weight:800;font-size:16px}
+.gdock.folded .dock-tiles{flex:1 1 0;justify-content:flex-start;gap:6px}
+.gdock.folded .dock-tiles .tile{width:46px;height:54px;border-radius:14px;font-size:24px}
+.gdock.folded .dock-pad,.gdock.folded .dock-erase{display:none}
+.gdock.folded .dock-go{flex:0 0 auto;padding:0 18px}
+@media (max-height:700px){
+  .dock-tiles .tile{height:52px;font-size:23px}
+  .key{height:42px}.key.c{height:44px}
+  .dock-erase,.gdock .dock-go{height:48px;min-height:48px}
+}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]) .mode-tile.noche{border-color:var(--linea)}}
 :root[data-theme=dark] .mode-tile.noche{border-color:var(--linea)}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
@@ -1073,32 +1208,60 @@ button.grow:active{transform:translateY(4px);box-shadow:none}
   </section>
 
   <!-- PRACTICA: PARTIDA -->
-  <section id="s-practice-game" class="hidden">
-    <div class="card">
-      <span class="practice-badge" data-i18n="practice_unranked">Práctica · no afecta al ranking</span>
-      <h2 id="practice-game-title" data-i18n="practice_title">Práctica</h2>
-      <p class="hint" id="practice-rules"></p>
-      <div class="mysecret"><span data-i18n="practice_secret">Código secreto:</span><span id="practice-secret" class="n">•••</span></div>
-      <div class="statusrow" id="practice-status"><span class="chip" id="practice-attempts"></span><span class="chip hidden" id="practice-computer-attempts"></span><span class="chip hidden" id="practice-difficulty"></span><span class="chip hidden" id="practice-timer"></span></div>
-      <div id="practice-banner"></div>
-      <div class="turnbar mine hidden" id="practice-turn"><span class="dot"></span><span data-vaca="alert" data-vaca-size="34"></span><span id="practice-turn-txt"></span></div>
-      <div class="guessarea" id="practice-guessarea">
-        <div class="field"><input type="text" id="practice-guess" class="code" inputmode="numeric" placeholder="•••"><div class="pad hidden" id="practice-pad"><div class="slots" id="practice-slots"></div><div class="palette" id="practice-palette"></div></div></div>
-        <button class="btn" id="practice-guess-btn" onclick="submitPracticeGuess()" data-i18n="guess_btn">Adivinar</button>
+  <section id="s-practice-game" class="hidden gshell">
+    <header class="gbar">
+      <div class="gbar-row">
+        <button type="button" class="gbar-btn" id="practice-lobby-btn" onclick="leavePracticeToLobby()" data-ico="atras" data-ico-size="18" data-i18n-title="practice_save_lobby"></button>
+        <div class="gbar-title">
+          <span class="gbar-name"><span id="practice-game-title" data-i18n="practice_title">Práctica</span><span id="practice-attempt-no"></span></span>
+          <span class="gbar-rules" id="practice-rules"></span>
+        </div>
       </div>
-      <div class="val" id="practice-guess-val"></div>
-      <div class="legend"><span><i class="pip f"></i><span data-i18n="legend_fija">F = posición correcta</span></span><span><i class="pip p"></i><span data-i18n="legend_pica">P = presente, mal colocada</span></span></div>
-      <div style="height:16px"></div>
-      <div class="cols" id="practice-logs"><div class="card"><div class="colhead" data-i18n="computer_your_attempts">Tus intentos</div><div class="glog" id="practice-log"></div></div><div class="card hidden" id="practice-computer-log-card"><div class="colhead" data-i18n="computer_attempts">Intentos del computador</div><div class="glog" id="practice-computer-log"></div></div></div>
+      <div class="statusrow" id="practice-status"><span class="chip" id="practice-attempts"></span><span class="chip hidden" id="practice-computer-attempts"></span><span class="chip hidden" id="practice-timer"></span></div>
+    </header>
+
+    <div class="gbody" id="practice-body">
+      <span class="practice-badge" data-i18n="practice_unranked">Práctica · no afecta al ranking</span>
+      <div id="practice-banner"></div>
       <div class="guest-invite hidden" id="guest-invite">
         <h3 data-i18n="guest_invite_title">¿Jugamos de verdad?</h3>
         <p data-i18n="guest_invite_text">Crea una cuenta gratis y juega contra personas: partidas por código, ranking y chat.</p>
         <button class="btn green" type="button" onclick="guestRegister()" data-i18n="guest_invite_cta">Crear mi cuenta</button>
       </div>
-      <div id="practice-actions" class="hidden"><div style="height:14px"></div><button class="btn green" onclick="startPractice(false)" data-i18n="practice_again">Jugar otra vez</button><div style="height:10px"></div><button class="btn ghost" onclick="openPractice()" data-i18n="practice_settings">Cambiar reglas</button></div>
-      <div id="practice-active-actions"><div style="height:14px"></div><div class="row"><button class="btn ghost" onclick="cancelPractice()" data-i18n="practice_cancel">Cancelar</button><button class="btn pink" onclick="surrenderPractice()" data-i18n="practice_surrender">Rendirse</button></div></div>
-      <div style="height:10px"></div><button class="btn ghost" id="practice-lobby-btn" onclick="leavePracticeToLobby()" data-i18n="practice_save_lobby">Guardar y volver al lobby</button>
+      <div class="practice-end hidden" id="practice-actions"><button class="btn green" onclick="startPractice(false)" data-i18n="practice_again">Jugar otra vez</button><button class="btn ghost" onclick="openPractice()" data-i18n="practice_settings">Cambiar reglas</button><button class="btn ghost" id="practice-exit-btn" onclick="leavePracticeToLobby()"></button></div>
+      <div class="turnbar mine hidden" id="practice-turn"><span class="dot"></span><span data-vaca="alert" data-vaca-size="34"></span><span id="practice-turn-txt"></span></div>
+
+      <div class="journal" id="practice-logs">
+        <div class="jstick">
+          <div class="jtabs-row">
+            <div class="jtabs" role="tablist" id="practice-tabs">
+              <button type="button" class="jtab" role="tab" id="practice-tab-mine" aria-controls="practice-log" aria-selected="true" onclick="pickJournal('p','mine')"></button>
+              <button type="button" class="jtab" role="tab" id="practice-tab-theirs" aria-controls="practice-computer-log" aria-selected="false" onclick="pickJournal('p','theirs')"></button>
+            </div>
+            <span class="jhint" data-i18n="journal_order">Lo más reciente arriba</span>
+          </div>
+          <nav class="frieze" id="practice-frieze"></nav>
+        </div>
+        <div class="glog" id="practice-log" role="tabpanel" aria-labelledby="practice-tab-mine"></div>
+        <div class="glog hidden" id="practice-computer-log" role="tabpanel" aria-labelledby="practice-tab-theirs"></div>
+      </div>
+
+      <div class="legend"><span><i class="pip f"></i><span data-i18n="legend_fija">F = posición correcta</span></span><span><i class="pip p"></i><span data-i18n="legend_pica">P = presente, mal colocada</span></span></div>
+      <div class="secret-row"><span data-i18n="practice_secret">Código secreto:</span><span id="practice-secret" class="n">•••</span></div>
+      <div class="gfoot" id="practice-active-actions"><button type="button" class="linkbtn soft" onclick="cancelPractice()" data-i18n="practice_cancel">Cancelar</button><button type="button" class="linkbtn danger" onclick="surrenderPractice()" data-i18n="practice_surrender">Rendirse</button></div>
       <div class="foot credits hidden" id="practice-credits"></div>
+    </div>
+
+    <div class="gdock" id="practice-guessarea">
+      <div class="dock-top">
+        <button type="button" class="dock-pull" id="practice-dock-pull" aria-expanded="true" onclick="toggleDockPad()"><span data-ico="chevron" data-ico-size="12"></span><span class="dock-pull-txt"></span></button>
+        <div class="val" id="practice-guess-val"></div>
+      </div>
+      <div class="dock-tiles" id="practice-slots" aria-hidden="true" onclick="openDockPad()"></div>
+      <span class="offscreen" id="practice-dock-live" aria-live="polite"></span>
+      <div class="dock-pad" id="practice-palette" role="group"></div>
+      <button type="button" class="dock-erase" id="practice-erase" onclick="practicePad.pop()" data-ico="borrar" data-ico-size="22" data-i18n-title="dock_erase"></button>
+      <button type="button" class="btn dock-go" id="practice-guess-btn" onclick="submitPracticeGuess()" data-i18n="guess_btn">Adivinar</button>
     </div>
   </section>
 
@@ -1473,62 +1636,73 @@ button.grow:active{transform:translateY(4px);box-shadow:none}
   </section>
 
   <!-- JUEGO -->
-  <section id="s-game" class="hidden">
-    <div class="card">
-      <div class="players" id="g-players"></div>
-      <div class="banks hidden" id="g-banks">
-        <div class="bank" id="g-bank-mine"><span class="who"></span><span class="clock"></span></div>
-        <div class="bank" id="g-bank-theirs"><span class="who"></span><span class="clock"></span></div>
+  <section id="s-game" class="hidden gshell">
+    <!-- Serie Plaza, L4: la cabecera fija con los relojes, el diario que se
+         desplaza y el muelle con las fichas y «Adivinar». -->
+    <header class="gbar">
+      <div class="gbar-row">
+        <button type="button" class="gbar-btn" id="g-back" onclick="gameBack()" data-ico="atras" data-ico-size="18" data-i18n-title="result_lobby"></button>
+        <div class="gbar-title">
+          <span class="gbar-name"><span data-i18n="game_match">Partida</span> <b class="gbar-code" id="g-code"></b><span id="g-attempt-no"></span></span>
+          <span class="gbar-rules" id="g-rules"></span>
+        </div>
+        <button type="button" class="gbar-btn hidden" id="g-pause-btn" onclick="requestGamePause()" data-ico="pausa" data-ico-size="18"></button>
+        <button type="button" class="gbar-btn dark hidden" id="g-chat-btn" onclick="openPrimaryChat()" aria-label="Chat"><span data-ico="globo" data-ico-size="20"></span><span class="chat-badge hidden" id="g-chat-badge">0</span></button>
       </div>
-      <div class="mysecret">
-        <span><span data-i18n="game_match">Partida</span> <b class="n" style="letter-spacing:3px" id="g-code"></b> · <span id="g-rules"></span></span>
-        <span class="code-view"><span data-i18n="game_yourcode">Tu código:</span>&nbsp;<span id="g-mysecret"></span></span>
+      <div class="banks" id="g-banks">
+        <div class="bank" id="g-bank-mine"><span class="avatar vacio" aria-hidden="true"></span><span class="who"></span><span class="clock"></span></div>
+        <div class="bank" id="g-bank-theirs"><span class="avatar vacio" aria-hidden="true"></span><span class="who"></span><span class="clock"></span></div>
       </div>
+    </header>
 
+    <div class="gbody" id="g-body">
       <div id="g-banner"></div>
       <div id="g-rematch-zone"></div>
+      <div class="turnbar theirs" id="g-turn"><span class="dot"></span><span data-vaca="alert" data-vaca-size="34"></span><span class="tb-main"><span class="tb-title" id="g-turn-txt"></span><span class="tb-sub" id="g-turn-sub"></span></span></div>
 
-      <div class="turnbar theirs" id="g-turn"><span class="dot"></span><span data-vaca="alert" data-vaca-size="34"></span><span id="g-turn-txt"></span></div>
-      <div class="statusrow hidden" id="g-statusrow">
-        <span class="chip hidden" id="g-timer"></span>
-        <button class="pause-chip pause-inline" id="g-pause-btn" onclick="requestGamePause()" aria-label="Pausar partida" title="Pausar partida"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9.6 5.5c.3 4.4.3 8.8 0 13.2M14.5 5.5c.3 4.4.3 8.8 0 13.2"></path></svg></button>
-        <span class="chip hidden" id="g-attempts"></span>
-      </div>
-
-      <div class="guessarea" id="g-guessarea">
-        <div class="field">
-          <input type="text" id="g-guess" class="code" inputmode="numeric" placeholder="•••" style="letter-spacing:8px;font-size:22px">
-          <div class="pad hidden" id="pad-g"><div class="slots" id="slots-g"></div><div class="palette" id="palette-g"></div></div>
+      <div class="journal" id="g-journal">
+        <div class="jstick">
+          <div class="jtabs-row">
+            <div class="jtabs" role="tablist" id="g-tabs">
+              <button type="button" class="jtab" role="tab" id="g-tab-mine" aria-controls="g-mylog" aria-selected="true" onclick="pickJournal('g','mine')"></button>
+              <button type="button" class="jtab" role="tab" id="g-tab-theirs" aria-controls="g-theirlog" aria-selected="false" onclick="pickJournal('g','theirs')"></button>
+            </div>
+            <span class="jhint" data-i18n="journal_order">Lo más reciente arriba</span>
+          </div>
+          <nav class="frieze" id="g-frieze"></nav>
         </div>
-        <button class="btn" id="g-guess-btn" onclick="submitGuess()" data-i18n="guess_btn">Adivinar</button>
+        <div class="glog" id="g-mylog" role="tabpanel" aria-labelledby="g-tab-mine"></div>
+        <div class="glog hidden" id="g-theirlog" role="tabpanel" aria-labelledby="g-tab-theirs"></div>
       </div>
-      <div class="val" id="g-guess-val" style="margin-top:0;margin-bottom:8px"></div>
-      <div class="contradiction hidden" id="g-contradiction"></div>
 
       <div class="legend" id="g-legend">
         <span><span class="pip f"></span> <span data-i18n="legend_fija">F = posición correcta</span></span>
         <span><span class="pip p"></span> <span data-i18n="legend_pica">P = presente, mal colocada</span></span>
       </div>
 
+      <div class="secret-row" id="g-secret-row"><span data-i18n="secret_row">Tu código secreto</span><button type="button" class="secret-peek" id="g-mysecret" aria-pressed="false" onclick="toggleSecretPeek()"></button></div>
+
       <div class="nb hidden" id="g-notebook">
         <div class="nb-head"><span data-i18n="nb_title">Cuaderno</span><button type="button" class="nb-clear" onclick="clearNotebook()" data-i18n="nb_clear">Borrar marcas</button></div>
         <div class="nb-grid" id="g-notebook-grid"></div>
         <p class="nb-hint" data-i18n="nb_hint">Toca un símbolo para marcarlo: una vez descartado, dos veces confirmado. Las marcas son tuyas y viven solo en este aparato.</p>
       </div>
+
+      <div class="gfoot"><button type="button" class="linkbtn soft hidden" id="g-nb-link" onclick="scrollToNotebook()" data-i18n="nb_title">Cuaderno</button><span id="g-abandon-wrap"><button type="button" class="linkbtn danger" onclick="abandonGame()" data-i18n="abandon_game">Abandonar partida</button></span></div>
     </div>
 
-    <div class="cols">
-      <div class="card">
-        <div class="colhead" id="colhead-mine"></div>
-        <div class="glog" id="g-mylog"></div>
+    <div class="gdock hidden" id="g-guessarea">
+      <div class="dock-top">
+        <button type="button" class="dock-pull" id="g-dock-pull" aria-expanded="true" onclick="toggleDockPad()"><span data-ico="chevron" data-ico-size="12"></span><span class="dock-pull-txt"></span></button>
+        <div class="contradiction hidden" id="g-contradiction"></div>
+        <div class="val" id="g-guess-val"></div>
       </div>
-      <div class="card">
-        <div class="colhead" id="colhead-theirs"></div>
-        <div class="glog" id="g-theirlog"></div>
-      </div>
+      <div class="dock-tiles" id="slots-g" aria-hidden="true" onclick="openDockPad()"></div>
+      <span class="offscreen" id="g-dock-live" aria-live="polite"></span>
+      <div class="dock-pad" id="palette-g" role="group"></div>
+      <button type="button" class="dock-erase" id="g-erase" onclick="padG.pop()" data-ico="borrar" data-ico-size="22" data-i18n-title="dock_erase"></button>
+      <button type="button" class="btn dock-go" id="g-guess-btn" onclick="submitGuess()" data-i18n="guess_btn">Adivinar</button>
     </div>
-
-    <div class="foot"><span class="link" onclick="leaveGame()" data-i18n="back_home">Volver al inicio</span><span id="g-abandon-wrap"> · <span class="link" onclick="abandonGame()" data-i18n="abandon_game">Abandonar partida</span></span></div>
     <div class="pause-cover hidden" id="g-pause-cover">
       <div class="pause-box">
         <div class="pause-icon" data-ico="pausa" data-ico-size="42"></div>
@@ -1563,7 +1737,7 @@ button.grow:active{transform:translateY(4px);box-shadow:none}
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v4.4.0';
+const APP_VERSION = 'v4.5.0';
 /* Enlace de invitación: ...?game=SZ93
    La invitación sobrevive al registro: se guarda en el navegador, porque entre
    abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
@@ -2496,6 +2670,10 @@ Object.assign(I18N.fr,{menu_settings:"Réglages",menu_logout:"Se déconnecter"})
 Object.assign(I18N.es,{home_title:"Adivina el código antes que tu rival.",home_lead:"El clásico «Bulls and Cows» en duelo, en arena o contra el ordenador. Gratis y sin instalar.",lobby_my_profile:"Mi perfil",lobby_season:"Temporada de {month} · {points} pts · {rank}",lobby_season_none:"Temporada de {month} · todavía sin puntos",lobby_create_hint:"Comparte el código, juega en directo o por correspondencia.",lobby_create_go:"Nueva partida",mode_practice_hint:"Solo o contra el ordenador",mode_arena_hint:"De 3 a 8 jugadores, un solo código",mode_puzzles_hint:"Sin rival y sin reloj",mode_rank_hint:"Puntos de la temporada",lobby_mine_empty:"Ninguna partida en curso. Crea una o únete a una pública.",lobby_public:"Partidas públicas",lobby_public_empty:"No hay partidas públicas ahora mismo. Crea una y aparecerá aquí.",online_short:"{n} en línea",row_vs:"Contra {name}",row_open:"{name} busca rival",row_match:"{a} contra {b}",row_arena:"Arena de {name}",row_your_turn:"Te toca",row_their_turn:"Su turno",row_rematch:"Revancha",daily_tile_fresh:"Se renueva en {time}",daily_tile_progress:"{n} de {max} intentos · se renueva en {time}",daily_tile_solved:"Resuelto en {n} · el próximo en {time}",daily_tile_failed:"Hoy no salió · el próximo en {time}",activity_day_one:"Activo hace 1 día"});
 Object.assign(I18N.en,{home_title:"Crack the code before your opponent does.",home_lead:"The classic “Bulls and Cows” as a duel, in the arena or against the computer. Free, nothing to install.",lobby_my_profile:"My profile",lobby_season:"{month} season · {points} pts · {rank}",lobby_season_none:"{month} season · no points yet",lobby_create_hint:"Share the code, play live or by correspondence.",lobby_create_go:"New game",mode_practice_hint:"Solo or against the computer",mode_arena_hint:"3 to 8 players, one code",mode_puzzles_hint:"No opponent, no clock",mode_rank_hint:"Season points",lobby_mine_empty:"No games in progress. Create one or join a public one.",lobby_public:"Public games",lobby_public_empty:"No public games right now. Create one and it will show up here.",online_short:"{n} online",row_vs:"Against {name}",row_open:"{name} is looking for an opponent",row_match:"{a} vs {b}",row_arena:"{name}’s arena",row_your_turn:"Your turn",row_their_turn:"Their turn",row_rematch:"Rematch",daily_tile_fresh:"Renews in {time}",daily_tile_progress:"{n} of {max} tries · renews in {time}",daily_tile_solved:"Solved in {n} · next one in {time}",daily_tile_failed:"Not today · next one in {time}",activity_day_one:"Active 1 day ago"});
 Object.assign(I18N.fr,{home_title:"Devine le code avant ton adversaire.",home_lead:"Le classique « Bulls and Cows » en duel, en arène ou contre l’ordinateur. Gratuit, sans installer.",lobby_my_profile:"Mon profil",lobby_season:"Saison de {month} · {points} pts · {rank}",lobby_season_none:"Saison de {month} · pas encore de points",lobby_create_hint:"Partage le code, joue en direct ou par correspondance.",lobby_create_go:"Nouvelle partie",mode_practice_hint:"Solo ou contre l’ordinateur",mode_arena_hint:"3 à 8 joueurs, un seul code",mode_puzzles_hint:"Sans rival et sans horloge",mode_rank_hint:"Points de la saison",lobby_mine_empty:"Aucune partie en cours. Crées-en une ou rejoins une partie publique.",lobby_public:"Parties publiques",lobby_public_empty:"Aucune partie publique pour l’instant. Crées-en une : elle apparaîtra ici.",online_short:"{n} en ligne",row_vs:"Contre {name}",row_open:"{name} attend un adversaire",row_match:"{a} contre {b}",row_arena:"L’arène de {name}",row_your_turn:"À toi",row_their_turn:"Son tour",row_rematch:"Revanche",daily_tile_fresh:"Se renouvelle dans {time}",daily_tile_progress:"{n} essais sur {max} · se renouvelle dans {time}",daily_tile_solved:"Trouvé en {n} · le prochain dans {time}",daily_tile_failed:"Pas aujourd’hui · le prochain dans {time}",activity_day_one:"Actif il y a 1 jour"});
+/* Serie Plaza, lote 4 (4.5.0): la partida en telefono. */
+Object.assign(I18N.es,{tab_new_computer:"Intento nuevo del computador",turn_mine:"Te toca: adivina el código de {name}",turn_sub_attempt:"Intento {n}",turn_sub_attempt_max:"Intento {n} de {max}",turn_sub_turnclock:"el turno pasa si el reloj llega a cero",turn_sub_bank_inc:"+{n} s tras cada jugada",turn_sub_bank:"sin pausa: quien agota su tiempo pierde",turn_sub_corr:"el plazo corre aunque cierres el juego",game_attempt_no:"intento {n}",clock_you:"Tú",clock_your_turn:"Te toca",tab_mine:"Tus intentos · {n}",tab_player:"{name} · {n}",tab_computer:"Computador · {n}",tab_new:"Intento nuevo de {name}",journal_order:"Lo más reciente arriba",frieze_label:"Ir a un intento",jrow_aria:"Intento {n}: {code}, {f} fijas y {p} picas",jrow_missed_aria:"Intento {n}: perdido por tiempo",dock_pad_show:"Teclado",dock_pad_hide:"Plegar",dock_pad_show_aria:"Desplegar el teclado",dock_pad_hide_aria:"Plegar el teclado",dock_erase:"Borrar",dock_keys:"Teclado de símbolos",dock_live:"Tu intento: {code}",dock_live_empty:"Tu intento está vacío",secret_row:"Tu código secreto",secret_show:"Ver tu código",secret_hide:"Ocultar tu código",computer_chip:"Computador: {n}",computer_code:"Código del computador:",sym_0:"círculo rojo",sym_1:"cuadrado naranja",sym_2:"triángulo amarillo",sym_3:"triángulo invertido verde",sym_4:"rombo turquesa",sym_5:"estrella azul",sym_6:"cruz violeta",sym_7:"anillo rosa"});
+Object.assign(I18N.en,{tab_new_computer:"New try from the computer",turn_mine:"Your turn: crack {name}’s code",turn_sub_attempt:"Try {n}",turn_sub_attempt_max:"Try {n} of {max}",turn_sub_turnclock:"the turn passes if the clock hits zero",turn_sub_bank_inc:"+{n} s after each move",turn_sub_bank:"no pauses: whoever runs out of time loses",turn_sub_corr:"the clock keeps running even if you close the game",game_attempt_no:"try {n}",clock_you:"You",clock_your_turn:"Your turn",tab_mine:"Your tries · {n}",tab_player:"{name} · {n}",tab_computer:"Computer · {n}",tab_new:"New try from {name}",journal_order:"Newest first",frieze_label:"Jump to a try",jrow_aria:"Try {n}: {code}, {f} F and {p} P",jrow_missed_aria:"Try {n}: lost on time",dock_pad_show:"Keypad",dock_pad_hide:"Fold",dock_pad_show_aria:"Open the keypad",dock_pad_hide_aria:"Fold the keypad",dock_erase:"Delete",dock_keys:"Symbol keypad",dock_live:"Your try: {code}",dock_live_empty:"Your try is empty",secret_row:"Your secret code",secret_show:"Show your code",secret_hide:"Hide your code",computer_chip:"Computer: {n}",computer_code:"Computer’s code:",sym_0:"red circle",sym_1:"orange square",sym_2:"yellow triangle",sym_3:"green upside-down triangle",sym_4:"turquoise diamond",sym_5:"blue star",sym_6:"purple cross",sym_7:"pink ring"});
+Object.assign(I18N.fr,{tab_new_computer:"Nouvel essai de l’ordinateur",turn_mine:"À toi : devine le code de {name}",turn_sub_attempt:"Essai {n}",turn_sub_attempt_max:"Essai {n} sur {max}",turn_sub_turnclock:"le tour passe si l’horloge tombe à zéro",turn_sub_bank_inc:"+{n} s après chaque coup",turn_sub_bank:"sans pause : qui épuise son temps perd",turn_sub_corr:"le délai court même si tu fermes le jeu",game_attempt_no:"essai {n}",clock_you:"Toi",clock_your_turn:"À toi",tab_mine:"Tes essais · {n}",tab_player:"{name} · {n}",tab_computer:"Ordinateur · {n}",tab_new:"Nouvel essai de {name}",journal_order:"Le plus récent en haut",frieze_label:"Aller à un essai",jrow_aria:"Essai {n} : {code}, {f} F et {p} P",jrow_missed_aria:"Essai {n} : perdu au temps",dock_pad_show:"Pavé",dock_pad_hide:"Replier",dock_pad_show_aria:"Déplier le pavé",dock_pad_hide_aria:"Replier le pavé",dock_erase:"Effacer",dock_keys:"Pavé de symboles",dock_live:"Ton essai : {code}",dock_live_empty:"Ton essai est vide",secret_row:"Ton code secret",secret_show:"Voir ton code",secret_hide:"Masquer ton code",computer_chip:"Ordinateur : {n}",computer_code:"Code de l’ordinateur :",sym_0:"rond rouge",sym_1:"carré orange",sym_2:"triangle jaune",sym_3:"triangle inversé vert",sym_4:"losange turquoise",sym_5:"étoile bleue",sym_6:"croix violette",sym_7:"anneau rose"});
 
 /* La primera visita, en el idioma del navegador. Es lo unico que evita que
    quien llega desde un enlace compartido y no lee espanol tenga que buscar
@@ -2571,7 +2749,10 @@ const ICONS={
   flecha:'<path class="dl" style="stroke-width:2.6" d="M5 12h13M13 6l6 6-6 6"></path>',
   chevron:'<path class="dl" style="stroke-width:2.6" d="M9 6l6 6-6 6"></path>',
   recargar:'<path class="dl" d="M20.1 12.4c.2 4.7-3.7 8.5-8.4 8.4-4.6-.1-8.3-4-8-8.7.3-4.2 3.8-7.4 8-7.3 2.6.1 4.8 1.3 6.3 3.2"></path><path class="dl" d="M19.9 3.7c-.2 1.6-.2 3.1-.1 4.6-1.6.2-3.1.2-4.6.1"></path>',
-  globo:'<path class="dl" d="M4.4 11.4c0-3.7 3.4-6.6 7.6-6.6s7.5 2.9 7.4 6.6c-.1 3.6-3.3 6.5-7.5 6.5-.9 0-1.8-.1-2.6-.4-1.3.9-2.7 1.5-4 1.9.6-1.2 1-2.4 1.2-3.5-1.3-1.2-2.1-2.8-2.1-4.5Z"></path>'
+  globo:'<path class="dl" d="M4.4 11.4c0-3.7 3.4-6.6 7.6-6.6s7.5 2.9 7.4 6.6c-.1 3.6-3.3 6.5-7.5 6.5-.9 0-1.8-.1-2.6-.4-1.3.9-2.7 1.5-4 1.9.6-1.2 1-2.4 1.2-3.5-1.3-1.2-2.1-2.8-2.1-4.5Z"></path>',
+  /* 4.5.0: la partida en telefono */
+  atras:'<path class="dl" style="stroke-width:2.4" d="M19 12H6M11 6l-6 6 6 6"></path>',
+  borrar:'<path class="dl" d="M8.5 5h10A2.5 2.5 0 0 1 21 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-10L3 12z"></path><path class="dl" d="M11 9.5l5 5M16 9.5l-5 5"></path>'
 };
 function ico(nombre,tam){
   const p=ICONS[nombre]; if(!p) return '';
@@ -2737,12 +2918,12 @@ function vsPlayer(cc, name){ return `vs ${playerChip(cc, name)}`; }
    misma persona tiene el mismo en todas las filas y en todos los aparatos. */
 const AVATAR_TONES=['azul','coral','violeta','sol'];
 function initialOf(name){ return (Array.from(String(name||'').trim())[0]||'?').toLocaleUpperCase(lang); }
+function avatarTone(name){
+  let h=0; for(const ch of String(name||'').toLowerCase()) h=(h*31+ch.codePointAt(0))>>>0;
+  return name?AVATAR_TONES[h%AVATAR_TONES.length]:'vacio';
+}
 function avatarHTML(name, opts={}){
-  let tone=opts.tone;
-  if(!tone){
-    let h=0; for(const ch of String(name||'').toLowerCase()) h=(h*31+ch.codePointAt(0))>>>0;
-    tone=name?AVATAR_TONES[h%AVATAR_TONES.length]:'vacio';
-  }
+  const tone=opts.tone||avatarTone(name);
   return `<span class="avatar ${tone}${opts.sm?' sm':''}" aria-hidden="true">${esc(name?initialOf(name):'?')}</span>`;
 }
 /* El frances elide «de» ante vocal: «l’arene d’Ana», «saison d’octobre». Las
@@ -2862,6 +3043,10 @@ function show(name){
   ['login','verify','lobby','account','feedback','rank','profile','rivals','history','rules','practice','practice-game','puzzles','daily','create','wait','join','rematch','arena-new','arena','game'].forEach(s=>{
     $('s-'+s).classList.toggle('hidden', s!==name);
   });
+  // La partida y la practica son una capa fija con su propia cabecera: la
+  // pagina de debajo ni se ve ni se desplaza.
+  document.body.classList.toggle('in-shell', name==='game'||name==='practice-game');
+  measureDock();
   if(name!=='game') stopTick();
   if(name!=='practice-game') stopPracticeTick();
   if(name!=='daily') stopDailyTick();
@@ -2960,7 +3145,8 @@ function setChatContext(view){
      caja de escribir desaparece y el servidor tampoco aceptaria el mensaje. */
   const watching=view==='game'&&!!game.spectator&&!!gState&&!!gState.p2;
   const allowed=!!sessionToken&&(view==='lobby'||watching||(view==='game'&&gState&&gState.youAre>0&&gState.p2));
-  chatEnabled=allowed;$('chat-launch').classList.toggle('hidden',!allowed);
+  // En la partida el chat vive en la cabecera: el boton flotante taparia el muelle.
+  chatEnabled=allowed;$('chat-launch').classList.toggle('hidden',!allowed||view==='game');$('g-chat-btn').classList.toggle('hidden',!allowed||view!=='game');
   if(!allowed){$('chat-panel').classList.add('hidden');stopChatPoll();return;}
   if(view==='lobby')selectedPrivateThread=null;
   const room=watching?'watch:'+game.id:view==='game'?'private:'+(gState?.chatThreadId||game.id):'lobby';
@@ -2992,7 +3178,8 @@ function toggleChat(){
   if(!chatEnabled)return;
   chatUnread=0;updateChatBadge();panel.classList.remove('hidden');pollChat();setTimeout(()=>$('chat-input').focus(),50);startChatPoll();
 }
-function updateChatBadge(){const badge=$('chat-badge');badge.textContent=chatUnread>99?'99+':String(chatUnread);badge.classList.toggle('hidden',chatUnread<=0);}
+function updateChatBadge(){for(const badge of [$('chat-badge'),$('g-chat-badge')]){badge.textContent=chatUnread>99?'99+':String(chatUnread);badge.classList.toggle('hidden',chatUnread<=0);}}
+function chatLauncher(){return currentView==='game'?$('g-chat-btn'):$('chat-launch');}
 function systemChatText(body){const [event,name='']=String(body||'').split('|');const keys={joined:'chat_joined',paused:'chat_paused',resumed:'chat_resumed',abandoned:'chat_abandoned',rematch:'chat_rematch',finished:'chat_finished'};return t(keys[event]||event,{name});}
 /* Una reaccion (E6-T2) viaja como la clave de la frase, no como la frase: el
    servidor no sabe en que idioma se leera y no le hace falta saberlo. */
@@ -3033,10 +3220,10 @@ async function pollChat(scrollToLatest=false){
   if(!chatEnabled||!sessionToken)return;const room=currentChatRoom();
   try{const res=await api('chatList',{...room,after:chatLastId});if(!res.ok)return;const previous=chatLastId,received=res.messages||[],merged=new Map(chatItems.map(m=>[Number(m.id),m]));received.forEach(m=>merged.set(Number(m.id),m));chatItems=[...merged.values()].sort((a,b)=>Number(a.id)-Number(b.id)).slice(-100);chatLastId=received.reduce((max,m)=>Math.max(max,Number(m.id)||0),previous);
     const incoming=received.filter(m=>Number(m.id)>previous&&previous>0&&chatUserKey(m.sender)!==chatUserKey(user));
-    if(incoming.length&&$('chat-panel').classList.contains('hidden')){chatUnread+=incoming.length;updateChatBadge();const launch=$('chat-launch');launch.classList.remove('bump');void launch.offsetWidth;launch.classList.add('bump');}
+    if(incoming.length&&$('chat-panel').classList.contains('hidden')){chatUnread+=incoming.length;updateChatBadge();const launch=chatLauncher();launch.classList.remove('bump');void launch.offsetWidth;launch.classList.add('bump');}
     if(room.roomType==='private'&&incoming.some(m=>m.kind==='user'&&!chatMutedUsers().has(chatUserKey(m.sender))))playChatAudio(privateMessageAudio);
     const muted=chatMutedUsers();const nudge=incoming.find(m=>m.kind==='nudge'&&!muted.has(chatUserKey(m.sender))&&Date.now()-Date.parse(m.createdAt)<15000);
-    if(nudge&&chatNudgesOn){const target=$('chat-panel').classList.contains('hidden')?$('chat-launch'):$('chat-panel');target.classList.remove('chat-shake');void target.offsetWidth;target.classList.add('chat-shake');playChatAudio(wizzAudio);try{navigator.vibrate&&navigator.vibrate([100,50,180]);}catch(e){}}
+    if(nudge&&chatNudgesOn){const target=$('chat-panel').classList.contains('hidden')?chatLauncher():$('chat-panel');target.classList.remove('chat-shake');void target.offsetWidth;target.classList.add('chat-shake');playChatAudio(wizzAudio);try{navigator.vibrate&&navigator.vibrate([100,50,180]);}catch(e){}}
     if(room.roomType==='private'&&!$('chat-panel').classList.contains('hidden')){localStorage.setItem('pf_chat_read_'+room.threadId,String(chatLastId));renderPrivateThreads();}
     if($('s-lobby')&&!$('s-lobby').classList.contains('hidden'))refreshPrivateThreads();
     renderChat(scrollToLatest||incoming.length>0);
@@ -3344,9 +3531,7 @@ function makePad(slotsId, paletteId, getLen, getColors, onChange){
 const padC = makePad('slots-c','palette-c', ()=>cfg.digits, ()=>cfg.numColors, v=>setVal('secret-c-val', v, cfg.digits, cfg.allowRepeats));
 const padJ = makePad('slots-j','palette-j', ()=>joinMeta?joinMeta.digits:3, ()=>joinMeta?joinMeta.numColors:6, v=>setVal('secret-j-val', v, joinMeta.digits, joinMeta.allowRepeats));
 const padR = makePad('slots-r','palette-r', ()=>finishedMeta?finishedMeta.digits:3, ()=>finishedMeta?finishedMeta.numColors:6, v=>setVal('secret-r-val', v, finishedMeta.digits, finishedMeta.allowRepeats));
-const padG = makePad('slots-g','palette-g', ()=>game.digits, ()=>game.numColors||6, v=>{setVal('g-guess-val', v, game.digits, game.allowRepeats); renderContradiction(v);});
 const padA = makePad('slots-a','palette-a', ()=>arenaView.digits, ()=>arenaView.numColors||6, v=>setVal('arena-guess-val', v, arenaView.digits, arenaView.allowRepeats));
-const practicePad = makePad('practice-slots','practice-palette', ()=>practiceCfg.digits, ()=>practiceCfg.numColors, v=>setVal('practice-guess-val',v,practiceCfg.digits,practiceCfg.allowRepeats));
 const practiceSecretPad = makePad('practice-secret-slots','practice-secret-palette', ()=>practiceCfg.digits, ()=>practiceCfg.numColors, v=>setVal('practice-secret-val',v,practiceCfg.digits,practiceCfg.allowRepeats));
 function setVal(elId, v, digits, allowRepeats){
   const r=validateLive(v, digits, allowRepeats); $(elId).className='val '+r.cls; $(elId).textContent=r.msg;
@@ -3363,6 +3548,216 @@ function applyMode(ctx, mode, inputId, padId, pad){
   $(inputId).classList.toggle('hidden', isColors);
   $(padId).classList.toggle('hidden', !isColors);
   if(isColors) pad.refresh(); else { $(inputId).value=''; }
+}
+
+/* -------------------- el muelle (serie Plaza, L4) --------------------
+   Las fichas y el teclado propio de la partida y de la practica. El intento
+   vive aqui y no en un campo de texto: asi el telefono no despliega su
+   teclado encima del diario, y el teclado fisico sigue sirviendo porque el
+   documento escucha las cifras, el retroceso y Enter mientras el muelle esta
+   en uso. El teclado se pliega y la eleccion se recuerda en el aparato.
+   Tachado sale lo que no tiene sentido pulsar: un simbolo ya escrito cuando
+   las reglas prohiben repetir —apagado, no se puede— y lo que el jugador
+   descarto en su cuaderno —se puede pulsar igual, porque un descartado sirve
+   de relleno—. Nada mas: el teclado no deduce por nadie. */
+let dockOpen=(()=>{ try{ return localStorage.getItem('pf_dock_open')!=='0'; }catch(e){ return true; } })();
+function makeDockPad(o){
+  let value='', disabled=false, tilesHTML=null, padHTML=null;
+  const symbols=()=>o.mode()==='colors'?Math.min(o.colors()||6,COLORS.length):10;
+  const symbolName=k=>o.mode()==='colors'?t('sym_'+k):String(k);
+  function paint(){
+    const dock=$(o.dock); if(!dock) return;
+    const open=dockOpen&&!disabled;
+    dock.classList.toggle('folded',!open);
+    const pull=dock.querySelector('.dock-pull'); if(!pull) return;
+    pull.classList.toggle('hidden',disabled);
+    pull.setAttribute('aria-expanded',open?'true':'false');
+    pull.setAttribute('aria-label',t(open?'dock_pad_hide_aria':'dock_pad_show_aria'));
+    pull.querySelector('.dock-pull-txt').textContent=t(open?'dock_pad_hide':'dock_pad_show');
+  }
+  // Solo se toca el DOM cuando algo cambia: el sondeo repinta cada dos
+  // segundos y rehacer las fichas reiniciaria el parpadeo del cursor.
+  function draw(){
+    const len=o.len(), colors=o.mode()==='colors';
+    let th='';
+    for(let i=0;i<len;i++){
+      if(i<value.length){ const k=+value[i]; th+=colors?`<span class="tile on c" style="background:${COLORS[k].c}">${symbolSVG(k,28)}</span>`:`<span class="tile on">${esc(value[i])}</span>`; }
+      else th+=`<span class="tile">${i===value.length&&!disabled?'<span class="caret"></span>':''}</span>`;
+    }
+    if(th!==tilesHTML){ tilesHTML=th; $(o.tiles).innerHTML=th; }
+    const n=symbols(), repeats=o.repeats(), marks=(o.marks&&o.marks())||{};
+    let ph='';
+    for(let k=0;k<n;k++){
+      const used=!repeats&&value.includes(String(k)), out=!used&&marks[String(k)]==='out';
+      ph+=`<button type="button" class="key${colors?' c':''}${used?' used':out?' out':''}"${colors?` style="background:${COLORS[k].c}"`:''} data-k="${k}" aria-label="${esc(symbolName(k))}"${used||disabled?' disabled':''}>${colors?symbolSVG(k,26):k}</button>`;
+    }
+    const pad=$(o.pad), cls='dock-pad'+(colors?(n===6?' c6':' c4'):'');
+    if(pad.className!==cls) pad.className=cls;
+    if(ph!==padHTML){ padHTML=ph; pad.innerHTML=ph; pad.setAttribute('aria-label',t('dock_keys')); }
+    const erase=$(o.erase); if(erase) erase.disabled=disabled||!value;
+    paint();
+  }
+  function announce(){
+    const live=$(o.live); if(!live) return;
+    live.textContent=value?t('dock_live',{code:[...value].map(symbolName).join(', ')}):t('dock_live_empty');
+  }
+  function changed(){ draw(); announce(); if(o.onChange) o.onChange(value); }
+  function push(k){
+    k=String(k);
+    if(disabled||value.length>=o.len()||!(+k<symbols())||(!o.repeats()&&value.includes(k))) return;
+    value+=k; changed();
+  }
+  function pop(){ if(disabled||!value) return; value=value.slice(0,-1); changed(); }
+  $(o.pad).addEventListener('click',e=>{ const b=e.target.closest('button[data-k]'); if(b&&!b.disabled) push(b.dataset.k); });
+  // Un clic de raton no se lleva el foco: Enter sigue enviando el intento
+  // en vez de volver a pulsar la ultima ficha. El tabulador si llega.
+  $(o.dock).addEventListener('mousedown',e=>{ if(e.target.closest('button')) e.preventDefault(); });
+  return { get:()=>value, mode:o.mode, push, pop, paint, refresh:draw, isDisabled:()=>disabled,
+    set:v=>{ value=String(v||'').slice(0,o.len()); changed(); },
+    reset:()=>{ value=''; draw(); },
+    setDisabled:d=>{ d=!!d; if(d===disabled) return; disabled=d; draw(); } };
+}
+const padG = makeDockPad({dock:'g-guessarea', tiles:'slots-g', pad:'palette-g', erase:'g-erase', live:'g-dock-live',
+  len:()=>game.digits, mode:()=>game.mode, colors:()=>game.numColors||6, repeats:()=>!!game.allowRepeats,
+  marks:()=>gState&&gState.notebook&&gState.status==='active'&&gState.youAre!==0?notebookMarks:{},
+  onChange:v=>{setVal('g-guess-val', v, game.digits, game.allowRepeats); renderContradiction(v);}});
+const practicePad = makeDockPad({dock:'practice-guessarea', tiles:'practice-slots', pad:'practice-palette', erase:'practice-erase', live:'practice-dock-live',
+  len:()=>practiceCfg.digits, mode:()=>practiceCfg.mode, colors:()=>practiceCfg.numColors, repeats:()=>!!practiceCfg.allowRepeats,
+  onChange:v=>setVal('practice-guess-val',v,practiceCfg.digits,practiceCfg.allowRepeats)});
+function toggleDockPad(){
+  dockOpen=!dockOpen;
+  try{ localStorage.setItem('pf_dock_open',dockOpen?'1':'0'); }catch(e){}
+  padG.paint(); practicePad.paint(); measureDock();
+}
+function openDockPad(){ if(!dockOpen) toggleDockPad(); }
+/* Los avisos flotan por encima del muelle, que cambia de alto al plegarse. */
+function measureDock(){
+  let h=0;
+  for(const id of ['g-guessarea','practice-guessarea']){ const el=$(id); if(el&&el.getClientRects().length) h=el.offsetHeight; }
+  document.documentElement.style.setProperty('--dock-h',h+'px');
+}
+if(window.ResizeObserver){ const dockWatch=new ResizeObserver(measureDock); ['g-guessarea','practice-guessarea'].forEach(id=>dockWatch.observe($(id))); }
+function activeDock(){
+  if(currentView==='game'&&!$('g-guessarea').classList.contains('hidden')) return {pad:padG, go:$('g-guess-btn')};
+  if(currentView==='practice-game'&&!$('practice-guessarea').classList.contains('hidden')) return {pad:practicePad, go:$('practice-guess-btn')};
+  return null;
+}
+document.addEventListener('keydown', event=>{
+  const dock=activeDock(); if(!dock) return;
+  if(event.defaultPrevented||event.isComposing||event.ctrlKey||event.metaKey||event.altKey) return;
+  const target=event.target;
+  if(target&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
+  if(event.key==='Enter'){
+    // Sobre un boton con foco, Enter es ese boton.
+    if(event.repeat||(target&&target.tagName==='BUTTON')) return;
+    event.preventDefault(); if(!dock.go.disabled) dock.go.click(); return;
+  }
+  if(event.key==='Backspace'){ event.preventDefault(); dock.pad.pop(); return; }
+  if(dock.pad.mode()!=='colors'&&/^[0-9]$/.test(event.key)){ event.preventDefault(); dock.pad.push(event.key); }
+});
+
+/* -------------------- el diario (serie Plaza, L4) --------------------
+   Los intentos de cada lado en pestanas, con el mas reciente arriba, y encima
+   un friso de pastillas —una por intento, con sus fijas y sus picas— para
+   saltar a cualquiera sin recorrer la lista. Las fichas de un intento se
+   leen por forma, como en todo el juego: disco lleno la fija, anillo la pica,
+   anillo punteado la posicion sin nada. La lista se rehace solo cuando cambia:
+   el sondeo llega cada dos segundos y rehacerla en cada vuelta movia lo que
+   se estaba leyendo. */
+const JOURNAL={
+  g:{tabs:'g-tabs', mine:'g-tab-mine', theirs:'g-tab-theirs', logs:{mine:'g-mylog', theirs:'g-theirlog'}, frieze:'g-frieze'},
+  p:{tabs:'practice-tabs', mine:'practice-tab-mine', theirs:'practice-tab-theirs', logs:{mine:'practice-log', theirs:'practice-computer-log'}, frieze:'practice-frieze'}
+};
+const journalTab={g:'mine',p:'mine'}, journalSeen={g:-1,p:-1}, journalData={g:null,p:null};
+const FRIEZE_FROM=4;
+function resetJournal(ctx){
+  const J=JOURNAL[ctx];
+  journalTab[ctx]='mine'; journalSeen[ctx]=-1; journalData[ctx]=null;
+  for(const side of ['mine','theirs']){ const box=$(J.logs[side]); box.dataset.key=''; box.innerHTML=`<div class="empty">${t('loading')}</div>`; }
+  $(J.frieze).dataset.key=''; $(J.frieze).innerHTML='';
+}
+function spokenCode(code,mode){ return [...String(code)].map(ch=>mode==='colors'?t('sym_'+ch):ch).join(' '); }
+function tryLabel(g,n,mode){ return g.missed?t('jrow_missed_aria',{n}):t('jrow_aria',{n,code:spokenCode(g.guess,mode),f:g.fijas,p:g.picas}); }
+function tilesCodeHTML(code,mode){
+  return `<span class="jcode" aria-hidden="true">${[...String(code)].map(ch=>mode==='colors'
+    ?`<span class="jt c" style="background:${(COLORS[+ch]||{c:'#555'}).c}">${symbolSVG(+ch,20)}</span>`
+    :`<span class="jt">${esc(ch)}</span>`).join('')}</span>`;
+}
+function tryPipsHTML(g,digits){
+  let h='';
+  for(let i=0;i<g.fijas;i++) h+='<span class="pip f"></span>';
+  for(let i=0;i<g.picas;i++) h+='<span class="pip p"></span>';
+  for(let i=g.fijas+g.picas;i<digits;i++) h+='<span class="pip"></span>';
+  return `<span class="jpips${digits===4?'':' c3'}" aria-hidden="true">${h}</span>`;
+}
+function journalRowsHTML(ctx,side,d,mode,digits){
+  const list=d.list;
+  if(!list.length) return `<div class="empty">${d.empty}</div>`;
+  let html='';
+  for(let i=list.length-1;i>=0;i--){
+    const g=list[i], n=i+1, id=`${ctx}-${side}-e${n}`, cls='g jrow'+(i===list.length-1?' new':'');
+    if(g.missed){ html+=`<div class="${cls} missed" id="${id}" role="group" aria-label="${esc(tryLabel(g,n,mode))}"><span class="jn" aria-hidden="true">${n}</span><span class="scoretxt">${d.missed}</span></div>`; continue; }
+    const more=d.extra?d.extra(g):'';
+    html+=`<div class="${cls}${more?' has-think':''}" id="${id}" role="group" aria-label="${esc(tryLabel(g,n,mode))}"><span class="jn" aria-hidden="true">${n}</span>${tilesCodeHTML(g.guess,mode)}${tryPipsHTML(g,digits)}${more}</div>`;
+  }
+  return html;
+}
+function friezeHTML(ctx,side,list,mode){
+  let html='';
+  for(let i=list.length-1;i>=0;i--){
+    const g=list[i], n=i+1;
+    let marks='';
+    if(g.missed) marks=ico('reloj',12);
+    else{ for(let k=0;k<g.fijas;k++) marks+='<i class="f"></i>'; for(let k=0;k<g.picas;k++) marks+='<i class="p"></i>'; marks=marks?`<span class="fzp">${marks}</span>`:''; }
+    html+=`<button type="button" class="fz${i===list.length-1?' new':''}" onclick="jumpToTry('${ctx}','${side}',${n})" aria-label="${esc(tryLabel(g,n,mode))}">${n}${marks}</button>`;
+  }
+  return html;
+}
+/* data: {mode, digits, mine:{label, list, empty, missed, extra?}, theirs:{…, name}|null} */
+function renderJournal(ctx,data){
+  const J=JOURNAL[ctx]; journalData[ctx]=data;
+  const both=!!data.theirs;
+  if(!both) journalTab[ctx]='mine';
+  const tab=journalTab[ctx];
+  if(tab==='theirs'||journalSeen[ctx]<0) journalSeen[ctx]=both?data.theirs.list.length:0;
+  $(J.tabs).classList.toggle('solo',!both);
+  const mineBtn=$(J.mine), theirsBtn=$(J.theirs);
+  mineBtn.textContent=data.mine.label;
+  mineBtn.setAttribute('aria-selected',tab==='mine'?'true':'false');
+  theirsBtn.classList.toggle('hidden',!both);
+  theirsBtn.setAttribute('aria-selected',tab==='theirs'?'true':'false');
+  if(both){
+    theirsBtn.textContent=data.theirs.label;
+    // Un punto en la pestaña cerrada cuando el otro lado ha jugado desde la ultima vez que se miro.
+    if(tab!=='theirs'&&data.theirs.list.length>journalSeen[ctx])
+      theirsBtn.insertAdjacentHTML('beforeend',`<span class="jdot" role="img" aria-label="${esc(data.theirs.newLabel||tElide('tab_new',{name:data.theirs.name},{name:data.theirs.name}))}"></span>`);
+  }
+  for(const side of ['mine','theirs']){
+    const box=$(J.logs[side]), d=data[side];
+    box.classList.toggle('hidden',side!==tab||!d);
+    if(!d) continue;
+    const last=d.list[d.list.length-1];
+    const key=[lang,data.mode,data.digits,d.list.length,last?JSON.stringify(last):'',d.empty].join('|');
+    if(box.dataset.key!==key){ box.dataset.key=key; box.innerHTML=journalRowsHTML(ctx,side,d,data.mode,data.digits); }
+  }
+  const list=data[tab]?data[tab].list:[], fz=$(J.frieze), last=list[list.length-1];
+  const fkey=[lang,tab,data.mode,list.length,last?JSON.stringify(last):''].join('|');
+  if(fz.dataset.key!==fkey){
+    fz.dataset.key=fkey;
+    fz.innerHTML=list.length>=FRIEZE_FROM?friezeHTML(ctx,tab,list,data.mode):'';
+    fz.setAttribute('aria-label',t('frieze_label'));
+  }
+}
+function pickJournal(ctx,side){
+  if(journalTab[ctx]===side) return;
+  journalTab[ctx]=side;
+  if(journalData[ctx]) renderJournal(ctx,journalData[ctx]);
+}
+function jumpToTry(ctx,side,n){
+  const row=$(`${ctx}-${side}-e${n}`); if(!row) return;
+  const calm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  row.scrollIntoView({block:'start',behavior:calm?'auto':'smooth'});
+  row.classList.add('flash'); setTimeout(()=>row.classList.remove('flash'),1200);
 }
 
 function randomInt(max){
@@ -4926,23 +5321,29 @@ function startPractice(randomRules){
   if(practice.deadline)practiceTickTimer=setInterval(renderPracticeStatus,250);
 }
 function displayPracticeGame(restored){
-  const input=$('practice-guess'); input.maxLength=practiceCfg.digits; input.value=''; input.placeholder='•'.repeat(practiceCfg.digits);
-  practicePad.reset(); practicePad.refresh(); applyMode('practice',practiceCfg.mode,'practice-guess','practice-pad',practicePad);
+  resetJournal('p'); practiceDockBusy(false); practicePad.reset();
   $('practice-guess-val').textContent=''; $('practice-banner').innerHTML=''; $('practice-actions').classList.add('hidden'); $('practice-active-actions').classList.remove('hidden'); $('practice-guessarea').classList.remove('hidden');
-  renderPracticeLog();renderComputerLog();$('practice-computer-log-card').classList.toggle('hidden',practiceCfg.type!=='computer'); $('practice-turn').classList.toggle('hidden',practiceCfg.type!=='computer');
+  renderPracticeLog();renderComputerLog();$('practice-turn').classList.toggle('hidden',practiceCfg.type!=='computer');
   $('practice-game-title').textContent=t(practiceCfg.type==='computer'?'computer_title':'practice_title');
   $('practice-secret').className=practiceCfg.type==='computer'?'':'n'; $('practice-secret').innerHTML=practiceCfg.type==='computer'?codeViewHTML(practice.playerSecret,practiceCfg.mode):'•'.repeat(practiceCfg.digits);
-  $('practice-rules').textContent=rulesLabel({...practiceCfg,revealSecrets:true,practiceSolo:practiceCfg.type==='solo'});
+  $('practice-rules').textContent=rulesLabel({...practiceCfg,revealSecrets:true,practiceSolo:practiceCfg.type==='solo'})
+    +(practiceCfg.type==='computer'?' · '+t('computer_difficulty',{level:t('difficulty_'+practiceCfg.difficulty)}):'');
   practiceExitChrome('practice_save_lobby',false);
-  if(restored&&practiceCfg.type==='computer'&&practice.turn==='computer')$('practice-guessarea').classList.add('hidden');
-  show('practice-game'); renderPracticeStatus();
+  if(restored&&practiceCfg.type==='computer'&&practice.turn==='computer')practiceDockBusy(true);
+  show('practice-game'); $('practice-body').scrollTop=0; renderPracticeStatus();
 }
+/* Mientras piensa el computador, el muelle se queda donde esta pero apagado:
+   esconderlo medio segundo en cada turno hacia saltar el diario. */
+function practiceDockBusy(busy){ practicePad.setDisabled(busy); $('practice-guess-btn').disabled=busy; }
 /* La salida de la practica dice dos cosas distintas segun quien juegue, y al
    terminar es cuando al invitado se le ofrece la cuenta: hasta entonces nadie
    le pide nada. */
 function practiceExitChrome(exitKey,ended){
   const guest=guestActive(),key=guest?'guest_back':exitKey,btn=$('practice-lobby-btn');
-  if(btn){ btn.textContent=t(key); btn.dataset.i18n=key; }
+  // El boton de la cabecera es un icono: lo que dice va en su etiqueta.
+  if(btn){ btn.title=t(key); btn.setAttribute('aria-label',t(key)); btn.dataset.i18nTitle=key; }
+  const exit=$('practice-exit-btn'), exitKey2=guest?'guest_back':'result_lobby';
+  if(exit){ exit.textContent=t(exitKey2); exit.dataset.i18n=exitKey2; }
   const invite=$('guest-invite'); if(invite) invite.classList.toggle('hidden',!(guest&&ended));
 }
 function stopPracticeTick(){ if(practiceTickTimer){clearInterval(practiceTickTimer);practiceTickTimer=null;} if(practiceComputerTimer){clearTimeout(practiceComputerTimer);practiceComputerTimer=null;} }
@@ -4951,9 +5352,13 @@ function playerPracticeAttempts(){return practice.guesses.length+(practice.misse
 function renderPracticeStatus(){
   if(!practice||practice.finished)return;
   const used=playerPracticeAttempts(), left=practiceCfg.maxAttempts?Math.max(0,practiceCfg.maxAttempts-used):'∞';
-  $('practice-attempts').textContent=practiceCfg.maxAttempts?t('attempts_chip',{left,max:practiceCfg.maxAttempts}):`${used} ${t('rl_attempts',{n:''}).trim()}`;
-  const computer=practiceCfg.type==='computer'; $('practice-computer-attempts').classList.toggle('hidden',!computer); $('practice-difficulty').classList.toggle('hidden',!computer);
-  if(computer){const n=practice.computerGuesses.length,l=practiceCfg.maxAttempts?Math.max(0,practiceCfg.maxAttempts-n):'∞';$('practice-computer-attempts').textContent=`🤖 ${practiceCfg.maxAttempts?l+'/'+practiceCfg.maxAttempts:n}`;$('practice-difficulty').textContent=t('computer_difficulty',{level:t('difficulty_'+practiceCfg.difficulty)});}
+  $('practice-attempt-no').textContent=' · '+t('game_attempt_no',{n:practiceCfg.maxAttempts?Math.min(used+1,practiceCfg.maxAttempts):used+1});
+  // Sin limite, la cuenta ya esta en el titulo y en la pestaña del diario.
+  $('practice-attempts').classList.toggle('hidden',!practiceCfg.maxAttempts);
+  $('practice-attempts').textContent=practiceCfg.maxAttempts?t('attempts_chip',{left,max:practiceCfg.maxAttempts}):'';
+  // Sin limite, los intentos de cada lado ya se cuentan en las pestañas del diario.
+  const computer=practiceCfg.type==='computer'; $('practice-computer-attempts').classList.toggle('hidden',!computer||!practiceCfg.maxAttempts);
+  if(computer&&practiceCfg.maxAttempts){const l=Math.max(0,practiceCfg.maxAttempts-practice.computerGuesses.length);$('practice-computer-attempts').textContent=t('computer_chip',{n:l+'/'+practiceCfg.maxAttempts});}
   const bank=isPracticeBank(), timer=$('practice-timer');
   timer.classList.toggle('hidden',!practice.deadline&&!bank);
   if(practice.deadline||bank){
@@ -4971,18 +5376,26 @@ function evaluatePractice(secret,guess){
 }
 function submitPracticeGuess(){
   if(!practice||practice.finished||practice.turn!=='player')return;
-  const guess=practiceCfg.mode==='colors'?practicePad.get():$('practice-guess').value.trim();
+  const guess=practicePad.get();
   const validation=validateLive(guess,practiceCfg.digits,practiceCfg.allowRepeats);
   if(validation.cls!=='ok'){toast(t('invalid_guess'),true);return;}
   const score=evaluatePractice(practice.secret,guess); practice.guesses.push({guess,...score}); renderPracticeLog();
-  $('practice-guess').value=''; practicePad.reset(); $('practice-guess-val').textContent='';
+  practicePad.reset(); $('practice-guess-val').textContent='';
   if(practiceCfg.type==='computer'){handlePlayerComputerScore(score);return;}
   if(score.fijas===practiceCfg.digits) finishPractice(true,'solved');
   else if(practiceCfg.maxAttempts&&practice.guesses.length>=practiceCfg.maxAttempts) finishPractice(false,'attempts');
   else{if(practiceCfg.turnSeconds)practice.deadline=Date.now()+practiceCfg.turnSeconds*1000;renderPracticeStatus();saveActivePractice();}
 }
-function renderPracticeLog(){
-  $('practice-log').innerHTML=practice.guesses.length?practice.guesses.slice().reverse().map(g=>{if(g.missed)return `<div class="g"><span class="scoretxt">${t('practice_missed_timeout')}</span></div>`;let p='';for(let i=0;i<g.fijas;i++)p+='<span class="pip f"></span>';for(let i=0;i<g.picas;i++)p+='<span class="pip p"></span>';if(!p)p=`<span class="scoretxt">${t('log_nada')}</span>`;return `<div class="g">${codeViewHTML(g.guess,practiceCfg.mode)}<span class="scoretxt">${g.fijas}F · ${g.picas}P</span><span class="pips">${p}</span></div>`;}).join(''):`<div class="empty">${t('log_empty_mine')}</div>`;
+function renderPracticeLog(){ renderPracticeJournal(); }
+/* Los dos lados de la practica en el mismo diario que la partida: tus
+   intentos y, contra el computador, los suyos con lo que penso en cada uno. */
+function renderPracticeJournal(){
+  if(!practice) return;
+  const computer=practiceCfg.type==='computer';
+  renderJournal('p',{mode:practiceCfg.mode, digits:practiceCfg.digits,
+    mine:{label:t('tab_mine',{n:practice.guesses.length}), list:practice.guesses, empty:t('log_empty_mine'), missed:t('practice_missed_timeout')},
+    theirs:computer?{label:t('tab_computer',{n:practice.computerGuesses.length}), newLabel:t('tab_new_computer'), list:practice.computerGuesses,
+      empty:t('log_empty_theirs'), missed:t('missed_timeout'), extra:thinkLine}:null});
 }
 function expireSoloAttempt(){if(!practice||practice.finished||practiceCfg.type!=='solo')return;
   practice.deadline=0;practice.guesses.push({missed:true,reason:'timeout'});renderPracticeLog();
@@ -5005,9 +5418,7 @@ function thinkLine(g){
   const groups=g.groups>1?' · '+t('think_groups',{n:g.groups}):'';
   return `<div class="think">${t('think_line',{before:g.before,after:g.after})}${groups}</div>`;
 }
-function renderComputerLog(){
-  $('practice-computer-log').innerHTML=practice.computerGuesses.length?practice.computerGuesses.slice().reverse().map(g=>{let p='';for(let i=0;i<g.fijas;i++)p+='<span class="pip f"></span>';for(let i=0;i<g.picas;i++)p+='<span class="pip p"></span>';if(!p)p=`<span class="scoretxt">${t('log_nada')}</span>`;return `<div class="g">${codeViewHTML(g.guess,practiceCfg.mode)}<span class="scoretxt">${g.fijas}F · ${g.picas}P</span><span class="pips">${p}</span></div>`+thinkLine(g);}).join(''):`<div class="empty">${t('log_empty_theirs')}</div>`;
-}
+function renderComputerLog(){ renderPracticeJournal(); }
 function handlePlayerComputerScore(score){
   settlePracticeBank();
   if(score.fijas===practiceCfg.digits)practice.pendingWinner='player';
@@ -5017,7 +5428,7 @@ function handlePlayerComputerScore(score){
   beginComputerTurn();
 }
 function beginComputerTurn(){
-  practice.turn='computer';practice.deadline=0;$('practice-guessarea').classList.add('hidden');$('practice-turn').className='turnbar sending';$('practice-turn-txt').textContent=computerThinkingText();renderPracticeStatus();saveActivePractice();practiceComputerTimer=setTimeout(runComputerTurn,450);
+  practice.turn='computer';practice.deadline=0;practiceDockBusy(true);$('practice-turn').className='turnbar sending';$('practice-turn-txt').textContent=computerThinkingText();renderPracticeStatus();saveActivePractice();practiceComputerTimer=setTimeout(runComputerTurn,450);
 }
 function runComputerTurn(){
   practiceComputerTimer=null;if(!practice||practice.finished)return;
@@ -5030,17 +5441,17 @@ function runComputerTurn(){
   if(practiceCfg.maxAttempts&&playerPracticeAttempts()>=practiceCfg.maxAttempts&&practice.computerGuesses.length>=practiceCfg.maxAttempts){finishComputerPractice('draw');return;}
   beginPlayerTurn();
 }
-function beginPlayerTurn(){practice.turn='player';practice.deadline=isPracticeBank()?Date.now()+Math.max(1,practice.bankMs):(practiceCfg.turnSeconds?Date.now()+practiceCfg.turnSeconds*1000:0);$('practice-guessarea').classList.remove('hidden');renderPracticeStatus();saveActivePractice();}
+function beginPlayerTurn(){practice.turn='player';practice.deadline=isPracticeBank()?Date.now()+Math.max(1,practice.bankMs):(practiceCfg.turnSeconds?Date.now()+practiceCfg.turnSeconds*1000:0);practiceDockBusy(false);renderPracticeStatus();saveActivePractice();}
 function expireComputerPlayerTurn(){if(!practice||practice.finished||practice.turn!=='player')return;
   if(isPracticeBank()){practice.deadline=0;practice.bankMs=0;finishComputerPractice('loss','timeout');return;}
   practice.deadline=0;practice.missedTurns++;toast(t('computer_timeout'));if(practice.pendingWinner==='computer'){finishComputerPractice('loss');return;}if(practiceCfg.maxAttempts&&playerPracticeAttempts()>=practiceCfg.maxAttempts&&practice.computerGuesses.length>=practiceCfg.maxAttempts){finishComputerPractice('draw');return;}if(!practiceCfg.maxAttempts||practice.computerGuesses.length<practiceCfg.maxAttempts)beginComputerTurn();else beginPlayerTurn();}
 function finishComputerPractice(result,reason=''){
   if(!practice||practice.finished)return;practice.finished=true;stopPracticeTick();clearSavedPractice();
   const s=computerStats(),key=result==='win'?'wins':result==='loss'?'losses':'draws';s.played++;s[key]++;s.byDifficulty[practiceCfg.difficulty][key]++;localStorage.setItem('pf_computer_stats',JSON.stringify(s));
-  $('practice-secret').innerHTML=codeViewHTML(practice.playerSecret,practiceCfg.mode);$('practice-guessarea').classList.add('hidden');$('practice-turn').classList.add('hidden');$('practice-active-actions').classList.add('hidden');$('practice-actions').classList.remove('hidden');practiceExitChrome('result_lobby',true);
+  $('practice-secret').innerHTML=codeViewHTML(practice.playerSecret,practiceCfg.mode);$('practice-guessarea').classList.add('hidden');$('practice-attempt-no').textContent='';$('practice-turn').classList.add('hidden');$('practice-active-actions').classList.add('hidden');$('practice-actions').classList.remove('hidden');practiceExitChrome('result_lobby',true);
   const surrendered=reason==='surrender',title=surrendered?t('practice_surrendered'):t('computer_result_'+result),
     detail=surrendered?t('practice_surrender_detail'):reason==='timeout'?t('lose_timeout'):t('computer_both_codes',{yours:practice.playerSecret,computer:practice.secret});
-  $('practice-banner').innerHTML=`<div class="banner ${result==='win'?'win':result==='loss'?'lose':'draw'}"><h2>${title}</h2><p>${detail}</p></div><div class="note"><b>${t('practice_secret')}</b> ${codeViewHTML(practice.playerSecret,practiceCfg.mode)} · <b>🤖</b> ${codeViewHTML(practice.secret,practiceCfg.mode)}</div>`
+  $('practice-banner').innerHTML=`<div class="banner ${result==='win'?'win':result==='loss'?'lose':'draw'}"><h2>${title}</h2><p>${detail}</p></div><div class="note"><b>${t('practice_secret')}</b> ${codeViewHTML(practice.playerSecret,practiceCfg.mode)} · <b>${t('computer_code')}</b> ${codeViewHTML(practice.secret,practiceCfg.mode)}</div>`
     +shareCardBlock({guesses:practice.guesses, digits:practiceCfg.digits,
       solved:practice.guesses.some(g=>g.fijas===practiceCfg.digits), attempts:practice.guesses.filter(g=>!g.missed).length,
       durationMs:Date.now()-practice.startedAt})
@@ -5056,7 +5467,7 @@ function finishPractice(won,reason){
     +shareCardBlock({guesses:practice.guesses, digits:practiceCfg.digits, solved:won,
       attempts:practice.guesses.filter(g=>!g.missed).length, durationMs:elapsed})
     +analysisBlock(practiceCfg,practice.guesses);
-  $('practice-guessarea').classList.add('hidden'); $('practice-active-actions').classList.add('hidden'); $('practice-actions').classList.remove('hidden');practiceExitChrome('result_lobby',true); endSound(won?'win':'lose');
+  $('practice-guessarea').classList.add('hidden'); $('practice-attempt-no').textContent=''; $('practice-active-actions').classList.add('hidden'); $('practice-actions').classList.remove('hidden');practiceExitChrome('result_lobby',true); endSound(won?'win':'lose');
 }
 $('p-seg-type').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;practiceCfg.type=b.dataset.type;segPick($('p-seg-type'),b);syncPracticeControls();});
 $('p-seg-difficulty').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;practiceCfg.difficulty=b.dataset.level;segPick($('p-seg-difficulty'),b);});
@@ -5089,9 +5500,7 @@ function syncPracticeClock(){
 $('p-seg-clock').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;practiceClock=b.dataset.c;segPick($('p-seg-clock'),b);syncPracticeClock();});
 $('p-seg-bank').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;segPick($('p-seg-bank'),b);syncPracticeClock();});
 $('p-seg-bank-inc').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;segPick($('p-seg-bank-inc'),b);syncPracticeClock();});
-$('practice-guess').addEventListener('input',e=>setVal('practice-guess-val',e.target.value,practiceCfg.digits,practiceCfg.allowRepeats));
 $('practice-player-secret').addEventListener('input',e=>setVal('practice-secret-val',e.target.value,practiceCfg.digits,practiceCfg.allowRepeats));
-bindEnterToButton('practice-guess','practice-guess-btn');
 function suggestPracticeSecret(){const value=randomSecret(practiceCfg);if(practiceCfg.mode==='colors')practiceSecretPad.set(value);else{$('practice-player-secret').value=value;$('practice-player-secret').dispatchEvent(new Event('input'));}}
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden&&practice&&!practice.finished&&!$('s-practice-game').classList.contains('hidden')){practice.backgroundPaused=true;pauseActivePractice();}
@@ -5186,7 +5595,7 @@ function getSecret(ctx){
   if(ctx==='c') return cfg.mode==='colors'? padC.get() : $('secret-c').value.trim();
   if(ctx==='j') return joinMeta.mode==='colors'? padJ.get() : $('secret-j').value.trim();
   if(ctx==='r') return finishedMeta.mode==='colors'? padR.get() : $('secret-r').value.trim();
-  if(ctx==='g') return game.mode==='colors'? padG.get() : $('g-guess').value.trim();
+  if(ctx==='g') return padG.get();
 }
 async function createGame(){
   const secret=getSecret('c');
@@ -5374,21 +5783,28 @@ function metaFromState(st){
     maxAttempts:st.maxAttempts||0, turnSeconds:st.turnSeconds||0, timeMode:st.timeMode||'turn', bankSeconds:st.bankSeconds||0, bankIncrement:st.bankIncrement||0,
     revealSecrets:!!st.revealSecrets, notebook:!!st.notebook};
 }
+function resetClock(id){
+  const box=$(id); box.className='bank'; box.dataset.who='';
+  box.querySelector('.avatar').outerHTML=avatarHTML('');
+  for(const part of ['.who','.clock']){ const el=box.querySelector(part); el.dataset.html=''; el.textContent=''; }
+}
 function resetGameView(){
   hideToast();
-  $('g-players').innerHTML=''; $('g-mysecret').textContent='•'.repeat(game.digits);
-  $('g-mysecret').closest('.code-view').classList.toggle('hidden',!!game.spectator);
   $('g-banner').innerHTML=''; $('g-rematch-zone').innerHTML='';
-  $('g-mylog').innerHTML=`<div class="empty">${t('loading')}</div>`;
-  $('g-theirlog').innerHTML=`<div class="empty">${t('loading')}</div>`;
+  resetJournal('g');
+  secretPeek=false; paintMySecret();
+  $('g-secret-row').classList.toggle('hidden',!!game.spectator);
   $('g-turn').className='turnbar theirs'; $('g-turn').classList.remove('hidden');
-  $('g-turn-txt').textContent=t('waiting_generic');
-  $('g-statusrow').classList.add('hidden'); $('g-timer').classList.add('hidden'); $('g-attempts').classList.add('hidden');
-  $('g-banks').classList.add('hidden');
-  $('g-guessarea').classList.toggle('hidden',!!game.spectator); $('g-guess').disabled=true; $('g-guess-btn').disabled=true;
-  $('g-abandon-wrap').classList.add('hidden'); $('g-legend').style.display='flex';
+  $('g-turn-txt').textContent=t('waiting_generic'); $('g-turn-sub').textContent='';
+  $('g-attempt-no').textContent=''; $('g-rules').textContent=rulesLabel(game);
+  resetClock('g-bank-mine'); resetClock('g-bank-theirs');
+  $('g-guessarea').classList.toggle('hidden',!!game.spectator); $('g-guess-btn').disabled=true;
+  $('g-abandon-wrap').classList.add('hidden'); $('g-nb-link').classList.add('hidden'); $('g-legend').style.display='flex';
   $('g-pause-cover').classList.add('hidden'); $('g-pause-btn').classList.add('hidden');
   $('g-notebook').classList.add('hidden'); $('g-contradiction').classList.add('hidden'); $('g-contradiction').textContent='';
+  const back=$('g-back'), label=t(reviewingHistory?'back':'result_lobby');
+  back.title=label; back.setAttribute('aria-label',label);
+  $('g-body').scrollTop=0;
 }
 function enterGame(meta,initialState=null){
   const epoch=++gameViewEpoch;
@@ -5396,10 +5812,9 @@ function enterGame(meta,initialState=null){
   reviewingHistory=!!meta.review;
   game={id:meta.id, digits:parseInt(meta.digits,10), mode:meta.mode, numColors:meta.numColors||6, allowRepeats:meta.allowRepeats, isPublic:meta.isPublic!==false,
     maxAttempts:meta.maxAttempts||0, turnSeconds:meta.turnSeconds||0, timeMode:meta.timeMode||'turn', bankSeconds:meta.bankSeconds||0, bankIncrement:meta.bankIncrement||0, revealSecrets:!!meta.revealSecrets, notebook:!!meta.notebook, spectator:!!meta.spectator};
-  const inp=$('g-guess'); inp.maxLength=game.digits; inp.value=''; inp.placeholder='•'.repeat(game.digits);
-  padG.reset(); applyMode('g', game.mode, 'g-guess', 'pad-g', padG);
   $('g-code').textContent=meta.id; $('g-guess-val').textContent='';
-  gState=null; passRequested=false; lastTurnStart=''; lastYourTurn=null; endSoundPlayed=false; freshBadges=[];
+  gState=null; passRequested=false; lastTurnStart=''; lastYourTurn=null; endSoundPlayed=false; freshBadges=[]; finishSeen=false;
+  padG.setDisabled(true); padG.reset();
   resetGameView();
   if(!reviewingHistory&&!game.spectator)localStorage.setItem('pf_current_game',game.id);
   show('game');
@@ -5429,7 +5844,6 @@ async function refreshGame(expectedEpoch=gameViewEpoch, expectedGameId=game.id){
     }else toast(te(st.error)||t('net_error'),true);
   }catch(e){ /* Un fallo transitorio conserva visible el último estado válido. */ }
 }
-$('g-guess').addEventListener('input', e=>{setVal('g-guess-val', e.target.value, game.digits, game.allowRepeats); renderContradiction(e.target.value);});
 
 bindEnterToButton('upin2','auth-register-btn');
 bindEnterToButton('login-pin','auth-login-btn');
@@ -5438,7 +5852,6 @@ bindEnterToButton('join-code-inp','btn-join-code');
 bindEnterToButton('secret-c','btn-create');
 bindEnterToButton('secret-j','btn-join');
 bindEnterToButton('secret-r','btn-rematch');
-bindEnterToButton('g-guess','g-guess-btn');
 
 function renderGame(st){
   if(!st||String(st.gameId)!==String(game.id)||$('s-game').classList.contains('hidden')) return;
@@ -5452,49 +5865,43 @@ function renderGame(st){
   if(st.turnStartedAt!==lastTurnStart){ lastTurnStart=st.turnStartedAt; passRequested=false; }
   if(typeof st.notebook==='boolean') game.notebook=st.notebook;
   syncNotebook(st);
-  renderContradiction(game.mode==='colors'?padG.get():$('g-guess').value);
+  renderContradiction(padG.get());
 
   const me=st.youAre; const oppName = me===1 ? st.p2 : st.p1; const oppLabel = oppName||t('rival');
   const spectator=me===0;
-  const oppCountry = me===1 ? st.country2 : st.country1;
-  let leftCC, leftName, rightCC, rightName;
-  if(me===0){ leftCC=st.country1; leftName=st.p1; rightCC=st.country2; rightName=st.p2; }
-  else { leftCC=myCountry; leftName=user; rightCC=oppCountry; rightName=oppName; }
-  const rightChip = rightName ? playerChip(rightCC, rightName) : `<span class="pl">${t('waiting_short')}</span>`;
-  $('g-players').innerHTML = playerChip(leftCC, leftName) + `<span class="vs-sep">vs</span>` + rightChip +
-    (spectator?`<span class="pill">${t('spectator_mode')}</span>`:'');
-  $('g-rules').textContent = rulesLabel(metaFromState(st));
-  if(spectator){
-    $('colhead-mine').textContent=t('spectator_p1',{name:st.p1,opp:st.p2});
-    $('colhead-theirs').textContent=t('spectator_p2',{name:st.p2,opp:st.p1});
-  }else{
-    $('colhead-mine').textContent=t('colhead_mine',{name:oppLabel});
-    $('colhead-theirs').textContent=t('colhead_theirs',{name:oppLabel});
-  }
+  const rules=rulesLabel(metaFromState(st));
+  $('g-rules').textContent=rules; $('g-rules').title=rules;
+  const myAttempts = (me===1 ? st.attemptsP1 : st.attemptsP2)||0;
+  const attemptNo = st.maxAttempts>0 ? Math.min(myAttempts+1, st.maxAttempts) : myAttempts+1;
+  $('g-attempt-no').textContent = spectator ? ' · '+t('spectator_mode') : st.status==='active' ? ' · '+t('game_attempt_no',{n:attemptNo}) : '';
 
-  const local=localStorage.getItem('pf_secret_'+game.id);
-  const mySecret=st.yourSecret||local||'';
   // El backend devuelve únicamente el secreto del usuario autenticado. Guardarlo
   // localmente permite seguir mostrándolo si una actualización puntual falla.
   if(st.yourSecret) localStorage.setItem('pf_secret_'+game.id,st.yourSecret);
-  $('g-mysecret').innerHTML = mySecret ? codeViewHTML(mySecret, game.mode) : '•'.repeat(game.digits);
-  $('g-mysecret').closest('.code-view').classList.toggle('hidden',spectator);
+  $('g-secret-row').classList.toggle('hidden',spectator);
+  paintMySecret();
 
   const mine=st.guesses.filter(g=>g.by===(spectator?st.p1:user));
   const theirs=st.guesses.filter(g=>g.by===(spectator?st.p2:oppName));
-  renderLog('g-mylog', mine, t('log_empty_mine'));
-  renderLog('g-theirlog', theirs, t('log_empty_theirs'));
+  const rivalName=spectator?st.p2:oppLabel;
+  renderJournal('g',{mode:game.mode, digits:game.digits,
+    mine:{label:spectator?t('tab_player',{name:st.p1,n:mine.length}):t('tab_mine',{n:mine.length}), list:mine, empty:t('log_empty_mine'), missed:t('missed_timeout')},
+    theirs:{label:t('tab_player',{name:rivalName,n:theirs.length}), name:rivalName, list:theirs, empty:t('log_empty_theirs'), missed:t('missed_timeout')}});
+  renderClocks(st);
 
   const banner=$('g-banner'); const rz=$('g-rematch-zone'); const turn=$('g-turn');
-  const guessarea=$('g-guessarea'); const legend=$('g-legend'); const statusrow=$('g-statusrow');
+  const guessarea=$('g-guessarea'); const legend=$('g-legend');
 
   if(st.status==='finished'){
     if(!reviewingHistory)localStorage.removeItem('pf_current_game');
-    $('g-abandon-wrap').classList.add('hidden');
+    $('g-abandon-wrap').classList.add('hidden'); $('g-nb-link').classList.add('hidden');
     $('g-pause-cover').classList.add('hidden'); $('g-pause-btn').classList.add('hidden');
-    turn.classList.add('hidden'); guessarea.classList.add('hidden'); statusrow.classList.add('hidden'); legend.style.display='none';
-    renderBanks(st);
+    turn.classList.add('hidden'); guessarea.classList.add('hidden'); legend.style.display='none';
+    padG.setDisabled(true);
     stopTick();
+    // El final se anuncia arriba del diario: si se estaba leyendo un intento
+    // viejo, se sube una vez para verlo.
+    if(!finishSeen){ finishSeen=true; $('g-body').scrollTop=0; }
     const won = st.winner===user;
     if(!endSoundPlayed&&!spectator){ endSoundPlayed=true; endSound(st.isDraw?'draw':(won?'win':'lose')); }
     if(st.isDraw){
@@ -5529,87 +5936,89 @@ function renderGame(st){
       if(freshBadges.length){ banner.insertAdjacentHTML('beforeend',badgesBlockHTML(freshBadges)); }
     }
     if(reviewingHistory){
-      rz.innerHTML=`<button class="btn ghost" onclick="leaveHistoryGame()">${t('back')}</button><div style="height:12px"></div>`;
+      rz.innerHTML=`<button class="btn ghost" onclick="leaveHistoryGame()">${t('back')}</button>`;
     }else if(spectator){
       rz.innerHTML='';
     }else if(st.rematchId){
-      rz.innerHTML=`<button class="btn green" onclick="goToRematch('${st.rematchId}')">${t('rematch_go')}</button>
-        <div style="height:10px"></div><button class="btn ghost" onclick="leaveGame()">${t('result_lobby')}</button><div style="height:12px"></div>`;
+      rz.innerHTML=`<button class="btn green" onclick="goToRematch('${st.rematchId}')">${t('rematch_go')}</button><button class="btn ghost" onclick="leaveGame()">${t('result_lobby')}</button>`;
     }else{
-      rz.innerHTML=`<button class="btn green" onclick="openRematch()">${t('rematch_btn')}</button>
-        <div style="height:10px"></div><button class="btn ghost" onclick="leaveGame()">${t('result_lobby')}</button><div style="height:12px"></div>`;
+      rz.innerHTML=`<button class="btn green" onclick="openRematch()">${t('rematch_btn')}</button><button class="btn ghost" onclick="leaveGame()">${t('result_lobby')}</button>`;
     }
     return;
   }
 
   banner.innerHTML=''; rz.innerHTML=''; legend.style.display='flex';
-  $('g-abandon-wrap').classList.toggle('hidden',st.status!=='active'||spectator);
-  $('g-pause-btn').classList.toggle('hidden',st.status!=='active'||spectator||!!st.manualPausedBy||!(st.turnSeconds>0)||st.timeMode==='correspondence');
-  $('g-pause-btn').title=t('pause_btn'); $('g-pause-btn').setAttribute('aria-label',t('pause_btn'));
+  const playing=st.status==='active'&&!spectator;
+  $('g-abandon-wrap').classList.toggle('hidden',!playing);
+  $('g-nb-link').classList.toggle('hidden',!(playing&&st.notebook));
+  const pauseBtn=$('g-pause-btn');
+  pauseBtn.classList.toggle('hidden',!playing||!!st.manualPausedBy||!(st.turnSeconds>0)||st.timeMode==='correspondence');
+  pauseBtn.title=t('pause_btn'); pauseBtn.setAttribute('aria-label',t('pause_btn'));
   turn.classList.remove('hidden'); guessarea.classList.toggle('hidden',spectator);
   updatePauseCover();
 
-  renderBanks(st);
-  const myAttempts = me===1 ? st.attemptsP1 : st.attemptsP2;
   const canGuessAttempts = !(st.maxAttempts>0 && myAttempts>=st.maxAttempts);
-  if(st.maxAttempts>0 || st.turnSeconds>0){
-    statusrow.classList.remove('hidden');
-    if(st.maxAttempts>0){ const left=Math.max(0, st.maxAttempts-myAttempts);
-      const a=$('g-attempts'); a.classList.remove('hidden'); a.className='chip'+(left<=1?' hot':(left<=2?' warn':''));
-      a.textContent=t('attempts_chip',{left:left,max:st.maxAttempts}); }
-    else $('g-attempts').classList.add('hidden');
-    $('g-timer').classList.toggle('hidden', !(st.turnSeconds>0));
-  }else statusrow.classList.add('hidden');
-
+  const sub=$('g-turn-sub');
   const pending = st.pendingWinner || '';
+  let playable=false;
   if(st.yourTurn){
-    turn.className='turnbar mine'; $('g-turn-txt').textContent=t('your_turn');
+    turn.className='turnbar mine';
+    $('g-turn-txt').textContent=tElide('turn_mine',{name:oppLabel},{name:oppLabel});
+    sub.textContent=turnSubText(st,attemptNo);
     const ok=canGuessAttempts&&!st.timerPaused&&(!(st.turnSeconds>0)||st.turnRemaining>0)&&(st.timeMode!=='bank'||bankLeft(st,me)>0);
-    $('g-guess-btn').disabled=!ok||guessSubmitting; $('g-guess').disabled=!ok||guessSubmitting; padG.setDisabled(!ok||guessSubmitting);
-    if(!ok) $('g-turn-txt').textContent=t('no_attempts_wait');
+    playable=ok&&!guessSubmitting;
+    $('g-guess-btn').disabled=!playable;
+    if(!ok){ $('g-turn-txt').textContent=t('no_attempts_wait'); sub.textContent=''; }
     if(pending && pending!==user){
       turn.className='turnbar mine';
       $('g-turn-txt').textContent=t('tiebreak_you',{name:oppLabel});
     }
     if(guessSubmitting){
       turn.className='turnbar sending';
-      $('g-turn-txt').textContent=t('sending_guess');
+      $('g-turn-txt').textContent=t('sending_guess'); sub.textContent='';
     }
   }else{
     turn.className='turnbar theirs';
     $('g-turn-txt').textContent= st.whoseTurn ? t('turn_of',{name:st.whoseTurn}) : t('waiting_generic');
-    $('g-guess-btn').disabled=true; $('g-guess').disabled=true; padG.setDisabled(true);
-    $('g-guess').value=''; padG.reset(); $('g-guess-val').textContent=''; renderContradiction('');
+    sub.textContent='';
+    $('g-guess-btn').disabled=true;
+    if(padG.get()){ padG.reset(); $('g-guess-val').textContent=''; renderContradiction(''); }
     if(pending && pending===user){
       $('g-turn-txt').textContent=t('solved_wait',{name:oppLabel});
     }
   }
-  if(st.timerPaused) $('g-turn-txt').textContent=pausedStatusText(st);
+  padG.setDisabled(!playable);
+  if(st.timerPaused){ $('g-turn-txt').textContent=pausedStatusText(st); sub.textContent=''; }
   if(st.yourTurn && lastYourTurn===false) notifyTurn();
   lastYourTurn = st.yourTurn;
   updateTimer();
 }
-function renderLog(id, arr, emptyMsg){
-  const box=$(id);
-  if(!arr.length){ box.innerHTML=`<div class="empty">${emptyMsg}</div>`; return; }
-  box.innerHTML='';
-  arr.slice().reverse().forEach(g=>{
-    const el=document.createElement('div'); el.className='g';
-    if(g.missed){
-      el.className='g missed';
-      el.innerHTML=`<span class="scoretxt">${t('missed_timeout')}</span>`;
-      box.appendChild(el);
-      return;
-    }
-    let pips='';
-    for(let i=0;i<g.fijas;i++) pips+='<span class="pip f"></span>';
-    for(let i=0;i<g.picas;i++) pips+='<span class="pip p"></span>';
-    if(g.fijas+g.picas===0) pips=`<span class="scoretxt">${t('log_nada')}</span>`;
-    el.innerHTML=`${codeViewHTML(g.guess, game.mode)}
-      <span class="scoretxt">${g.fijas}F · ${g.picas}P</span>
-      <span class="pips">${pips}</span>`;
-    box.appendChild(el);
-  });
+/* La linea de debajo del turno: en que intento vas y que hace tu reloj. */
+function turnSubText(st, attemptNo){
+  const parts=[st.maxAttempts>0?t('turn_sub_attempt_max',{n:attemptNo,max:st.maxAttempts}):t('turn_sub_attempt',{n:attemptNo})];
+  if(st.timeMode==='correspondence') parts.push(t('turn_sub_corr'));
+  else if(st.timeMode==='bank'&&st.bankSeconds>0) parts.push(st.bankIncrement>0?t('turn_sub_bank_inc',{n:st.bankIncrement}):t('turn_sub_bank'));
+  else if(st.turnSeconds>0) parts.push(t('turn_sub_turnclock'));
+  return parts.join(' · ');
+}
+/* Tu codigo va plegado: se ve de un toque, y no a quien mire por encima del
+   hombro. Al terminar la partida ya no hay nada que guardar. */
+let secretPeek=false, finishSeen=false;
+function paintMySecret(){
+  const btn=$('g-mysecret'); if(!btn) return;
+  const secret=(gState&&String(gState.gameId)===String(game.id)&&gState.yourSecret)||localStorage.getItem('pf_secret_'+game.id)||'';
+  const shown=!!secret&&(secretPeek||!!(gState&&gState.status==='finished'));
+  const html=shown?codeViewHTML(secret,game.mode):esc('•'.repeat(game.digits||4));
+  if(btn.dataset.html!==html){ btn.dataset.html=html; btn.innerHTML=html; }
+  btn.setAttribute('aria-pressed',shown?'true':'false');
+  const label=t(shown?'secret_hide':'secret_show'); btn.title=label; btn.setAttribute('aria-label',label);
+  btn.disabled=!secret;
+}
+function toggleSecretPeek(){ secretPeek=!secretPeek; paintMySecret(); }
+function gameBack(){ if(reviewingHistory) leaveHistoryGame(); else leaveGame(); }
+function scrollToNotebook(){
+  const calm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  $('g-notebook').scrollIntoView({block:'start',behavior:calm?'auto':'smooth'});
 }
 
 /* -------------------- el cuaderno y el aviso de contradiccion (E4-T3) -------
@@ -5647,6 +6056,8 @@ function renderNotebook(){
       +` aria-pressed="${state?'true':'false'}">${face}</button>`;
   }
   grid.innerHTML=html;
+  // Lo descartado aqui sale tachado tambien en el teclado del muelle.
+  padG.refresh();
 }
 function syncNotebook(st){
   const box=$('g-notebook'); if(!box) return;
@@ -5679,9 +6090,9 @@ async function submitGuess(){
   const requestId=(crypto.randomUUID?crypto.randomUUID():[...crypto.getRandomValues(new Uint8Array(16))].map(byte=>byte.toString(16).padStart(2,'0')).join('')).replace(/[^A-Za-z0-9-]/g,'');
   guessSubmitting=true;
   $('g-turn').className='turnbar sending';
-  $('g-turn-txt').textContent=t('sending_guess');
+  $('g-turn-txt').textContent=t('sending_guess'); $('g-turn-sub').textContent='';
   $('g-guess-btn').disabled=true;
-  $('g-guess').disabled=true;
+  padG.setDisabled(true);
   let res;
   try{
     try{
@@ -5691,7 +6102,7 @@ async function submitGuess(){
       res=await api('guess',{gameId:game.id, username:user, guess, requestId},{timeoutMs:30000});
     }
     if(!res.ok){ guessSubmitting=false; if(gState) renderGame(gState); toast(te(res.error),true); refreshGame(); return; }
-    $('g-guess').value=''; padG.reset(); $('g-guess-val').textContent=''; renderContradiction('');
+    padG.reset(); $('g-guess-val').textContent=''; renderContradiction('');
     guessSubmitting=false;
     if(res.tie) toast(t('toast_tie'));
     else if(res.win) toast(t('win_title'));
@@ -5760,10 +6171,10 @@ function pausedStatusText(st){
 }
 
 /* -------------------- los relojes --------------------
-   Dos formas con la misma aritmetica: el cronometro por turno vive en un chip
-   y la bolsa de tiempo en dos relojes, uno por jugador. En los dos casos el
-   navegador solo descuenta desde el estado que mando el servidor; quien decide
-   sigue siendo el servidor. */
+   Tres formas con la misma aritmetica —por turno, bolsa y correspondencia— y
+   un solo sitio donde se ven: los dos relojes compactos de la cabecera, uno
+   por jugador. El navegador solo descuenta desde el estado que mando el
+   servidor; quien decide sigue siendo el servidor. */
 function fmtClock(seconds){
   const total=Math.max(0,seconds), mm=Math.floor(total/60), ss=total%60;
   if(total>=86400){const days=Math.floor(total/86400),hours=Math.floor((total%86400)/3600),mins=Math.floor((total%3600)/60);return days+'d '+String(hours).padStart(2,'0')+':'+String(mins).padStart(2,'0');}
@@ -5779,53 +6190,71 @@ function bankLeft(st, side){
   const since=Number(st.clientReceivedAt)||Date.now();
   return Math.max(0, Math.min(st.bankSeconds, stored - Math.floor((Date.now()-since)/1000)));
 }
-function paintBank(id, label, seconds, running){
-  const box=$(id); box.querySelector('.who').textContent=label;
-  box.querySelector('.clock').innerHTML=ico('reloj',16)+'<span>'+fmtClock(seconds)+'</span>';
-  box.className='bank'+(running?' running':'')+(seconds<=0?' out':'')+(running?(seconds<=10?' hot':(seconds<=30?' warn':'')):'');
+/* Lo que le queda al turno en curso, contado desde la foto que mando el
+   servidor. Con el reloj en pausa se queda quieto. */
+function turnLeft(){
+  if(!gState||!(gState.turnSeconds>0)) return 0;
+  const started=Number(gState.clientReceivedAt)||Date.now();
+  const base=Number.isFinite(Number(gState.turnRemaining))?Number(gState.turnRemaining):gState.turnSeconds;
+  if(gState.timerPaused) return Math.max(0, Math.min(gState.turnSeconds, base));
+  return Math.max(0, Math.min(gState.turnSeconds, base - Math.floor((Date.now()-started)/1000)));
 }
-function renderBanks(st){
-  const host=$('g-banks'), on=st&&st.timeMode==='bank'&&st.bankSeconds>0;
-  host.classList.toggle('hidden',!on);
-  if(!on) return;
-  // El primer reloj es siempre el propio. Un espectador no tiene reloj, asi que
-  // ve los dos con su nombre, en el orden de la fila de jugadores.
-  const near = st.youAre===2 ? 2 : 1, far = near===1 ? 2 : 1;
-  const nameOf = side => side===1 ? st.p1 : st.p2;
-  const label = side => st.youAre===side ? t('bank_yours') : t('bank_theirs',{name:nameOf(side)||t('rival')});
-  const running = side => st.status==='active' && st.turn===side && !st.timerPaused;
-  paintBank('g-bank-mine', label(near), bankLeft(st,near), running(near));
-  paintBank('g-bank-theirs', label(far), bankLeft(st,far), running(far));
+/* Un reloj de la cabecera. Se repinta cada segundo, asi que cada pieza solo se
+   toca cuando cambia: la inicial y la bandera no parpadean. */
+function paintClock(id,o){
+  const box=$(id), who=(o.name||'')+'|'+(o.tone||'');
+  if(box.dataset.who!==who){ box.dataset.who=who; box.querySelector('.avatar').outerHTML=avatarHTML(o.name,{tone:o.tone}); }
+  const whoEl=box.querySelector('.who'), whoHTML=(o.cc?flagHTML(o.cc):'')+esc(o.label);
+  if(whoEl.dataset.html!==whoHTML){ whoEl.dataset.html=whoHTML; whoEl.innerHTML=whoHTML; }
+  const clockEl=box.querySelector('.clock'), timeHTML=o.seconds==null?'':(o.paused?ico('pausa',14):'')+'<span>'+fmtClock(o.seconds)+'</span>';
+  if(clockEl.dataset.html!==timeHTML){ clockEl.dataset.html=timeHTML; clockEl.innerHTML=timeHTML; }
+  const live=o.running&&o.seconds!=null&&!o.paused;
+  box.className='bank'+(o.running?' running':'')+(o.seconds!=null&&o.seconds<=0?' out':'')+(live?(o.seconds<=o.hot?' hot':(o.seconds<=o.warn?' warn':'')):'');
+}
+/* El primer reloj es siempre el propio. Un espectador no tiene reloj, asi que
+   ve los dos con su nombre, en el orden de la partida. Sin reloj quedan la
+   inicial, el nombre y a quien le toca. */
+function renderClocks(st){
+  const me=st.youAre, spectator=me===0, active=st.status==='active';
+  const near=me===2?2:1, far=near===1?2:1;
+  const nameOf=side=>side===1?st.p1:st.p2, ccOf=side=>side===1?st.country1:st.country2;
+  const bank=st.timeMode==='bank'&&st.bankSeconds>0, turnClock=!bank&&st.turnSeconds>0;
+  for(const [id,side] of [['g-bank-mine',near],['g-bank-theirs',far]]){
+    const running=active&&st.turn===side&&!!st.p2;
+    const mine=!spectator&&side===me;
+    let seconds=null;
+    if(bank) seconds=bankLeft(st,side);
+    else if(turnClock&&active) seconds=running?turnLeft():st.turnSeconds;
+    // Quien juega es coral, como en su saludo del vestibulo; el rival lleva
+    // su color de siempre, y nunca el mismo que tu.
+    const tone=mine?'coral':(!spectator&&avatarTone(nameOf(side))==='coral'?'violeta':'');
+    paintClock(id,{name:mine?user:nameOf(side), tone, cc:mine?'':ccOf(side),
+      label:mine?t(running?'clock_your_turn':'clock_you'):(nameOf(side)||t('waiting_short')),
+      seconds, running, paused:running&&!!st.timerPaused, warn:bank?30:10, hot:bank?10:5});
+  }
 }
 function updateTimer(){
   updatePauseCover();
   if(!gState || gState.status!=='active') return;
+  renderClocks(gState);
   if(gState.timeMode==='bank'){
-    renderBanks(gState);
     // Se avisa al servidor cuando cae la propia bandera. El rival tambien lo
     // descubre por su consulta periodica, asi que cerrar el navegador no salva
     // la partida ni la deja colgada.
     const me=gState.youAre;
     if(me && gState.turn===me && bankLeft(gState,me)<=0 && !passRequested){
       passRequested=true;
-      $('g-guess-btn').disabled=true; $('g-guess').disabled=true; padG.setDisabled(true);
+      $('g-guess-btn').disabled=true; padG.setDisabled(true);
       api('passTurn',{gameId:game.id, username:user}).then(()=>refreshGame()).catch(()=>{});
     }
     return;
   }
   if(!(gState.turnSeconds>0)) return;
-  const el=$('g-timer'); el.classList.remove('hidden');
-  if(gState.timerPaused){
-    el.textContent=pausedStatusText(gState); el.className='chip warn'; passRequested=false; return;
-  }
-  const started=Number(gState.clientReceivedAt)||Date.now();
-  const base=Number.isFinite(Number(gState.turnRemaining))?Number(gState.turnRemaining):gState.turnSeconds;
-  const remaining=Math.max(0, Math.min(gState.turnSeconds, base - Math.floor((Date.now()-started)/1000)));
-  el.innerHTML=ico('reloj',14)+'<span>'+fmtClock(remaining)+'</span>';
-  el.className='chip'+(remaining<=5?' hot':(remaining<=10?' warn':''));
+  if(gState.timerPaused){ passRequested=false; return; }
+  const remaining=turnLeft();
   if(remaining<=0 && !passRequested){
     passRequested=true;
-    $('g-guess-btn').disabled=true; $('g-guess').disabled=true; padG.setDisabled(true);
+    $('g-guess-btn').disabled=true; padG.setDisabled(true);
     api('passTurn',{gameId:game.id, username:user}).then(()=>refreshGame()).catch(()=>{});
   }
 }
