@@ -126,6 +126,6 @@ test('el selector de idioma está fuera del formulario de alta y a la vista en l
   // Dentro de un <form>, un <button> sin type es un botón de envío: elegir
   // idioma disparaba el alta. Fuera del formulario y con type, ya no puede.
   for (const code of ['es','en','fr'])
-    assert.match(login, new RegExp(`<button type="button" data-lang="${code}">`), code);
+    assert.match(login, new RegExp(`<button type="button" data-lang="${code}"[^>]*>`), code);
   assert.match(html, /\$\('seg-lang'\)\.addEventListener\('click'/);
 });

@@ -217,19 +217,24 @@ const boardRow = (row, rank) => ({
 /* El ranking. La respuesta cambia de forma respecto a la 3.9.1: cada fila
    lleva `points` y la lista viene ordenada por puntos. `wins` y `played`
    siguen ahi, porque la pantalla los sigue enseñando, y la peticion elige
-   temporada: el mes en curso o la historia entera. */
+   temporada: el mes en curso o la historia entera.
+
+   Con `meOnly`, solo la fila propia y su puesto: es lo que pinta el saludo del
+   vestibulo (4.4.0), que no necesita el Top 50 ni el total. Dos lecturas por
+   clave e indice, una vez al entrar al vestibulo y nunca en su sondeo. */
 export async function leaderboard(db, username, params = {}) {
   const requested = String(params.season || "").trim();
   const season = requested === SEASON_ALL ? SEASON_ALL : requested && /^\d{4}-\d{2}$/.test(requested) ? requested : seasonOf();
-  const { results } = await db
+  const meOnly = Boolean(params.meOnly);
+  const results = meOnly ? [] : (await db
     .prepare(
       `SELECT username,country,points,wins,played FROM player_scores
        WHERE season=? AND played>0 ORDER BY points DESC,wins DESC,played ASC LIMIT 50`,
     )
     .bind(season)
-    .all();
+    .all()).results;
   const key = usernameKey(username);
-  const total = await db
+  const total = meOnly ? null : await db
     .prepare("SELECT COUNT(*) n FROM player_scores WHERE season=? AND played>0")
     .bind(season)
     .first();
@@ -248,6 +253,7 @@ export async function leaderboard(db, username, params = {}) {
       .first();
     me = boardRow(mine, toInt(ahead?.n) + 1);
   }
+  if (meOnly) return { ok: true, season, me };
   return {
     ok: true,
     season,

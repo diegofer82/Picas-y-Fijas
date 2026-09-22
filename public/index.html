@@ -139,7 +139,6 @@
   button.logo:not(:disabled){cursor:pointer}
   button.logo:not(:disabled):hover{filter:brightness(1.06)}
   button.logo:not(:disabled):active{transform:translateY(4px);box-shadow:none}
-  .lobby-chips{display:flex;gap:8px;margin-top:16px;padding-top:15px;border-top:2px solid var(--linea-2);flex-wrap:wrap}
   .chipbtn{flex:1 1 auto;min-height:42px;padding:9px 12px;border-radius:999px;background:var(--papel);
     border:2px solid var(--linea);color:var(--tinta);cursor:pointer;box-shadow:0 3px 0 var(--linea);
     font:700 12.5px 'Figtree',system-ui,sans-serif;line-height:1.25;transition:transform .08s,box-shadow .08s,border-color .15s}
@@ -211,9 +210,6 @@
   .secret-label-row label{margin:0}
   .random-code-btn{width:40px;height:36px;border:2px solid var(--linea);border-radius:var(--r-sm);background:var(--papel);color:var(--tinta);cursor:pointer;font-size:18px;line-height:1;box-shadow:0 3px 0 var(--linea)}
   .random-code-btn:active{transform:translateY(3px);box-shadow:none}
-  .guest-try{margin:0 0 16px;padding:14px;border:2px solid var(--linea-2);border-radius:var(--r);background:var(--hueco)}
-  .guest-try .hint{margin:10px 0 0}
-  .public-pulse{margin:11px 0 0;color:var(--tinta);font:600 13px 'Figtree',system-ui,sans-serif;line-height:1.45;text-align:center}
   .guest-sep{display:flex;align-items:center;gap:10px;margin:0 0 16px;color:var(--bruma-2);font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase}
   .guest-sep::before,.guest-sep::after{content:"";flex:1;height:2px;background:var(--linea-2)}
   .guest-invite{margin-top:14px;padding:14px;border:2px solid var(--azul);border-radius:var(--r);background:var(--azul-suave)}
@@ -246,10 +242,6 @@
   .seg button.on{background:var(--tinta);border-color:var(--tinta);color:var(--sobre-tinta);box-shadow:0 3px 0 var(--tinta-2);font-weight:700}
   .seg button:disabled{opacity:.4;cursor:not-allowed}
 
-  /* Arriba de la tarjeta de acceso: discreto porque la mayoria no lo necesita,
-     pero a la vista porque para quien lo necesita no hay alternativa. */
-  .lang-pick{justify-content:flex-end;gap:6px;margin:0 0 14px}
-  .lang-pick button{flex:0 0 auto;min-width:0;min-height:36px;padding:6px 12px;font-size:12px;border-radius:10px}
 
   .val{font-size:12px;font-weight:600;margin-top:8px;min-height:16px}
   .val.err{color:var(--error)} .val.ok{color:var(--fija-texto)}
@@ -264,11 +256,6 @@
   .sw.bs{background:var(--papel);border-color:var(--linea);color:var(--tinta);font-size:18px;display:grid;place-items:center;box-shadow:0 3px 0 var(--linea)}
 
   .list{display:flex;flex-direction:column;gap:10px}
-  .availability-stats{display:grid;gap:6px;margin:10px 0 18px;padding:12px 14px;background:var(--hueco);border:0;border-radius:var(--r-md)}
-  .availability-line{font-size:13px;color:var(--bruma);font-weight:600;font-family:'Figtree',system-ui,sans-serif}
-  .lobby-section{padding-top:16px;margin-top:16px;border-top:2px solid var(--linea-2)}
-  .lobby-section-title{font-size:15px;font-weight:800;margin-bottom:3px}
-  .lobby-section-hint{font-size:12px;color:var(--bruma);margin-bottom:10px;line-height:1.4}
   .gitem{display:flex;align-items:center;gap:12px;background:var(--papel);border:2px solid var(--linea-2);border-radius:18px;padding:12px 14px;}
   .gitem .gid{font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:3px;font-size:16px;color:var(--azul-texto)}
   .gitem .meta{flex:1;min-width:0}
@@ -390,11 +377,6 @@
   #chat-muted-btn{grid-auto-flow:column;gap:4px;padding:0 8px}
   .chat-muted-count{font:700 11px 'JetBrains Mono',ui-monospace,monospace;color:var(--pica-texto)}
   .chat-actions button{display:inline-grid;place-items:center}
-  .greet{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px}
-  .greet-main{flex:1;min-width:0}
-  .greet h2{margin:0}
-  .greet .rule{display:block;color:var(--coral);margin:1px 0 7px}
-  .greet p.hint{margin:0}
   .btn{display:flex;align-items:center;justify-content:center;gap:9px}
   .chipbtn{display:flex;align-items:center;justify-content:center;gap:6px}
   /* En la barra de turno la mascota sustituye al punto, y solo cuando te toca. */
@@ -535,6 +517,154 @@ button.an-tag::after{content:' ?';opacity:.6}
 .pz-clue{display:flex;align-items:center;gap:9px;padding:8px 0;border-top:2px solid var(--linea-2)}
 .pz-clue:first-child{border-top:0}
 .pz-clue .scoretxt{margin-left:auto}
+/* ==========================================================================
+   Serie Plaza, lote 3: la portada y el vestibulo. Los dibujos (la baldosa, las
+   fichas, las pistas) llevan sus colores escritos, como la vaca: son la misma
+   ilustracion de dia y de noche. Lo que es interfaz sigue pidiendo tokens.
+   ========================================================================== */
+.btn.dark{background:var(--tinta);color:var(--sobre-tinta);box-shadow:0 4px 0 var(--tinta-2)}
+.btn.sm.dark{box-shadow:0 3px 0 var(--tinta-2)}
+.btn.big{min-height:58px;border-radius:18px;font-size:18px;font-weight:800}
+#s-login,#s-lobby{display:flex;flex-direction:column;gap:16px}
+#s-login>.card,#s-lobby>.card{margin:0}
+#s-login .foot,#s-lobby .foot{margin-top:4px}
+/* El idioma, arriba a la derecha: tres siglas en una pastilla. */
+.seg.lang-pick{align-self:flex-end;flex-wrap:nowrap;gap:4px;margin:0;padding:4px;background:var(--papel);border:2px solid var(--linea);border-radius:14px}
+.seg.lang-pick button{flex:0 0 auto;min-width:0;min-height:34px;padding:0 11px;border:0;border-radius:10px;background:transparent;color:var(--bruma);font-size:13px;font-weight:700;box-shadow:none}
+.seg.lang-pick button.on{background:var(--tinta);color:var(--sobre-tinta);box-shadow:none}
+/* El heroe de la portada: una jugada a medias y la vaca que la mira. */
+.home-hero{position:relative;height:236px;border-radius:28px;background:var(--azul);overflow:hidden;flex-shrink:0}
+.home-hero .hh{position:absolute;border-radius:50%}
+.home-hero .hh.v{width:220px;height:220px;background:var(--violeta);right:-80px;top:-90px;opacity:.9}
+.home-hero .hh.c{width:140px;height:140px;background:var(--coral);left:-50px;bottom:-60px}
+.home-hero .hh.s{width:18px;height:18px;background:#FFC531;left:44px;top:30px}
+.home-hero .hh.k{width:10px;height:10px;background:#FFF5E8;left:150px;top:200px}
+.tiles{display:flex;gap:8px}
+.tiles span{display:flex;align-items:center;justify-content:center;background:#fff;border:3px solid #1B1638;color:#1B1638;
+  font:700 30px 'JetBrains Mono',ui-monospace,monospace;width:54px;height:62px;border-radius:16px;box-shadow:0 5px 0 #1B1638}
+.tiles span.q{background:#FFC531}
+.home-hero .tiles{position:absolute;left:26px;top:64px;transform:rotate(-9deg);animation:heroFloat 3.2s ease-in-out infinite}
+.hero-pips{position:absolute;left:60px;top:150px;display:flex;gap:8px;padding:10px 14px;border-radius:16px;background:#1B1638;
+  transform:rotate(7deg);animation:heroFloat2 3.8s ease-in-out infinite}
+.hero-pips span{width:18px;height:18px;border-radius:50%}
+.hero-pips .f{background:#39D37E}
+.hero-pips .p{border:4px solid #F6A040}
+.hero-pips .e{border:2px dashed #625B7A}
+.home-hero .vaca{position:absolute;right:8px;bottom:-1px}
+@keyframes heroFloat{0%,100%{transform:translateY(0) rotate(-9deg)}50%{transform:translateY(-8px) rotate(-7deg)}}
+@keyframes heroFloat2{0%,100%{transform:translateY(0) rotate(7deg)}50%{transform:translateY(-6px) rotate(9deg)}}
+.home-title{margin:0;font:800 34px/1.02 'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.03em}
+.home-lead{margin:8px 0 0;color:var(--bruma);font-size:15px;line-height:1.5}
+.guest-try{display:flex;flex-direction:column;gap:8px}
+.guest-try .btn{margin:0}
+.guest-try .hint{margin:0;color:var(--bruma);font-size:13px;line-height:1.45;text-align:center}
+.guest-sep{margin:0}
+.home-auth .hint{margin:0 0 14px}
+.home-auth h3{margin:0 0 6px;font:800 22px/1.1 'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.02em}
+.auth-alt .linkbtn.soft{color:var(--bruma)}
+/* Al pedir el enlace del PIN o elegir uno nuevo, la portada se aparta. */
+#s-login[data-mode=forgot] :is(.home-hero,.home-pitch,#guest-try,#guest-sep){display:none}
+.public-pulse{display:flex;align-items:center;justify-content:center;gap:8px;margin:0;color:var(--bruma);font:600 13px/1.45 'Figtree',system-ui,sans-serif;text-align:center}
+.public-pulse::before,.live-dot{content:"";flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:var(--fija);animation:pulse 1.4s ease-in-out infinite}
+/* El vestibulo. */
+.avatar{flex:0 0 auto;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font:800 18px 'Figtree',system-ui,sans-serif;line-height:1}
+.avatar.azul{background:var(--azul);color:var(--sobre-azul)}
+.avatar.coral{background:var(--coral);color:var(--sobre-coral)}
+.avatar.violeta{background:var(--violeta);color:#fff}
+.avatar.sol{background:var(--sol);color:var(--sobre-sol)}
+.avatar.vacio{background:var(--hueco);color:var(--bruma)}
+.avatar.sm{width:34px;height:34px;border-radius:11px;font-size:14px;border:2px solid var(--papel)}
+.avatar.sm+.avatar.sm{margin-left:-10px}
+.avatars{display:flex;flex:0 0 auto}
+button.avatar{border:0;padding:0;cursor:pointer;transition:transform .08s,box-shadow .08s}
+button.avatar:active{transform:translateY(3px);box-shadow:none}
+.lobby-head{display:flex;align-items:center;gap:12px}
+.lobby-head .avatar{width:48px;height:48px;border-radius:16px;font-size:20px;box-shadow:0 3px 0 var(--coral-2)}
+.lobby-head-main{flex:1;min-width:0}
+.lobby-head h2{margin:0;font:800 26px/1.05 'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.02em;overflow-wrap:anywhere}
+.lobby-season{margin:4px 0 0;min-height:17px;color:var(--bruma);font-size:13px;font-weight:600}
+/* Crear partida: la tarjeta azul, la unica accion llena del vestibulo. */
+.lobby-create{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:8px;width:100%;padding:22px 22px 20px;border:0;border-radius:26px;
+  background:var(--azul);color:#fff;text-align:left;font:inherit;cursor:pointer;overflow:hidden;box-shadow:0 5px 0 var(--azul-2);transition:transform .08s,box-shadow .08s}
+.lobby-create:active{transform:translateY(5px);box-shadow:none}
+.lobby-create>*{position:relative}
+.lobby-create .lc-circle{position:absolute;width:160px;height:160px;border-radius:50%;background:var(--violeta);right:-50px;top:-70px}
+.lobby-create .tiles{position:absolute;right:22px;bottom:22px;gap:5px;transform:rotate(-6deg)}
+.lobby-create .tiles span{width:30px;height:36px;border-radius:9px;border-width:2px;font-size:17px;box-shadow:0 3px 0 #1B1638}
+.lc-title{font:800 28px/1.05 'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.02em}
+.lc-text{max-width:220px;font-size:14px;line-height:1.45;opacity:.92}
+.lc-go{display:inline-flex;align-items:center;gap:8px;margin-top:6px;height:40px;padding:0 16px;border-radius:12px;background:#fff;color:#1F3FB8;font-weight:800;font-size:14px}
+.join-row{display:flex;gap:8px}
+.join-row input[type=text].codeinp{flex:1;min-width:0;height:52px;background:var(--papel);font-size:17px;letter-spacing:.18em;text-align:left;padding:0 16px}
+.join-row .btn{flex:0 0 auto;width:auto;min-height:52px;margin:0;border-radius:var(--r-md)}
+.join-row input.codeinp::placeholder{text-transform:none;letter-spacing:.04em;font-weight:500;color:var(--bruma-2)}
+/* El icono del sonido va en la linea, no encima de ella. */
+.foot .link .ico{display:inline-block;vertical-align:-2px}
+/* El codigo del dia: la baldosa amarilla con su anillo de intentos. */
+.daily-tile{display:flex;align-items:center;gap:14px;width:100%;padding:16px 18px;border:0;border-radius:24px;background:var(--sol);color:#1B1638;
+  text-align:left;font:inherit;cursor:pointer;box-shadow:0 4px 0 var(--sol-2);transition:transform .08s,box-shadow .08s}
+.daily-tile:active{transform:translateY(4px);box-shadow:none}
+.daily-tile svg{flex:0 0 auto}
+.dt-main{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.dt-kicker{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.7}
+.dt-title{font:800 22px/1 'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.02em}
+.dt-hint{font-size:13px;font-weight:600;opacity:.8}
+/* Los modos: cuatro baldosas con su dibujo. */
+.mode-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.mode-tile{position:relative;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;min-height:128px;padding:64px 16px 16px;border:0;border-radius:22px;
+  text-align:left;font:inherit;cursor:pointer;overflow:hidden;transition:transform .08s,box-shadow .08s}
+.mode-tile:active{transform:translateY(4px);box-shadow:none}
+.mode-tile .mt-art{position:absolute}
+.mode-tile .mt-title{position:relative;font:800 19px/1.1 'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.02em}
+.mode-tile .mt-hint{position:relative;font-size:12px;font-weight:600;line-height:1.3;opacity:.82}
+.mode-tile.coral{background:var(--coral);color:#1B1638;box-shadow:0 4px 0 var(--coral-2)}
+.mode-tile.violeta{background:var(--violeta);color:#fff;box-shadow:0 4px 0 var(--violeta-2)}
+.mode-tile.noche{background:#1B1638;color:#FFF5E8;box-shadow:0 4px 0 #0C0A1C;border:2px solid transparent}
+.mode-tile.papel{background:var(--papel);color:var(--tinta);border:2px solid var(--linea-2);box-shadow:0 4px 0 var(--linea)}
+.mode-tile.papel .mt-hint{color:var(--bruma);opacity:1}
+.mode-tile .tiles span{width:22px;height:26px;border-radius:7px;border:0;font-size:13px;box-shadow:none;background:#FFF5E8}
+.mode-tile .tiles span.q{background:#FFC531}
+.mt-pips{display:flex;gap:4px}
+.mt-pips span{width:10px;height:10px;border-radius:50%}
+.mt-pips .f{background:#39D37E}
+.mt-pips .p{border:2.5px solid #F6A040}
+.mt-bars{display:flex;align-items:flex-end;gap:4px}
+.mt-bars span{width:14px;border-radius:5px 5px 0 0}
+.mt-bars span:nth-child(1){height:26px;background:var(--violeta)}
+.mt-bars span:nth-child(2){height:40px;background:var(--azul)}
+.mt-bars span:nth-child(3){height:18px;background:var(--coral)}
+.mode-tile.coral .mt-art{right:-10px;top:-10px}
+.mode-tile.violeta .mt-art{right:-6px;top:4px}
+.mode-tile.noche .tiles{right:12px;top:12px;gap:4px}
+.mode-tile.noche .mt-pips{right:12px;top:46px}
+.mode-tile.papel .mt-bars{right:14px;top:16px}
+/* Las listas: filas blancas. La fila entera es el boton cuando solo hay una cosa que hacer. */
+.lobby-block{display:flex;flex-direction:column;gap:10px}
+.lobby-block-head{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px}
+.lobby-block-head h3{margin:0 auto 0 0;font:800 20px/1.1 'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.02em}
+.lobby-links{display:flex;align-items:baseline;gap:6px;color:var(--bruma-2)}
+.lobby-online{display:inline-flex;align-items:center;gap:6px;color:var(--bruma);font-size:12px;font-weight:700}
+.lobby-online.off .live-dot{background:var(--bruma-2);animation:none}
+.lobby-block .list:empty{display:none}
+.iconbtn{width:36px;height:36px;display:grid;place-items:center;padding:0;border:2px solid var(--linea);border-radius:11px;background:var(--papel);color:var(--tinta);
+  cursor:pointer;box-shadow:0 3px 0 var(--linea);transition:transform .08s,box-shadow .08s}
+.iconbtn:active{transform:translateY(3px);box-shadow:none}
+.grow{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border:2px solid var(--linea-2);border-radius:20px;background:var(--papel);
+  color:var(--tinta);text-align:left;font:inherit}
+button.grow{cursor:pointer;box-shadow:0 4px 0 var(--linea);transition:transform .08s,box-shadow .08s}
+button.grow:active{transform:translateY(4px);box-shadow:none}
+.grow.turn{border-color:var(--azul);box-shadow:0 4px 0 var(--azul)}
+.grow.invite{border-color:var(--coral);box-shadow:0 4px 0 var(--coral-2)}
+.grow-main{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.grow-title{font-weight:700;font-size:15px;line-height:1.3;overflow-wrap:anywhere}
+.grow-title .gid{font-size:15px;letter-spacing:1px;color:inherit}
+.grow-det{color:var(--bruma);font-size:12px;line-height:1.4}
+.grow .btn{flex:0 0 auto;width:auto;margin:0}
+.rpill{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;min-height:30px;padding:0 10px;border-radius:9px;background:var(--linea-2);color:var(--bruma);font-size:12px;font-weight:700;white-space:nowrap}
+.rpill.mine{background:var(--azul);color:var(--sobre-azul);font-weight:800}
+.rpill.hot{background:var(--coral);color:var(--sobre-coral);font-weight:800}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .mode-tile.noche{border-color:var(--linea)}}
+:root[data-theme=dark] .mode-tile.noche{border-color:var(--linea)}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -570,24 +700,35 @@ button.an-tag::after{content:' ?';opacity:.6}
   </div>
 
   <!-- LOGIN -->
-  <section id="s-login" class="card">
+  <section id="s-login" data-mode="login">
     <!-- El idioma, lo primero y siempre visible: quien no lee español no puede
          tener que adivinar que esta detras de «Crear una cuenta». -->
     <div class="seg lang-pick" id="seg-lang" role="group" data-i18n-title="lang_switch">
-      <button type="button" data-lang="es">Español</button>
-      <button type="button" data-lang="en">English</button>
-      <button type="button" data-lang="fr">Français</button>
+      <button type="button" data-lang="es" lang="es" aria-label="Español">ES</button>
+      <button type="button" data-lang="en" lang="en" aria-label="English">EN</button>
+      <button type="button" data-lang="fr" lang="fr" aria-label="Français">FR</button>
     </div>
     <div class="invite-banner hidden" id="login-invite"></div>
-    <h2 data-i18n="auth_title">À vous de jouer</h2>
-    <p class="hint" id="auth-hint" data-i18n="auth_hint_login">Entrez avec votre nom ou votre e-mail et votre PIN.</p>
+    <!-- El heroe es un dibujo: una jugada a medias y la vaca que la mira. No
+         dice nada que no diga el titulo de debajo, asi que se calla. -->
+    <div class="home-hero" aria-hidden="true">
+      <span class="hh v"></span><span class="hh c"></span><span class="hh s"></span><span class="hh k"></span>
+      <div class="tiles"><span>4</span><span>7</span><span class="q">?</span><span>9</span></div>
+      <div class="hero-pips"><span class="f"></span><span class="f"></span><span class="p"></span><span class="e"></span></div>
+      <span data-vaca="alert" data-vaca-size="132"></span>
+    </div>
+    <div class="home-pitch">
+      <h2 class="home-title" data-i18n="home_title">Adivina el código antes que tu rival.</h2>
+      <p class="home-lead" data-i18n="home_lead">El clásico «Bulls and Cows» en duelo, en arena o contra el ordenador. Gratis y sin instalar.</p>
+    </div>
     <div class="guest-try" id="guest-try">
-      <button class="btn green" type="button" onclick="startGuestPractice()" data-i18n="guest_try_cta">Probar ahora</button>
+      <button class="btn green big" type="button" onclick="startGuestPractice()"><span data-ico="jugar" data-ico-size="22"></span><span data-i18n="guest_try_cta">Probar ahora</span></button>
       <button class="btn ghost hidden" type="button" id="guest-resume" onclick="resumeGuestPractice()" data-i18n="practice_resume">Continuar práctica</button>
       <p class="hint" data-i18n="guest_try_hint">Una partida contra el ordenador, sin cuenta y sin esperar.</p>
-      <p class="public-pulse hidden" id="public-pulse" role="status" aria-live="polite"></p>
     </div>
     <div class="guest-sep" id="guest-sep"><span data-i18n="guest_or">o</span></div>
+    <div class="card home-auth">
+    <p class="hint" id="auth-hint" data-i18n="auth_hint_login">Entrez avec votre nom ou votre e-mail et votre PIN.</p>
     <form id="auth-register-panel" class="hidden">
       <label for="reg-email" data-i18n="auth_email">E-mail</label>
       <input type="email" id="reg-email" maxlength="254" autocomplete="email" data-i18n-ph="auth_email_ph" placeholder="vous@exemple.com">
@@ -599,7 +740,7 @@ button.an-tag::after{content:' ?';opacity:.6}
       <input type="password" id="upin2" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" data-i18n-ph="login_pin_ph" placeholder="4–8 chiffres" autocomplete="new-password">
       <p class="auth-note"><span>✦</span><span data-i18n="auth_recovery_note">Votre e-mail permet de récupérer votre PIN.</span></p>
       <div class="val" id="auth-register-val"></div>
-      <button class="btn" id="auth-register-btn" type="submit" data-i18n="auth_register_cta">Créer mon compte</button>
+      <button class="btn dark" id="auth-register-btn" type="submit" data-i18n="auth_register_cta">Créer mon compte</button>
       <div class="auth-alt"><span data-i18n="auth_have_account">Vous avez déjà un compte&nbsp;?</span><button type="button" class="linkbtn" onclick="setAuthMode('login')" data-i18n="auth_go_login">Se connecter</button></div>
     </form>
     <form id="auth-login-panel">
@@ -608,9 +749,8 @@ button.an-tag::after{content:' ?';opacity:.6}
       <label for="login-pin" data-i18n="auth_pin">PIN · 4–8 chiffres</label>
       <input type="password" id="login-pin" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" data-i18n-ph="login_pin_ph" placeholder="4–8 chiffres" autocomplete="current-password">
       <div class="val" id="auth-login-val"></div>
-      <button class="btn" id="auth-login-btn" type="submit" data-i18n="auth_login_cta">Entrer dans le jeu</button>
-      <div class="foot"><button type="button" class="linkbtn" onclick="setAuthMode('forgot')" data-i18n="auth_forgot">PIN oublié ?</button></div>
-      <div class="auth-alt"><span data-i18n="auth_no_account">Pas encore de compte&nbsp;?</span><button type="button" class="linkbtn" onclick="setAuthMode('register')" data-i18n="auth_go_register">Créer un compte</button></div>
+      <button class="btn dark" id="auth-login-btn" type="submit" data-i18n="auth_login_cta">Entrer dans le jeu</button>
+      <div class="auth-alt"><button type="button" class="linkbtn" onclick="setAuthMode('register')" data-i18n="auth_go_register">Créer un compte</button><span aria-hidden="true">·</span><button type="button" class="linkbtn soft" onclick="setAuthMode('forgot')" data-i18n="auth_forgot">PIN oublié ?</button></div>
     </form>
     <form id="auth-forgot-panel" class="hidden">
       <h3 id="auth-forgot-title" data-i18n="auth_forgot_title">Récupérer mon PIN</h3>
@@ -618,9 +758,11 @@ button.an-tag::after{content:' ?';opacity:.6}
       <div id="forgot-email-fields"><label for="forgot-email" data-i18n="auth_email">E-mail</label><input type="email" id="forgot-email" maxlength="254" autocomplete="email" data-i18n-ph="auth_email_ph" placeholder="vous@exemple.com"><div id="pin-reset-turnstile" aria-label="Vérification anti-spam"></div></div>
       <div id="reset-pin-fields" class="hidden"><label for="reset-pin" data-i18n="auth_pin_new">Nouveau PIN · 4–8 chiffres</label><input type="password" id="reset-pin" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" autocomplete="new-password" data-i18n-ph="login_pin_ph" placeholder="4–8 chiffres"><label for="reset-pin-repeat" data-i18n="auth_pin_repeat">Confirmer votre PIN</label><input type="password" id="reset-pin-repeat" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" autocomplete="new-password" data-i18n-ph="login_pin_ph" placeholder="4–8 chiffres"></div>
       <div class="val" id="auth-forgot-val"></div>
-      <button class="btn" id="auth-recovery-btn" type="submit" data-i18n="auth_recover_cta">Envoyer le lien</button>
+      <button class="btn dark" id="auth-recovery-btn" type="submit" data-i18n="auth_recover_cta">Envoyer le lien</button>
       <div class="foot"><button type="button" class="linkbtn" onclick="setAuthMode('login')" data-i18n="auth_back_login">Retour à la connexion</button></div>
     </form>
+    </div>
+    <p class="public-pulse hidden" id="public-pulse" role="status" aria-live="polite"></p>
     <div class="foot"><a class="link" data-rules-link href="/como-se-juega" onclick="openRules();return false" data-i18n="rules_link">¿Cómo se juega?</a><span id="login-install" class="hidden"> · <a class="link" data-install-link id="login-install-link" href="/instalar"></a></span></div>
     <div class="foot credits"></div>
     <div class="foot"><button type="button" class="linkbtn" onclick="openFeedback()"><span data-ico="globo" data-ico-size="14"></span><span data-i18n="feedback_link">Sugerencias y errores</span></button></div>
@@ -675,41 +817,40 @@ button.an-tag::after{content:' ?';opacity:.6}
 
   <!-- LOBBY -->
   <section id="s-lobby" class="hidden">
-    <div class="card">
-      <div class="invite-banner hidden" id="lobby-welcome"></div>
-      <div class="greet">
-        <div class="greet-main">
-          <h2 id="lobby-greet"></h2>
-          <span id="lobby-rule"></span>
-          <p class="hint" data-i18n="lobby_hint">Crea una partida y comparte el código, o únete a una pública abierta.</p>
-        </div>
-        <span id="lobby-vaca"></span>
-      </div>
-      <button class="btn" onclick="show('create')"><svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" style="stroke-width:2.4" d="M12 4.4c.4 4.9.5 9.9.2 15M4.3 11.5c5.1.5 10.2.5 15.4.2"></path></svg><span data-i18n="lobby_create">Crear partida</span></button>
-      <div style="height:10px"></div>
-      <button class="btn ghost" onclick="openPractice()"><svg width="18" height="18" viewBox="0 0 24 24" style="color:var(--pica)" aria-hidden="true"><path class="dl" d="M12.4 3.4c4.9-.3 8.9 3.7 8.7 8.6-.2 4.7-4 8.6-8.8 8.6-4.9 0-8.9-4.1-8.5-9 .3-4.2 3.7-7.6 7.9-8"></path><path class="dl" d="M12.2 8.5c2-.2 3.6 1.4 3.5 3.4-.1 1.9-1.7 3.4-3.6 3.3-2 0-3.5-1.7-3.3-3.7"></path><circle cx="12" cy="12" r="1.5" fill="currentColor"></circle></svg><span data-i18n="lobby_practice">Practicar</span></button>
-      <div style="height:10px"></div>
-      <div class="row">
-        <input type="text" id="join-code-inp" class="codeinp" maxlength="6" autocomplete="off"
-               autocapitalize="characters" spellcheck="false" data-i18n-ph="lobby_code_ph" placeholder="Código de partida">
-        <button class="btn ghost sm" id="btn-join-code" style="flex:0 0 auto" onclick="joinByCode()" data-i18n="join_btn">Unirse</button>
-      </div>
-      <div style="height:10px"></div>
-      <div class="lobby-chips">
-        <button class="chipbtn" onclick="openRank()"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M7.5 3.9c3-.4 6-.4 9-.1.4 3.5.2 6.2-.5 8.2-.9 2.5-2.4 3.7-4.2 3.7s-3.2-1.3-4-3.8c-.6-2-.7-4.6-.3-8Z"></path><path class="dl" d="M7.5 6c-1.6-.3-2.7 0-3 .9-.2 1.2.9 2.3 3.1 2.7M16.5 6c1.6-.3 2.7 0 3 .9.2 1.2-.9 2.3-3.1 2.7"></path><path class="dl" d="M12 15.9c.1 1.3.1 2.5 0 3.4M8.7 20.1c2.2-.4 4.4-.4 6.6 0"></path></svg><span data-i18n="lobby_ranking">Ranking</span></button>
-        <button class="chipbtn" onclick="openHistory()"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M12.3 3.6c4.7-.2 8.6 3.8 8.4 8.5-.2 4.6-4 8.3-8.6 8.3-4.8 0-8.7-4-8.4-8.8.3-4.3 3.8-7.7 8-7.9"></path><path class="dl" d="M11.9 7.3c.2 1.8.2 3.4.1 4.9 1.1.8 2.2 1.4 3.3 2"></path></svg><span data-i18n="lobby_history">Historial</span></button>
-        <button class="chipbtn" onclick="openRivals()"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M9 7.6c0 1.5-1.2 2.7-2.7 2.7S3.6 9.1 3.6 7.6 4.8 4.9 6.3 4.9 9 6.1 9 7.6Z"></path><path class="dl" d="M20.4 7.6c0 1.5-1.2 2.7-2.7 2.7S15 9.1 15 7.6s1.2-2.7 2.7-2.7 2.7 1.2 2.7 2.7Z"></path><path class="dl" d="M2.6 19.1c.2-3 1.7-4.6 4-4.6 2.2 0 3.7 1.5 4 4.5M13.4 19.1c.2-3 1.7-4.6 4-4.6 2.2 0 3.7 1.5 4 4.5"></path></svg><span data-i18n="lobby_rivals">Rivales</span></button>
-        <button class="chipbtn" onclick="openPuzzles()"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M4.6 5.3c2.1-.4 4.2-.5 6.3-.3-.3 1.6.3 2.4 1.6 2.5 1.3.1 2-.7 1.9-2.2 1.7-.2 3.3-.2 4.9 0 .3 2 .4 3.9.2 5.8-1.6-.3-2.4.3-2.5 1.6-.1 1.3.7 2 2.2 1.9.2 1.6.1 3.3-.1 4.9-2.1.3-4.2.3-6.3.1.3-1.6-.3-2.4-1.6-2.5-1.3-.1-2 .7-1.9 2.2-1.5.2-3.1.2-4.6 0-.4-4.6-.4-9.3-.1-14Z"></path></svg><span data-i18n="lobby_puzzles">Enigmas</span></button>
-        <button class="chipbtn" onclick="refreshLobby()"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M20.1 12.4c.2 4.7-3.7 8.5-8.4 8.4-4.6-.1-8.3-4-8-8.7.3-4.2 3.8-7.4 8-7.3 2.6.1 4.8 1.3 6.3 3.2"></path><path class="dl" d="M19.9 3.7c-.2 1.6-.2 3.1-.1 4.6-1.6.2-3.1.2-4.6.1"></path></svg><span data-i18n="lobby_refresh">Actualizar lista</span></button>
+    <div class="invite-banner hidden" id="lobby-welcome"></div>
+    <!-- El saludo: la inicial lleva al perfil propio y la linea de debajo dice
+         como va la temporada, que se pide una vez al entrar y no en el sondeo. -->
+    <div class="lobby-head">
+      <button type="button" class="avatar coral" id="lobby-avatar" onclick="openProfile(user,'lobby')" data-i18n-title="lobby_my_profile"></button>
+      <div class="lobby-head-main">
+        <h2 id="lobby-greet"></h2>
+        <p class="lobby-season" id="lobby-season"></p>
       </div>
     </div>
-
-    <div class="card daily-card" id="daily-card">
-      <span class="practice-badge" data-i18n="daily_badge">Nuevo cada día</span>
-      <h2 data-i18n="daily_title">El código del día</h2>
-      <p class="hint" id="daily-card-hint">Un solo código para todo el mundo y un intento al día.</p>
-      <button class="btn green" id="daily-card-btn" onclick="openDaily()" data-i18n="daily_play">Jugar el código de hoy</button>
+    <!-- La unica accion llena del vestibulo. -->
+    <button type="button" class="lobby-create" onclick="show('create')">
+      <span class="lc-circle" aria-hidden="true"></span>
+      <span class="tiles" aria-hidden="true"><span>2</span><span class="q">?</span><span>8</span></span>
+      <span class="lc-title" data-i18n="lobby_create">Crear partida</span>
+      <span class="lc-text" data-i18n="lobby_create_hint">Comparte el código, juega en directo o por correspondencia.</span>
+      <span class="lc-go"><span data-i18n="lobby_create_go">Nueva partida</span><span data-ico="flecha" data-ico-size="16"></span></span>
+    </button>
+    <div class="join-row">
+      <input type="text" id="join-code-inp" class="codeinp" maxlength="6" autocomplete="off"
+             autocapitalize="characters" spellcheck="false" data-i18n-ph="lobby_code_ph" data-i18n-title="lobby_code_ph" placeholder="Código de partida">
+      <button class="btn dark sm" id="btn-join-code" onclick="joinByCode()" data-i18n="join_btn">Unirse</button>
     </div>
+    <!-- El codigo del dia: el anillo cuenta los intentos gastados hoy en este
+         aparato. No pregunta al servidor: lo recuerda pf_daily. -->
+    <button type="button" class="daily-tile" id="daily-card" onclick="openDaily()">
+      <span id="daily-ring"></span>
+      <span class="dt-main">
+        <span class="dt-kicker" data-i18n="daily_badge">Nuevo cada día</span>
+        <span class="dt-title" data-i18n="daily_title">El código del día</span>
+        <span class="dt-hint" id="daily-card-hint"></span>
+      </span>
+      <span data-ico="chevron" data-ico-size="22"></span>
+    </button>
 
     <div class="card hidden" id="practice-resume-card">
       <span class="practice-badge" data-i18n="practice_saved_badge">Práctica guardada</span>
@@ -720,6 +861,54 @@ button.an-tag::after{content:' ?';opacity:.6}
       <button class="btn green" onclick="resumePractice()" data-i18n="practice_resume">Continuar práctica</button>
       <div style="height:10px"></div>
       <button class="btn ghost" onclick="discardSavedPractice()" data-i18n="practice_discard">Descartar</button>
+    </div>
+
+    <!-- Los modos: cada baldosa lleva su dibujo, con sus colores escritos. -->
+    <div class="mode-grid">
+      <button type="button" class="mode-tile coral" onclick="openPractice()">
+        <svg class="mt-art" width="76" height="76" viewBox="0 0 76 76" fill="none" aria-hidden="true"><circle cx="38" cy="38" r="30" stroke="#1B1638" stroke-width="5"></circle><circle cx="38" cy="38" r="18" stroke="#1B1638" stroke-width="5"></circle><circle cx="38" cy="38" r="6" fill="#1B1638"></circle></svg>
+        <span class="mt-title" data-i18n="lobby_practice">Practicar</span>
+        <span class="mt-hint" data-i18n="mode_practice_hint">Solo o contra el ordenador</span>
+      </button>
+      <button type="button" class="mode-tile violeta" onclick="openArenaCreate()">
+        <svg class="mt-art" width="86" height="70" viewBox="0 0 86 70" fill="none" aria-hidden="true"><circle cx="14" cy="22" r="8" fill="#fff" fill-opacity=".9"></circle><circle cx="40" cy="14" r="8" fill="#FFC531"></circle><circle cx="66" cy="22" r="8" fill="#fff" fill-opacity=".9"></circle><circle cx="27" cy="44" r="8" fill="#FF6B5E"></circle><circle cx="53" cy="44" r="8" fill="#fff" fill-opacity=".9"></circle><rect x="30" y="56" width="26" height="12" rx="4" fill="#1B1638"></rect></svg>
+        <span class="mt-title" data-i18n="arena_title">La arena</span>
+        <span class="mt-hint" data-i18n="mode_arena_hint">De 3 a 8 jugadores, un solo código</span>
+      </button>
+      <button type="button" class="mode-tile noche" onclick="openPuzzles()">
+        <span class="mt-art tiles" aria-hidden="true"><span>5</span><span class="q">?</span><span>1</span></span>
+        <span class="mt-art mt-pips" aria-hidden="true"><span class="f"></span><span class="p"></span></span>
+        <span class="mt-title" data-i18n="lobby_puzzles">Enigmas</span>
+        <span class="mt-hint" data-i18n="mode_puzzles_hint">Sin rival y sin reloj</span>
+      </button>
+      <button type="button" class="mode-tile papel" onclick="openRank()">
+        <span class="mt-art mt-bars" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span class="mt-title" data-i18n="lobby_ranking">Ranking</span>
+        <span class="mt-hint" data-i18n="mode_rank_hint">Puntos de la temporada</span>
+      </button>
+    </div>
+
+    <!-- Las partidas propias, privadas y publicas juntas: la fila entera entra. -->
+    <div class="lobby-block" id="mine-card">
+      <div class="lobby-block-head">
+        <h3 data-i18n="lobby_mine">Tus partidas en curso</h3>
+        <span class="lobby-links"><button type="button" class="linkbtn" onclick="openHistory()" data-i18n="lobby_history">Historial</button><span aria-hidden="true">·</span><button type="button" class="linkbtn" onclick="openRivals()" data-i18n="lobby_rivals">Rivales</button></span>
+      </div>
+      <div class="list" id="mine-list"><div class="empty">…</div></div>
+    </div>
+
+    <!-- Lo publico: partidas que esperan rival, partidas que se pueden mirar
+         (E6-T1) y arenas (E6-T3), en una sola lista de filas blancas. -->
+    <div class="lobby-block" id="public-card">
+      <div class="lobby-block-head">
+        <h3 data-i18n="lobby_public">Partidas públicas</h3>
+        <span class="lobby-online" id="lobby-online"><span class="live-dot"></span><span id="players-online"></span></span>
+        <button type="button" class="iconbtn" onclick="refreshLobby()" data-i18n-title="lobby_refresh"><span data-ico="recargar" data-ico-size="16"></span></button>
+      </div>
+      <div class="list" id="open-list"></div>
+      <div class="list" id="watch-list"></div>
+      <div class="list" id="arena-list"></div>
+      <div class="empty" id="public-empty">…</div>
     </div>
 
     <div class="card experience-card" id="experience-card">
@@ -738,45 +927,6 @@ button.an-tag::after{content:' ?';opacity:.6}
       <div class="install-steps hidden" id="install-steps"></div>
       <div class="install-note hidden" id="install-note"></div>
       <div class="install-foot"><a class="link" id="install-guide-link" data-install-link href="/instalar" target="_blank" rel="noopener"></a> · <span class="link" id="install-later" onclick="dismissInstall()"></span></div>
-    </div>
-
-    <div class="card" id="mine-card">
-      <h2 data-i18n="lobby_mine">Tus partidas activas</h2>
-      <div class="list" id="mine-list"><div class="empty">—</div></div>
-    </div>
-
-    <!-- LA ARENA (E6-T3) -->
-    <div class="card" id="arena-card">
-      <h2 data-i18n="arena_title">La arena</h2>
-      <p class="hint" data-i18n="arena_hint">De 3 a 8 jugadores contra el mismo código, a la vez. Lo sortea el servidor: nadie elige secreto y nadie espera turno.</p>
-      <div class="list" id="arena-list"><div class="empty">…</div></div>
-      <div style="height:10px"></div>
-      <button class="btn sm" onclick="openArenaCreate()" data-i18n="arena_open">Abrir una arena</button>
-    </div>
-
-    <div class="card">
-      <h2 data-i18n="available_title">Partidas disponibles</h2>
-      <div class="availability-stats">
-        <div class="availability-line" id="players-online"></div>
-        <div class="availability-line" id="private-now"></div>
-        <div class="availability-line" id="public-now"></div>
-      </div>
-      <div class="lobby-section">
-        <div class="lobby-section-title" data-i18n="private_games_title">Tus partidas privadas</div>
-        <div class="lobby-section-hint" data-i18n="private_games_hint">Por privacidad, solo se muestran las partidas privadas en las que participas.</div>
-        <div class="list" id="private-list"><div class="empty">…</div></div>
-      </div>
-      <div class="lobby-section">
-        <div class="lobby-section-title" data-i18n="lobby_open">Partidas públicas abiertas</div>
-        <div class="list" id="open-list"><div class="empty">…</div></div>
-      </div>
-      <!-- Espectador (E6-T1): las partidas publicas que ya tienen sus dos
-           jugadores no se podian ni ver. Ahora se pueden mirar. -->
-      <div class="lobby-section">
-        <div class="lobby-section-title" data-i18n="watch_title">Partidas en curso</div>
-        <div class="lobby-section-hint" data-i18n="watch_hint">Mira jugar a otros: los códigos secretos no se ven hasta que la partida termina.</div>
-        <div class="list" id="watch-list"><div class="empty">…</div></div>
-      </div>
     </div>
 
     <div class="foot"><span class="link" id="sound-link" onclick="toggleSound()"></span> · <a class="link" data-rules-link href="/como-se-juega" onclick="openRules();return false" data-i18n="rules_link">¿Cómo se juega?</a> · <span class="link" onclick="openFeedback()" data-i18n="feedback_link">Sugerencias y errores</span></div>
@@ -1413,7 +1563,7 @@ button.an-tag::after{content:' ?';opacity:.6}
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v4.3.0';
+const APP_VERSION = 'v4.4.0';
 /* Enlace de invitación: ...?game=SZ93
    La invitación sobrevive al registro: se guarda en el navegador, porque entre
    abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
@@ -1470,12 +1620,9 @@ const I18N = {
     login_forgot_msg:"No recuerdo la contraseña de mi cuenta «{name}». ¿Podéis ayudarme a recuperarla?",
     login_welcome:"Cuenta creada. Para volver a entrar como {name} necesitarás esa misma contraseña: guárdala.",
     lobby_greeting:"Hola, {name}",
-    lobby_hint:"Crea una partida y comparte el código, o únete a una pública abierta.",
     lobby_create:"Crear partida", lobby_practice:"Practicar", lobby_ranking:"Ranking", lobby_refresh:"Actualizar lista",
-    lobby_mine:"Tus partidas activas", lobby_open:"Partidas públicas abiertas", lobby_sync_later:"última actualización hace {seconds} s",
-    available_title:"Partidas disponibles", private_games_title:"Tus partidas privadas", private_games_hint:"Por privacidad, solo se muestran las partidas privadas en las que participas.",
-    private_empty:"No tienes partidas privadas abiertas o en curso.", private_now:"{n} privadas abiertas o en curso", public_now:"{active} públicas en curso · {open} abiertas",
-    loading:"Cargando…", load_error:"No se pudo cargar", open_empty:"No hay partidas públicas abiertas. ¡Crea una!",
+    lobby_mine:"Tus partidas en curso", lobby_sync_later:"última actualización hace {seconds} s",
+    loading:"Cargando…", load_error:"No se pudo cargar",
     join_btn:"Unirse", lobby_code_ph:"Código de partida", code_invalid:"Escribe el código de la partida (4 caracteres).",
     mine_waiting:"Esperando rival", mine_rematch_from:"Revancha de {name}", see_btn:"Ver", continue_btn:"Continuar", private_tag:"privada",
     rank_title:"Ranking global", rank_hint:"Victorias totales por jugador. Se actualiza con cada partida terminada.",
@@ -1486,7 +1633,7 @@ const I18N = {
     hist_title:"Historial de partidas", hist_hint:"Tus últimas partidas terminadas. Haz clic en un resultado para revisarla.",
     hist_empty:"Aún no tienes partidas terminadas.",
     result_win:"Ganada", result_loss:"Perdida", result_draw:"Empate",
-    sound_label:"Sonido", on:"activado", off:"desactivado", notif_yourturn:"¡Es tu turno!", notif_joined:"¡Un rival se ha unido!", game_expired:"La partida abierta expiró (nadie se unió).", online_now:"{n} en curso ahora", online_players_one:"1 jugador conectado ahora", online_players_many:"{n} jugadores conectados ahora", credits_by:"Creado por",
+    sound_label:"Sonido", on:"activado", off:"desactivado", notif_yourturn:"¡Es tu turno!", notif_joined:"¡Un rival se ha unido!", game_expired:"La partida abierta expiró (nadie se unió).", online_now:"{n} en curso ahora", credits_by:"Creado por",
     create_title:"Nueva partida", create_hint:"Configura las reglas y define tu código secreto.",
     lbl_mode:"Modo", mode_numbers:"Números 0-9", mode_colors:"Colores",
     lbl_positions:"Posiciones", lbl_repeats:"Repetidos", rep_no:"No permitir", rep_yes:"Permitir",
@@ -1506,8 +1653,8 @@ const I18N = {
     rematch_send:"Enviar revancha", back_home:"Volver al inicio", result_lobby:"Volver al lobby",
     game_match:"Partida", game_yourcode:"Tu código:", opponent_code:"Código secreto de {name}:", vs:"vs {name}", waiting_short:"esperando…",
     spectator_confirm:"La partida está llena. ¿Deseas continuar como espectador?", spectator_mode:"Espectador", spectator_p1:"Intentos de {name} → código de {opp}", spectator_p2:"Intentos de {name} → código de {opp}", spectator_winner:"Ganó {name}",
-    arena_title:"La arena", arena_hint:"De 3 a 8 jugadores contra el mismo código, a la vez. Lo sortea el servidor: nadie elige secreto y nadie espera turno.", arena_open:"Abrir una arena", arena_empty:"No hay ninguna arena abierta. Abre tú la primera.", arena_join:"Entrar", arena_new_title:"Abrir una arena", arena_new_hint:"El código lo sortea el servidor. Tú eliges las reglas y compartes el código de la arena con quien quieras.", arena_create_btn:"Abrir la arena", arena_start:"Empezar la arena", arena_leave:"Salir de la arena", arena_leave_confirm:"¿Salir de la arena? Si ya ha empezado, tus intentos se quedan en la clasificación.", arena_your_guess:"Tu intento", arena_players:"{n}/{max} jugadores", arena_status_waiting:"Esperando jugadores", arena_status_active:"En juego", arena_status_finished:"Terminada", arena_need:"Faltan {n} para poder empezar.", arena_ready:"Ya se puede empezar. Comparte el código para que entre más gente.", arena_solved:"Descifrado en {n}", arena_attempts:"{n} intentos", arena_attempts_one:"1 intento", arena_attempts_none:"Todavía no ha probado", arena_best:"mejor {n}F", arena_gaveup:"Se marchó", arena_nomore:"Sin intentos", arena_secret:"El código era {code}", arena_you_solved:"¡Lo descifraste en {n} intentos!", arena_over:"Arena terminada", arena_log_empty:"Todavía no has probado nada.", arena_empty_board:"Aquí aparecerá quien entre.",
-    watch_title:"Partidas en curso", watch_hint:"Mira jugar a otros: los códigos secretos no se ven hasta que la partida termina.", watch_empty:"Ahora mismo no hay ninguna partida pública en juego.", watch_btn:"Mirar", watch_attempts:"{a} · {b} intentos", spectator_chat_readonly:"Estás mirando: puedes leer el chat de la partida, no escribir.", spectator_leave:"Dejar de mirar",
+    arena_title:"La arena", arena_join:"Entrar", arena_new_title:"Abrir una arena", arena_new_hint:"El código lo sortea el servidor. Tú eliges las reglas y compartes el código de la arena con quien quieras.", arena_create_btn:"Abrir la arena", arena_start:"Empezar la arena", arena_leave:"Salir de la arena", arena_leave_confirm:"¿Salir de la arena? Si ya ha empezado, tus intentos se quedan en la clasificación.", arena_your_guess:"Tu intento", arena_players:"{n}/{max} jugadores", arena_status_waiting:"Esperando jugadores", arena_status_active:"En juego", arena_status_finished:"Terminada", arena_need:"Faltan {n} para poder empezar.", arena_ready:"Ya se puede empezar. Comparte el código para que entre más gente.", arena_solved:"Descifrado en {n}", arena_attempts:"{n} intentos", arena_attempts_one:"1 intento", arena_attempts_none:"Todavía no ha probado", arena_best:"mejor {n}F", arena_gaveup:"Se marchó", arena_nomore:"Sin intentos", arena_secret:"El código era {code}", arena_you_solved:"¡Lo descifraste en {n} intentos!", arena_over:"Arena terminada", arena_log_empty:"Todavía no has probado nada.", arena_empty_board:"Aquí aparecerá quien entre.",
+    watch_hint:"Mira jugar a otros: los códigos secretos no se ven hasta que la partida termina.", watch_btn:"Mirar", watch_attempts:"{a} · {b} intentos", spectator_chat_readonly:"Estás mirando: puedes leer el chat de la partida, no escribir.", spectator_leave:"Dejar de mirar",
     guess_btn:"Adivinar", legend_fija:"F = posición correcta", legend_pica:"P = presente, mal colocada",
     colhead_mine:"Tus intentos → código de {name}", colhead_theirs:"Intentos de {name} → tu código",
     rival:"rival", log_empty_mine:"Aún no has adivinado", log_empty_theirs:"Sin intentos todavía", log_nada:"nada",
@@ -1532,9 +1679,7 @@ const I18N = {
     val_digits:"Solo dígitos 0-9", val_repeats:"Hay repetidos", val_valid:"¡Válido!",
     rl_colors:"{n} colores", rl_numbers:"números", rl_pos:"{n} pos", rl_norepeat:"sin repetir", rl_repeat:"repetidos ✓",
     rl_attempts:"{n} intentos", rl_turn:"{n}s/turno", rl_reveal:"revela códigos al final", rl_noreveal:"códigos ocultos al final",
-    daily_badge:"Nuevo cada día", daily_title:"El código del día", daily_play:"Jugar el código de hoy", daily_see:"Ver mi resultado de hoy",
-    daily_card_hint:"Un solo código para todo el mundo y un intento al día.",
-    daily_card_solved:"Hoy lo resolviste en {n} intentos.", daily_card_failed:"Hoy no salió. Mañana hay uno nuevo.",
+    daily_badge:"Nuevo cada día", daily_title:"El código del día", daily_play:"Jugar el código de hoy",
     daily_hint:"{digits} posiciones, sin repetir, {max} intentos. El mismo código para todo el mundo hasta la medianoche UTC.",
     daily_number:"Código #{n}", daily_attempts_chip:"Intento {n} de {max}", daily_next:"Nuevo código en {time}",
     daily_solved_title:"¡Descifrado!", daily_solved_detail:"Lo resolviste en {n} intentos y {time}.",
@@ -1567,12 +1712,9 @@ const I18N = {
     login_forgot_msg:"I cannot remember the password of my account “{name}”. Could you help me recover it?",
     login_welcome:"Account created. To sign in as {name} again you will need that same password: keep it safe.",
     lobby_greeting:"Hi, {name}",
-    lobby_hint:"Create a game and share the code, or join an open public one.",
     lobby_create:"Create game", lobby_practice:"Practice", lobby_ranking:"Ranking", lobby_refresh:"Refresh list",
-    lobby_mine:"Your active games", lobby_open:"Open public games", lobby_sync_later:"last updated {seconds}s ago",
-    available_title:"Available games", private_games_title:"Your private games", private_games_hint:"For privacy, only private games you participate in are shown.",
-    private_empty:"You have no open or active private games.", private_now:"{n} private open or in progress", public_now:"{active} public in progress · {open} open",
-    loading:"Loading…", load_error:"Couldn't load", open_empty:"No open public games. Create one!",
+    lobby_mine:"Your games in progress", lobby_sync_later:"last updated {seconds}s ago",
+    loading:"Loading…", load_error:"Couldn't load",
     join_btn:"Join", lobby_code_ph:"Game code", code_invalid:"Enter the game code (4 characters).",
     mine_waiting:"Waiting for opponent", mine_rematch_from:"Rematch from {name}", see_btn:"View", continue_btn:"Continue", private_tag:"private",
     rank_title:"Global ranking", rank_hint:"Total wins per player. Updates after each finished game.",
@@ -1583,7 +1725,7 @@ const I18N = {
     hist_title:"Match history", hist_hint:"Your latest finished games. Click a result to review it.",
     hist_empty:"No finished games yet.",
     result_win:"Won", result_loss:"Lost", result_draw:"Draw",
-    sound_label:"Sound", on:"on", off:"off", notif_yourturn:"It's your turn!", notif_joined:"An opponent joined!", game_expired:"The open game expired (nobody joined).", online_now:"{n} in progress now", online_players_one:"1 player connected now", online_players_many:"{n} players connected now", credits_by:"Created by",
+    sound_label:"Sound", on:"on", off:"off", notif_yourturn:"It's your turn!", notif_joined:"An opponent joined!", game_expired:"The open game expired (nobody joined).", online_now:"{n} in progress now", credits_by:"Created by",
     create_title:"New game", create_hint:"Set the rules and choose your secret code.",
     lbl_mode:"Mode", mode_numbers:"Numbers 0-9", mode_colors:"Colors",
     lbl_positions:"Positions", lbl_repeats:"Repeats", rep_no:"Not allowed", rep_yes:"Allowed",
@@ -1603,8 +1745,8 @@ const I18N = {
     rematch_send:"Send rematch", back_home:"Back to home", result_lobby:"Back to lobby",
     game_match:"Game", game_yourcode:"Your code:", opponent_code:"{name}'s secret code:", vs:"vs {name}", waiting_short:"waiting…",
     spectator_confirm:"This game is full. Continue as a spectator?", spectator_mode:"Spectator", spectator_p1:"{name}'s guesses → {opp}'s code", spectator_p2:"{name}'s guesses → {opp}'s code", spectator_winner:"{name} won",
-    arena_title:"The arena", arena_hint:"Three to eight players against the same code, at the same time. The server draws it: nobody picks a secret and nobody waits for a turn.", arena_open:"Open an arena", arena_empty:"No arena is open. Be the first to open one.", arena_join:"Enter", arena_new_title:"Open an arena", arena_new_hint:"The server draws the code. You choose the rules and share the arena code with whoever you like.", arena_create_btn:"Open the arena", arena_start:"Start the arena", arena_leave:"Leave the arena", arena_leave_confirm:"Leave the arena? If it has already started, your guesses stay on the board.", arena_your_guess:"Your guess", arena_players:"{n}/{max} players", arena_status_waiting:"Waiting for players", arena_status_active:"Playing", arena_status_finished:"Finished", arena_need:"{n} more needed to start.", arena_ready:"Ready to start. Share the code so more people can join.", arena_solved:"Cracked in {n}", arena_attempts:"{n} guesses", arena_attempts_one:"1 guess", arena_attempts_none:"No guesses yet", arena_best:"best {n}F", arena_gaveup:"Left", arena_nomore:"Out of guesses", arena_secret:"The code was {code}", arena_you_solved:"You cracked it in {n} guesses!", arena_over:"Arena over", arena_log_empty:"You have not tried anything yet.", arena_empty_board:"Whoever joins will show up here.",
-    watch_title:"Games in progress", watch_hint:"Watch others play: the secret codes stay hidden until the game ends.", watch_empty:"No public game is being played right now.", watch_btn:"Watch", watch_attempts:"{a} · {b} guesses", spectator_chat_readonly:"You are watching: you can read the game chat, not write in it.", spectator_leave:"Stop watching",
+    arena_title:"The arena", arena_join:"Enter", arena_new_title:"Open an arena", arena_new_hint:"The server draws the code. You choose the rules and share the arena code with whoever you like.", arena_create_btn:"Open the arena", arena_start:"Start the arena", arena_leave:"Leave the arena", arena_leave_confirm:"Leave the arena? If it has already started, your guesses stay on the board.", arena_your_guess:"Your guess", arena_players:"{n}/{max} players", arena_status_waiting:"Waiting for players", arena_status_active:"Playing", arena_status_finished:"Finished", arena_need:"{n} more needed to start.", arena_ready:"Ready to start. Share the code so more people can join.", arena_solved:"Cracked in {n}", arena_attempts:"{n} guesses", arena_attempts_one:"1 guess", arena_attempts_none:"No guesses yet", arena_best:"best {n}F", arena_gaveup:"Left", arena_nomore:"Out of guesses", arena_secret:"The code was {code}", arena_you_solved:"You cracked it in {n} guesses!", arena_over:"Arena over", arena_log_empty:"You have not tried anything yet.", arena_empty_board:"Whoever joins will show up here.",
+    watch_hint:"Watch others play: the secret codes stay hidden until the game ends.", watch_btn:"Watch", watch_attempts:"{a} · {b} guesses", spectator_chat_readonly:"You are watching: you can read the game chat, not write in it.", spectator_leave:"Stop watching",
     guess_btn:"Guess", legend_fija:"F = correct position", legend_pica:"P = present, wrong spot",
     colhead_mine:"Your guesses → {name}'s code", colhead_theirs:"{name}'s guesses → your code",
     rival:"opponent", log_empty_mine:"No guesses yet", log_empty_theirs:"No guesses yet", log_nada:"none",
@@ -1629,9 +1771,7 @@ const I18N = {
     val_digits:"Digits 0-9 only", val_repeats:"Repeated digits", val_valid:"Valid!",
     rl_colors:"{n} colors", rl_numbers:"numbers", rl_pos:"{n} pos", rl_norepeat:"no repeats", rl_repeat:"repeats ✓",
     rl_attempts:"{n} tries", rl_turn:"{n}s/turn", rl_reveal:"reveals codes at the end", rl_noreveal:"codes hidden at the end",
-    daily_badge:"New every day", daily_title:"Code of the day", daily_play:"Play today's code", daily_see:"See today's result",
-    daily_card_hint:"One code for everyone and one go a day.",
-    daily_card_solved:"You cracked today's code in {n} tries.", daily_card_failed:"Not today. A new code lands tomorrow.",
+    daily_badge:"New every day", daily_title:"Code of the day", daily_play:"Play today's code",
     daily_hint:"{digits} positions, no repeats, {max} tries. The same code for everyone until midnight UTC.",
     daily_number:"Code #{n}", daily_attempts_chip:"Try {n} of {max}", daily_next:"New code in {time}",
     daily_solved_title:"Cracked!", daily_solved_detail:"You got it in {n} tries and {time}.",
@@ -1664,12 +1804,9 @@ const I18N = {
     login_forgot_msg:"Je ne me souviens plus du mot de passe de mon compte « {name} ». Pouvez-vous m'aider à le récupérer ?",
     login_welcome:"Compte créé. Pour revenir en tant que {name} il te faudra ce même mot de passe : garde-le.",
     lobby_greeting:"Salut, {name}",
-    lobby_hint:"Crée une partie et partage le code, ou rejoins une partie publique ouverte.",
     lobby_create:"Créer une partie", lobby_practice:"S'entraîner", lobby_ranking:"Classement", lobby_refresh:"Actualiser la liste",
-    lobby_mine:"Tes parties en cours", lobby_open:"Parties publiques ouvertes", lobby_sync_later:"dernière mise à jour il y a {seconds} s",
-    available_title:"Parties disponibles", private_games_title:"Tes parties privées", private_games_hint:"Pour préserver la confidentialité, seules les parties privées auxquelles tu participes sont affichées.",
-    private_empty:"Tu n'as aucune partie privée ouverte ou en cours.", private_now:"{n} privées ouvertes ou en cours", public_now:"{active} publiques en cours · {open} ouvertes",
-    loading:"Chargement…", load_error:"Échec du chargement", open_empty:"Aucune partie publique ouverte. Crées-en une !",
+    lobby_mine:"Tes parties en cours", lobby_sync_later:"dernière mise à jour il y a {seconds} s",
+    loading:"Chargement…", load_error:"Échec du chargement",
     join_btn:"Rejoindre", lobby_code_ph:"Code de la partie", code_invalid:"Saisis le code de la partie (4 caractères).",
     mine_waiting:"En attente d'un adversaire", mine_rematch_from:"Revanche de {name}", see_btn:"Voir", continue_btn:"Continuer", private_tag:"privée",
     rank_title:"Classement global", rank_hint:"Victoires totales par joueur. Mis à jour après chaque partie terminée.",
@@ -1680,7 +1817,7 @@ const I18N = {
     hist_title:"Historique des parties", hist_hint:"Tes dernières parties terminées. Clique sur un résultat pour la revoir.",
     hist_empty:"Aucune partie terminée pour l'instant.",
     result_win:"Gagnée", result_loss:"Perdue", result_draw:"Égalité",
-    sound_label:"Son", on:"activé", off:"désactivé", notif_yourturn:"À toi de jouer !", notif_joined:"Un adversaire a rejoint !", game_expired:"La partie ouverte a expiré (personne n'a rejoint).", online_now:"{n} en cours maintenant", online_players_one:"1 joueur connecté maintenant", online_players_many:"{n} joueurs connectés maintenant", credits_by:"Créé par",
+    sound_label:"Son", on:"activé", off:"désactivé", notif_yourturn:"À toi de jouer !", notif_joined:"Un adversaire a rejoint !", game_expired:"La partie ouverte a expiré (personne n'a rejoint).", online_now:"{n} en cours maintenant", credits_by:"Créé par",
     create_title:"Nouvelle partie", create_hint:"Règle les paramètres et choisis ton code secret.",
     lbl_mode:"Mode", mode_numbers:"Chiffres 0-9", mode_colors:"Couleurs",
     lbl_positions:"Positions", lbl_repeats:"Répétitions", rep_no:"Interdites", rep_yes:"Autorisées",
@@ -1700,8 +1837,8 @@ const I18N = {
     rematch_send:"Envoyer la revanche", back_home:"Retour à l'accueil", result_lobby:"Retour au lobby",
     game_match:"Partie", game_yourcode:"Ton code :", opponent_code:"Code secret de {name} :", vs:"vs {name}", waiting_short:"en attente…",
     spectator_confirm:"Cette partie est complète. Continuer comme spectateur ?", spectator_mode:"Spectateur", spectator_p1:"Essais de {name} → code de {opp}", spectator_p2:"Essais de {name} → code de {opp}", spectator_winner:"{name} a gagné",
-    arena_title:"L'arène", arena_hint:"De 3 à 8 joueurs contre le même code, en même temps. C'est le serveur qui le tire : personne ne choisit de secret et personne n'attend son tour.", arena_open:"Ouvrir une arène", arena_empty:"Aucune arène ouverte. Ouvre la première.", arena_join:"Entrer", arena_new_title:"Ouvrir une arène", arena_new_hint:"Le code est tiré par le serveur. Tu choisis les règles et tu partages le code de l'arène avec qui tu veux.", arena_create_btn:"Ouvrir l'arène", arena_start:"Lancer l'arène", arena_leave:"Quitter l'arène", arena_leave_confirm:"Quitter l'arène ? Si elle a déjà commencé, tes essais restent au classement.", arena_your_guess:"Ton essai", arena_players:"{n}/{max} joueurs", arena_status_waiting:"En attente de joueurs", arena_status_active:"En jeu", arena_status_finished:"Terminée", arena_need:"Il manque {n} pour commencer.", arena_ready:"On peut commencer. Partage le code pour que d'autres entrent.", arena_solved:"Trouvé en {n}", arena_attempts:"{n} essais", arena_attempts_one:"1 essai", arena_attempts_none:"Pas encore d'essai", arena_best:"meilleur {n}F", arena_gaveup:"A quitté", arena_nomore:"Plus d'essais", arena_secret:"Le code était {code}", arena_you_solved:"Tu l'as trouvé en {n} essais !", arena_over:"Arène terminée", arena_log_empty:"Tu n'as encore rien essayé.", arena_empty_board:"Ceux qui entrent apparaîtront ici.",
-    watch_title:"Parties en cours", watch_hint:"Regarde les autres jouer : les codes secrets restent cachés jusqu'à la fin de la partie.", watch_empty:"Aucune partie publique n'est en cours pour le moment.", watch_btn:"Regarder", watch_attempts:"{a} · {b} essais", spectator_chat_readonly:"Tu regardes : tu peux lire le chat de la partie, pas y écrire.", spectator_leave:"Arrêter de regarder",
+    arena_title:"L'arène", arena_join:"Entrer", arena_new_title:"Ouvrir une arène", arena_new_hint:"Le code est tiré par le serveur. Tu choisis les règles et tu partages le code de l'arène avec qui tu veux.", arena_create_btn:"Ouvrir l'arène", arena_start:"Lancer l'arène", arena_leave:"Quitter l'arène", arena_leave_confirm:"Quitter l'arène ? Si elle a déjà commencé, tes essais restent au classement.", arena_your_guess:"Ton essai", arena_players:"{n}/{max} joueurs", arena_status_waiting:"En attente de joueurs", arena_status_active:"En jeu", arena_status_finished:"Terminée", arena_need:"Il manque {n} pour commencer.", arena_ready:"On peut commencer. Partage le code pour que d'autres entrent.", arena_solved:"Trouvé en {n}", arena_attempts:"{n} essais", arena_attempts_one:"1 essai", arena_attempts_none:"Pas encore d'essai", arena_best:"meilleur {n}F", arena_gaveup:"A quitté", arena_nomore:"Plus d'essais", arena_secret:"Le code était {code}", arena_you_solved:"Tu l'as trouvé en {n} essais !", arena_over:"Arène terminée", arena_log_empty:"Tu n'as encore rien essayé.", arena_empty_board:"Ceux qui entrent apparaîtront ici.",
+    watch_hint:"Regarde les autres jouer : les codes secrets restent cachés jusqu'à la fin de la partie.", watch_btn:"Regarder", watch_attempts:"{a} · {b} essais", spectator_chat_readonly:"Tu regardes : tu peux lire le chat de la partie, pas y écrire.", spectator_leave:"Arrêter de regarder",
     guess_btn:"Deviner", legend_fija:"F = bonne position", legend_pica:"P = présent, mal placé",
     colhead_mine:"Tes essais → code de {name}", colhead_theirs:"Essais de {name} → ton code",
     rival:"adversaire", log_empty_mine:"Aucun essai pour l'instant", log_empty_theirs:"Aucun essai pour l'instant", log_nada:"rien",
@@ -1726,9 +1863,7 @@ const I18N = {
     val_digits:"Chiffres 0-9 uniquement", val_repeats:"Chiffres répétés", val_valid:"Valide !",
     rl_colors:"{n} couleurs", rl_numbers:"chiffres", rl_pos:"{n} pos", rl_norepeat:"sans répétition", rl_repeat:"répétitions ✓",
     rl_attempts:"{n} essais", rl_turn:"{n}s/tour", rl_reveal:"codes révélés à la fin", rl_noreveal:"codes masqués à la fin",
-    daily_badge:"Nouveau chaque jour", daily_title:"Le code du jour", daily_play:"Jouer le code du jour", daily_see:"Voir mon résultat du jour",
-    daily_card_hint:"Un seul code pour tout le monde et un essai par jour.",
-    daily_card_solved:"Tu l’as trouvé aujourd’hui en {n} essais.", daily_card_failed:"Pas aujourd’hui. Un nouveau code arrive demain.",
+    daily_badge:"Nouveau chaque jour", daily_title:"Le code du jour", daily_play:"Jouer le code du jour",
     daily_hint:"{digits} positions, sans répétition, {max} essais. Le même code pour tout le monde jusqu’à minuit UTC.",
     daily_number:"Code n° {n}", daily_attempts_chip:"Essai {n} sur {max}", daily_next:"Nouveau code dans {time}",
     daily_solved_title:"Décrypté !", daily_solved_detail:"Trouvé en {n} essais et {time}.",
@@ -2200,9 +2335,9 @@ const RULES = {
 const URL_LANG = {'/es':'es','/en':'en','/fr':'fr'}[location.pathname] || null;
 const RULES_PAGE_PATH = {es:'/como-se-juega', en:'/en/how-to-play', fr:'/fr/comment-jouer'};
 Object.assign(I18N.es,{
-  auth_title:"Tu próxima partida empieza aquí",auth_hint:"Crea tu perfil para jugar, o vuelve a tu cuenta.",auth_register:"Crear cuenta",auth_login:"Entrar",
+  auth_register:"Crear cuenta",auth_login:"Entrar",
   auth_hint_login:"Entra con tu nombre o tu correo y tu PIN.",auth_hint_register:"Crea tu perfil en menos de un minuto.",
-  auth_no_account:"¿Todavía no tienes cuenta?",auth_go_register:"Crear una cuenta",auth_have_account:"¿Ya tienes cuenta?",auth_go_login:"Entrar",
+  auth_go_register:"Crear una cuenta",auth_have_account:"¿Ya tienes cuenta?",auth_go_login:"Entrar",
   auth_email_ph:"tu@ejemplo.com",auth_identifier_ph:"Diego o tu@ejemplo.com",
   auth_email:"Correo electrónico",auth_display_name:"Nombre que se verá en el juego",auth_pin:"PIN · 4–8 dígitos",auth_pin_repeat:"Confirma tu PIN",
   auth_recovery_note:"Tu correo sirve para recuperar el PIN.",auth_register_cta:"Crear mi cuenta",auth_identifier:"Nombre de usuario o correo electrónico",auth_login_cta:"Entrar a jugar",
@@ -2211,9 +2346,9 @@ Object.assign(I18N.es,{
   ,auth_pin_new:"Nuevo PIN · 4–8 dígitos",auth_reset_title:"Elige un nuevo PIN",auth_reset_hint:"Tu nuevo PIN protegerá tu cuenta.",auth_reset_cta:"Guardar mi nuevo PIN",auth_reset_done:"PIN actualizado. Ya puedes entrar."
 });
 Object.assign(I18N.en,{
-  auth_title:"Your next game starts here",auth_hint:"Create your profile to play, or return to your account.",auth_register:"Create account",auth_login:"Sign in",
+  auth_register:"Create account",auth_login:"Sign in",
   auth_hint_login:"Sign in with your name or email and your PIN.",auth_hint_register:"Create your profile in under a minute.",
-  auth_no_account:"No account yet?",auth_go_register:"Create one",auth_have_account:"Already have an account?",auth_go_login:"Sign in",
+  auth_go_register:"Create an account",auth_have_account:"Already have an account?",auth_go_login:"Sign in",
   auth_email_ph:"you@example.com",auth_identifier_ph:"Diego or you@example.com",
   auth_email:"Email address",auth_display_name:"Name shown in the game",auth_pin:"PIN · 4–8 digits",auth_pin_repeat:"Confirm your PIN",
   auth_recovery_note:"Your email lets you recover your PIN.",auth_register_cta:"Create my account",auth_identifier:"Username or email address",auth_login_cta:"Enter the game",
@@ -2222,9 +2357,9 @@ Object.assign(I18N.en,{
   ,auth_pin_new:"New PIN · 4–8 digits",auth_reset_title:"Choose a new PIN",auth_reset_hint:"Your new PIN will protect your account.",auth_reset_cta:"Save my new PIN",auth_reset_done:"PIN updated. You can now sign in."
 });
 Object.assign(I18N.fr,{
-  auth_title:"Votre prochaine partie commence ici",auth_hint:"Créez votre profil pour jouer, ou retrouvez votre compte.",auth_register:"Créer un compte",auth_login:"Se connecter",
+  auth_register:"Créer un compte",auth_login:"Se connecter",
   auth_hint_login:"Entrez avec votre nom ou votre e-mail et votre PIN.",auth_hint_register:"Créez votre profil en moins d’une minute.",
-  auth_no_account:"Pas encore de compte ?",auth_go_register:"En créer un",auth_have_account:"Vous avez déjà un compte ?",auth_go_login:"Se connecter",
+  auth_go_register:"Créer un compte",auth_have_account:"Vous avez déjà un compte ?",auth_go_login:"Se connecter",
   auth_email_ph:"vous@exemple.com",auth_identifier_ph:"Diego ou vous@exemple.com",
   auth_email:"E-mail",auth_display_name:"Nom affiché dans le jeu",auth_pin:"PIN · 4–8 chiffres",auth_pin_repeat:"Confirmer votre PIN",
   auth_recovery_note:"Votre e-mail permet de récupérer votre PIN.",auth_register_cta:"Créer mon compte",auth_identifier:"Nom d’utilisateur ou e-mail",auth_login_cta:"Entrer dans le jeu",
@@ -2357,6 +2492,10 @@ Object.assign(I18N.fr,{lbl_notebook:"Carnet de déduction",nb_off:"Sans carnet",
 Object.assign(I18N.es,{menu_settings:"Ajustes",menu_logout:"Cerrar sesión"});
 Object.assign(I18N.en,{menu_settings:"Settings",menu_logout:"Log out"});
 Object.assign(I18N.fr,{menu_settings:"Réglages",menu_logout:"Se déconnecter"});
+/* Serie Plaza, lote 3 (4.4.0): la portada y el vestibulo. */
+Object.assign(I18N.es,{home_title:"Adivina el código antes que tu rival.",home_lead:"El clásico «Bulls and Cows» en duelo, en arena o contra el ordenador. Gratis y sin instalar.",lobby_my_profile:"Mi perfil",lobby_season:"Temporada de {month} · {points} pts · {rank}",lobby_season_none:"Temporada de {month} · todavía sin puntos",lobby_create_hint:"Comparte el código, juega en directo o por correspondencia.",lobby_create_go:"Nueva partida",mode_practice_hint:"Solo o contra el ordenador",mode_arena_hint:"De 3 a 8 jugadores, un solo código",mode_puzzles_hint:"Sin rival y sin reloj",mode_rank_hint:"Puntos de la temporada",lobby_mine_empty:"Ninguna partida en curso. Crea una o únete a una pública.",lobby_public:"Partidas públicas",lobby_public_empty:"No hay partidas públicas ahora mismo. Crea una y aparecerá aquí.",online_short:"{n} en línea",row_vs:"Contra {name}",row_open:"{name} busca rival",row_match:"{a} contra {b}",row_arena:"Arena de {name}",row_your_turn:"Te toca",row_their_turn:"Su turno",row_rematch:"Revancha",daily_tile_fresh:"Se renueva en {time}",daily_tile_progress:"{n} de {max} intentos · se renueva en {time}",daily_tile_solved:"Resuelto en {n} · el próximo en {time}",daily_tile_failed:"Hoy no salió · el próximo en {time}",activity_day_one:"Activo hace 1 día"});
+Object.assign(I18N.en,{home_title:"Crack the code before your opponent does.",home_lead:"The classic “Bulls and Cows” as a duel, in the arena or against the computer. Free, nothing to install.",lobby_my_profile:"My profile",lobby_season:"{month} season · {points} pts · {rank}",lobby_season_none:"{month} season · no points yet",lobby_create_hint:"Share the code, play live or by correspondence.",lobby_create_go:"New game",mode_practice_hint:"Solo or against the computer",mode_arena_hint:"3 to 8 players, one code",mode_puzzles_hint:"No opponent, no clock",mode_rank_hint:"Season points",lobby_mine_empty:"No games in progress. Create one or join a public one.",lobby_public:"Public games",lobby_public_empty:"No public games right now. Create one and it will show up here.",online_short:"{n} online",row_vs:"Against {name}",row_open:"{name} is looking for an opponent",row_match:"{a} vs {b}",row_arena:"{name}’s arena",row_your_turn:"Your turn",row_their_turn:"Their turn",row_rematch:"Rematch",daily_tile_fresh:"Renews in {time}",daily_tile_progress:"{n} of {max} tries · renews in {time}",daily_tile_solved:"Solved in {n} · next one in {time}",daily_tile_failed:"Not today · next one in {time}",activity_day_one:"Active 1 day ago"});
+Object.assign(I18N.fr,{home_title:"Devine le code avant ton adversaire.",home_lead:"Le classique « Bulls and Cows » en duel, en arène ou contre l’ordinateur. Gratuit, sans installer.",lobby_my_profile:"Mon profil",lobby_season:"Saison de {month} · {points} pts · {rank}",lobby_season_none:"Saison de {month} · pas encore de points",lobby_create_hint:"Partage le code, joue en direct ou par correspondance.",lobby_create_go:"Nouvelle partie",mode_practice_hint:"Solo ou contre l’ordinateur",mode_arena_hint:"3 à 8 joueurs, un seul code",mode_puzzles_hint:"Sans rival et sans horloge",mode_rank_hint:"Points de la saison",lobby_mine_empty:"Aucune partie en cours. Crées-en une ou rejoins une partie publique.",lobby_public:"Parties publiques",lobby_public_empty:"Aucune partie publique pour l’instant. Crées-en une : elle apparaîtra ici.",online_short:"{n} en ligne",row_vs:"Contre {name}",row_open:"{name} attend un adversaire",row_match:"{a} contre {b}",row_arena:"L’arène de {name}",row_your_turn:"À toi",row_their_turn:"Son tour",row_rematch:"Revanche",daily_tile_fresh:"Se renouvelle dans {time}",daily_tile_progress:"{n} essais sur {max} · se renouvelle dans {time}",daily_tile_solved:"Trouvé en {n} · le prochain dans {time}",daily_tile_failed:"Pas aujourd’hui · le prochain dans {time}",activity_day_one:"Actif il y a 1 jour"});
 
 /* La primera visita, en el idioma del navegador. Es lo unico que evita que
    quien llega desde un enlace compartido y no lee espanol tenga que buscar
@@ -2427,6 +2566,11 @@ const ICONS={
   bombilla:'<path class="dl" d="M12.2 3.4c3.3-.2 5.9 2.3 5.8 5.4-.1 1.9-.9 3-1.9 4.1-.7.8-1.1 1.6-1.2 2.6-1.9.3-3.9.3-5.8 0-.1-1-.5-1.8-1.2-2.6C6.9 11.8 6.1 10.7 6 8.8c-.1-2.9 2.3-5.3 5.4-5.4"></path><path class="dl" d="M9.6 18.2c1.6.3 3.2.3 4.8 0M10.5 20.6c1 .2 2 .2 3 0"></path>',
   bicho:'<path class="dl" d="M12 7.6c2.7 0 4.6 2.4 4.6 5.7s-1.9 5.9-4.6 5.9-4.6-2.6-4.6-5.9S9.3 7.6 12 7.6Z"></path><path class="dl" d="M12 9.4c.2 2.7.2 5.4 0 8.1"></path><path class="dl" d="M10.3 5.1c.3-1.7 3.1-1.7 3.4 0"></path><path class="dl" d="M10.7 4.2 9.1 2.3M13.3 4.2 14.9 2.3"></path><path class="dl" d="M7.6 10.6 4.3 8.7M7.4 16.2 4.3 18.4M16.4 10.6l3.3-1.9M16.6 16.2l3.1 2.2"></path>',
   interrogacion:'<path class="dl" d="M8.7 8.8c-.2-2.4 1.3-3.9 3.4-3.9 2.1 0 3.5 1.3 3.5 3.1 0 2.4-3 2.7-3.5 5.1-.1.5-.1 1-.1 1.5"></path><circle cx="12" cy="18.6" r="1.4" fill="currentColor"></circle>',
+  /* 4.4.0: la portada y el vestibulo */
+  jugar:'<path d="M7 5.5v13l11-6.5z" fill="currentColor"></path>',
+  flecha:'<path class="dl" style="stroke-width:2.6" d="M5 12h13M13 6l6 6-6 6"></path>',
+  chevron:'<path class="dl" style="stroke-width:2.6" d="M9 6l6 6-6 6"></path>',
+  recargar:'<path class="dl" d="M20.1 12.4c.2 4.7-3.7 8.5-8.4 8.4-4.6-.1-8.3-4-8-8.7.3-4.2 3.8-7.4 8-7.3 2.6.1 4.8 1.3 6.3 3.2"></path><path class="dl" d="M19.9 3.7c-.2 1.6-.2 3.1-.1 4.6-1.6.2-3.1.2-4.6.1"></path>',
   globo:'<path class="dl" d="M4.4 11.4c0-3.7 3.4-6.6 7.6-6.6s7.5 2.9 7.4 6.6c-.1 3.6-3.3 6.5-7.5 6.5-.9 0-1.8-.1-2.6-.4-1.3.9-2.7 1.5-4 1.9.6-1.2 1-2.4 1.2-3.5-1.3-1.2-2.1-2.8-2.1-4.5Z"></path>'
 };
 function ico(nombre,tam){
@@ -2475,7 +2619,7 @@ function applyI18n(){
   document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ el.placeholder = t(el.dataset.i18nPh); });
   document.querySelectorAll('[data-i18n-title]').forEach(el=>{ el.title = t(el.dataset.i18nTitle); el.setAttribute('aria-label',t(el.dataset.i18nTitle)); });
-  document.querySelectorAll('#seg-lang button, #fb-seg-lang button, #menu-seg-lang button').forEach(b=> b.classList.toggle('on', b.dataset.lang===lang));
+  document.querySelectorAll('#seg-lang button, #fb-seg-lang button, #menu-seg-lang button').forEach(b=>{ b.classList.toggle('on', b.dataset.lang===lang); b.setAttribute('aria-pressed', b.dataset.lang===lang?'true':'false'); });
   // El enlace a las reglas apunta a su pagina publica en el idioma actual: es
   // un enlace de verdad para los buscadores y sigue abriendo el panel al pulsarlo.
   const rulesHref = RULES_PAGE_PATH[lang] || RULES_PAGE_PATH.es;
@@ -2493,6 +2637,8 @@ function applyI18n(){
   if(typeof syncGuestChrome==='function') syncGuestChrome();
   if(typeof renderPublicPulse==='function') renderPublicPulse();
   if(typeof renderDailyCard==='function'&&$('daily-card')) renderDailyCard();
+  if(typeof renderLobbyHead==='function'&&user) renderLobbyHead();
+  if(typeof paintLobby==='function'&&currentView==='lobby'&&lastLobbySnapshot) paintLobby(lastLobbySnapshot);
   if(typeof renderDaily==='function'&&$('daily-log')) renderDaily();
   if(typeof renderPracticeStats==='function'&&$('practice-stats')) renderPracticeStats();
   if(typeof renderPracticeResumeCard==='function'&&$('practice-resume-card')) renderPracticeResumeCard();
@@ -2587,6 +2733,45 @@ function flagHTML(cc){
 function playerChip(cc, name){ return `<span class="pl">${flagHTML(cc)}<b>${esc(name||'—')}</b></span>`; }
 /* "vs" + bandera + nombre (para historial y mis partidas) */
 function vsPlayer(cc, name){ return `vs ${playerChip(cc, name)}`; }
+/* La inicial sobre un color de la marca. El color sale del nombre, asi que la
+   misma persona tiene el mismo en todas las filas y en todos los aparatos. */
+const AVATAR_TONES=['azul','coral','violeta','sol'];
+function initialOf(name){ return (Array.from(String(name||'').trim())[0]||'?').toLocaleUpperCase(lang); }
+function avatarHTML(name, opts={}){
+  let tone=opts.tone;
+  if(!tone){
+    let h=0; for(const ch of String(name||'').toLowerCase()) h=(h*31+ch.codePointAt(0))>>>0;
+    tone=name?AVATAR_TONES[h%AVATAR_TONES.length]:'vacio';
+  }
+  return `<span class="avatar ${tone}${opts.sm?' sm':''}" aria-hidden="true">${esc(name?initialOf(name):'?')}</span>`;
+}
+/* El frances elide «de» ante vocal: «l’arene d’Ana», «saison d’octobre». Las
+   plantillas se escriben con «de {x}» y la elision se decide con el valor en
+   claro (`raw`), antes de sustituir su HTML. */
+function tElide(key, vars, raw){
+  let s=t(key);
+  if(lang==='fr') for(const k in raw)
+    if(/^[aeiouyàâäéèêëîïôöûüœ]/i.test(String(raw[k]||''))) s=s.split('de {'+k+'}').join('d’{'+k+'}');
+  for(const k in vars) s=s.split('{'+k+'}').join(vars[k]);
+  return s;
+}
+/* Una fila del vestibulo. Cuando solo hay una cosa que hacer con ella —entrar
+   en una partida propia— la fila entera es el boton; cuando hay que elegir
+   —unirse, mirar—, el boton va aparte y la fila es solo texto. */
+function lobbyRow(o){
+  const el=document.createElement(o.onRow?'button':'div');
+  if(o.onRow){ el.type='button'; el.onclick=o.onRow; }
+  el.className='grow'+(o.rowCls?' '+o.rowCls:'');
+  el.innerHTML=`${o.avatar}<span class="grow-main"><span class="grow-title">${o.title}</span><span class="grow-det">${o.detail}</span></span>`
+    +(o.pill?`<span class="rpill${o.pillCls?' '+o.pillCls:''}">${o.pill}</span>`:'');
+  if(o.action){
+    const b=document.createElement('button'); b.type='button';
+    b.className='btn sm'+(o.actionCls?' '+o.actionCls:''); b.textContent=o.action;
+    if(o.actionTitle) b.title=o.actionTitle;
+    b.onclick=o.onAction; el.appendChild(b);
+  }
+  return el;
+}
 
 /* -------------------- utilidades -------------------- */
 const $ = id => document.getElementById(id);
@@ -2901,7 +3086,8 @@ function relativeActivity(iso){
   if(mins<60) return t('activity_min',{n:mins});
   const hours=Math.floor(mins/60);
   if(hours<24) return t('activity_hours',{n:hours});
-  return t('activity_days',{n:Math.floor(hours/24)});
+  const days=Math.floor(hours/24);
+  return days===1 ? t('activity_day_one') : t('activity_days',{n:days});
 }
 
 /* -------------------- aviso de turno (sonido / vibración / notificación) -------------------- */
@@ -3324,6 +3510,7 @@ function defaultAuthMode(){
 }
 function setAuthMode(mode){
   ['register','login','forgot'].forEach(name=>$('auth-'+name+'-panel').classList.toggle('hidden',name!==mode));
+  $('s-login').dataset.mode=mode;
   const hint=$('auth-hint');
   if(hint){
     hint.classList.toggle('hidden', mode==='forgot');
@@ -3566,7 +3753,48 @@ async function logout(){
   chatEnabled=false;stopChatPoll();$('chat-panel').classList.add('hidden');$('chat-launch').classList.add('hidden');
   show('login');
 }
-function enterLobby(){ if(!sessionToken) return exitGuest(); showWelcomeNote(); $('lobby-greet').textContent=t('lobby_greeting',{name:user}); $('lobby-rule').innerHTML=ruleSVG(112); $('lobby-vaca').innerHTML=vacaSVG('calm',54); updateSoundLabel(); show('lobby'); renderDailyCard(); renderPracticeResumeCard(); refreshLobby(); handleDeepLink(); }
+function enterLobby(){ if(!sessionToken) return exitGuest(); showWelcomeNote(); renderLobbyHead(); updateSoundLabel(); show('lobby'); renderDailyCard(); renderPracticeResumeCard(); refreshLobby(); loadLobbySeason(); handleDeepLink(); }
+
+/* -------------------- el saludo del vestibulo (4.4.0) --------------------
+   La inicial lleva al perfil propio y la linea de debajo dice como va la
+   temporada: puntos y puesto. Se pide al entrar al vestibulo, solo la fila
+   propia (`meOnly`), y se recuerda quince segundos para que ir y volver del
+   ranking no la pida otra vez. Nunca entra en el sondeo. */
+let lobbySeasonData=null, lobbySeasonAt=0, lobbySeasonBusy=false;
+function renderLobbyHead(){
+  if(!$('lobby-greet')) return;
+  $('lobby-greet').textContent=t('lobby_greeting',{name:user});
+  $('lobby-avatar').textContent=initialOf(user);
+  renderLobbySeason();
+}
+function ordinal(n){
+  if(lang==='fr') return n===1?'1er':n+'e';
+  if(lang==='en') return '#'+n;
+  return n+'.º';
+}
+function renderLobbySeason(){
+  const el=$('lobby-season'); if(!el) return;
+  const d=lobbySeasonData;
+  if(!d||d.user!==user){ el.textContent=''; return; }
+  const [y,m]=String(d.season||'').split('-').map(Number);
+  let month='';
+  try{ month=new Intl.DateTimeFormat(lang,{month:'long',timeZone:'UTC'}).format(new Date(Date.UTC(y,m-1,1))); }catch(e){}
+  if(!month){ el.textContent=''; return; }
+  el.textContent=d.me
+    ? tElide('lobby_season',{month,points:d.me.points,rank:ordinal(d.me.rank)},{month})
+    : tElide('lobby_season_none',{month},{month});
+}
+async function loadLobbySeason(){
+  if(lobbySeasonBusy) return;
+  if(lobbySeasonData&&lobbySeasonData.user===user&&Date.now()-lobbySeasonAt<15000) return renderLobbySeason();
+  lobbySeasonBusy=true;
+  const who=user;
+  try{
+    const res=await api('leaderboard',{meOnly:1});
+    if(res&&res.ok&&who===user){ lobbySeasonData={user:who,season:res.season,me:res.me||null}; lobbySeasonAt=Date.now(); }
+  }catch(e){}
+  finally{ lobbySeasonBusy=false; renderLobbySeason(); }
+}
 
 function showWelcomeNote(){
   const box=$('lobby-welcome'); if(!box) return;
@@ -3582,12 +3810,7 @@ let lastLobbySnapshot = null;
 async function lobbyRefresh(detect){
   if(lobbyRefreshBusy) return;
   lobbyRefreshBusy=true;
-  if(!detect){
-    $('open-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
-    $('private-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
-    $('watch-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
-    $('arena-list').innerHTML=`<div class="empty">${t('loading')}</div>`;
-  }
+  if(!detect) lobbyListsNotice(t('loading'));
   try{
     const snapshot=await api('lobbyState');
     if(!snapshot.ok)throw new Error('LOBBY_UNAVAILABLE');
@@ -3602,19 +3825,10 @@ async function lobbyRefresh(detect){
       else if(turnHit) notifyTurn();
     }
     myWaitingIds = nowWaiting; myTurnIds = nowTurn;
-    const privateGames = games.filter(g=>!g.isPublic);
-    const publicMine = games.filter(g=>g.isPublic);
-    const privateCount = (typeof snapshot.privateCount==='number') ? snapshot.privateCount : privateGames.length;
-    const publicActive = (typeof snapshot.publicActiveCount==='number') ? snapshot.publicActiveCount : (snapshot.activeCount||0);
-    const publicOpen = (typeof snapshot.publicOpenCount==='number') ? snapshot.publicOpenCount : (snapshot.games||[]).length;
-    const pc = snapshot.onlineCount||0;
-    $('players-online').textContent=t(pc===1?'online_players_one':'online_players_many',{n:pc});
-    $('private-now').textContent=t('private_now',{n:privateCount});
-    $('public-now').textContent=t('public_now',{active:publicActive,open:publicOpen});
-    renderOpen(snapshot.games||[]);
-    renderWatchable(snapshot.watchable||[]);
-    renderArenaList(snapshot.arenas||[]);
-    renderPrivate(privateGames); renderMine(publicMine);
+    paintLobby(snapshot);
+    // La cuenta atras del codigo del dia no pide nada al servidor: se repinta
+    // con el sondeo para que no se quede parada.
+    renderDailyCard();
   }catch(e){
     // En caso de corte, la última lista sigue visible: poner los contadores a
     // cero haría pensar que los jugadores y las partidas desaparecieron.
@@ -3627,89 +3841,101 @@ async function lobbyRefresh(detect){
       // «3 jugadores, hace 5729 s» es peor que reconocer que no hay linea.
       $('players-online').textContent=age>60
         ? t('lobby_offline')
-        : `${t('online_players_many',{n:lastLobbySnapshot.onlineCount||0})} · ${t('lobby_sync_later',{seconds:age})}`;
+        : `${t('online_short',{n:lastLobbySnapshot.onlineCount||0})} · ${t('lobby_sync_later',{seconds:age})}`;
+      $('lobby-online').classList.add('off');
     }
     // Una recarga a mano vacio las listas para poner «Cargando…». Si la
     // peticion falla, ese cartel se queda girando para siempre: hay que
     // decirlo.
-    if(!detect){
-      $('open-list').innerHTML=`<div class="empty">${t('load_error')}</div>`;
-      $('private-list').innerHTML=`<div class="empty">${t('load_error')}</div>`;
-      $('watch-list').innerHTML=`<div class="empty">${t('load_error')}</div>`;
-    }
+    if(!detect) lobbyListsNotice(t('load_error'));
   }finally{ lobbyRefreshBusy=false; }
+}
+/* Pinta el vestibulo a partir de una respuesta ya recibida. applyI18n la
+   llama con la ultima para que cambiar de idioma no espere al sondeo. */
+function paintLobby(snapshot){
+  $('players-online').textContent=t('online_short',{n:snapshot.onlineCount||0});
+  $('lobby-online').classList.remove('off');
+  renderOpen(snapshot.games||[]);
+  renderWatchable(snapshot.watchable||[]);
+  renderArenaList(snapshot.arenas||[]);
+  renderMine(snapshot.myGames||[]);
+  syncPublicEmpty(t('lobby_public_empty'));
 }
 function refreshLobby(){ lobbyRefresh(false); }
 function lobbyTick(){ lobbyRefresh(true); }
 function startLobbyPoll(){ stopLobbyPoll(); lobbyPollTimer=setInterval(lobbyTick, 10000); }
 function stopLobbyPoll(){ if(lobbyPollTimer){ clearInterval(lobbyPollTimer); lobbyPollTimer=null; } }
+/* Un cartel en lugar de las filas —«Cargando…», «No se pudo cargar»— solo
+   donde no hay filas que ensenar: una recarga a mano no borra lo que se ve. */
+function lobbyListsNotice(text){
+  if(!$('mine-list').querySelector('.grow')) $('mine-list').innerHTML=`<div class="empty">${esc(text)}</div>`;
+  syncPublicEmpty(text);
+}
+function syncPublicEmpty(text){
+  const el=$('public-empty'); if(!el) return;
+  const rows=['open-list','watch-list','arena-list'].some(id=>$(id).children.length);
+  el.textContent=text; el.classList.toggle('hidden', rows);
+}
 function renderOpen(games){
   const box=$('open-list'); const list=games.filter(g=>g.p1!==user);
-  if(!list.length){ box.innerHTML=`<div class="empty">${t('open_empty')}</div>`; return; }
   box.innerHTML='';
-  list.forEach(g=>{
-    const el=document.createElement('div'); el.className='gitem';
-    el.innerHTML=`<div class="gid">${g.gameId}</div>
-      <div class="meta"><div class="who">${playerChip(g.country1, g.p1)}</div><div class="det">${rulesLabel(g)}</div></div>
-      <span class="pill" style="margin-right:2px">1/2</span>`;
-    const b=document.createElement('button'); b.className='btn pink sm'; b.textContent=t('join_btn');
-    b.onclick=()=>openJoin(g); el.appendChild(b); box.appendChild(el);
-  });
+  list.forEach(g=>box.appendChild(lobbyRow({
+    avatar:avatarHTML(g.p1),
+    title:tElide('row_open',{name:playerChip(g.country1,g.p1)},{name:g.p1}),
+    detail:rulesLabel(g),
+    action:t('join_btn'), onAction:()=>openJoin(g),
+  })));
 }
 /* Partidas que se pueden mirar (E6-T1). Solo publicas, solo con los dos
    jugadores dentro, y nunca las propias: quien juega ya tiene su pantalla. */
 function renderWatchable(games){
   const box=$('watch-list');
   const list=(games||[]).filter(g=>g.p1!==user&&g.p2!==user);
-  if(!list.length){ box.innerHTML=`<div class="empty">${t('watch_empty')}</div>`; return; }
   box.innerHTML='';
-  list.forEach(g=>{
-    const el=document.createElement('div'); el.className='gitem';
-    el.innerHTML=`<div class="gid">${esc(g.gameId)}</div>
-      <div class="meta"><div class="who">${playerChip(g.country1,g.p1)}<span class="vs-sep">vs</span>${playerChip(g.country2,g.p2)}</div>
-      <div class="det">${rulesLabel(g)} · ${t('watch_attempts',{a:g.attemptsP1||0,b:g.attemptsP2||0})}</div></div>`;
-    const b=document.createElement('button'); b.className='btn sm'; b.textContent=t('watch_btn');
-    b.onclick=()=>watchGame(g); el.appendChild(b); box.appendChild(el);
-  });
+  list.forEach(g=>box.appendChild(lobbyRow({
+    avatar:`<span class="avatars">${avatarHTML(g.p1,{sm:true})}${avatarHTML(g.p2,{sm:true})}</span>`,
+    title:t('row_match',{a:playerChip(g.country1,g.p1),b:playerChip(g.country2,g.p2)}),
+    detail:`${rulesLabel(g)} · ${t('watch_attempts',{a:g.attemptsP1||0,b:g.attemptsP2||0})}`,
+    action:t('watch_btn'), actionCls:'ghost', actionTitle:t('watch_hint'), onAction:()=>watchGame(g),
+  })));
 }
 function watchGame(g){
   enterGame({id:g.gameId,digits:g.digits,mode:g.mode,numColors:g.numColors,allowRepeats:g.allowRepeats,isPublic:true,
     maxAttempts:g.maxAttempts,turnSeconds:g.turnSeconds,timeMode:g.timeMode,bankSeconds:g.bankSeconds,
     bankIncrement:g.bankIncrement,revealSecrets:g.revealSecrets,notebook:g.notebook,spectator:true});
 }
-function renderPrivate(games){
-  const box=$('private-list');
-  if(!games.length){ box.innerHTML=`<div class="empty">${t('private_empty')}</div>`; return; }
-  renderGameItems(box, games);
-}
+/* Las partidas propias, privadas y publicas juntas. Delante, la revancha que
+   me han propuesto y las que esperan mi jugada: son las que piden algo. */
 function renderMine(games){
   const box=$('mine-list');
-  if(!games.length){ $('mine-card').classList.add('hidden'); return; }
-  $('mine-card').classList.remove('hidden'); renderGameItems(box, games);
-}
-function renderGameItems(box, games){
+  if(!games.length){ box.innerHTML=`<div class="empty">${t('lobby_mine_empty')}</div>`; return; }
+  const order=g=>g.rematchInvite?0:g.yourTurn?1:g.status==='active'?2:3;
   box.innerHTML='';
-  games.forEach(g=>{
+  games.slice().sort((a,b)=>order(a)-order(b)).forEach(g=>{
     const opp = g.p1===user ? g.p2 : g.p1;
     const oppCountry = g.p1===user ? g.country2 : g.country1;
     // Revancha que me ha propuesto el rival: todavía no soy jugador, hay que unirse.
     const invite = !!g.rematchInvite;
-    const who = invite ? t('mine_rematch_from',{name:esc(opp||'—')})
-              : (g.status==='waiting' ? esc(t('mine_waiting')) : vsPlayer(oppCountry, opp||'—'));
-    const el=document.createElement('div'); el.className='gitem'+(invite?' invite':'');
-    const complete=!!(g.p1&&g.p2);
-    const cnt = invite ? ico('revancha',13) : (complete ? '2/2' : '1/2');
-    const cntCls = (invite||complete) ? 'pill f' : 'pill';
-    el.innerHTML=`<div class="gid">${g.gameId}</div>
-      <div class="meta"><div class="who">${who}</div><div class="det">${rulesLabel(g)}${g.isPublic?'':' · '+t('private_tag')} · ${relativeActivity(g.updatedAt)}</div></div>
-      <span class="${cntCls}" style="margin-right:2px">${cnt}</span>`;
-    const b=document.createElement('button'); b.className='btn sm'+(invite?' green':'');
-    b.textContent= invite ? t('join_btn') : (g.status==='waiting'?t('see_btn'):t('continue_btn'));
-    b.onclick=()=>{ const meta={id:g.gameId,digits:g.digits,mode:g.mode,numColors:g.numColors,allowRepeats:g.allowRepeats,maxAttempts:g.maxAttempts,turnSeconds:g.turnSeconds,
-      timeMode:g.timeMode,bankSeconds:g.bankSeconds,bankIncrement:g.bankIncrement,revealSecrets:g.revealSecrets,notebook:g.notebook};
-      if(invite){ goToRematch(g.gameId); }
-      else if(g.status==='waiting'||!complete){ enterWait(meta); } else { enterGame(meta); } };
-    el.appendChild(b); box.appendChild(el);
+    const complete = !!(g.p1&&g.p2);
+    const code = `<span class="gid">${esc(g.gameId)}</span>`;
+    const title = invite ? tElide('mine_rematch_from',{name:playerChip(oppCountry,opp||'—')},{name:opp})
+      : g.status==='waiting' ? `${esc(t('mine_waiting'))} · ${code}`
+      : `${t('row_vs',{name:playerChip(oppCountry,opp||'—')})} · ${code}`;
+    // La que espera rival ya lo dice en su titulo: no lleva pastilla.
+    const pill = invite ? ico('revancha',13)+esc(t('row_rematch'))
+      : g.yourTurn ? esc(t('row_your_turn'))
+      : g.status==='active' ? esc(t('row_their_turn')) : '';
+    box.appendChild(lobbyRow({
+      avatar:avatarHTML(complete||invite?opp:''),
+      title, pill,
+      pillCls: invite ? 'hot' : g.yourTurn ? 'mine' : '',
+      rowCls: invite ? 'invite' : g.yourTurn ? 'turn' : '',
+      detail:`${rulesLabel(g)}${g.isPublic?'':' · '+t('private_tag')} · ${relativeActivity(g.updatedAt)}`,
+      onRow:()=>{ const meta={id:g.gameId,digits:g.digits,mode:g.mode,numColors:g.numColors,allowRepeats:g.allowRepeats,maxAttempts:g.maxAttempts,turnSeconds:g.turnSeconds,
+        timeMode:g.timeMode,bankSeconds:g.bankSeconds,bankIncrement:g.bankIncrement,revealSecrets:g.revealSecrets,notebook:g.notebook};
+        if(invite){ goToRematch(g.gameId); }
+        else if(g.status==='waiting'||!complete){ enterWait(meta); } else { enterGame(meta); } },
+    }));
   });
 }
 
@@ -3858,18 +4084,15 @@ $('arena-guess').addEventListener('input', e=>setVal('arena-guess-val', e.target
    con su propia consulta indexada y un tope de doce. */
 function renderArenaList(list){
   const box=$('arena-list');
-  if(!list||!list.length){ box.innerHTML=`<div class="empty">${t('arena_empty')}</div>`; return; }
   box.innerHTML='';
-  list.forEach(a=>{
-    const el=document.createElement('div'); el.className='gitem';
-    el.innerHTML=`<div class="gid">${esc(a.arenaId)}</div>
-      <div class="meta"><div class="who">${playerChip('',a.host)}</div>
-      <div class="det">${esc(arenaRules(a))} · ${esc(t('arena_players',{n:a.players,max:a.maxPlayers}))}</div></div>
-      <span class="pill" style="margin-right:2px">${a.status==='active'?esc(t('arena_status_active')):esc(t('arena_status_waiting'))}</span>`;
-    const b=document.createElement('button'); b.className='btn sm'+(a.status==='waiting'?' pink':'');
-    b.textContent=t(a.status==='waiting'?'arena_join':'see_btn');
-    b.onclick=()=>joinArena(a.arenaId); el.appendChild(b); box.appendChild(el);
-  });
+  (list||[]).forEach(a=>box.appendChild(lobbyRow({
+    avatar:avatarHTML(a.host,{tone:'violeta'}),
+    title:tElide('row_arena',{name:playerChip('',a.host)},{name:a.host}),
+    detail:[t(a.status==='active'?'arena_status_active':'arena_status_waiting'),arenaRules(a),
+      t('arena_players',{n:a.players,max:a.maxPlayers})].map(esc).join(' · '),
+    action:t(a.status==='waiting'?'arena_join':'see_btn'), actionCls:a.status==='waiting'?'':'ghost',
+    onAction:()=>joinArena(a.arenaId),
+  })));
 }
 
 /* -------------------- ranking (E5-T1) --------------------
@@ -4055,14 +4278,29 @@ function rememberDaily(){
   try{ localStorage.setItem('pf_daily',JSON.stringify({day:dailyData.day,finished:dailyData.finished,solved:dailyData.solved,attempts:dailyData.attempts})); }catch(e){}
 }
 function todayUTC(){ return new Date().toISOString().slice(0,10); }
+/* El anillo cuenta los intentos gastados hoy sobre ocho, los de DAILY_RULES
+   en src/daily.js. La cuenta atras es hasta la medianoche UTC, que es cuando
+   cambia el codigo para todo el mundo. */
+const DAILY_MAX=8;
+function dailyRingSVG(done,max){
+  const c=2*Math.PI*23, frac=Math.min(1,done/max);
+  return `<svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="23" fill="none" stroke="#1B1638" stroke-opacity=".18" stroke-width="6"></circle>`
+    +(frac>0?`<circle cx="28" cy="28" r="23" fill="none" stroke="#1B1638" stroke-width="6" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c*(1-frac)).toFixed(1)}" transform="rotate(-90 28 28)"></circle>`:'')
+    +`<text x="28" y="33" text-anchor="middle" font-family="'Bricolage Grotesque',sans-serif" font-weight="800" font-size="17" fill="#1B1638">${done}/${max}</text></svg>`;
+}
+function dailyRenewsIn(){
+  const now=new Date(), next=Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()+1);
+  const minutes=Math.max(1,Math.round((next-now.getTime())/60000)), hours=Math.floor(minutes/60);
+  return hours?t('daily_hours',{h:hours,m:minutes%60}):t('daily_minutes',{m:minutes});
+}
 function renderDailyCard(){
   const card=$('daily-card'); if(!card) return;
-  const memo=readDailyMemo(), done=!!(memo&&memo.day===todayUTC()&&memo.finished);
-  $('daily-card-hint').textContent=done
-    ? (memo.solved?t('daily_card_solved',{n:memo.attempts}):t('daily_card_failed'))
-    : t('daily_card_hint');
-  const btn=$('daily-card-btn'), key=done?'daily_see':'daily_play';
-  btn.textContent=t(key); btn.dataset.i18n=key; btn.className=done?'btn ghost':'btn green';
+  const memo=readDailyMemo(), today=!!(memo&&memo.day===todayUTC());
+  const done=today?Math.max(0,Math.min(DAILY_MAX,Number(memo.attempts)||0)):0, time=dailyRenewsIn();
+  $('daily-ring').innerHTML=dailyRingSVG(done,DAILY_MAX);
+  $('daily-card-hint').textContent = today&&memo.finished
+    ? t(memo.solved?'daily_tile_solved':'daily_tile_failed',{n:done,time})
+    : done ? t('daily_tile_progress',{n:done,max:DAILY_MAX,time}) : t('daily_tile_fresh',{time});
 }
 async function openDaily(){
   show('daily');

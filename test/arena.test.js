@@ -214,6 +214,6 @@ test("la pantalla tiene su arena, con textos en los tres idiomas", () => {
   assert.match(html, /id="s-arena-new"/);
   assert.match(html, /renderArenaList\(snapshot\.arenas\|\|\[\]\)/);
   assert.match(html, /'arena-new','arena','game'\]/);
-  for (const key of ["arena_title", "arena_open", "arena_start", "arena_players", "arena_secret", "arena_you_solved"])
+  for (const key of ["arena_title", "mode_arena_hint", "arena_start", "arena_players", "arena_secret", "arena_you_solved"])
     assert.equal((html.match(new RegExp(key + ":", "g")) || []).length, 3, key + " debe existir en los tres idiomas");
 });

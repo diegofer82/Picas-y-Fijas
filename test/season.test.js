@@ -155,6 +155,31 @@ test("el ranking ordena por puntos, distingue temporada de historia y sitúa a q
   assert.equal(past.me, null);
 });
 
+/* El saludo del vestíbulo (4.4.0) enseña la temporada propia: puntos y puesto.
+   Pide solo eso, sin el Top 50 ni el total, y lo pide al entrar, no en el
+   sondeo de cada diez segundos. */
+test("el saludo del vestíbulo lee solo la fila propia de la temporada", async () => {
+  const { winner, loser } = await playedGame("greet");
+  const full = await api("leaderboard", {}, winner.token);
+  const mine = await api("leaderboard", { meOnly: 1 }, winner.token);
+  assert.equal(mine.ok, true);
+  assert.equal(mine.season, seasonOf());
+  assert.deepEqual(mine.me, full.me, "el mismo puesto y los mismos puntos que en el ranking");
+  assert.equal(mine.ranking, undefined, "sin el Top 50");
+  assert.equal(mine.total, undefined, "sin el total");
+  const other = await api("leaderboard", { meOnly: 1 }, loser.token);
+  assert.equal(other.me.user, loser.username);
+  assert.ok(other.me.rank > mine.me.rank);
+
+  const lobbyPoll = html.match(/function startLobbyPoll\(\)\{[\s\S]*?\n\}/)[0];
+  assert.doesNotMatch(lobbyPoll, /leaderboard/);
+  assert.match(html, /api\('leaderboard',\{meOnly:1\}\)/);
+  const enter = html.match(/function enterLobby\(\)\{[^\n]*/)[0];
+  assert.match(enter, /loadLobbySeason\(\)/, "se pide al entrar al vestíbulo");
+  const refresh = html.slice(html.indexOf("async function lobbyRefresh("), html.indexOf("function refreshLobby("));
+  assert.doesNotMatch(refresh, /leaderboard|loadLobbySeason/, "y no en el sondeo");
+});
+
 test("el perfil sale de lo ya contado, enseña insignias y no deja escapar el correo", async () => {
   const { winner, loser } = await playedGame("prof");
   const mine = await api("profile", { player: winner.username }, loser.token);

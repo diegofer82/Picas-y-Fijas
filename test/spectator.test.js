@@ -174,7 +174,7 @@ test("la pantalla ofrece mirar y avisa de que el chat es solo de lectura", () =>
   assert.match(html, /function renderWatchable\(games\)\{/);
   assert.match(html, /renderWatchable\(snapshot\.watchable\|\|\[\]\)/);
   assert.match(html, /id="chat-readonly"/);
-  for (const key of ["watch_title", "watch_empty", "watch_btn", "spectator_chat_readonly"])
+  for (const key of ["row_match", "watch_hint", "watch_btn", "spectator_chat_readonly"])
     assert.equal((html.match(new RegExp(key + ":", "g")) || []).length, 3, key + " debe existir en los tres idiomas");
   // Mirar no es jugar: no se guarda como partida propia ni se suelta presencia.
   assert.match(html, /if\(!reviewingHistory&&!game\.spectator\)localStorage\.setItem\('pf_current_game'/);

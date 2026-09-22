@@ -45,8 +45,11 @@ test('la vaca tiene cuatro humores y el toro ya no esta en el juego', async () =
   assert.deepEqual(Object.keys(faces(html)), ['calm', 'alert', 'happy', 'sad']);
   assert.match(html, /function vacaSVG\(mood,width\)\{/);
   assert.doesNotMatch(html, /toroSVG|TORO_|class="toro"|\.toro\b/);
-  // Los cuatro sitios que la piden: saludo, empate, victoria y derrota.
-  assert.match(html, /\$\('lobby-vaca'\)\.innerHTML=vacaSVG\('calm',54\)/);
+  // Los cuatro sitios que la piden: la portada, empate, victoria y derrota.
+  // Desde la 4.4.0 el saludo del vestibulo lleva la inicial y no la vaca.
+  const home = html.slice(html.indexOf('<section id="s-login"'), html.indexOf('<!-- BUZON DE SUGERENCIAS -->'));
+  assert.match(home, /<div class="home-hero" aria-hidden="true">[\s\S]*<span data-vaca="alert" data-vaca-size="132"><\/span>/);
+  assert.doesNotMatch(html, /lobby-vaca/);
   assert.match(html, /vacaSVG\('calm',118\)/);
   assert.match(html, /won\?vacaSVG\('happy',150\):vacaSVG\('sad',118\)/);
 });
