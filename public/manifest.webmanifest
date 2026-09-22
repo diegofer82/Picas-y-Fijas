@@ -4,8 +4,8 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#12100C",
-  "theme_color": "#12100C",
+  "background_color": "#FFF5E8",
+  "theme_color": "#FFF5E8",
   "description": "Duelo de deducción online",
   "icons": [
     {

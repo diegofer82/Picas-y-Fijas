@@ -6,7 +6,7 @@ Este es el único documento de referencia del proyecto. Está pensado para perso
 
 Picas y Fijas es un juego multijugador web en español, inglés y francés. La versión vigente funciona íntegramente en Cloudflare; la implementación anterior de Google Sheets y Apps Script fue retirada del árbol actual después de completar la migración. Sigue disponible en el historial de Git si alguna vez se necesita consultar.
 
-Versión actual: **4.1.0**, de la serie de correcciones y mejoras de la 4 —véase «Correcciones y mejoras de la 4»—. La 4.0.0 cierra «El camino a la 4.0.0»: dieciocho mejoras en seis etapas, ordenadas alrededor de una sola frase —quien llegaba creaba una cuenta, iba a buscar el correo, volvía, entraba al vestíbulo y no había nadie—. La mayor sube por tres razones concretas, no por ceremonia: hay pantallas que funcionan **sin sesión**, cuando hasta la 3.5.1 todo lo que no fuera el buzón exigía una; el **ranking cambió de forma**, porque dejó de ordenar por victorias y pasó a contar puntos por temporada, de modo que su respuesta ya no es la misma; y llegó un modo con **más de dos jugadores**, que el modelo de `games`, con sus `p1` y `p2`, no podía representar. Antes de ponerle el número se auditó entera —véase «La auditoría de la 4.0.0»—, porque dieciocho cambios en seis etapas dejan grietas en las costuras y no en el sitio donde se miró al escribirlas.
+Versión actual: **4.2.0**, el primer lote de la identidad **Plaza** —véase «La serie 5: la identidad Plaza»—, entregado dentro de la serie de correcciones y mejoras de la 4. La 4.0.0 cierra «El camino a la 4.0.0»: dieciocho mejoras en seis etapas, ordenadas alrededor de una sola frase —quien llegaba creaba una cuenta, iba a buscar el correo, volvía, entraba al vestíbulo y no había nadie—. La mayor sube por tres razones concretas, no por ceremonia: hay pantallas que funcionan **sin sesión**, cuando hasta la 3.5.1 todo lo que no fuera el buzón exigía una; el **ranking cambió de forma**, porque dejó de ordenar por victorias y pasó a contar puntos por temporada, de modo que su respuesta ya no es la misma; y llegó un modo con **más de dos jugadores**, que el modelo de `games`, con sus `p1` y `p2`, no podía representar. Antes de ponerle el número se auditó entera —véase «La auditoría de la 4.0.0»—, porque dieciocho cambios en seis etapas dejan grietas en las costuras y no en el sitio donde se miró al escribirlas.
 
 Lo que hay hoy, de lo último a lo primero. La **arena** (3.11.0) junta de 3 a 8 jugadores contra el mismo código, a la vez: lo sortea el servidor, así que nadie elige secreto y nadie juega con ventaja; no hay turnos, así que una desconexión no congela a nadie; y siempre hay límite de intentos, que es lo que garantiza que una arena termine aunque alguien cierre la pestaña. La clasificación se ve en directo, pero los intentos de los demás no viajan —todos atacan el mismo código—: de cada rival solo se sabe cuánto ha gastado y cuál es su mejor número de fijas, que no dicen nada del código. Vive en tablas propias (`arenas`, `arena_players`, `arena_guesses`) y no toca ni una columna de las partidas clásicas. Las **reacciones rápidas** (3.10.2) dan cuatro frases hechas —suerte, casi, vaya jugada, buena partida— a un toque, en los tres idiomas; lo que se guarda es la clave, no la frase, así que por esa vía no entra texto libre que moderar. El **espectador** (3.10.1) deja mirar desde el vestíbulo una partida pública en curso: los nombres, las reglas, los intentos de los dos y el reloj, en directo. Lo que no se ve es ningún código: quien mira es `youAre === 0` y para esa cifra `secretsFor()` devuelve dos cadenas vacías, también al terminar, cuando los códigos se revelan a quienes jugaron. El chat de la partida se puede leer, no escribir, y la lectura se filtra por el identificador de la partida, porque el hilo de la pareja guarda conversaciones más antiguas que siguen siendo privadas.
 
@@ -437,27 +437,34 @@ Chrome descarta las capturas que se salen de sus límites —entre 320 y 3840 px
 
 ## Identidad visual
 
-Desde 2.4.0 la aplicación usa la identidad **Mesa**: tablero de madera oscura en lugar del morado anterior. Los colores viven en `:root`, dentro del bloque `<style>` de `public/index.html`.
+Desde la 4.2.0 la aplicación usa la identidad **Plaza**: una plaza pública, clara y de colores francos, en lugar del tablero de madera oscura de **Mesa** (2.4.0 → 4.1.0). La propuesta completa —sistema, pantallas y animaciones— se validó sobre un lienzo de diseño antes de tocar el código, y se está implementando por lotes (véase «La serie 5: la identidad Plaza»). Los colores viven en `:root`, dentro del bloque `<style>` de `public/index.html`, con el modo noche debajo, en `@media (prefers-color-scheme: dark)`; `data-theme="light|dark"` en `<html>` podrá forzarlo cuando exista el interruptor.
 
-| Variable | Valor | Uso |
-| --- | --- | --- |
-| `--ink` | `#12100C` | Fondo de página |
-| `--panel` / `--panel-2` | `#231D16` / `#1A150F` | Degradado de las tarjetas |
-| `--edge` | `#3B3229` | Bordes |
-| `--text` / `--muted` | `#F5EFE3` / `#A3947E` | Texto principal y secundario |
-| `--fija` | `#4FC97C` | Fijas |
-| `--pica` | `#F0B429` | Picas |
-| `--accent` | `#5B8DEF` | Acciones e interactividad |
-| `--pink` | `#E0685A` | Errores y avisos |
+| Variable | Día | Noche | Uso |
+| --- | --- | --- | --- |
+| `--crema` | `#FFF5E8` | `#120F24` | Fondo de página |
+| `--papel` / `--papel-2` / `--hueco` | `#FFFFFF` / `#FFF9F1` / `#F7F0E4` | `#1D1838` / `#231D45` / `#171233` | Tarjetas, y el hueco de campos y filas secundarias |
+| `--linea` / `--linea-2` | `#E9DFD0` / `#F2ECE0` | `#2E2850` / `#2A2448` | Bordes de 2 px y rebordes duros de los controles |
+| `--tinta` / `--bruma` | `#1B1638` / `#625B7A` | `#F6F1FF` / `#A79FC4` | Texto principal y secundario |
+| `--azul` | `#2F5BFF` | `#4F79FF` | La acción primaria y el turno propio |
+| `--coral` | `#FF6B5E` | `#FF7A6E` | La energía: probar, revancha, avisos |
+| `--violeta` | `#7C5CFF` | `#9B82FF` | La arena y el chat del rival |
+| `--sol` | `#FFC531` | `#FFC531` | El código del día y las insignias |
+| `--fija` | `#12A150` | `#39D37E` | Fijas: disco lleno |
+| `--pica` | `#E0731A` | `#F6A040` | Picas: anillo |
+| `--error` | `#B23A31` | `#FF8A80` | Errores |
+
+Cada color de marca tiene su variante oscura para el reborde (`--azul-2`, `--coral-2`…), su fondo suave (`--azul-suave`…) y, cuando hace falta contraste sobre fondo claro, su tono de texto (`--azul-texto`, `--fija-texto`, `--pica-texto`). Los nombres de **Mesa** (`--ink`, `--panel`, `--edge`, `--text`, `--muted`, `--accent`, `--pink`) siguen existiendo como alias de los nuevos, para que cualquier trazado que el script pinte por su nombre viejo siga encontrando un color; no se usan en la hoja de estilos y se retirarán al cerrar la serie.
+
+Los controles son **táctiles**: cada botón, ficha y selector lleva un reborde duro de 4 px debajo (`box-shadow: 0 4px 0`) que desaparece al pulsar mientras el control baja esos mismos 4 px. Una sola acción llena por pantalla; lo secundario va en blanco con borde (`.btn.ghost`, y `.btn.pink`, que ya no es rosa), y `.btn.green` pasó a ser el botón coral de la energía —probar, revancha, jugar el código del día—, porque el verde volvió a ser solo información.
 
 Reglas que conviene respetar al tocar el diseño:
 
 - El verde y el ámbar son **información del juego**. No se deben usar para decorar; si el fondo compite con ellos, las pistas dejan de leerse.
 - Las fichas se distinguen **también por forma**: la fija es un círculo relleno y la pica es un anillo (`.pip.f` y `.pip.p`). Es lo que permite jugar con daltonismo rojo-verde; no se debe reducir a una diferencia de color.
-- Tipografías: `Instrument Serif` en los títulos, `Archivo` en la interfaz y `JetBrains Mono` en códigos y cifras. El cero de JetBrains Mono lleva punto interior, que lo separa del 8 y de la O.
+- Tipografías: `Bricolage Grotesque` (800) en los títulos y cifras fuertes, `Figtree` en la interfaz y `JetBrains Mono` en códigos y relojes. El cero de JetBrains Mono lleva punto interior, que lo separa del 8 y de la O; es la razón de conservarla.
 - El array `COLORS` del script son las fichas de colores del modo Mastermind. No forma parte de la paleta de la interfaz y no debe repintarse con ella.
 - Una sola acción primaria por tarjeta. Lo secundario baja a `.btn.ghost` y lo terciario a `.chipbtn`.
-- La frontera es **icono o prosa**: un emoji dentro de una frase (`chat_nudged`, `tiebreak_you`, un `¡Ganaste! 🎉`) es tono y se queda; un emoji que hace de control o de indicador se dibuja. Ojo con los que el JavaScript reescribe: el botón de silenciados llevaba su icono en el marcado y `updateChatLabels` se lo borraba en cada refresco poniendo el emoji de vuelta. Si un elemento se repinta desde el script, el icono tiene que salir de `ico()` ahí también, no solo de `data-ico`.
+- La frontera es **icono o prosa**, y desde la 4.2.0 la prosa también se quedó sin emoji: títulos, botones, fichas, avisos, notificaciones y líneas de estado no llevan ninguno. Solo se conservan donde son contenido escrito por o para el chat (`react_*`, `chat_nudged`) y en la rejilla del código del día que se copia como texto. Un emoji que hace de control o de indicador se dibuja. Ojo con los que el JavaScript reescribe: el botón de silenciados llevaba su icono en el marcado y `updateChatLabels` se lo borraba en cada refresco poniendo el emoji de vuelta. Si un elemento se repinta desde el script, el icono tiene que salir de `ico()` ahí también, no solo de `data-ico`.
 - **Nada de emoji ni de glifos Unicode como icono.** Vienen de bloques distintos, pesan distinto y cada sistema los dibuja a su manera; algunos se pintan en color y arruinan la ficha que los contiene. Todos los iconos viven en la constante `ICONS` de `public/index.html` y se piden con `ico(nombre, tamaño)`. Los botones estáticos llevan `data-ico` y los rellena `pintarIconos()` desde `applyI18n`, así que no hay trazados repetidos entre el marcado y el script.
 - Las ocho fichas del modo colores se distinguen **por forma**, no solo por color: es lo que permite leer un código con daltonismo o en una pantalla mala. Están en `SYMBOL_D`, dibujadas sobre una rejilla de 24 e **igualadas por área de tinta**, no por caja: seis rondan las 176 px² y los dos triángulos se quedan en el 83 %, que es la compensación óptica habitual para que no parezcan más grandes. Si se añade o cambia una forma hay que volver a igualarla; medir la caja no sirve.
 - La marca es una cabeza de toro, por *Bulls and Cows*. Los mismos trazados viven en **tres** sitios: el logo de la cabecera y la constante `TORO_HEAD` del script, ambos en `public/index.html`, y el generador `tools/make-icons.mjs`. Si cambia la marca hay que cambiarla en los tres y volver a ejecutar `npm run icons`.
@@ -887,10 +894,32 @@ El número vive en tres sitios y los tres se cambian en el mismo commit: `versio
 
 No se deben borrar datos, ejecutar importaciones, alterar producción, cambiar roles o publicar secretos sin autorización explícita del propietario.
 
+## La serie 5: la identidad Plaza
+
+El 22 de septiembre de 2026 se validó un rediseño completo de todas las pantallas sobre un lienzo de diseño (Claude, «Picas y Fijas — Redesign»): la identidad **Plaza**, con su sistema visual, sus dieciséis pantallas de teléfono y de ordenador y su catálogo de animaciones. Tres cosas se decidieron ahí y no se vuelven a discutir en cada lote: la mascota es una **vaca pequeña y risueña** (no la cabeza de toro, y desde luego no algo que parezca un cerdo); en ordenador la interfaz **ocupa todo el navegador** con un raíl de navegación y tres columnas, en lugar de la columna única de 520 px; y en teléfono una partida larga **no se desplaza**: la cabecera con los relojes queda fija arriba, la entrada del intento en un muelle fijo abajo con el teclado plegable, y solo el diario de intentos se mueve, con el más reciente arriba y una friso de pastillas para saltar a cualquier intento.
+
+Se implementa por lotes sobre `public/index.html`, cada lote sube la menor y **se comita, se empuja y se despliega al terminar**, como cualquier tarea de este proyecto. Lo que ningún lote puede romper: el verde y el naranja siguen siendo información y no decoración; fija y pica se distinguen también por forma; todo texto nuevo nace en los tres idiomas y se relee a 375 px; la versión vive en tres sitios; los archivos generados se regeneran en el mismo commit que su fuente.
+
+| Lote | Qué entrega | Versión | Estado |
+| --- | --- | --- | --- |
+| **L1 · Fundaciones** | Tokens de día y de noche, tipografías, todos los componentes rehechos con reborde táctil, `theme-color` y manifest claros, emojis fuera de títulos y controles | 4.2.0 | **Cerrado** el 22-09-2026 |
+| **L2 · La vaca y la marca** | La mascota nueva en la cabecera, en `toroSVG` (cuatro humores), en `tools/make-icons.mjs` y en los PNG, tarjetas sociales, capturas y paleta de las guías PDF | 4.3.0 | À faire |
+| **L3 · Entrar y el lobby** | Portada con héroe ilustrado y «Probar ahora» en coral, lobby con saludo personal, tarjeta del código del día, rejilla de modos con ilustración por modo, listas en filas blancas | 4.4.0 | À faire |
+| **L4 · La partida en teléfono** | Cabecera fija con relojes compactos, muelle inferior con fichas y «Adivinar», teclado plegable que tacha los símbolos descartados, pestañas Tú/Rival, diario con el más reciente arriba y friso de intentos | 4.5.0 | À faire |
+| **L5 · El ordenador** | Raíl de navegación, tres anchos (< 720, 720–1100, > 1100 hasta 1600 px), lobby y partida a tres columnas con los dos diarios a la vista y el chat siempre abierto | 4.6.0 | À faire |
+| **L6 · Volver cada día** | Código del día, podio del ranking, perfil con insignias dibujadas (adiós a `BADGE_ICONS`), enigmas en rejilla, arena con barras de progreso, tarjeta de fin con confeti | 4.7.0 | À faire |
+| **L7 · Movimiento** | Los nueve gestos del catálogo: pulsación, ficha que cae, indicios que estallan, turno que respira, reloj que tiembla, confeti, esqueletos, pantallas que suben, puntos que se cuentan; todo apagado con `prefers-reduced-motion` | 4.8.0 | À faire |
+| **L8 · Recepción y 5.0.0** | Relectura completa en tres idiomas a 375 px y en ordenador, retirada de los alias de Mesa, documento maestro al día, etiqueta `v5.0.0` | 5.0.0 | À faire |
+
+Diario de transiciones:
+
+- 22-09-2026 · L1 · À faire → Cerrado · 4.2.0 · 286 pruebas en verde; portada, práctica y acceso revisados a 390 px de día y de noche en el servidor local. Queda para L2 lo que L1 deja a la vista a propósito: la cabecera de turno y los banners siguen dibujando la cabeza de toro con la paleta nueva.
+
 ## Correcciones y mejoras de la 4
 
 Con la 4.0.0 cerrada empieza su serie de correcciones y mejoras. Cada corrección sube el parche (4.0.1, 4.0.2…) y cada mejora compatible sube la menor, siempre en el commit que la trae y con su etiqueta anotada `vX.Y.Z`. De la más reciente a la más antigua:
 
+- **4.2.0** — Primer lote de la identidad Plaza. La hoja de estilos entera cambia de piel: fondo crema de día y noche índigo cuando el sistema lo pide, tarjetas blancas con borde de 2 px, botones y selectores con reborde táctil de 4 px, `Bricolage Grotesque` en los títulos y `Figtree` en la interfaz. Los títulos, botones, fichas, avisos y notificaciones pierden sus emoji; el altavoz del pie y la marca de revancha en las listas pasan a `ico()`. `theme-color` y el manifest se ponen en crema. Nada cambia de sitio todavía: la cabeza de toro y la columna única se van en los lotes siguientes.
 - **4.1.0** — La nota del análisis pasa del peor caso a la media, y se explica. Con el peor caso, acertar con un código que aún era posible salía «desperdiciado» (457 con 12 posibles, que era justo el código) y el primer intento de una partida sin repetidos salía «correcto» o «óptimo» según la muestra, cuando todos valen lo mismo. Ahora se mide cuántos códigos quedan de media contando todas las respuestas, la victoria cuenta como cero, y la lista se recorre entera mientras cabe; el cálculo pasó a una versión sin objetos diez veces más rápida. Cada nota es un botón que despliega su porqué, y el pie aclara que un intento sin fijas ni picas no se castiga por el resultado sino por lo que podía enseñar. Las guías en PDF cuentan la regla nueva.
 - **4.0.1** — El análisis de la partida («Cómo se jugó») se cerraba un segundo después de abrirlo. La pantalla final se repinta con cada sondeo, porque el chat y la revancha siguen preguntando al servidor al terminar, y cada repintado recreaba el desplegable cerrado. Ahora `analysisBlock` recuerda qué análisis está abierto, por reglas e intentos, y el bloque nuevo nace en el mismo estado; el clic se anota en el acto para que un repintado que llegue antes del evento `toggle` no lo cierre.
 
