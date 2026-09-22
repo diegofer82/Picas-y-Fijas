@@ -63,9 +63,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Figtree:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
   /* ==========================================================================
-     Identidad «Plaza» (serie 5, lote 1). Los colores viven aqui y solo aqui:
-     la interfaz se pinta con los nombres nuevos y el bloque de alias mantiene
-     con vida lo que el script todavia pide por su nombre de la epoca «Mesa».
+     Identidad «Plaza» (serie 5). Los colores viven aqui y solo aqui. Los
+     nombres de la epoca «Mesa» (--ink, --panel, --accent…) se retiraron al
+     cerrar la serie, en la 5.0.0: nada los pide ya.
      Verde (fija) y naranja (pica) son informacion de juego y no decoran nada.
      ========================================================================== */
   :root{
@@ -84,8 +84,6 @@
     --r:22px; --r-md:16px; --r-sm:12px;
     --sombra:0 10px 30px rgba(27,22,56,.06);
     --sombra-alta:0 18px 50px rgba(27,22,56,.18);
-    --ink:var(--crema); --panel:var(--papel); --panel-2:var(--papel-2); --edge:var(--linea);
-    --text:var(--tinta); --muted:var(--bruma); --accent:var(--azul); --pink:var(--coral);
   }
   /* Modo noche: el mismo tablero con la luz apagada. Sigue la preferencia del
      sistema; data-theme en <html> podra forzarlo cuando exista el interruptor. */
@@ -975,6 +973,9 @@ body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .pri
 #s-daily .val,#s-puzzles .val,#s-arena .val{min-height:0;margin:0}
 #s-daily .val:not(.err),#s-puzzles .val:not(.err),#s-arena .val:not(.err){display:none}
 .ebanner:empty{display:none}
+/* El widget de Turnstile mide 300 px y no encoge: en un telefono de 375 la
+   tarjeta del buzon le dejaba 295. Se le presta el margen de la tarjeta. */
+@media (max-width:400px){#s-feedback .card{padding-left:14px;padding-right:14px}}
 .ebanner{display:flex;flex-direction:column;gap:12px}
 .ebanner>*{margin:0}
 /* La cabecera de cada pantalla: volver, el titulo y lo que haga falta. */
@@ -2074,7 +2075,7 @@ body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .pri
     <div class="card" style="text-align:center">
       <h2 data-i18n="wait_title">Partida creada</h2>
       <p class="hint" data-i18n="wait_hint">Comparte este código con tu rival. Empieza en cuanto se una.</p>
-      <div style="font-family:'JetBrains Mono',monospace;font-size:44px;font-weight:800;letter-spacing:10px;color:var(--accent);margin:6px 0 4px" id="wait-code">····</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:44px;font-weight:800;letter-spacing:10px;color:var(--azul-texto);margin:6px 0 4px" id="wait-code">····</div>
       <div class="scoretxt" id="wait-info"></div>
       <div style="height:16px"></div>
       <button class="btn ghost sm" style="width:100%" onclick="copyCode()" data-i18n="wait_copy">Copiar código</button>
@@ -2092,7 +2093,7 @@ body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .pri
   <!-- UNIRSE -->
   <section id="s-join" class="hidden">
     <div class="card">
-      <h2><span data-i18n="join_to">Unirse a</span> <span id="join-code" style="font-family:'JetBrains Mono',monospace;color:var(--accent)"></span></h2>
+      <h2><span data-i18n="join_to">Unirse a</span> <span id="join-code" style="font-family:'JetBrains Mono',monospace;color:var(--azul-texto)"></span></h2>
       <p class="hint" id="join-rules-txt">Define tu código secreto.</p>
       <div class="secret-label-row"><label data-i18n="lbl_secret">Tu código secreto</label><button type="button" class="random-code-btn" onclick="suggestSecret('j')" data-i18n-title="random_secret" title="Proponer código aleatorio" data-ico="dado"></button></div>
       <input type="text" id="secret-j" class="code" inputmode="numeric" maxlength="3" placeholder="•••">
@@ -2304,7 +2305,7 @@ body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .pri
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v4.8.0';
+const APP_VERSION = 'v5.0.0';
 /* Enlace de invitación: ...?game=SZ93
    La invitación sobrevive al registro: se guarda en el navegador, porque entre
    abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
@@ -2342,22 +2343,18 @@ function gameLink(code){ return location.origin+location.pathname+'?game='+code;
 const I18N = {
   es:{
     brand_sub:"Duelo de deducción online", brand_alias:"También conocido como “Bulls and Cows” · inspirado en “Mastermind”",
-    login_title:"Elige tu nombre de jugador",
-    login_hint:"Tu nombre aparecerá en las partidas y el ranking. En el paso siguiente eliges la contraseña que lo protege.",
     login_lang:"Idioma", lang_switch:"Cambiar idioma", login_name:"Nombre de usuario", login_name_ph:"p.ej. Diego", login_pin:"Tu contraseña · 4–8 dígitos", login_pin_ph:"4–8 dígitos",
-    login_pin_note:"Es tu contraseña para entrar en la app. No es el código secreto del juego ni el código de la partida.",
     login_invite:"Te han invitado a la partida {code}. Crea tu nombre y tu contraseña y entrarás directo.",
     login_invite_host:"{name} te invita a su partida {code}. Crea tu cuenta y entrarás directo.", login_invite_rules:"Reglas: {rules}", login_invite_gone:"La partida {code} ya no espera rival. Crea tu cuenta y busca otra en el vestíbulo.",
     login_enter:"Entrar", login_min:"Mínimo 2 caracteres", login_pin_invalid:"La contraseña debe tener entre 4 y 8 dígitos",
-    login_continue:"Continuar", login_change_name:"Cambiar",
-    login_back_title:"Hola otra vez, {name}", login_back_hint:"Escribe la contraseña que elegiste al registrarte.",
-    login_new_title:"Nombre libre: crea tu contraseña", login_new_hint:"Nadie usa ese nombre todavía. Elige una contraseña de 4 a 8 dígitos: la necesitarás cada vez que vuelvas.",
+    login_continue:"Continuar",
+    login_back_title:"Hola otra vez, {name}",
+    login_new_title:"Nombre libre: crea tu contraseña",
     login_pin_new:"Crea tu contraseña · 4–8 dígitos", login_pin2:"Repite tu contraseña",
     login_pin_warn:"Apúntala donde no se pierda: hoy no se puede recuperar sola.",
     login_pin_mismatch:"Las dos contraseñas no coinciden",
     login_create:"Crear mi cuenta", login_forgot:"¿Olvidaste tu contraseña?",
     login_wrong_pin:"Esa contraseña no es la de {name}. Prueba otra vez, usa otro nombre o escríbenos.",
-    login_try_other_name:"Usar otro nombre",
     login_forgot_msg:"No recuerdo la contraseña de mi cuenta «{name}». ¿Podéis ayudarme a recuperarla?",
     login_welcome:"Cuenta creada. Para volver a entrar como {name} necesitarás esa misma contraseña: guárdala.",
     lobby_greeting:"Hola, {name}",
@@ -2365,16 +2362,16 @@ const I18N = {
     lobby_mine:"Tus partidas en curso", lobby_sync_later:"última actualización hace {seconds} s",
     loading:"Cargando…", load_error:"No se pudo cargar",
     join_btn:"Unirse", lobby_code_ph:"Código de partida", code_invalid:"Escribe el código de la partida (4 caracteres).",
-    mine_waiting:"Esperando rival", mine_rematch_from:"Revancha de {name}", see_btn:"Ver", continue_btn:"Continuar", private_tag:"privada",
-    rank_title:"Ranking", rank_hint:"Victorias totales por jugador. Se actualiza con cada partida terminada.",
-    rank_empty:"Aún no hay partidas terminadas.", rank_wl:"{wins} victorias · {played} jug.", rank_total:"Ranking global · {n} jugadores", rank_your_pos:"… tu posición: #{n}", back:"Volver",
+    mine_waiting:"Esperando rival", mine_rematch_from:"Revancha de {name}", see_btn:"Ver", private_tag:"privada",
+    rank_title:"Ranking",
+    rank_empty:"Aún no hay partidas terminadas.", rank_your_pos:"… tu posición: #{n}", back:"Volver",
     rules_title:"Cómo se juega", rules_link:"¿Cómo se juega?", wait_share:"Compartir",
     share_text:"¡Únete a mi partida de Picas y Fijas! Código: {code}",
     lbl_numcolors:"Número de colores", lobby_history:"Historial",
     hist_title:"Historial de partidas", hist_hint:"Tus últimas partidas terminadas. Haz clic en un resultado para revisarla.",
     hist_empty:"Aún no tienes partidas terminadas.",
     result_win:"Ganada", result_loss:"Perdida", result_draw:"Empate",
-    sound_label:"Sonido", on:"activado", off:"desactivado", notif_yourturn:"¡Es tu turno!", notif_joined:"¡Un rival se ha unido!", game_expired:"La partida abierta expiró (nadie se unió).", online_now:"{n} en curso ahora", credits_by:"Creado por",
+    sound_label:"Sonido", on:"activado", off:"desactivado", notif_yourturn:"¡Es tu turno!", notif_joined:"¡Un rival se ha unido!", game_expired:"La partida abierta expiró (nadie se unió).", credits_by:"Creado por",
     create_title:"Nueva partida", create_hint:"Configura las reglas y define tu código secreto.",
     lbl_mode:"Modo", mode_numbers:"Números 0-9", mode_colors:"Colores",
     lbl_positions:"Posiciones", lbl_repeats:"Repetidos", rep_no:"No permitir", rep_yes:"Permitir",
@@ -2383,22 +2380,21 @@ const I18N = {
     pub_hint_public:"Aparece en el lobby: cualquiera puede unirse.",
     pub_hint_private:"No aparece en el lobby: solo se entra con el código.",
     lbl_secret:"Tu código secreto", create_btn:"Crear y esperar rival", create_random:"Partida aleatoria", random_secret:"Proponer un código aleatorio",
-    practice_unranked:"Práctica · no afecta al ranking", practice_title:"Práctica", practice_hint:"Escoge cómo quieres practicar. Los resultados se guardan solo en este dispositivo.", practice_type:"Tipo de práctica", practice_solo:"Solo", practice_computer:"Contra el computador", practice_difficulty:"Dificultad", difficulty_easy:"Fácil", difficulty_normal:"Normal", difficulty_expert:"Experto", practice_time:"Tiempo total", practice_turn_time:"Tiempo por turno", practice_start:"Comenzar práctica", practice_random:"Partida aleatoria", practice_secret:"Código secreto:", practice_again:"Jugar otra vez", practice_settings:"Cambiar reglas", practice_won:"¡Código descubierto!", practice_lost:"Fin de la práctica", practice_reveal:"El código era", practice_played:"Partidas", practice_wins:"Resueltas", practice_streak:"Racha", practice_attempts_used:"Lo resolviste en {n} intentos y {time}.", practice_time_up:"Se terminó el tiempo.", practice_attempts_up:"Agotaste los intentos.", computer_title:"Contra el computador", computer_hint:"Ambos intentan descubrir el código rival por turnos.", computer_thinking:"El computador está pensando…", computer_your_turn:"Tu turno — descubre el código del computador", computer_last_turn:"Último intento para empatar: el computador descubrió tu código.", computer_attempts:"Intentos del computador", computer_your_attempts:"Tus intentos", computer_difficulty:"Dificultad: {level}", computer_wins:"Victorias", computer_losses:"Derrotas", computer_draws:"Empates", computer_result_win:"¡Ganaste!", computer_result_loss:"Ganó el computador", computer_result_draw:"Empate", computer_both_codes:"Tu código: {yours} · Código del computador: {computer}", computer_timeout:"Se agotó tu tiempo; el turno pasa al computador.", computer_stats_detail:"{level}: {wins}V · {losses}D · {draws}E", computer_invalid_secret:"Revisa tu código secreto.",
+    practice_unranked:"Práctica · no afecta al ranking", practice_title:"Práctica", practice_hint:"Escoge cómo quieres practicar. Los resultados se guardan solo en este dispositivo.", practice_type:"Tipo de práctica", practice_solo:"Solo", practice_computer:"Contra el computador", practice_difficulty:"Dificultad", difficulty_easy:"Fácil", difficulty_normal:"Normal", difficulty_expert:"Experto", practice_time:"Tiempo total", practice_turn_time:"Tiempo por turno", practice_start:"Comenzar práctica", practice_random:"Partida aleatoria", practice_secret:"Código secreto:", practice_again:"Jugar otra vez", practice_settings:"Cambiar reglas", practice_won:"¡Código descubierto!", practice_lost:"Fin de la práctica", practice_reveal:"El código era", practice_played:"Partidas", practice_wins:"Resueltas", practice_streak:"Racha", practice_attempts_used:"Lo resolviste en {n} intentos y {time}.", practice_time_up:"Se terminó el tiempo.", practice_attempts_up:"Agotaste los intentos.", computer_title:"Contra el computador", computer_hint:"Ambos intentan descubrir el código rival por turnos.", computer_thinking:"El computador está pensando…", computer_your_turn:"Tu turno — descubre el código del computador", computer_last_turn:"Último intento para empatar: el computador descubrió tu código.", computer_difficulty:"Dificultad: {level}", computer_wins:"Victorias", computer_losses:"Derrotas", computer_draws:"Empates", computer_result_win:"¡Ganaste!", computer_result_loss:"Ganó el computador", computer_result_draw:"Empate", computer_both_codes:"Tu código: {yours} · Código del computador: {computer}", computer_timeout:"Se agotó tu tiempo; el turno pasa al computador.", computer_stats_detail:"{level}: {wins}V · {losses}D · {draws}E", computer_invalid_secret:"Revisa tu código secreto.",
     practice_saved_badge:"Práctica guardada", practice_resume_title:"Práctica en curso", practice_resume:"Continuar práctica", practice_discard:"Descartar", practice_discard_confirm:"¿Descartar esta práctica y todo su progreso?", practice_replace_confirm:"Ya tienes una práctica guardada. ¿Descartarla y comenzar una nueva?", practice_save_lobby:"Guardar y volver al lobby", practice_resume_progress:"{yours} intentos tuyos · {computer} del computador", practice_resume_solo_progress:"{n} intentos realizados", practice_saved_toast:"Práctica guardada. Puedes continuarla desde el lobby.", practice_cancel:"Cancelar", practice_cancel_confirm:"¿Cancelar esta práctica? Se eliminará todo el progreso y no se guardará ningún resultado.", practice_surrender:"Rendirse", practice_surrender_confirm:"¿Rendirse? La práctica terminará y se revelará el código.", practice_surrendered:"Te rendiste", practice_surrender_detail:"El código queda revelado. Puedes revisar tus intentos y las pistas.",
     wait_title:"Partida creada", wait_hint:"Comparte este código con tu rival. Empieza en cuanto se una.",
     wait_copy:"Copiar código", wait_waiting:"Esperando a que alguien se una…", wait_cancel:"Cancelar partida", wait_back:"Volver atrás",
     copied:"Código copiado: {code}", cancel_confirm:"¿Cancelar esta partida abierta?", cancel_done:"Partida cancelada", abandon_game:"Abandonar partida", abandon_confirm:"¿Abandonar esta partida? Perderás automáticamente y la victoria será otorgada a tu rival.", abandon_done:"Partida abandonada · victoria otorgada a tu rival",
     join_to:"Unirse a", join_rules:"Reglas: {rules}. Define tu código secreto.", join_btn2:"Unirse y jugar",
-    rematch_title:"Revancha", rematch_hint:"Mismas reglas, mismo rival. Define tu nuevo código secreto.",
+    rematch_title:"Revancha",
     rematch_rules:"Reglas: {rules}. Define tu nuevo código.", lbl_newsecret:"Tu nuevo código secreto",
     rematch_send:"Enviar revancha", back_home:"Volver al inicio", result_lobby:"Volver al lobby",
-    game_match:"Partida", game_yourcode:"Tu código:", opponent_code:"Código secreto de {name}", vs:"vs {name}", waiting_short:"esperando…",
-    spectator_confirm:"La partida está llena. ¿Deseas continuar como espectador?", spectator_mode:"Espectador", spectator_p1:"Intentos de {name} → código de {opp}", spectator_p2:"Intentos de {name} → código de {opp}", spectator_winner:"Ganó {name}",
-    arena_title:"La arena", arena_join:"Entrar", arena_new_title:"Abrir una arena", arena_new_hint:"El código lo sortea el servidor. Tú eliges las reglas y compartes el código de la arena con quien quieras.", arena_create_btn:"Abrir la arena", arena_start:"Empezar la arena", arena_leave:"Salir de la arena", arena_leave_confirm:"¿Salir de la arena? Si ya ha empezado, tus intentos se quedan en la clasificación.", arena_your_guess:"Tu intento", arena_players:"{n}/{max} jugadores", arena_status_waiting:"Esperando jugadores", arena_status_active:"En juego", arena_status_finished:"Terminada", arena_need:"Faltan {n} para poder empezar.", arena_ready:"Ya se puede empezar. Comparte el código para que entre más gente.", arena_solved:"Descifrado en {n}", arena_attempts:"{n} intentos", arena_attempts_one:"1 intento", arena_attempts_none:"Todavía no ha probado", arena_best:"mejor {n}F", arena_gaveup:"Se marchó", arena_nomore:"Sin intentos", arena_secret:"El código era {code}", arena_you_solved:"¡Lo descifraste en {n} intentos!", arena_over:"Arena terminada", arena_log_empty:"Todavía no has probado nada.", arena_empty_board:"Aquí aparecerá quien entre.",
-    watch_hint:"Mira jugar a otros: los códigos secretos no se ven hasta que la partida termina.", watch_btn:"Mirar", watch_attempts:"{a} · {b} intentos", spectator_chat_readonly:"Estás mirando: puedes leer el chat de la partida, no escribir.", spectator_leave:"Dejar de mirar",
+    game_match:"Partida", opponent_code:"Código secreto de {name}", vs:"vs {name}", waiting_short:"esperando…",
+    spectator_confirm:"La partida está llena. ¿Deseas continuar como espectador?", spectator_mode:"Espectador", spectator_winner:"Ganó {name}",
+    arena_title:"La arena", arena_join:"Entrar", arena_new_title:"Abrir una arena", arena_new_hint:"El código lo sortea el servidor. Tú eliges las reglas y compartes el código de la arena con quien quieras.", arena_create_btn:"Abrir la arena", arena_start:"Empezar la arena", arena_leave:"Salir de la arena", arena_leave_confirm:"¿Salir de la arena? Si ya ha empezado, tus intentos se quedan en la clasificación.", arena_players:"{n}/{max} jugadores", arena_status_waiting:"Esperando jugadores", arena_status_active:"En juego", arena_status_finished:"Terminada", arena_need:"Faltan {n} para poder empezar.", arena_ready:"Ya se puede empezar. Comparte el código para que entre más gente.", arena_solved:"Descifrado en {n}", arena_attempts:"{n} intentos", arena_attempts_one:"1 intento", arena_attempts_none:"Todavía no ha probado", arena_best:"mejor {n}F", arena_gaveup:"Se marchó", arena_nomore:"Sin intentos", arena_secret:"El código era {code}", arena_you_solved:"¡Lo descifraste en {n} intentos!", arena_over:"Arena terminada", arena_log_empty:"Todavía no has probado nada.", arena_empty_board:"Aquí aparecerá quien entre.",
+    watch_hint:"Mira jugar a otros: los códigos secretos no se ven hasta que la partida termina.", watch_btn:"Mirar", watch_attempts:"{a} · {b} intentos", spectator_chat_readonly:"Estás mirando: puedes leer el chat de la partida, no escribir.",
     guess_btn:"Adivinar", legend_fija:"F = posición correcta", legend_pica:"P = presente, mal colocada",
-    colhead_mine:"Tus intentos → código de {name}", colhead_theirs:"Intentos de {name} → tu código",
-    rival:"rival", log_empty_mine:"Aún no has adivinado", log_empty_theirs:"Sin intentos todavía", log_nada:"nada",
+    rival:"rival", log_empty_mine:"Aún no has adivinado", log_empty_theirs:"Sin intentos todavía",
     your_turn:"Es tu turno — adivina el código rival", sending_guess:"Enviando tu intento al oponente…", no_attempts_wait:"Sin intentos restantes — esperando al rival",
     tiebreak_you:"Último intento: {name} ya descifró tu código. ¡Aciértalo para empatar!",
     turn_of:"Turno de {name} …", waiting_generic:"Esperando… …", activity_now:"Activo ahora", activity_min:"Activo hace {n} min", activity_hours:"Activo hace {n} h", activity_days:"Activo hace {n} días",
@@ -2434,22 +2430,18 @@ const I18N = {
   },
   en:{
     brand_sub:"Online deduction duel", brand_alias:"Also known as “Bulls and Cows” · inspired by “Mastermind”",
-    login_title:"Choose your player name",
-    login_hint:"Your name appears in games and on the ranking. You will choose the password that protects it in the next step.",
     login_lang:"Language", lang_switch:"Change language", login_name:"Username", login_name_ph:"e.g. Diego", login_pin:"Your password · 4–8 digits", login_pin_ph:"4–8 digits",
-    login_pin_note:"It's your password to sign in to the app. It is not the game's secret code nor the game code.",
     login_invite:"You've been invited to game {code}. Choose your name and password and you'll go straight in.",
     login_invite_host:"{name} invites you to game {code}. Create your account and you'll go straight in.", login_invite_rules:"Rules: {rules}", login_invite_gone:"Game {code} is no longer waiting for an opponent. Create your account and find another one in the lobby.",
     login_enter:"Enter", login_min:"At least 2 characters", login_pin_invalid:"The password must contain 4 to 8 digits",
-    login_continue:"Continue", login_change_name:"Change",
-    login_back_title:"Welcome back, {name}", login_back_hint:"Type the password you chose when you signed up.",
-    login_new_title:"Name available: create your password", login_new_hint:"Nobody uses that name yet. Choose a 4 to 8 digit password: you will need it every time you come back.",
+    login_continue:"Continue",
+    login_back_title:"Welcome back, {name}",
+    login_new_title:"Name available: create your password",
     login_pin_new:"Create your password · 4–8 digits", login_pin2:"Repeat your password",
     login_pin_warn:"Write it down somewhere safe: today it cannot be recovered on its own.",
     login_pin_mismatch:"The two passwords do not match",
     login_create:"Create my account", login_forgot:"Forgot your password?",
     login_wrong_pin:"That is not {name}'s password. Try again, use another name or write to us.",
-    login_try_other_name:"Use another name",
     login_forgot_msg:"I cannot remember the password of my account “{name}”. Could you help me recover it?",
     login_welcome:"Account created. To sign in as {name} again you will need that same password: keep it safe.",
     lobby_greeting:"Hi, {name}",
@@ -2457,16 +2449,16 @@ const I18N = {
     lobby_mine:"Your games in progress", lobby_sync_later:"last updated {seconds}s ago",
     loading:"Loading…", load_error:"Couldn't load",
     join_btn:"Join", lobby_code_ph:"Game code", code_invalid:"Enter the game code (4 characters).",
-    mine_waiting:"Waiting for opponent", mine_rematch_from:"Rematch from {name}", see_btn:"View", continue_btn:"Continue", private_tag:"private",
-    rank_title:"Ranking", rank_hint:"Total wins per player. Updates after each finished game.",
-    rank_empty:"No finished games yet.", rank_wl:"{wins} wins · {played} games", rank_total:"Global ranking · {n} players", rank_your_pos:"… your position: #{n}", back:"Back",
+    mine_waiting:"Waiting for opponent", mine_rematch_from:"Rematch from {name}", see_btn:"View", private_tag:"private",
+    rank_title:"Ranking",
+    rank_empty:"No finished games yet.", rank_your_pos:"… your position: #{n}", back:"Back",
     rules_title:"How to play", rules_link:"How to play?", wait_share:"Share",
     share_text:"Join my Picas y Fijas game! Code: {code}",
     lbl_numcolors:"Number of colors", lobby_history:"History",
     hist_title:"Match history", hist_hint:"Your latest finished games. Click a result to review it.",
     hist_empty:"No finished games yet.",
     result_win:"Won", result_loss:"Lost", result_draw:"Draw",
-    sound_label:"Sound", on:"on", off:"off", notif_yourturn:"It's your turn!", notif_joined:"An opponent joined!", game_expired:"The open game expired (nobody joined).", online_now:"{n} in progress now", credits_by:"Created by",
+    sound_label:"Sound", on:"on", off:"off", notif_yourturn:"It's your turn!", notif_joined:"An opponent joined!", game_expired:"The open game expired (nobody joined).", credits_by:"Created by",
     create_title:"New game", create_hint:"Set the rules and choose your secret code.",
     lbl_mode:"Mode", mode_numbers:"Numbers 0-9", mode_colors:"Colors",
     lbl_positions:"Positions", lbl_repeats:"Repeats", rep_no:"Not allowed", rep_yes:"Allowed",
@@ -2475,22 +2467,21 @@ const I18N = {
     pub_hint_public:"Shown in the lobby: anyone can join.",
     pub_hint_private:"Not shown in the lobby: join only with the code.",
     lbl_secret:"Your secret code", create_btn:"Create and wait for opponent", create_random:"Random game", random_secret:"Suggest a random code",
-    practice_unranked:"Practice · does not affect ranking", practice_title:"Practice", practice_hint:"Choose how you want to practice. Results are saved only on this device.", practice_type:"Practice type", practice_solo:"Solo", practice_computer:"Against the computer", practice_difficulty:"Difficulty", difficulty_easy:"Easy", difficulty_normal:"Normal", difficulty_expert:"Expert", practice_time:"Total time", practice_turn_time:"Time per turn", practice_start:"Start practice", practice_random:"Random game", practice_secret:"Secret code:", practice_again:"Play again", practice_settings:"Change rules", practice_won:"Code discovered!", practice_lost:"Practice over", practice_reveal:"The code was", practice_played:"Games", practice_wins:"Solved", practice_streak:"Streak", practice_attempts_used:"Solved in {n} attempts and {time}.", practice_time_up:"Time is up.", practice_attempts_up:"No attempts remaining.", computer_title:"Against the computer", computer_hint:"Take turns trying to discover each other's code.", computer_thinking:"The computer is thinking…", computer_your_turn:"Your turn — discover the computer's code", computer_last_turn:"Last try to draw: the computer discovered your code.", computer_attempts:"Computer attempts", computer_your_attempts:"Your attempts", computer_difficulty:"Difficulty: {level}", computer_wins:"Wins", computer_losses:"Losses", computer_draws:"Draws", computer_result_win:"You won!", computer_result_loss:"The computer won", computer_result_draw:"Draw", computer_both_codes:"Your code: {yours} · Computer code: {computer}", computer_timeout:"Your time ran out; the turn passes to the computer.", computer_stats_detail:"{level}: {wins}W · {losses}L · {draws}D", computer_invalid_secret:"Check your secret code.",
+    practice_unranked:"Practice · does not affect ranking", practice_title:"Practice", practice_hint:"Choose how you want to practice. Results are saved only on this device.", practice_type:"Practice type", practice_solo:"Solo", practice_computer:"Against the computer", practice_difficulty:"Difficulty", difficulty_easy:"Easy", difficulty_normal:"Normal", difficulty_expert:"Expert", practice_time:"Total time", practice_turn_time:"Time per turn", practice_start:"Start practice", practice_random:"Random game", practice_secret:"Secret code:", practice_again:"Play again", practice_settings:"Change rules", practice_won:"Code discovered!", practice_lost:"Practice over", practice_reveal:"The code was", practice_played:"Games", practice_wins:"Solved", practice_streak:"Streak", practice_attempts_used:"Solved in {n} attempts and {time}.", practice_time_up:"Time is up.", practice_attempts_up:"No attempts remaining.", computer_title:"Against the computer", computer_hint:"Take turns trying to discover each other's code.", computer_thinking:"The computer is thinking…", computer_your_turn:"Your turn — discover the computer's code", computer_last_turn:"Last try to draw: the computer discovered your code.", computer_difficulty:"Difficulty: {level}", computer_wins:"Wins", computer_losses:"Losses", computer_draws:"Draws", computer_result_win:"You won!", computer_result_loss:"The computer won", computer_result_draw:"Draw", computer_both_codes:"Your code: {yours} · Computer code: {computer}", computer_timeout:"Your time ran out; the turn passes to the computer.", computer_stats_detail:"{level}: {wins}W · {losses}L · {draws}D", computer_invalid_secret:"Check your secret code.",
     practice_saved_badge:"Saved practice", practice_resume_title:"Practice in progress", practice_resume:"Continue practice", practice_discard:"Discard", practice_discard_confirm:"Discard this practice and all its progress?", practice_replace_confirm:"You already have a saved practice. Discard it and start a new one?", practice_save_lobby:"Save and return to lobby", practice_resume_progress:"{yours} of your attempts · {computer} by the computer", practice_resume_solo_progress:"{n} attempts made", practice_saved_toast:"Practice saved. You can continue it from the lobby.", practice_cancel:"Cancel", practice_cancel_confirm:"Cancel this practice? All progress will be deleted and no result will be saved.", practice_surrender:"Surrender", practice_surrender_confirm:"Surrender? The practice will end and the code will be revealed.", practice_surrendered:"You surrendered", practice_surrender_detail:"The code is now revealed. You can review your attempts and clues.",
     wait_title:"Game created", wait_hint:"Share this code with your opponent. It starts as soon as they join.",
     wait_copy:"Copy code", wait_waiting:"Waiting for someone to join…", wait_cancel:"Cancel game", wait_back:"Go back",
     copied:"Code copied: {code}", cancel_confirm:"Cancel this open game?", cancel_done:"Game cancelled", abandon_game:"Abandon game", abandon_confirm:"Abandon this game? You will automatically lose and your opponent will receive the win.", abandon_done:"Game abandoned · win awarded to your opponent",
     join_to:"Join", join_rules:"Rules: {rules}. Choose your secret code.", join_btn2:"Join and play",
-    rematch_title:"Rematch", rematch_hint:"Same rules, same opponent. Choose your new secret code.",
+    rematch_title:"Rematch",
     rematch_rules:"Rules: {rules}. Choose your new code.", lbl_newsecret:"Your new secret code",
     rematch_send:"Send rematch", back_home:"Back to home", result_lobby:"Back to lobby",
-    game_match:"Game", game_yourcode:"Your code:", opponent_code:"{name}’s secret code", vs:"vs {name}", waiting_short:"waiting…",
-    spectator_confirm:"This game is full. Continue as a spectator?", spectator_mode:"Spectator", spectator_p1:"{name}'s guesses → {opp}'s code", spectator_p2:"{name}'s guesses → {opp}'s code", spectator_winner:"{name} won",
-    arena_title:"The arena", arena_join:"Enter", arena_new_title:"Open an arena", arena_new_hint:"The server draws the code. You choose the rules and share the arena code with whoever you like.", arena_create_btn:"Open the arena", arena_start:"Start the arena", arena_leave:"Leave the arena", arena_leave_confirm:"Leave the arena? If it has already started, your guesses stay on the board.", arena_your_guess:"Your guess", arena_players:"{n}/{max} players", arena_status_waiting:"Waiting for players", arena_status_active:"Playing", arena_status_finished:"Finished", arena_need:"{n} more needed to start.", arena_ready:"Ready to start. Share the code so more people can join.", arena_solved:"Cracked in {n}", arena_attempts:"{n} guesses", arena_attempts_one:"1 guess", arena_attempts_none:"No guesses yet", arena_best:"best {n}F", arena_gaveup:"Left", arena_nomore:"Out of guesses", arena_secret:"The code was {code}", arena_you_solved:"You cracked it in {n} guesses!", arena_over:"Arena over", arena_log_empty:"You have not tried anything yet.", arena_empty_board:"Whoever joins will show up here.",
-    watch_hint:"Watch others play: the secret codes stay hidden until the game ends.", watch_btn:"Watch", watch_attempts:"{a} · {b} guesses", spectator_chat_readonly:"You are watching: you can read the game chat, not write in it.", spectator_leave:"Stop watching",
+    game_match:"Game", opponent_code:"{name}’s secret code", vs:"vs {name}", waiting_short:"waiting…",
+    spectator_confirm:"This game is full. Continue as a spectator?", spectator_mode:"Spectator", spectator_winner:"{name} won",
+    arena_title:"The arena", arena_join:"Enter", arena_new_title:"Open an arena", arena_new_hint:"The server draws the code. You choose the rules and share the arena code with whoever you like.", arena_create_btn:"Open the arena", arena_start:"Start the arena", arena_leave:"Leave the arena", arena_leave_confirm:"Leave the arena? If it has already started, your guesses stay on the board.", arena_players:"{n}/{max} players", arena_status_waiting:"Waiting for players", arena_status_active:"Playing", arena_status_finished:"Finished", arena_need:"{n} more needed to start.", arena_ready:"Ready to start. Share the code so more people can join.", arena_solved:"Cracked in {n}", arena_attempts:"{n} guesses", arena_attempts_one:"1 guess", arena_attempts_none:"No guesses yet", arena_best:"best {n}F", arena_gaveup:"Left", arena_nomore:"Out of guesses", arena_secret:"The code was {code}", arena_you_solved:"You cracked it in {n} guesses!", arena_over:"Arena over", arena_log_empty:"You have not tried anything yet.", arena_empty_board:"Whoever joins will show up here.",
+    watch_hint:"Watch others play: the secret codes stay hidden until the game ends.", watch_btn:"Watch", watch_attempts:"{a} · {b} guesses", spectator_chat_readonly:"You are watching: you can read the game chat, not write in it.",
     guess_btn:"Guess", legend_fija:"F = correct position", legend_pica:"P = present, wrong spot",
-    colhead_mine:"Your guesses → {name}'s code", colhead_theirs:"{name}'s guesses → your code",
-    rival:"opponent", log_empty_mine:"No guesses yet", log_empty_theirs:"No guesses yet", log_nada:"none",
+    rival:"opponent", log_empty_mine:"No guesses yet", log_empty_theirs:"No guesses yet",
     your_turn:"Your turn — guess the opponent's code", sending_guess:"Sending your guess to your opponent…", no_attempts_wait:"No attempts left — waiting for opponent",
     tiebreak_you:"Last try: {name} already cracked your code. Match it to tie!",
     turn_of:"{name}'s turn …", waiting_generic:"Waiting… …", activity_now:"Active now", activity_min:"Active {n} min ago", activity_hours:"Active {n} h ago", activity_days:"Active {n} days ago",
@@ -2526,22 +2517,18 @@ const I18N = {
   },
   fr:{
     brand_sub:"Duel de déduction en ligne", brand_alias:"Aussi appelé « Bulls and Cows » · inspiré de « Mastermind »",
-    login_title:"Choisis ton nom de joueur",
-    login_hint:"Ton nom apparaît dans les parties et le classement. Tu choisiras à l'étape suivante le mot de passe qui le protège.",
     login_lang:"Langue", lang_switch:"Changer de langue", login_name:"Nom d'utilisateur", login_name_ph:"ex. Diego", login_pin:"Ton mot de passe · 4–8 chiffres", login_pin_ph:"4–8 chiffres",
-    login_pin_note:"C'est ton mot de passe pour entrer dans l'app. Ce n'est ni le code secret du jeu ni le code de la partie.",
     login_invite:"Tu es invité à la partie {code}. Choisis ton nom et ton mot de passe et tu entreras directement.",
     login_invite_host:"{name} t'invite à sa partie {code}. Crée ton compte et tu entreras directement.", login_invite_rules:"Règles : {rules}", login_invite_gone:"La partie {code} n'attend plus d'adversaire. Crée ton compte et cherches-en une autre dans le lobby.",
     login_enter:"Entrer", login_min:"2 caractères minimum", login_pin_invalid:"Le mot de passe doit contenir de 4 à 8 chiffres",
-    login_continue:"Continuer", login_change_name:"Changer",
-    login_back_title:"Te revoilà, {name}", login_back_hint:"Écris le mot de passe choisi lors de ton inscription.",
-    login_new_title:"Nom libre : crée ton mot de passe", login_new_hint:"Personne n'utilise encore ce nom. Choisis un mot de passe de 4 à 8 chiffres : il te sera demandé à chaque retour.",
+    login_continue:"Continuer",
+    login_back_title:"Te revoilà, {name}",
+    login_new_title:"Nom libre : crée ton mot de passe",
     login_pin_new:"Crée ton mot de passe · 4–8 chiffres", login_pin2:"Répète ton mot de passe",
     login_pin_warn:"Note-le en lieu sûr : aujourd'hui il ne peut pas être récupéré tout seul.",
     login_pin_mismatch:"Les deux mots de passe ne correspondent pas",
     login_create:"Créer mon compte", login_forgot:"Mot de passe oublié ?",
     login_wrong_pin:"Ce n'est pas le mot de passe de {name}. Réessaie, prends un autre nom ou écris-nous.",
-    login_try_other_name:"Utiliser un autre nom",
     login_forgot_msg:"Je ne me souviens plus du mot de passe de mon compte « {name} ». Pouvez-vous m'aider à le récupérer ?",
     login_welcome:"Compte créé. Pour revenir en tant que {name} il te faudra ce même mot de passe : garde-le.",
     lobby_greeting:"Salut, {name}",
@@ -2549,16 +2536,16 @@ const I18N = {
     lobby_mine:"Tes parties en cours", lobby_sync_later:"dernière mise à jour il y a {seconds} s",
     loading:"Chargement…", load_error:"Échec du chargement",
     join_btn:"Rejoindre", lobby_code_ph:"Code de la partie", code_invalid:"Saisis le code de la partie (4 caractères).",
-    mine_waiting:"En attente d'un adversaire", mine_rematch_from:"Revanche de {name}", see_btn:"Voir", continue_btn:"Continuer", private_tag:"privée",
-    rank_title:"Classement", rank_hint:"Victoires totales par joueur. Mis à jour après chaque partie terminée.",
-    rank_empty:"Aucune partie terminée pour l'instant.", rank_wl:"{wins} victoires · {played} parties", rank_total:"Classement global · {n} joueurs", rank_your_pos:"… ta position : #{n}", back:"Retour",
+    mine_waiting:"En attente d'un adversaire", mine_rematch_from:"Revanche de {name}", see_btn:"Voir", private_tag:"privée",
+    rank_title:"Classement",
+    rank_empty:"Aucune partie terminée pour l'instant.", rank_your_pos:"… ta position : #{n}", back:"Retour",
     rules_title:"Comment jouer", rules_link:"Comment jouer ?", wait_share:"Partager",
     share_text:"Rejoins ma partie de Picas y Fijas ! Code : {code}",
     lbl_numcolors:"Nombre de couleurs", lobby_history:"Historique",
     hist_title:"Historique des parties", hist_hint:"Tes dernières parties terminées. Clique sur un résultat pour la revoir.",
     hist_empty:"Aucune partie terminée pour l'instant.",
     result_win:"Gagnée", result_loss:"Perdue", result_draw:"Égalité",
-    sound_label:"Son", on:"activé", off:"désactivé", notif_yourturn:"À toi de jouer !", notif_joined:"Un adversaire a rejoint !", game_expired:"La partie ouverte a expiré (personne n'a rejoint).", online_now:"{n} en cours maintenant", credits_by:"Créé par",
+    sound_label:"Son", on:"activé", off:"désactivé", notif_yourturn:"À toi de jouer !", notif_joined:"Un adversaire a rejoint !", game_expired:"La partie ouverte a expiré (personne n'a rejoint).", credits_by:"Créé par",
     create_title:"Nouvelle partie", create_hint:"Règle les paramètres et choisis ton code secret.",
     lbl_mode:"Mode", mode_numbers:"Chiffres 0-9", mode_colors:"Couleurs",
     lbl_positions:"Positions", lbl_repeats:"Répétitions", rep_no:"Interdites", rep_yes:"Autorisées",
@@ -2567,22 +2554,21 @@ const I18N = {
     pub_hint_public:"Visible dans le lobby : tout le monde peut rejoindre.",
     pub_hint_private:"Absente du lobby : on rejoint uniquement avec le code.",
     lbl_secret:"Ton code secret", create_btn:"Créer et attendre l'adversaire", create_random:"Partie aléatoire", random_secret:"Proposer un code aléatoire",
-    practice_unranked:"Entraînement · sans effet sur le classement", practice_title:"Entraînement", practice_hint:"Choisis ton type d'entraînement. Les résultats restent sur cet appareil.", practice_type:"Type d'entraînement", practice_solo:"Solo", practice_computer:"Contre l'ordinateur", practice_difficulty:"Difficulté", difficulty_easy:"Facile", difficulty_normal:"Normal", difficulty_expert:"Expert", practice_time:"Temps total", practice_turn_time:"Temps par tour", practice_start:"Commencer", practice_random:"Partie aléatoire", practice_secret:"Code secret :", practice_again:"Rejouer", practice_settings:"Changer les règles", practice_won:"Code découvert !", practice_lost:"Fin de l'entraînement", practice_reveal:"Le code était", practice_played:"Parties", practice_wins:"Résolues", practice_streak:"Série", practice_attempts_used:"Résolu en {n} essais et {time}.", practice_time_up:"Temps écoulé.", practice_attempts_up:"Plus aucun essai.", computer_title:"Contre l'ordinateur", computer_hint:"Chacun tente de découvrir le code adverse à tour de rôle.", computer_thinking:"L'ordinateur réfléchit…", computer_your_turn:"À toi — découvre le code de l'ordinateur", computer_last_turn:"Dernier essai pour égaliser : l'ordinateur a découvert ton code.", computer_attempts:"Essais de l'ordinateur", computer_your_attempts:"Tes essais", computer_difficulty:"Difficulté : {level}", computer_wins:"Victoires", computer_losses:"Défaites", computer_draws:"Nuls", computer_result_win:"Tu as gagné !", computer_result_loss:"L'ordinateur a gagné", computer_result_draw:"Match nul", computer_both_codes:"Ton code : {yours} · Code de l'ordinateur : {computer}", computer_timeout:"Temps écoulé ; le tour passe à l'ordinateur.", computer_stats_detail:"{level} : {wins}V · {losses}D · {draws}N", computer_invalid_secret:"Vérifie ton code secret.",
+    practice_unranked:"Entraînement · sans effet sur le classement", practice_title:"Entraînement", practice_hint:"Choisis ton type d'entraînement. Les résultats restent sur cet appareil.", practice_type:"Type d'entraînement", practice_solo:"Solo", practice_computer:"Contre l'ordinateur", practice_difficulty:"Difficulté", difficulty_easy:"Facile", difficulty_normal:"Normal", difficulty_expert:"Expert", practice_time:"Temps total", practice_turn_time:"Temps par tour", practice_start:"Commencer", practice_random:"Partie aléatoire", practice_secret:"Code secret :", practice_again:"Rejouer", practice_settings:"Changer les règles", practice_won:"Code découvert !", practice_lost:"Fin de l'entraînement", practice_reveal:"Le code était", practice_played:"Parties", practice_wins:"Résolues", practice_streak:"Série", practice_attempts_used:"Résolu en {n} essais et {time}.", practice_time_up:"Temps écoulé.", practice_attempts_up:"Plus aucun essai.", computer_title:"Contre l'ordinateur", computer_hint:"Chacun tente de découvrir le code adverse à tour de rôle.", computer_thinking:"L'ordinateur réfléchit…", computer_your_turn:"À toi — découvre le code de l'ordinateur", computer_last_turn:"Dernier essai pour égaliser : l'ordinateur a découvert ton code.", computer_difficulty:"Difficulté : {level}", computer_wins:"Victoires", computer_losses:"Défaites", computer_draws:"Nuls", computer_result_win:"Tu as gagné !", computer_result_loss:"L'ordinateur a gagné", computer_result_draw:"Match nul", computer_both_codes:"Ton code : {yours} · Code de l'ordinateur : {computer}", computer_timeout:"Temps écoulé ; le tour passe à l'ordinateur.", computer_stats_detail:"{level} : {wins}V · {losses}D · {draws}N", computer_invalid_secret:"Vérifie ton code secret.",
     practice_saved_badge:"Entraînement sauvegardé", practice_resume_title:"Entraînement en cours", practice_resume:"Continuer", practice_discard:"Supprimer", practice_discard_confirm:"Supprimer cet entraînement et toute sa progression ?", practice_replace_confirm:"Un entraînement est déjà sauvegardé. Le supprimer et en commencer un nouveau ?", practice_save_lobby:"Sauvegarder et retourner au lobby", practice_resume_progress:"{yours} de tes essais · {computer} de l'ordinateur", practice_resume_solo_progress:"{n} essais effectués", practice_saved_toast:"Entraînement sauvegardé. Tu peux le continuer depuis le lobby.", practice_cancel:"Annuler", practice_cancel_confirm:"Annuler cet entraînement ? Toute la progression sera supprimée et aucun résultat ne sera enregistré.", practice_surrender:"Abandonner", practice_surrender_confirm:"Abandonner ? L'entraînement prendra fin et le code sera révélé.", practice_surrendered:"Tu as abandonné", practice_surrender_detail:"Le code est maintenant révélé. Tu peux examiner tes essais et les indices.",
     wait_title:"Partie créée", wait_hint:"Partage ce code avec ton adversaire. La partie démarre dès qu'il rejoint.",
     wait_copy:"Copier le code", wait_waiting:"En attente d'un joueur…", wait_cancel:"Annuler la partie", wait_back:"Retour",
     copied:"Code copié : {code}", cancel_confirm:"Annuler cette partie ouverte ?", cancel_done:"Partie annulée", abandon_game:"Abandonner la partie", abandon_confirm:"Abandonner cette partie ? Tu perdras automatiquement et la victoire sera attribuée à ton adversaire.", abandon_done:"Partie abandonnée · victoire attribuée à ton adversaire",
     join_to:"Rejoindre", join_rules:"Règles : {rules}. Choisis ton code secret.", join_btn2:"Rejoindre et jouer",
-    rematch_title:"Revanche", rematch_hint:"Mêmes règles, même adversaire. Choisis ton nouveau code secret.",
+    rematch_title:"Revanche",
     rematch_rules:"Règles : {rules}. Choisis ton nouveau code.", lbl_newsecret:"Ton nouveau code secret",
     rematch_send:"Envoyer la revanche", back_home:"Retour à l'accueil", result_lobby:"Retour au lobby",
-    game_match:"Partie", game_yourcode:"Ton code :", opponent_code:"Code secret de {name}", vs:"vs {name}", waiting_short:"en attente…",
-    spectator_confirm:"Cette partie est complète. Continuer comme spectateur ?", spectator_mode:"Spectateur", spectator_p1:"Essais de {name} → code de {opp}", spectator_p2:"Essais de {name} → code de {opp}", spectator_winner:"{name} a gagné",
-    arena_title:"L'arène", arena_join:"Entrer", arena_new_title:"Ouvrir une arène", arena_new_hint:"Le code est tiré par le serveur. Tu choisis les règles et tu partages le code de l'arène avec qui tu veux.", arena_create_btn:"Ouvrir l'arène", arena_start:"Lancer l'arène", arena_leave:"Quitter l'arène", arena_leave_confirm:"Quitter l'arène ? Si elle a déjà commencé, tes essais restent au classement.", arena_your_guess:"Ton essai", arena_players:"{n}/{max} joueurs", arena_status_waiting:"En attente de joueurs", arena_status_active:"En jeu", arena_status_finished:"Terminée", arena_need:"Il manque {n} pour commencer.", arena_ready:"On peut commencer. Partage le code pour que d'autres entrent.", arena_solved:"Trouvé en {n}", arena_attempts:"{n} essais", arena_attempts_one:"1 essai", arena_attempts_none:"Pas encore d'essai", arena_best:"meilleur {n}F", arena_gaveup:"A quitté", arena_nomore:"Plus d'essais", arena_secret:"Le code était {code}", arena_you_solved:"Tu l'as trouvé en {n} essais !", arena_over:"Arène terminée", arena_log_empty:"Tu n'as encore rien essayé.", arena_empty_board:"Ceux qui entrent apparaîtront ici.",
-    watch_hint:"Regarde les autres jouer : les codes secrets restent cachés jusqu'à la fin de la partie.", watch_btn:"Regarder", watch_attempts:"{a} · {b} essais", spectator_chat_readonly:"Tu regardes : tu peux lire le chat de la partie, pas y écrire.", spectator_leave:"Arrêter de regarder",
+    game_match:"Partie", opponent_code:"Code secret de {name}", vs:"vs {name}", waiting_short:"en attente…",
+    spectator_confirm:"Cette partie est complète. Continuer comme spectateur ?", spectator_mode:"Spectateur", spectator_winner:"{name} a gagné",
+    arena_title:"L'arène", arena_join:"Entrer", arena_new_title:"Ouvrir une arène", arena_new_hint:"Le code est tiré par le serveur. Tu choisis les règles et tu partages le code de l'arène avec qui tu veux.", arena_create_btn:"Ouvrir l'arène", arena_start:"Lancer l'arène", arena_leave:"Quitter l'arène", arena_leave_confirm:"Quitter l'arène ? Si elle a déjà commencé, tes essais restent au classement.", arena_players:"{n}/{max} joueurs", arena_status_waiting:"En attente de joueurs", arena_status_active:"En jeu", arena_status_finished:"Terminée", arena_need:"Il manque {n} pour commencer.", arena_ready:"On peut commencer. Partage le code pour que d'autres entrent.", arena_solved:"Trouvé en {n}", arena_attempts:"{n} essais", arena_attempts_one:"1 essai", arena_attempts_none:"Pas encore d'essai", arena_best:"meilleur {n}F", arena_gaveup:"A quitté", arena_nomore:"Plus d'essais", arena_secret:"Le code était {code}", arena_you_solved:"Tu l'as trouvé en {n} essais !", arena_over:"Arène terminée", arena_log_empty:"Tu n'as encore rien essayé.", arena_empty_board:"Ceux qui entrent apparaîtront ici.",
+    watch_hint:"Regarde les autres jouer : les codes secrets restent cachés jusqu'à la fin de la partie.", watch_btn:"Regarder", watch_attempts:"{a} · {b} essais", spectator_chat_readonly:"Tu regardes : tu peux lire le chat de la partie, pas y écrire.",
     guess_btn:"Deviner", legend_fija:"F = bonne position", legend_pica:"P = présent, mal placé",
-    colhead_mine:"Tes essais → code de {name}", colhead_theirs:"Essais de {name} → ton code",
-    rival:"adversaire", log_empty_mine:"Aucun essai pour l'instant", log_empty_theirs:"Aucun essai pour l'instant", log_nada:"rien",
+    rival:"adversaire", log_empty_mine:"Aucun essai pour l'instant", log_empty_theirs:"Aucun essai pour l'instant",
     your_turn:"À toi — devine le code de l'adversaire", sending_guess:"Envoi de ton essai à l'adversaire…", no_attempts_wait:"Plus d'essais — en attente de l'adversaire",
     tiebreak_you:"Dernier essai : {name} a déjà trouvé ton code. Réussis pour égaliser !",
     turn_of:"Tour de {name} …", waiting_generic:"En attente… …", activity_now:"Actif maintenant", activity_min:"Actif il y a {n} min", activity_hours:"Actif il y a {n} h", activity_days:"Actif il y a {n} jours",
@@ -2631,7 +2617,7 @@ Object.assign(I18N.fr,{public_pulse_player_one:"{n} joueur connecté",public_pul
 Object.assign(I18N.es,{
   chat_lobby:"Chat del lobby",chat_game:"Chat de la partida",chat_placeholder:"Escribe un mensaje…",chat_empty:"Todavía no hay mensajes.",chat_deleted:"Mensaje eliminado",chat_mute:"Silenciar usuario",chat_mute_confirm:"¿Silenciar a {name}? Sus mensajes y zumbidos quedarán ocultos hasta que lo reactives desde el botón 🔇.",chat_manage_muted:"Gestionar usuarios silenciados",chat_muted_title:"Usuarios silenciados",chat_muted_empty:"No has silenciado a ningún usuario.",chat_unmute:"Reactivar",chat_unmute_all:"Reactivar a todos",chat_unmuted:"{name} fue reactivado.",chat_all_unmuted:"Todos los usuarios fueron reactivados.",chat_report:"Reportar mensaje",chat_muted:"Usuario silenciado en este dispositivo.",chat_reported:"Mensaje reportado.",chat_nudge:"Enviar zumbido",chat_nudges_on:"Zumbidos activados",chat_nudges_off:"Zumbidos desactivados",chat_joined:"{name} entró en la partida.",chat_paused:"{name} pausó la partida.",chat_resumed:"{name} reanudó la partida.",chat_abandoned:"{name} abandonó la partida.",chat_rematch:"{name} propuso una revancha.",chat_finished:"La partida terminó.",chat_nudged:"{name} te ha enviado un zumbido ⚡",chat_report_reason:"Motivo: 1 spam, 2 insultos/acoso, 3 contenido inapropiado",react_luck:"{name}: ¡Suerte! 🍀",react_close:"{name}: ¡Casi! 😮",react_wow:"{name}: ¡Vaya jugada! 👏",react_gg:"{name}: ¡Buena partida! 🤝",react_short_luck:"Suerte",react_short_close:"Casi",react_short_wow:"Vaya jugada",react_short_gg:"Buena partida",react_title:"Reacciones rápidas",react_wait:"Espera unos segundos antes de enviar otra reacción."
 });
-Object.assign(I18N.es,{experience_title:"No te pierdas tu turno",experience_hint:"Activa las notificaciones y el sonido para recibir avisos de turnos, rivales y zumbidos aunque el chat esté cerrado.",experience_activate:"Activar notificaciones y sonido",experience_ready:"Notificaciones y sonido activados.",experience_sound_only:"Sonido activado. Este navegador no admite notificaciones.",experience_denied:"El sonido está activado, pero las notificaciones están bloqueadas. Permítelas desde la configuración del sitio en tu navegador.",experience_default:"Recomendado para una mejor experiencia de juego.",experience_enabled_toast:"Notificaciones y sonido activados",experience_denied_toast:"El navegador bloqueó las notificaciones. Revisa los permisos del sitio."});
+Object.assign(I18N.es,{experience_title:"No te pierdas tu turno",experience_hint:"Activa las notificaciones y el sonido para recibir avisos de turnos, rivales y zumbidos aunque el chat esté cerrado.",experience_activate:"Activar notificaciones y sonido",experience_sound_only:"Sonido activado. Este navegador no admite notificaciones.",experience_denied:"El sonido está activado, pero las notificaciones están bloqueadas. Permítelas desde la configuración del sitio en tu navegador.",experience_default:"Recomendado para una mejor experiencia de juego.",experience_enabled_toast:"Notificaciones y sonido activados",experience_denied_toast:"El navegador bloqueó las notificaciones. Revisa los permisos del sitio."});
 /* Instalar el juego como app. Estas claves son tambien la unica fuente de las
    paginas /instalar, que genera tools/make-install-pages.py leyendolas de aqui. */
 Object.assign(I18N.es,{install_title:"Juégalo desde tu pantalla de inicio",install_hint_android:"Añádelo como app: se abre a pantalla completa, sin la barra del navegador, y vuelves a la partida de un solo toque.",install_hint_ios:"Añádelo a tu pantalla de inicio: se abre a pantalla completa y es la única forma de que el iPhone te avise cuando sea tu turno.",install_btn:"Instalar la app",install_btn_steps:"Ver cómo se hace",install_btn_hide:"Ocultar los pasos",install_btn_copy:"Copiar el enlace",install_later:"Ahora no",install_guide:"Guía con imágenes",install_done:"Listo: el juego ya está en tu pantalla de inicio",install_copied:"Enlace copiado",install_note_browser:"Desde este navegador integrado no se puede instalar. Copia el enlace y ábrelo en Safari (iPhone) o en Chrome (Android).",install_ios_1:"Toca el botón <b>Compartir</b> en la barra de Safari.",install_ios_2:"Desliza hacia abajo y elige <b>Añadir a pantalla de inicio</b>.",install_ios_3:"Pulsa <b>Añadir</b>, arriba a la derecha.",install_and_1:"Abre el menú <b>⋮</b> del navegador, arriba a la derecha.",install_and_2:"Elige <b>Instalar aplicación</b> o <b>Añadir a pantalla de inicio</b>.",install_and_3:"Confirma con <b>Instalar</b>.",experience_ios_install:"En iPhone los avisos de turno solo llegan si añades el juego a tu pantalla de inicio."});
@@ -2640,14 +2626,14 @@ I18N.es.missed_timeout="Turno perdido por tiempo";
 Object.assign(I18N.en,{
   chat_lobby:"Lobby chat",chat_game:"Game chat",chat_placeholder:"Write a message…",chat_empty:"No messages yet.",chat_deleted:"Message deleted",chat_mute:"Mute user",chat_mute_confirm:"Mute {name}? Their messages and nudges will stay hidden until you restore them with the 🔇 button.",chat_manage_muted:"Manage muted users",chat_muted_title:"Muted users",chat_muted_empty:"You have not muted anyone.",chat_unmute:"Unmute",chat_unmute_all:"Unmute everyone",chat_unmuted:"{name} was unmuted.",chat_all_unmuted:"Everyone was unmuted.",chat_report:"Report message",chat_muted:"User muted on this device.",chat_reported:"Message reported.",chat_nudge:"Send a nudge",chat_nudges_on:"Nudges enabled",chat_nudges_off:"Nudges disabled",chat_joined:"{name} joined the game.",chat_paused:"{name} paused the game.",chat_resumed:"{name} resumed the game.",chat_abandoned:"{name} abandoned the game.",chat_rematch:"{name} proposed a rematch.",chat_finished:"The game ended.",chat_nudged:"{name} sent you a nudge ⚡",chat_report_reason:"Reason: 1 spam, 2 harassment, 3 inappropriate content",react_luck:"{name}: Good luck! 🍀",react_close:"{name}: So close! 😮",react_wow:"{name}: Nice move! 👏",react_gg:"{name}: Good game! 🤝",react_short_luck:"Good luck",react_short_close:"So close",react_short_wow:"Nice move",react_short_gg:"Good game",react_title:"Quick reactions",react_wait:"Wait a few seconds before sending another reaction."
 });
-Object.assign(I18N.en,{experience_title:"Don't miss your turn",experience_hint:"Enable notifications and sound for turn, opponent and nudge alerts even when chat is closed.",experience_activate:"Enable notifications and sound",experience_ready:"Notifications and sound enabled.",experience_sound_only:"Sound enabled. This browser does not support notifications.",experience_denied:"Sound is enabled, but notifications are blocked. Allow them in this site's browser settings.",experience_default:"Recommended for the best game experience.",experience_enabled_toast:"Notifications and sound enabled",experience_denied_toast:"The browser blocked notifications. Check this site's permissions."});
+Object.assign(I18N.en,{experience_title:"Don't miss your turn",experience_hint:"Enable notifications and sound for turn, opponent and nudge alerts even when chat is closed.",experience_activate:"Enable notifications and sound",experience_sound_only:"Sound enabled. This browser does not support notifications.",experience_denied:"Sound is enabled, but notifications are blocked. Allow them in this site's browser settings.",experience_default:"Recommended for the best game experience.",experience_enabled_toast:"Notifications and sound enabled",experience_denied_toast:"The browser blocked notifications. Check this site's permissions."});
 Object.assign(I18N.en,{install_title:"Play it from your home screen",install_hint_android:"Add it as an app: it opens full screen, without the browser bar, and you are back in the game in a single tap.",install_hint_ios:"Add it to your home screen: it opens full screen and it is the only way your iPhone can alert you when it is your turn.",install_btn:"Install the app",install_btn_steps:"Show me how",install_btn_hide:"Hide the steps",install_btn_copy:"Copy the link",install_later:"Not now",install_guide:"Illustrated guide",install_done:"Done: the game is on your home screen",install_copied:"Link copied",install_note_browser:"This in-app browser cannot install it. Copy the link and open it in Safari (iPhone) or Chrome (Android).",install_ios_1:"Tap the <b>Share</b> button in the Safari bar.",install_ios_2:"Scroll down and pick <b>Add to Home Screen</b>.",install_ios_3:"Tap <b>Add</b>, at the top right.",install_and_1:"Open the browser <b>⋮</b> menu, at the top right.",install_and_2:"Pick <b>Install app</b> or <b>Add to Home screen</b>.",install_and_3:"Confirm with <b>Install</b>.",experience_ios_install:"On iPhone, turn alerts only arrive if you add the game to your home screen."});
 I18N.en.session_expired="Your session expired. Enter your PIN to reconnect.";
 I18N.en.missed_timeout="Turn lost on time";
 Object.assign(I18N.fr,{
   chat_lobby:"Chat du lobby",chat_game:"Chat de la partie",chat_placeholder:"Écris un message…",chat_empty:"Aucun message pour l'instant.",chat_deleted:"Message supprimé",chat_mute:"Ignorer l'utilisateur",chat_mute_confirm:"Ignorer {name} ? Ses messages et wizz resteront masqués jusqu'à sa réactivation avec le bouton 🔇.",chat_manage_muted:"Gérer les utilisateurs ignorés",chat_muted_title:"Utilisateurs ignorés",chat_muted_empty:"Tu n'as ignoré aucun utilisateur.",chat_unmute:"Réactiver",chat_unmute_all:"Tout réactiver",chat_unmuted:"{name} a été réactivé.",chat_all_unmuted:"Tous les utilisateurs ont été réactivés.",chat_report:"Signaler le message",chat_muted:"Utilisateur ignoré sur cet appareil.",chat_reported:"Message signalé.",chat_nudge:"Envoyer un wizz",chat_nudges_on:"Wizz activés",chat_nudges_off:"Wizz désactivés",chat_joined:"{name} a rejoint la partie.",chat_paused:"{name} a mis la partie en pause.",chat_resumed:"{name} a repris la partie.",chat_abandoned:"{name} a abandonné la partie.",chat_rematch:"{name} a proposé une revanche.",chat_finished:"La partie est terminée.",chat_nudged:"{name} t'a envoyé un wizz ⚡",chat_report_reason:"Motif : 1 spam, 2 harcèlement, 3 contenu inapproprié",react_luck:"{name} : Bonne chance ! 🍀",react_close:"{name} : Presque ! 😮",react_wow:"{name} : Joli coup ! 👏",react_gg:"{name} : Belle partie ! 🤝",react_short_luck:"Bonne chance",react_short_close:"Presque",react_short_wow:"Joli coup",react_short_gg:"Belle partie",react_title:"Réactions rapides",react_wait:"Attends quelques secondes avant d'envoyer une autre réaction."
 });
-Object.assign(I18N.fr,{experience_title:"Ne rate pas ton tour",experience_hint:"Active les notifications et le son pour les alertes de tour, d'adversaire et de wizz, même lorsque le chat est fermé.",experience_activate:"Activer les notifications et le son",experience_ready:"Notifications et son activés.",experience_sound_only:"Son activé. Ce navigateur ne prend pas en charge les notifications.",experience_denied:"Le son est activé, mais les notifications sont bloquées. Autorise-les dans les paramètres du site du navigateur.",experience_default:"Recommandé pour une meilleure expérience de jeu.",experience_enabled_toast:"Notifications et son activés",experience_denied_toast:"Le navigateur a bloqué les notifications. Vérifie les autorisations de ce site."});
+Object.assign(I18N.fr,{experience_title:"Ne rate pas ton tour",experience_hint:"Active les notifications et le son pour les alertes de tour, d'adversaire et de wizz, même lorsque le chat est fermé.",experience_activate:"Activer les notifications et le son",experience_sound_only:"Son activé. Ce navigateur ne prend pas en charge les notifications.",experience_denied:"Le son est activé, mais les notifications sont bloquées. Autorise-les dans les paramètres du site du navigateur.",experience_default:"Recommandé pour une meilleure expérience de jeu.",experience_enabled_toast:"Notifications et son activés",experience_denied_toast:"Le navigateur a bloqué les notifications. Vérifie les autorisations de ce site."});
 Object.assign(I18N.es,{clock_correspondence:"Correspondencia",lbl_correspondence:"Tiempo por jugada",day_one:"1 día",day_three:"3 días",correspondence_hint:"El reloj sigue corriendo aunque alguien cierre el juego.",rl_correspondence_one:"1 día/jugada",rl_correspondence_three:"3 días/jugada",experience_push_ready:"Avisos de turno activados, incluso con el juego cerrado.",experience_push_failed:"No pudimos activar los avisos con el juego cerrado; recibirás un correo cuando sea tu turno."});
 Object.assign(I18N.en,{clock_correspondence:"Correspondence",lbl_correspondence:"Time per move",day_one:"1 day",day_three:"3 days",correspondence_hint:"The clock keeps running even when someone closes the game.",rl_correspondence_one:"1 day/move",rl_correspondence_three:"3 days/move",experience_push_ready:"Turn alerts enabled, even when the game is closed.",experience_push_failed:"We could not enable closed-game alerts; you will receive an email when it is your turn."});
 Object.assign(I18N.fr,{clock_correspondence:"Correspondance",lbl_correspondence:"Temps par coup",day_one:"1 jour",day_three:"3 jours",correspondence_hint:"Le chrono continue même lorsque quelqu’un ferme le jeu.",rl_correspondence_one:"1 jour/coup",rl_correspondence_three:"3 jours/coup",experience_push_ready:"Alertes de tour activées, même lorsque le jeu est fermé.",experience_push_failed:"Impossible d’activer les alertes jeu fermé ; tu recevras un e-mail lorsque ce sera ton tour."});
@@ -2693,9 +2679,8 @@ Object.assign(I18N.es,{
   lbl_bank:"Bolsa por jugador", lbl_bank_inc:"Incremento por jugada", bank_inc_off:"Sin incremento",
   bank_hint:"Como en el ajedrez: cada jugador gasta de su propia bolsa mientras le toca y pierde si se le acaba. No hay pausas, y los dos deben estar presentes de principio a fin.",
   rl_bank:"bolsa {n}", rl_bank_inc:"+{n}s por jugada",
-  bank_yours:"Tu tiempo", bank_theirs:"Tiempo de {name}",
   win_timeout:"A {name} se le acabó la bolsa de tiempo", lose_timeout:"Se te acabó la bolsa de tiempo",
-  timeout_toast:"Se te acabó el tiempo", hist_timeout:"por tiempo",
+  hist_timeout:"por tiempo",
   min_short:"{n} min"
 });
 Object.assign(I18N.en,{
@@ -2721,9 +2706,8 @@ Object.assign(I18N.en,{
   lbl_bank:"Bank per player", lbl_bank_inc:"Increment per move", bank_inc_off:"No increment",
   bank_hint:"Just like chess: each player spends from their own bank while it is their turn, and loses when it runs out. No pauses, and both players must stay for the whole game.",
   rl_bank:"{n} bank", rl_bank_inc:"+{n}s per move",
-  bank_yours:"Your time", bank_theirs:"{name}'s time",
   win_timeout:"{name} ran out of time", lose_timeout:"Your time bank ran out",
-  timeout_toast:"You ran out of time", hist_timeout:"on time",
+  hist_timeout:"on time",
   min_short:"{n} min"
 });
 Object.assign(I18N.fr,{
@@ -2749,9 +2733,8 @@ Object.assign(I18N.fr,{
   lbl_bank:"Réserve par joueur", lbl_bank_inc:"Incrément par coup", bank_inc_off:"Sans incrément",
   bank_hint:"Comme aux échecs : chaque joueur puise dans sa propre réserve pendant son tour et perd si elle s'épuise. Pas de pause, et les deux doivent rester jusqu'au bout.",
   rl_bank:"réserve {n}", rl_bank_inc:"+{n}s par coup",
-  bank_yours:"Ton temps", bank_theirs:"Temps de {name}",
   win_timeout:"{name} n'a plus de temps", lose_timeout:"Ta réserve de temps est épuisée",
-  timeout_toast:"Tu n'as plus de temps", hist_timeout:"au temps",
+  hist_timeout:"au temps",
   min_short:"{n} min"
 });
 /* Mensajes de error del backend (español) → traducción */
@@ -3109,20 +3092,19 @@ Object.assign(I18N.fr,{
   ,auth_pin_new:"Nouveau PIN · 4–8 chiffres",auth_reset_title:"Choisissez un nouveau PIN",auth_reset_hint:"Votre nouveau PIN protégera votre compte.",auth_reset_cta:"Enregistrer mon nouveau PIN",auth_reset_done:"PIN mis à jour. Vous pouvez vous connecter."
 });
 
-Object.assign(I18N.es,{account_link:"Mi cuenta",account_title:"Mi cuenta",account_hint:"Cambia tu nombre o tu PIN. Tu correo verificado no cambia.",account_name:"Nombre de usuario",account_name_hint:"Puedes cambiarlo una vez cada 90 días. Tu correo no cambia.",account_name_next:"Podrás volver a cambiarlo a partir del {date}.",account_save_name:"Cambiar mi nombre",account_name_confirm:"Confirma con tu PIN actual que quieres llamarte «{name}». Tu PIN no cambia.",account_name_confirm_btn:"Confirmar",account_name_cancel:"Cancelar",account_name_saved:"Nombre actualizado. Tu historial y tu ranking te siguen.",account_email:"Correo de acceso",account_save_email:"Verificar este nuevo correo",account_pin_title:"Cambiar mi PIN",account_pin_hint:"Tu PIN debe tener entre 4 y 8 dígitos.",account_current_pin:"PIN actual",account_new_pin:"Nuevo PIN",account_save_pin:"Guardar mi nuevo PIN",account_email_verified:"✓ Correo verificado",account_email_locked:"✓ Correo verificado. Es la llave de tu cuenta y no se puede cambiar.",account_email_pending:"Revisa tu correo y abre el enlace para verificarlo.",account_email_sent:"Te enviamos un enlace de verificación.",account_pin_saved:"PIN actualizado. Tus otras sesiones se cerraron.",account_email_missing:"No has apuntado ningún correo: sin él no podrás recuperar tu PIN.",account_current_pin_invalid:"Escribe tu PIN actual.",verify_title:"Valida tu correo",verify_hint_missing:"Tu cuenta todavía no tiene correo. Apunta uno: es lo que te permitirá recuperar tu PIN si lo olvidas, y hace falta para jugar.",verify_hint_sent:"Te enviamos un enlace. Ábrelo desde este correo para desbloquear tu cuenta; caduca en 3 días.",verify_send:"Enviar el enlace",verify_resend:"Enviar otro enlace",verify_sent:"Enlace enviado. Revisa tu bandeja de entrada y también el correo no deseado.",verify_done:"Ya lo he validado",verify_not_yet:"Todavía no nos consta validado. Abre el enlace del correo y vuelve a intentarlo."});
-Object.assign(I18N.en,{account_link:"My account",account_title:"My account",account_hint:"Change your name or your PIN. Your verified email stays the same.",account_name:"Username",account_name_hint:"You can change it once every 90 days. Your email stays the same.",account_name_next:"You can change it again from {date}.",account_save_name:"Change my name",account_name_confirm:"Confirm with your current PIN that you want to be called “{name}”. Your PIN stays the same.",account_name_confirm_btn:"Confirm",account_name_cancel:"Cancel",account_name_saved:"Name updated. Your history and ranking came with you.",account_email:"Sign-in email",account_save_email:"Verify this new email",account_pin_title:"Change my PIN",account_pin_hint:"Your PIN must be 4 to 8 digits.",account_current_pin:"Current PIN",account_new_pin:"New PIN",account_save_pin:"Save my new PIN",account_email_verified:"✓ Email verified",account_email_locked:"✓ Email verified. It is the key to your account and cannot be changed.",account_email_pending:"Check your email and open the link to verify it.",account_email_sent:"We sent you a verification link.",account_pin_saved:"PIN updated. Your other sessions were signed out.",account_email_missing:"No email saved yet: without one you cannot recover your PIN.",account_current_pin_invalid:"Enter your current PIN.",verify_title:"Verify your email",verify_hint_missing:"Your account has no email yet. Add one: it is what lets you recover your PIN if you forget it, and it is required to play.",verify_hint_sent:"We sent you a link. Open it from that inbox to unlock your account; it expires in 3 days.",verify_send:"Send the link",verify_resend:"Send another link",verify_sent:"Link sent. Check your inbox, and your spam folder too.",verify_done:"I have verified it",verify_not_yet:"We don't see it verified yet. Open the link in the email and try again."});
-Object.assign(I18N.fr,{account_link:"Mon compte",account_title:"Mon compte",account_hint:"Change ton nom ou ton PIN. Ton e-mail vérifié ne change pas.",account_name:"Nom d'utilisateur",account_name_hint:"Tu peux le changer une fois tous les 90 jours. Ton e-mail ne change pas.",account_name_next:"Tu pourras le changer à nouveau à partir du {date}.",account_save_name:"Changer mon nom",account_name_confirm:"Confirme avec ton PIN actuel que tu veux t'appeler « {name} ». Ton PIN ne change pas.",account_name_confirm_btn:"Confirmer",account_name_cancel:"Annuler",account_name_saved:"Nom mis à jour. Ton historique et ton classement te suivent.",account_email:"E-mail de connexion",account_save_email:"Vérifier ce nouvel e-mail",account_pin_title:"Modifier mon PIN",account_pin_hint:"Votre PIN doit contenir de 4 à 8 chiffres.",account_current_pin:"PIN actuel",account_new_pin:"Nouveau PIN",account_save_pin:"Enregistrer mon nouveau PIN",account_email_verified:"✓ E-mail vérifié",account_email_locked:"✓ E-mail vérifié. C'est la clé de ton compte, il ne peut pas être modifié.",account_email_pending:"Consultez votre e-mail et ouvrez le lien de vérification.",account_email_sent:"Nous vous avons envoyé un lien de vérification.",account_pin_saved:"PIN mis à jour. Vos autres sessions ont été fermées.",account_email_missing:"Aucun e-mail enregistré : sans lui, impossible de récupérer ton PIN.",account_current_pin_invalid:"Saisis ton PIN actuel.",verify_title:"Valide ton e-mail",verify_hint_missing:"Ton compte n'a pas encore d'e-mail. Ajoutes-en un : c'est ce qui te permettra de récupérer ton PIN si tu l'oublies, et c'est nécessaire pour jouer.",verify_hint_sent:"Nous t'avons envoyé un lien. Ouvre-le depuis cette boîte pour débloquer ton compte ; il expire dans 3 jours.",verify_send:"Envoyer le lien",verify_resend:"Envoyer un autre lien",verify_sent:"Lien envoyé. Vérifie ta boîte de réception, et aussi les indésirables.",verify_done:"Je l'ai validé",verify_not_yet:"Nous ne le voyons pas encore validé. Ouvre le lien reçu par e-mail et réessaie."});
+Object.assign(I18N.es,{account_link:"Mi cuenta",account_title:"Mi cuenta",account_hint:"Cambia tu nombre o tu PIN. Tu correo verificado no cambia.",account_name:"Nombre de usuario",account_name_hint:"Puedes cambiarlo una vez cada 90 días. Tu correo no cambia.",account_name_next:"Podrás volver a cambiarlo a partir del {date}.",account_save_name:"Cambiar mi nombre",account_name_confirm:"Confirma con tu PIN actual que quieres llamarte «{name}». Tu PIN no cambia.",account_name_confirm_btn:"Confirmar",account_name_cancel:"Cancelar",account_name_saved:"Nombre actualizado. Tu historial y tu ranking te siguen.",account_email:"Correo de acceso",account_save_email:"Verificar este nuevo correo",account_pin_title:"Cambiar mi PIN",account_pin_hint:"Tu PIN debe tener entre 4 y 8 dígitos.",account_current_pin:"PIN actual",account_new_pin:"Nuevo PIN",account_save_pin:"Guardar mi nuevo PIN",account_email_locked:"✓ Correo verificado. Es la llave de tu cuenta y no se puede cambiar.",account_email_pending:"Revisa tu correo y abre el enlace para verificarlo.",account_email_sent:"Te enviamos un enlace de verificación.",account_pin_saved:"PIN actualizado. Tus otras sesiones se cerraron.",account_email_missing:"No has apuntado ningún correo: sin él no podrás recuperar tu PIN.",account_current_pin_invalid:"Escribe tu PIN actual.",verify_title:"Valida tu correo",verify_hint_missing:"Tu cuenta todavía no tiene correo. Apunta uno: es lo que te permitirá recuperar tu PIN si lo olvidas, y hace falta para jugar.",verify_hint_sent:"Te enviamos un enlace. Ábrelo desde este correo para desbloquear tu cuenta; caduca en 3 días.",verify_send:"Enviar el enlace",verify_resend:"Enviar otro enlace",verify_sent:"Enlace enviado. Revisa tu bandeja de entrada y también el correo no deseado.",verify_done:"Ya lo he validado",verify_not_yet:"Todavía no nos consta validado. Abre el enlace del correo y vuelve a intentarlo."});
+Object.assign(I18N.en,{account_link:"My account",account_title:"My account",account_hint:"Change your name or your PIN. Your verified email stays the same.",account_name:"Username",account_name_hint:"You can change it once every 90 days. Your email stays the same.",account_name_next:"You can change it again from {date}.",account_save_name:"Change my name",account_name_confirm:"Confirm with your current PIN that you want to be called “{name}”. Your PIN stays the same.",account_name_confirm_btn:"Confirm",account_name_cancel:"Cancel",account_name_saved:"Name updated. Your history and ranking came with you.",account_email:"Sign-in email",account_save_email:"Verify this new email",account_pin_title:"Change my PIN",account_pin_hint:"Your PIN must be 4 to 8 digits.",account_current_pin:"Current PIN",account_new_pin:"New PIN",account_save_pin:"Save my new PIN",account_email_locked:"✓ Email verified. It is the key to your account and cannot be changed.",account_email_pending:"Check your email and open the link to verify it.",account_email_sent:"We sent you a verification link.",account_pin_saved:"PIN updated. Your other sessions were signed out.",account_email_missing:"No email saved yet: without one you cannot recover your PIN.",account_current_pin_invalid:"Enter your current PIN.",verify_title:"Verify your email",verify_hint_missing:"Your account has no email yet. Add one: it is what lets you recover your PIN if you forget it, and it is required to play.",verify_hint_sent:"We sent you a link. Open it from that inbox to unlock your account; it expires in 3 days.",verify_send:"Send the link",verify_resend:"Send another link",verify_sent:"Link sent. Check your inbox, and your spam folder too.",verify_done:"I have verified it",verify_not_yet:"We don't see it verified yet. Open the link in the email and try again."});
+Object.assign(I18N.fr,{account_link:"Mon compte",account_title:"Mon compte",account_hint:"Change ton nom ou ton PIN. Ton e-mail vérifié ne change pas.",account_name:"Nom d'utilisateur",account_name_hint:"Tu peux le changer une fois tous les 90 jours. Ton e-mail ne change pas.",account_name_next:"Tu pourras le changer à nouveau à partir du {date}.",account_save_name:"Changer mon nom",account_name_confirm:"Confirme avec ton PIN actuel que tu veux t'appeler « {name} ». Ton PIN ne change pas.",account_name_confirm_btn:"Confirmer",account_name_cancel:"Annuler",account_name_saved:"Nom mis à jour. Ton historique et ton classement te suivent.",account_email:"E-mail de connexion",account_save_email:"Vérifier ce nouvel e-mail",account_pin_title:"Modifier mon PIN",account_pin_hint:"Votre PIN doit contenir de 4 à 8 chiffres.",account_current_pin:"PIN actuel",account_new_pin:"Nouveau PIN",account_save_pin:"Enregistrer mon nouveau PIN",account_email_locked:"✓ E-mail vérifié. C'est la clé de ton compte, il ne peut pas être modifié.",account_email_pending:"Consultez votre e-mail et ouvrez le lien de vérification.",account_email_sent:"Nous vous avons envoyé un lien de vérification.",account_pin_saved:"PIN mis à jour. Vos autres sessions ont été fermées.",account_email_missing:"Aucun e-mail enregistré : sans lui, impossible de récupérer ton PIN.",account_current_pin_invalid:"Saisis ton PIN actuel.",verify_title:"Valide ton e-mail",verify_hint_missing:"Ton compte n'a pas encore d'e-mail. Ajoutes-en un : c'est ce qui te permettra de récupérer ton PIN si tu l'oublies, et c'est nécessaire pour jouer.",verify_hint_sent:"Nous t'avons envoyé un lien. Ouvre-le depuis cette boîte pour débloquer ton compte ; il expire dans 3 jours.",verify_send:"Envoyer le lien",verify_resend:"Envoyer un autre lien",verify_sent:"Lien envoyé. Vérifie ta boîte de réception, et aussi les indésirables.",verify_done:"Je l'ai validé",verify_not_yet:"Nous ne le voyons pas encore validé. Ouvre le lien reçu par e-mail et réessaie."});
 /* -------------------- etapa 5: puntos, perfil, insignias y rivales --------
    Los codigos de las insignias los decide el servidor, que no sabe en que
    lengua se van a leer; el nombre y la frase de cada una viven aqui, en los
    tres idiomas, como todo lo que se lee en pantalla. */
 Object.assign(I18N.es,{
-  rank_hint:"Los puntos premian la dificultad de las reglas y resolver en pocos intentos. Cada mes empieza una temporada nueva; el total de siempre no se pierde.",
   rank_season_month:"Esta temporada", rank_season_all:"Desde siempre",
   rank_points:"{n} pts", rank_line:"{points} pts · {wins} victorias · {played} partidas",
   rank_season_label:"Temporada {season}", rank_season_all_label:"Clasificación de siempre",
   lobby_rivals:"Rivales",
-  profile_title:"Perfil", profile_since:"Juega desde {date}",
+  profile_since:"Juega desde {date}",
   profile_empty:"Todavía no ha terminado ninguna partida.",
   profile_points:"Puntos", profile_played:"Partidas", profile_wins:"Ganadas", profile_winrate:"Acierto",
   profile_record:"{wins} ganadas · {losses} perdidas · {draws} empates",
@@ -3130,7 +3112,6 @@ Object.assign(I18N.es,{
   profile_best:"Mejor partida: código descubierto en {n} intentos", profile_best_one:"Mejor partida: código descubierto en 1 intento",
   profile_best_none:"Todavía no ha descubierto ningún código.",
   profile_rules:"Reglas preferidas", profile_badges:"Insignias",
-  profile_badges_none:"Sin insignias todavía.",
   profile_streak_days:"Racha: {n} días seguidos jugando",
   profile_streak_wins:"Racha: {n} victorias seguidas",
   profile_not_found:"Ese jugador no existe.",
@@ -3146,16 +3127,15 @@ Object.assign(I18N.es,{
   rivals_empty:"Todavía no has terminado ninguna partida con nadie.",
   rivals_record:"{wins}–{losses} en {played} partidas", rivals_record_one:"{wins}–{losses} en 1 partida",
   rivals_online:"Conectado", rivals_offline:"Desconectado",
-  rivals_challenge:"Desafiar", rivals_last:"Última partida: {when}",
+  rivals_challenge:"Desafiar",
   rivals_no_game:"No encuentro vuestra última partida para pedir la revancha."
 });
 Object.assign(I18N.en,{
-  rank_hint:"Points reward the difficulty of the rules and cracking the code in few attempts. A new season starts every month; your all-time total stays.",
   rank_season_month:"This season", rank_season_all:"All time",
   rank_points:"{n} pts", rank_line:"{points} pts · {wins} wins · {played} games",
   rank_season_label:"Season {season}", rank_season_all_label:"All-time ranking",
   lobby_rivals:"Rivals",
-  profile_title:"Profile", profile_since:"Playing since {date}",
+  profile_since:"Playing since {date}",
   profile_empty:"No finished games yet.",
   profile_points:"Points", profile_played:"Games", profile_wins:"Wins", profile_winrate:"Win rate",
   profile_record:"{wins} won · {losses} lost · {draws} drawn",
@@ -3163,7 +3143,6 @@ Object.assign(I18N.en,{
   profile_best:"Best game: code cracked in {n} attempts", profile_best_one:"Best game: code cracked in 1 attempt",
   profile_best_none:"No code cracked yet.",
   profile_rules:"Favourite rules", profile_badges:"Badges",
-  profile_badges_none:"No badges yet.",
   profile_streak_days:"Streak: {n} days in a row",
   profile_streak_wins:"Streak: {n} wins in a row",
   profile_not_found:"That player does not exist.",
@@ -3179,16 +3158,15 @@ Object.assign(I18N.en,{
   rivals_empty:"You have not finished a game with anyone yet.",
   rivals_record:"{wins}–{losses} in {played} games", rivals_record_one:"{wins}–{losses} in 1 game",
   rivals_online:"Online", rivals_offline:"Offline",
-  rivals_challenge:"Challenge", rivals_last:"Last game: {when}",
+  rivals_challenge:"Challenge",
   rivals_no_game:"I cannot find your last game to ask for a rematch."
 });
 Object.assign(I18N.fr,{
-  rank_hint:"Les points récompensent la difficulté des règles et les codes trouvés en peu d'essais. Une saison commence chaque mois ; le total de toujours reste.",
   rank_season_month:"Cette saison", rank_season_all:"Depuis toujours",
   rank_points:"{n} pts", rank_line:"{points} pts · {wins} victoires · {played} parties",
   rank_season_label:"Saison {season}", rank_season_all_label:"Classement de toujours",
   lobby_rivals:"Rivaux",
-  profile_title:"Profil", profile_since:"Joue depuis le {date}",
+  profile_since:"Joue depuis le {date}",
   profile_empty:"Aucune partie terminée pour l'instant.",
   profile_points:"Points", profile_played:"Parties", profile_wins:"Gagnées", profile_winrate:"Réussite",
   profile_record:"{wins} gagnées · {losses} perdues · {draws} nulles",
@@ -3196,7 +3174,6 @@ Object.assign(I18N.fr,{
   profile_best:"Meilleure partie : code trouvé en {n} essais", profile_best_one:"Meilleure partie : code trouvé en 1 essai",
   profile_best_none:"Aucun code trouvé pour l'instant.",
   profile_rules:"Règles préférées", profile_badges:"Badges",
-  profile_badges_none:"Pas encore de badge.",
   profile_streak_days:"Série : {n} jours d'affilée",
   profile_streak_wins:"Série : {n} victoires d'affilée",
   profile_not_found:"Ce joueur n'existe pas.",
@@ -3212,7 +3189,7 @@ Object.assign(I18N.fr,{
   rivals_empty:"Tu n'as encore terminé aucune partie avec personne.",
   rivals_record:"{wins}–{losses} en {played} parties", rivals_record_one:"{wins}–{losses} en 1 partie",
   rivals_online:"Connecté", rivals_offline:"Déconnecté",
-  rivals_challenge:"Défier", rivals_last:"Dernière partie : {when}",
+  rivals_challenge:"Défier",
   rivals_no_game:"Je ne retrouve pas votre dernière partie pour demander la revanche."
 });
 /* E3-T3: la tarjeta de fin de partida. La misma rejilla del codigo del dia,
