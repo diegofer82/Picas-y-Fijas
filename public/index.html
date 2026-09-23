@@ -2305,7 +2305,7 @@ body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .pri
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v5.0.0';
+const APP_VERSION = 'v5.0.1';
 /* Enlace de invitación: ...?game=SZ93
    La invitación sobrevive al registro: se guarda en el navegador, porque entre
    abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
@@ -5158,10 +5158,19 @@ function enterArena(arenaId){
 }
 function startArenaPoll(){ stopArenaPoll(); arenaPollTimer=setInterval(refreshArena, 4000); }
 function stopArenaPoll(){ if(arenaPollTimer){ clearInterval(arenaPollTimer); arenaPollTimer=null; } }
+/* El sondeo no espera a que vuelva el anterior, y tras un intento se pide el
+   estado otra vez. Una respuesta lenta puede llegar detras de una mas nueva:
+   pintarla devolveria la arena a antes del ultimo intento —el diario pierde la
+   fila, el contador retrocede— hasta el sondeo siguiente. Solo se pinta la
+   respuesta mas reciente de las pedidas. */
+let arenaAsked=0, arenaPainted=0;
 async function refreshArena(){
   if(!arenaView.id||$('s-arena').classList.contains('hidden')) return;
+  const ask=++arenaAsked;
   try{
     const st=await api('arenaState',{arenaId:arenaView.id});
+    if(ask<arenaPainted) return;
+    arenaPainted=ask;
     if(!st.ok){ stopArenaPoll(); toast(te(st.error),true); enterLobby(); return; }
     renderArena(st);
   }catch(e){ /* Un corte pasajero deja en pantalla el ultimo estado valido. */ }
@@ -5229,6 +5238,7 @@ function arenaRowHTML(row, st){
     +`<div class="arow-main"><div class="arow-top"><b>${me?esc(t('me_you')):playerChip(row.country,row.username)}</b><span>${esc(count)}</span></div>`
     +`<div class="abar" aria-hidden="true"><i class="${bar}" style="width:${pct}%"></i></div></div>${end}</div>`;
 }
+function arenaPlaying(st){ return !!st&&st.status==='active'&&st.youArePlaying&&!st.solved&&st.attemptsLeft>0; }
 function renderArena(st){
   if(String(st.arenaId)!==String(arenaView.id)) return;
   const fresh=arenaEvents(arenaPrev, st);
@@ -5258,7 +5268,7 @@ function renderArena(st){
   $('arena-hero-k').textContent=k; $('arena-hero-t').innerHTML=title; $('arena-hero-p').textContent=text;
   const box=$('arena-board');
   box.innerHTML=board.length?board.map(row=>arenaRowHTML(row,st)).join(''):`<div class="empty">${t('arena_empty_board')}</div>`;
-  const playing=st.status==='active'&&st.youArePlaying&&!st.solved&&st.attemptsLeft>0;
+  const playing=arenaPlaying(st);
   $('arena-play').classList.toggle('hidden',!playing);
   arenaPad.setDisabled(!playing||arenaBusy);
   if(playing){
@@ -5320,7 +5330,12 @@ async function sendArenaGuess(){
     else toast(t('toast_score',{f:res.fijas,p:res.picas}));
     await refreshArena();
   }catch(e){ toast(t('net_error'),true); }
-  finally{ arenaBusy=false; $('btn-arena-guess').disabled=false; }
+  finally{
+    // El estado pedido tras el intento se pinta aun ocupado, con el teclado
+    // apagado. Si no se enciende aqui, sigue apagado hasta el sondeo siguiente:
+    // hasta cuatro segundos en los que el jugador pulsa cifras que no entran.
+    arenaBusy=false; $('btn-arena-guess').disabled=false; arenaPad.setDisabled(!arenaPlaying(arenaSt));
+  }
 }
 /* Las arenas abiertas, en el vestibulo. Salen de la misma respuesta del lobby,
    con su propia consulta indexada y un tope de doce. */
