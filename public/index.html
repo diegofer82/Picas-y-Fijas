@@ -458,9 +458,14 @@
   .chat-launch{position:fixed;right:max(18px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));z-index:42;width:56px;height:56px;border:0;border-radius:18px;background:var(--tinta);color:var(--sobre-tinta);font-size:24px;cursor:pointer;box-shadow:0 4px 0 var(--tinta-2),var(--sombra-alta);display:grid;place-items:center}
   .chat-launch:active{transform:translateY(4px);box-shadow:var(--sombra)}
   .chat-launch.bump{animation:chatBump .5s ease}.chat-badge{position:absolute;right:-5px;top:-6px;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:var(--coral);color:var(--sobre-coral);font:800 11px 'JetBrains Mono',monospace;display:grid;place-items:center;border:2px solid var(--crema)}
-  .private-chat-bubbles{position:fixed;right:max(20px,env(safe-area-inset-right));bottom:84px;z-index:41;display:flex;flex-direction:column-reverse;gap:9px;align-items:center}.private-chat-bubble{position:relative;width:44px;height:44px;border:0;border-radius:14px;background:var(--violeta);color:#fff;font-weight:800;cursor:pointer;box-shadow:0 3px 0 var(--violeta-2)}.private-chat-bubble.unread::after{content:'';position:absolute;right:-3px;top:-3px;width:12px;height:12px;border-radius:50%;background:var(--coral);border:2px solid var(--crema)}.private-chat-menu{position:fixed;right:74px;bottom:84px;z-index:45;width:220px;max-height:250px;overflow:auto;background:var(--papel);border:2px solid var(--linea);border-radius:var(--r-md);padding:7px;box-shadow:var(--sombra-alta)}.private-chat-menu button{display:block;width:100%;border:0;border-radius:9px;background:transparent;color:var(--tinta);padding:9px;text-align:left;cursor:pointer;font:600 13px 'Figtree',sans-serif}.private-chat-menu button:hover{background:var(--hueco)}
+  .private-chat-bubbles{position:fixed;right:max(20px,env(safe-area-inset-right));bottom:84px;z-index:41;display:flex;flex-direction:column-reverse;gap:9px;align-items:center}.private-chat-bubble{position:relative;width:44px;height:44px;border:0;border-radius:14px;background:var(--violeta);color:#fff;font-weight:800;cursor:pointer;box-shadow:0 3px 0 var(--violeta-2)}.private-chat-bubble.unread::after{content:'';position:absolute;right:-3px;top:-3px;width:12px;height:12px;border-radius:50%;background:var(--coral);border:2px solid var(--crema)}.private-chat-menu{position:fixed;right:74px;bottom:84px;z-index:45;width:220px;max-height:250px;overflow:auto;background:var(--papel);border:2px solid var(--linea);border-radius:var(--r-md);padding:7px;box-shadow:var(--sombra-alta)}.private-chat-menu button{display:block;width:100%;border:0;border-radius:9px;background:transparent;color:var(--tinta);padding:9px;text-align:left;cursor:pointer;font:600 13px 'Figtree',sans-serif}.private-chat-menu button:hover{background:var(--hueco)}.private-chat-menu button{display:flex;align-items:center;gap:8px}
+  /* 5.1.0: la burbuja se quita deslizandola a un lado; el desplazamiento
+     vertical sigue siendo de la pagina. Y el vestibulo deja sitio debajo para
+     que su pie suba por encima del boton del chat y de las burbujas. */
+  .private-chat-bubble{touch-action:pan-y}.private-chat-bubble.dragging{transition:none;cursor:grabbing}
+  #s-lobby{padding-bottom:calc(48px + var(--burbujas,0) * 53px)}
   .chat-panel{position:fixed;right:max(18px,env(safe-area-inset-right));bottom:84px;z-index:44;width:min(360px,calc(100vw - 36px));height:min(470px,calc(100dvh - 120px));background:var(--papel);border:2px solid var(--linea);border-radius:var(--r);box-shadow:var(--sombra-alta);display:flex;flex-direction:column;overflow:hidden}
-  .chat-head{display:flex;align-items:center;gap:9px;padding:12px 14px;border-bottom:2px solid var(--linea-2);background:var(--papel)}.chat-head strong{flex:1;font-family:'Bricolage Grotesque','Figtree',sans-serif;font-size:17px;font-weight:800;letter-spacing:-.02em}.chat-icon-btn{border:2px solid var(--linea);background:var(--hueco);color:var(--tinta);border-radius:10px;min-width:34px;height:34px;cursor:pointer}.chat-icon-btn:disabled{opacity:.4;cursor:not-allowed}
+  .chat-head{display:flex;align-items:center;gap:9px;padding:12px 14px;border-bottom:2px solid var(--linea-2);background:var(--papel)}.chat-head strong{flex:1;min-width:0;overflow-wrap:anywhere;font-family:'Bricolage Grotesque','Figtree',sans-serif;font-size:17px;font-weight:800;letter-spacing:-.02em}.chat-icon-btn{border:2px solid var(--linea);background:var(--hueco);color:var(--tinta);border-radius:10px;min-width:34px;height:34px;cursor:pointer}.chat-icon-btn:disabled{opacity:.4;cursor:not-allowed}
   .chat-muted-panel{padding:10px 12px;border-bottom:2px solid var(--linea-2);background:var(--hueco);max-height:150px;overflow:auto}.chat-muted-title{font-size:12px;font-weight:700;color:var(--bruma);margin-bottom:8px}.chat-muted-row{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px;border-bottom:1px solid var(--linea)}.chat-muted-row:last-child{border-bottom:0}.chat-muted-row span{flex:1;overflow:hidden;text-overflow:ellipsis}.chat-muted-row button,.chat-unmute-all{border:2px solid var(--linea);background:var(--papel);color:var(--tinta);border-radius:8px;padding:5px 9px;cursor:pointer;font:700 11px 'Figtree',sans-serif}.chat-unmute-all{width:100%;margin-top:8px;color:var(--azul-texto)}
   .chat-messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:9px;overscroll-behavior:contain}.chat-empty{margin:auto;color:var(--bruma);font-size:13px;text-align:center}.chat-msg{max-width:86%;background:var(--violeta-suave);border:0;border-radius:16px 16px 16px 6px;padding:9px 12px;align-self:flex-start;overflow-wrap:anywhere;color:var(--tinta)}.chat-msg.mine{align-self:flex-end;border-radius:16px 16px 6px 16px;background:var(--azul);color:var(--sobre-azul)}.chat-msg.mine .chat-meta,.chat-msg.mine .chat-meta b,.chat-msg.mine .chat-actions button{color:inherit;opacity:.9}.chat-msg.system,.chat-msg.nudge{max-width:96%;align-self:center;text-align:center;background:transparent;border:2px dashed var(--linea);border-radius:12px;color:var(--bruma);font-size:12px}.chat-msg.nudge{color:var(--sol-texto);background:var(--sol-suave);border-color:var(--sol);font-weight:700}.chat-meta{display:flex;align-items:center;gap:7px;color:var(--bruma);font-size:10px;margin-bottom:3px}.chat-meta b{color:var(--tinta);font-size:11px}.chat-actions{margin-left:auto;display:flex;gap:3px}.chat-actions button{background:transparent;border:0;color:var(--bruma);padding:0 2px;cursor:pointer;font-size:11px}.chat-body{white-space:pre-wrap;font-size:13.5px;line-height:1.4}.chat-readonly{border-top:2px solid var(--linea-2);padding:10px 12px;background:var(--hueco);color:var(--bruma);font-size:12px;text-align:center}.chat-reactions{border-top:2px solid var(--linea-2);padding:8px 8px 0;background:var(--papel);display:flex;flex-wrap:wrap;gap:6px}.chat-reactions button{flex:0 1 auto;background:var(--papel);border:2px solid var(--linea);border-radius:10px;color:var(--tinta);font:700 12px 'Figtree',sans-serif;padding:6px 11px;cursor:pointer;min-height:34px;box-shadow:0 2px 0 var(--linea)}.chat-reactions button:active{transform:translateY(2px);box-shadow:none}.chat-reactions button:disabled{opacity:.45;cursor:default}.chat-msg.react{max-width:96%;align-self:center;text-align:center;background:var(--azul-suave);border:0;border-radius:12px;color:var(--azul-texto);font-size:12px;font-weight:700}.chat-compose{border-top:2px solid var(--linea-2);padding:10px;display:flex;gap:7px;background:var(--papel)}.chat-compose input{min-width:0;padding:10px 12px;font-size:14px}.chat-send{width:auto;min-height:44px;padding:0 13px;margin-bottom:0}.chat-shake{animation:chatShake .55s ease}
   @keyframes chatShake{0%,100%{transform:translateX(0)}15%{transform:translateX(-9px) rotate(-1deg)}30%{transform:translateX(8px) rotate(1deg)}45%{transform:translateX(-7px)}60%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
@@ -818,6 +823,7 @@ body{--rail-w:0px}
 .chat-panel.docked{position:relative;left:auto;right:auto;bottom:auto;z-index:auto;width:auto;height:100%;flex:1 1 auto;min-height:0;box-shadow:none;border-color:var(--linea-2);padding-bottom:0}
 .chat-panel.docked .chat-close{display:none}
 body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .private-chat-bubbles,body.chat-docked .private-chat-menu{display:none!important}
+body.chat-docked #s-lobby{padding-bottom:0}
 /* Los dos diarios a la vista: los decide renderJournal por el ancho que tiene
    (clase duo), no la ventana, porque el chat y el rail se comen su parte. */
 .jhead{margin:0;padding:14px 16px 8px;background:var(--papel);border:2px solid var(--linea-2);border-bottom:0;border-radius:24px 24px 0 0;
@@ -2285,7 +2291,7 @@ body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .pri
 <button class="chat-launch hidden" id="chat-launch" type="button" onclick="openPrimaryChat()" aria-label="Chat"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.4 12c0-3.7 3.5-6.7 7.7-6.7s7.6 3 7.5 6.7c-.1 3.7-3.4 6.6-7.6 6.6-.9 0-1.8-.1-2.6-.4-1.3.9-2.7 1.5-4 1.9.6-1.2 1-2.4 1.2-3.5-1.4-1.2-2.2-2.8-2.2-4.6Z"></path></svg><span class="chat-badge hidden" id="chat-badge">0</span></button>
 <div class="private-chat-bubbles hidden" id="private-chat-bubbles"></div><div class="private-chat-menu hidden" id="private-chat-menu"></div>
 <aside class="chat-panel hidden" id="chat-panel" aria-label="Chat">
-  <div class="chat-head"><strong id="chat-title">Chat</strong><button class="chat-icon-btn hidden" id="chat-nudge" type="button" onclick="sendChatNudge()" data-ico="rayo"></button><button class="chat-icon-btn hidden" id="chat-nudge-toggle" type="button" onclick="toggleNudges()"></button><button class="chat-icon-btn" id="chat-muted-btn" type="button" onclick="toggleMutedPanel()" data-ico="mudo"></button><button class="chat-icon-btn chat-close" type="button" onclick="closeChat()" data-ico="cerrar" data-ico-size="18"></button></div>
+  <div class="chat-head"><strong id="chat-title">Chat</strong><button class="chat-icon-btn hidden" id="chat-nudge" type="button" onclick="sendChatNudge()" data-ico="rayo"></button><button class="chat-icon-btn hidden" id="chat-nudge-toggle" type="button" onclick="toggleNudges()"></button><button class="chat-icon-btn hidden" id="chat-bubble-hide" type="button" onclick="hideCurrentBubble()" data-ico="globoOff"></button><button class="chat-icon-btn" id="chat-muted-btn" type="button" onclick="toggleMutedPanel()" data-ico="mudo"></button><button class="chat-icon-btn chat-close" type="button" onclick="closeChat()" data-ico="cerrar" data-ico-size="18"></button></div>
   <!-- L5: anclado en el vestibulo, las conversaciones privadas son pestañas. -->
   <div class="chat-threads hidden" id="chat-threads"></div>
   <div class="chat-muted-panel hidden" id="chat-muted-panel"></div>
@@ -2305,7 +2311,7 @@ body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .pri
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v5.0.2';
+const APP_VERSION = 'v5.1.0';
 /* Enlace de invitación: ...?game=SZ93
    La invitación sobrevive al registro: se guarda en el navegador, porque entre
    abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
@@ -2615,7 +2621,7 @@ Object.assign(I18N.es,{public_pulse_player_one:"{n} jugador conectado",public_pu
 Object.assign(I18N.en,{public_pulse_player_one:"{n} player online",public_pulse_players_many:"{n} players online",public_pulse_game_one:"{n} game in progress",public_pulse_games_many:"{n} games in progress"});
 Object.assign(I18N.fr,{public_pulse_player_one:"{n} joueur connecté",public_pulse_players_many:"{n} joueurs connectés",public_pulse_game_one:"{n} partie en cours",public_pulse_games_many:"{n} parties en cours"});
 Object.assign(I18N.es,{
-  chat_lobby:"Chat del lobby",chat_game:"Chat de la partida",chat_placeholder:"Escribe un mensaje…",chat_empty:"Todavía no hay mensajes.",chat_deleted:"Mensaje eliminado",chat_mute:"Silenciar usuario",chat_mute_confirm:"¿Silenciar a {name}? Sus mensajes y zumbidos quedarán ocultos hasta que lo reactives desde el botón 🔇.",chat_manage_muted:"Gestionar usuarios silenciados",chat_muted_title:"Usuarios silenciados",chat_muted_empty:"No has silenciado a ningún usuario.",chat_unmute:"Reactivar",chat_unmute_all:"Reactivar a todos",chat_unmuted:"{name} fue reactivado.",chat_all_unmuted:"Todos los usuarios fueron reactivados.",chat_report:"Reportar mensaje",chat_muted:"Usuario silenciado en este dispositivo.",chat_reported:"Mensaje reportado.",chat_nudge:"Enviar zumbido",chat_nudges_on:"Zumbidos activados",chat_nudges_off:"Zumbidos desactivados",chat_joined:"{name} entró en la partida.",chat_paused:"{name} pausó la partida.",chat_resumed:"{name} reanudó la partida.",chat_abandoned:"{name} abandonó la partida.",chat_rematch:"{name} propuso una revancha.",chat_finished:"La partida terminó.",chat_nudged:"{name} te ha enviado un zumbido ⚡",chat_report_reason:"Motivo: 1 spam, 2 insultos/acoso, 3 contenido inapropiado",react_luck:"{name}: ¡Suerte! 🍀",react_close:"{name}: ¡Casi! 😮",react_wow:"{name}: ¡Vaya jugada! 👏",react_gg:"{name}: ¡Buena partida! 🤝",react_short_luck:"Suerte",react_short_close:"Casi",react_short_wow:"Vaya jugada",react_short_gg:"Buena partida",react_title:"Reacciones rápidas",react_wait:"Espera unos segundos antes de enviar otra reacción."
+  chat_lobby:"Chat del lobby",chat_bubble_label:"Conversación con {name}. Deslízala a un lado para quitarla.",chat_bubble_hide:"Quitar la burbuja",chat_bubble_hidden:"Burbuja quitada. Vuelve si {name} te escribe; la conversación sigue en el chat del lobby.",chat_game:"Chat de la partida",chat_placeholder:"Escribe un mensaje…",chat_empty:"Todavía no hay mensajes.",chat_deleted:"Mensaje eliminado",chat_mute:"Silenciar usuario",chat_mute_confirm:"¿Silenciar a {name}? Sus mensajes y zumbidos quedarán ocultos hasta que lo reactives desde el botón 🔇.",chat_manage_muted:"Gestionar usuarios silenciados",chat_muted_title:"Usuarios silenciados",chat_muted_empty:"No has silenciado a ningún usuario.",chat_unmute:"Reactivar",chat_unmute_all:"Reactivar a todos",chat_unmuted:"{name} fue reactivado.",chat_all_unmuted:"Todos los usuarios fueron reactivados.",chat_report:"Reportar mensaje",chat_muted:"Usuario silenciado en este dispositivo.",chat_reported:"Mensaje reportado.",chat_nudge:"Enviar zumbido",chat_nudges_on:"Zumbidos activados",chat_nudges_off:"Zumbidos desactivados",chat_joined:"{name} entró en la partida.",chat_paused:"{name} pausó la partida.",chat_resumed:"{name} reanudó la partida.",chat_abandoned:"{name} abandonó la partida.",chat_rematch:"{name} propuso una revancha.",chat_finished:"La partida terminó.",chat_nudged:"{name} te ha enviado un zumbido ⚡",chat_report_reason:"Motivo: 1 spam, 2 insultos/acoso, 3 contenido inapropiado",react_luck:"{name}: ¡Suerte! 🍀",react_close:"{name}: ¡Casi! 😮",react_wow:"{name}: ¡Vaya jugada! 👏",react_gg:"{name}: ¡Buena partida! 🤝",react_short_luck:"Suerte",react_short_close:"Casi",react_short_wow:"Vaya jugada",react_short_gg:"Buena partida",react_title:"Reacciones rápidas",react_wait:"Espera unos segundos antes de enviar otra reacción."
 });
 Object.assign(I18N.es,{experience_title:"No te pierdas tu turno",experience_hint:"Activa las notificaciones y el sonido para recibir avisos de turnos, rivales y zumbidos aunque el chat esté cerrado.",experience_activate:"Activar notificaciones y sonido",experience_sound_only:"Sonido activado. Este navegador no admite notificaciones.",experience_denied:"El sonido está activado, pero las notificaciones están bloqueadas. Permítelas desde la configuración del sitio en tu navegador.",experience_default:"Recomendado para una mejor experiencia de juego.",experience_enabled_toast:"Notificaciones y sonido activados",experience_denied_toast:"El navegador bloqueó las notificaciones. Revisa los permisos del sitio."});
 /* Instalar el juego como app. Estas claves son tambien la unica fuente de las
@@ -2624,14 +2630,14 @@ Object.assign(I18N.es,{install_title:"Juégalo desde tu pantalla de inicio",inst
 I18N.es.session_expired="Tu sesión venció. Escribe tu PIN para volver a conectarte.";
 I18N.es.missed_timeout="Turno perdido por tiempo";
 Object.assign(I18N.en,{
-  chat_lobby:"Lobby chat",chat_game:"Game chat",chat_placeholder:"Write a message…",chat_empty:"No messages yet.",chat_deleted:"Message deleted",chat_mute:"Mute user",chat_mute_confirm:"Mute {name}? Their messages and nudges will stay hidden until you restore them with the 🔇 button.",chat_manage_muted:"Manage muted users",chat_muted_title:"Muted users",chat_muted_empty:"You have not muted anyone.",chat_unmute:"Unmute",chat_unmute_all:"Unmute everyone",chat_unmuted:"{name} was unmuted.",chat_all_unmuted:"Everyone was unmuted.",chat_report:"Report message",chat_muted:"User muted on this device.",chat_reported:"Message reported.",chat_nudge:"Send a nudge",chat_nudges_on:"Nudges enabled",chat_nudges_off:"Nudges disabled",chat_joined:"{name} joined the game.",chat_paused:"{name} paused the game.",chat_resumed:"{name} resumed the game.",chat_abandoned:"{name} abandoned the game.",chat_rematch:"{name} proposed a rematch.",chat_finished:"The game ended.",chat_nudged:"{name} sent you a nudge ⚡",chat_report_reason:"Reason: 1 spam, 2 harassment, 3 inappropriate content",react_luck:"{name}: Good luck! 🍀",react_close:"{name}: So close! 😮",react_wow:"{name}: Nice move! 👏",react_gg:"{name}: Good game! 🤝",react_short_luck:"Good luck",react_short_close:"So close",react_short_wow:"Nice move",react_short_gg:"Good game",react_title:"Quick reactions",react_wait:"Wait a few seconds before sending another reaction."
+  chat_lobby:"Lobby chat",chat_bubble_label:"Chat with {name}. Swipe it aside to remove it.",chat_bubble_hide:"Remove the bubble",chat_bubble_hidden:"Bubble removed. It comes back if {name} writes to you; the conversation stays in the lobby chat.",chat_game:"Game chat",chat_placeholder:"Write a message…",chat_empty:"No messages yet.",chat_deleted:"Message deleted",chat_mute:"Mute user",chat_mute_confirm:"Mute {name}? Their messages and nudges will stay hidden until you restore them with the 🔇 button.",chat_manage_muted:"Manage muted users",chat_muted_title:"Muted users",chat_muted_empty:"You have not muted anyone.",chat_unmute:"Unmute",chat_unmute_all:"Unmute everyone",chat_unmuted:"{name} was unmuted.",chat_all_unmuted:"Everyone was unmuted.",chat_report:"Report message",chat_muted:"User muted on this device.",chat_reported:"Message reported.",chat_nudge:"Send a nudge",chat_nudges_on:"Nudges enabled",chat_nudges_off:"Nudges disabled",chat_joined:"{name} joined the game.",chat_paused:"{name} paused the game.",chat_resumed:"{name} resumed the game.",chat_abandoned:"{name} abandoned the game.",chat_rematch:"{name} proposed a rematch.",chat_finished:"The game ended.",chat_nudged:"{name} sent you a nudge ⚡",chat_report_reason:"Reason: 1 spam, 2 harassment, 3 inappropriate content",react_luck:"{name}: Good luck! 🍀",react_close:"{name}: So close! 😮",react_wow:"{name}: Nice move! 👏",react_gg:"{name}: Good game! 🤝",react_short_luck:"Good luck",react_short_close:"So close",react_short_wow:"Nice move",react_short_gg:"Good game",react_title:"Quick reactions",react_wait:"Wait a few seconds before sending another reaction."
 });
 Object.assign(I18N.en,{experience_title:"Don't miss your turn",experience_hint:"Enable notifications and sound for turn, opponent and nudge alerts even when chat is closed.",experience_activate:"Enable notifications and sound",experience_sound_only:"Sound enabled. This browser does not support notifications.",experience_denied:"Sound is enabled, but notifications are blocked. Allow them in this site's browser settings.",experience_default:"Recommended for the best game experience.",experience_enabled_toast:"Notifications and sound enabled",experience_denied_toast:"The browser blocked notifications. Check this site's permissions."});
 Object.assign(I18N.en,{install_title:"Play it from your home screen",install_hint_android:"Add it as an app: it opens full screen, without the browser bar, and you are back in the game in a single tap.",install_hint_ios:"Add it to your home screen: it opens full screen and it is the only way your iPhone can alert you when it is your turn.",install_btn:"Install the app",install_btn_steps:"Show me how",install_btn_hide:"Hide the steps",install_btn_copy:"Copy the link",install_later:"Not now",install_guide:"Illustrated guide",install_done:"Done: the game is on your home screen",install_copied:"Link copied",install_note_browser:"This in-app browser cannot install it. Copy the link and open it in Safari (iPhone) or Chrome (Android).",install_ios_1:"Tap the <b>Share</b> button in the Safari bar.",install_ios_2:"Scroll down and pick <b>Add to Home Screen</b>.",install_ios_3:"Tap <b>Add</b>, at the top right.",install_and_1:"Open the browser <b>⋮</b> menu, at the top right.",install_and_2:"Pick <b>Install app</b> or <b>Add to Home screen</b>.",install_and_3:"Confirm with <b>Install</b>.",experience_ios_install:"On iPhone, turn alerts only arrive if you add the game to your home screen."});
 I18N.en.session_expired="Your session expired. Enter your PIN to reconnect.";
 I18N.en.missed_timeout="Turn lost on time";
 Object.assign(I18N.fr,{
-  chat_lobby:"Chat du lobby",chat_game:"Chat de la partie",chat_placeholder:"Écris un message…",chat_empty:"Aucun message pour l'instant.",chat_deleted:"Message supprimé",chat_mute:"Ignorer l'utilisateur",chat_mute_confirm:"Ignorer {name} ? Ses messages et wizz resteront masqués jusqu'à sa réactivation avec le bouton 🔇.",chat_manage_muted:"Gérer les utilisateurs ignorés",chat_muted_title:"Utilisateurs ignorés",chat_muted_empty:"Tu n'as ignoré aucun utilisateur.",chat_unmute:"Réactiver",chat_unmute_all:"Tout réactiver",chat_unmuted:"{name} a été réactivé.",chat_all_unmuted:"Tous les utilisateurs ont été réactivés.",chat_report:"Signaler le message",chat_muted:"Utilisateur ignoré sur cet appareil.",chat_reported:"Message signalé.",chat_nudge:"Envoyer un wizz",chat_nudges_on:"Wizz activés",chat_nudges_off:"Wizz désactivés",chat_joined:"{name} a rejoint la partie.",chat_paused:"{name} a mis la partie en pause.",chat_resumed:"{name} a repris la partie.",chat_abandoned:"{name} a abandonné la partie.",chat_rematch:"{name} a proposé une revanche.",chat_finished:"La partie est terminée.",chat_nudged:"{name} t'a envoyé un wizz ⚡",chat_report_reason:"Motif : 1 spam, 2 harcèlement, 3 contenu inapproprié",react_luck:"{name} : Bonne chance ! 🍀",react_close:"{name} : Presque ! 😮",react_wow:"{name} : Joli coup ! 👏",react_gg:"{name} : Belle partie ! 🤝",react_short_luck:"Bonne chance",react_short_close:"Presque",react_short_wow:"Joli coup",react_short_gg:"Belle partie",react_title:"Réactions rapides",react_wait:"Attends quelques secondes avant d'envoyer une autre réaction."
+  chat_lobby:"Chat du lobby",chat_bubble_label:"Conversation avec {name}. Fais-la glisser sur le côté pour la retirer.",chat_bubble_hide:"Retirer la bulle",chat_bubble_hidden:"Bulle retirée. Elle revient si {name} t'écrit ; la conversation reste dans le chat du lobby.",chat_game:"Chat de la partie",chat_placeholder:"Écris un message…",chat_empty:"Aucun message pour l'instant.",chat_deleted:"Message supprimé",chat_mute:"Ignorer l'utilisateur",chat_mute_confirm:"Ignorer {name} ? Ses messages et wizz resteront masqués jusqu'à sa réactivation avec le bouton 🔇.",chat_manage_muted:"Gérer les utilisateurs ignorés",chat_muted_title:"Utilisateurs ignorés",chat_muted_empty:"Tu n'as ignoré aucun utilisateur.",chat_unmute:"Réactiver",chat_unmute_all:"Tout réactiver",chat_unmuted:"{name} a été réactivé.",chat_all_unmuted:"Tous les utilisateurs ont été réactivés.",chat_report:"Signaler le message",chat_muted:"Utilisateur ignoré sur cet appareil.",chat_reported:"Message signalé.",chat_nudge:"Envoyer un wizz",chat_nudges_on:"Wizz activés",chat_nudges_off:"Wizz désactivés",chat_joined:"{name} a rejoint la partie.",chat_paused:"{name} a mis la partie en pause.",chat_resumed:"{name} a repris la partie.",chat_abandoned:"{name} a abandonné la partie.",chat_rematch:"{name} a proposé une revanche.",chat_finished:"La partie est terminée.",chat_nudged:"{name} t'a envoyé un wizz ⚡",chat_report_reason:"Motif : 1 spam, 2 harcèlement, 3 contenu inapproprié",react_luck:"{name} : Bonne chance ! 🍀",react_close:"{name} : Presque ! 😮",react_wow:"{name} : Joli coup ! 👏",react_gg:"{name} : Belle partie ! 🤝",react_short_luck:"Bonne chance",react_short_close:"Presque",react_short_wow:"Joli coup",react_short_gg:"Belle partie",react_title:"Réactions rapides",react_wait:"Attends quelques secondes avant d'envoyer une autre réaction."
 });
 Object.assign(I18N.fr,{experience_title:"Ne rate pas ton tour",experience_hint:"Active les notifications et le son pour les alertes de tour, d'adversaire et de wizz, même lorsque le chat est fermé.",experience_activate:"Activer les notifications et le son",experience_sound_only:"Son activé. Ce navigateur ne prend pas en charge les notifications.",experience_denied:"Le son est activé, mais les notifications sont bloquées. Autorise-les dans les paramètres du site du navigateur.",experience_default:"Recommandé pour une meilleure expérience de jeu.",experience_enabled_toast:"Notifications et son activés",experience_denied_toast:"Le navigateur a bloqué les notifications. Vérifie les autorisations de ce site."});
 Object.assign(I18N.es,{clock_correspondence:"Correspondencia",lbl_correspondence:"Tiempo por jugada",day_one:"1 día",day_three:"3 días",correspondence_hint:"El reloj sigue corriendo aunque alguien cierre el juego.",rl_correspondence_one:"1 día/jugada",rl_correspondence_three:"3 días/jugada",experience_push_ready:"Avisos de turno activados, incluso con el juego cerrado.",experience_push_failed:"No pudimos activar los avisos con el juego cerrado; recibirás un correo cuando sea tu turno."});
@@ -3350,6 +3356,8 @@ const ICONS={
   chevron:'<path class="dl" style="stroke-width:2.6" d="M9 6l6 6-6 6"></path>',
   recargar:'<path class="dl" d="M20.1 12.4c.2 4.7-3.7 8.5-8.4 8.4-4.6-.1-8.3-4-8-8.7.3-4.2 3.8-7.4 8-7.3 2.6.1 4.8 1.3 6.3 3.2"></path><path class="dl" d="M19.9 3.7c-.2 1.6-.2 3.1-.1 4.6-1.6.2-3.1.2-4.6.1"></path>',
   globo:'<path class="dl" d="M4.4 11.4c0-3.7 3.4-6.6 7.6-6.6s7.5 2.9 7.4 6.6c-.1 3.6-3.3 6.5-7.5 6.5-.9 0-1.8-.1-2.6-.4-1.3.9-2.7 1.5-4 1.9.6-1.2 1-2.4 1.2-3.5-1.3-1.2-2.1-2.8-2.1-4.5Z"></path>',
+  /* 5.1.0: quitar la burbuja de una conversacion, con la raya de campanaOff */
+  globoOff:'<path class="dl" d="M4.4 11.4c0-3.7 3.4-6.6 7.6-6.6s7.5 2.9 7.4 6.6c-.1 3.6-3.3 6.5-7.5 6.5-.9 0-1.8-.1-2.6-.4-1.3.9-2.7 1.5-4 1.9.6-1.2 1-2.4 1.2-3.5-1.3-1.2-2.1-2.8-2.1-4.5Z"></path><path class="dl" d="M4.6 4.3c5 5 9.9 10 14.8 15"></path>',
   /* 4.5.0: la partida en telefono */
   atras:'<path class="dl" style="stroke-width:2.4" d="M19 12H6M11 6l-6 6 6 6"></path>',
   borrar:'<path class="dl" d="M8.5 5h10A2.5 2.5 0 0 1 21 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-10L3 12z"></path><path class="dl" d="M11 9.5l5 5M16 9.5l-5 5"></path>',
@@ -3832,7 +3840,97 @@ function chatUserKey(value){return String(value||'').trim().toLocaleLowerCase();
 function currentChatRoom(){if(!$('s-game').classList.contains('hidden')&&game.spectator)return{roomType:'game',gameId:game.id};if(!$('s-game').classList.contains('hidden')&&gState?.chatThreadId)return{roomType:'private',threadId:gState.chatThreadId};if(selectedPrivateThread)return{roomType:'private',threadId:selectedPrivateThread.id};return{roomType:'lobby',gameId:''};}
 function openPrivateChat(id){selectedPrivateThread=privateThreads.find(x=>x.id===Number(id))||{id:Number(id),opponent:''};chatRoom='';chatItems=[];chatLastId=0;updateChatLabels();$('chat-panel').classList.remove('hidden');pollChat();}
 function openPrimaryChat(){if($('s-game').classList.contains('hidden'))selectedPrivateThread=null;toggleChat();}
-function renderPrivateThreads(){renderChatThreads();const host=$('private-chat-bubbles'),menu=$('private-chat-menu'),inLobby=!$('s-lobby').classList.contains('hidden');host.classList.toggle('hidden',!inLobby||!privateThreads.length);if(!inLobby)return;const visible=privateThreads.slice(0,3),rest=privateThreads.slice(3);host.innerHTML=visible.map(x=>`<button class="private-chat-bubble ${Number(x.lastMessageId)>Number(localStorage.getItem('pf_chat_read_'+x.id)||0)?'unread':''}" onclick="openPrivateChat(${x.id})" title="${esc(x.opponent)}">${esc([...x.opponent][0]?.toUpperCase()||'?')}</button>`).join('')+(rest.length?`<button class="private-chat-bubble" onclick="$('private-chat-menu').classList.toggle('hidden')">+${rest.length}</button>`:'');menu.innerHTML=rest.map(x=>`<button onclick="openPrivateChat(${x.id});$('private-chat-menu').classList.add('hidden')">💬 ${esc(x.opponent)}</button>`).join('');}
+/* 5.1.0: una burbuja se quita deslizandola a un lado, o con el boton de su
+   conversacion, y vuelve sola cuando el otro escribe. Se guarda, por hilo y en
+   este aparato, el ultimo mensaje que habia al quitarla: un aviso de la partida
+   (entro, termino, revancha) no la hace volver; un mensaje, un zumbido o una
+   reaccion del otro, si. La conversacion no se pierde: sigue en su pestaña del
+   chat del lobby. El punto rojo sigue la misma regla —alguien te ha escrito—,
+   y no se enciende por los avisos de cada partida. */
+function hiddenBubbles(){try{return JSON.parse(localStorage.getItem('pf_chat_hidden')||'{}')||{};}catch(e){return{};}}
+function saveHiddenBubbles(map){try{localStorage.setItem('pf_chat_hidden',JSON.stringify(map));}catch(e){}}
+function threadFromOther(x){return !!x.lastSender&&chatUserKey(x.lastSender)!==chatUserKey(user)&&(x.lastKind!=='system'||/^react_/.test(String(x.lastBody||'')));}
+function threadUnread(x){let read=0;try{read=Number(localStorage.getItem('pf_chat_read_'+x.id)||0);}catch(e){}return threadFromOther(x)&&Number(x.lastMessageId)>read;}
+function bubbleThreads(){
+  const map=hiddenBubbles(),now=Date.now();let changed=false;
+  const list=privateThreads.filter(x=>{
+    const h=map[x.id]; if(!h) return true;
+    if(Number(x.lastMessageId)>Number(h.m)&&threadFromOther(x)){ delete map[x.id]; changed=true; return true; }
+    if(now-Number(h.at||0)>3600000){ h.at=now; changed=true; }
+    return false;
+  });
+  // Un hilo que no se ve en ocho dias ya lo borro el mantenimiento (siete).
+  for(const id of Object.keys(map)) if(now-Number(map[id].at||0)>8*86400000){ delete map[id]; changed=true; }
+  if(changed) saveHiddenBubbles(map);
+  return list;
+}
+function hideBubble(id){
+  const x=privateThreads.find(t=>t.id===Number(id)); if(!x) return;
+  const map=hiddenBubbles(); map[x.id]={m:Number(x.lastMessageId)||0,at:Date.now()}; saveHiddenBubbles(map);
+  renderPrivateThreads(); updateChatLabels();
+  toast(t('chat_bubble_hidden',{name:x.opponent}));
+}
+function hideCurrentBubble(){
+  const room=currentChatRoom(); if(room.roomType!=='private') return;
+  hideBubble(room.threadId); closeChat(); openLobbyChat();
+}
+function renderPrivateThreads(){
+  renderChatThreads();
+  const host=$('private-chat-bubbles'),menu=$('private-chat-menu'),inLobby=!$('s-lobby').classList.contains('hidden'),list=inLobby?bubbleThreads():[];
+  host.classList.toggle('hidden',!list.length);
+  document.body.style.setProperty('--burbujas',String(Math.min(list.length,4)));
+  if(!list.length) menu.classList.add('hidden');
+  // Rehacer la burbuja que se esta arrastrando la soltaria a mitad de gesto.
+  if(!inLobby||bubbleDrag) return;
+  const visible=list.slice(0,3),rest=list.slice(3);
+  const html=visible.map(x=>`<button type="button" class="private-chat-bubble${threadUnread(x)?' unread':''}" data-thread="${Number(x.id)}" title="${esc(x.opponent)}" aria-label="${esc(t('chat_bubble_label',{name:x.opponent}))}">${esc([...x.opponent][0]?.toUpperCase()||'?')}</button>`).join('')+(rest.length?`<button type="button" class="private-chat-bubble" data-more="1">+${rest.length}</button>`:'');
+  if(host.dataset.html!==html){ host.dataset.html=html; host.innerHTML=html; }
+  if(!rest.length) menu.classList.add('hidden');
+  menu.innerHTML=rest.map(x=>`<button type="button" onclick="openPrivateChat(${Number(x.id)});$('private-chat-menu').classList.add('hidden')">${avatarHTML(x.opponent,{sm:true})}<span>${esc(x.opponent)}</span></button>`).join('');
+}
+/* El gesto es solo horizontal, hacia cualquiera de los dos lados, y un toque
+   sin arrastre sigue abriendo la conversacion. Con el teclado, Suprimir o
+   Retroceso sobre la burbuja hacen lo mismo. */
+let bubbleDrag=null,bubbleSwipedAt=0;
+(()=>{
+  const host=$('private-chat-bubbles');
+  host.addEventListener('pointerdown',e=>{
+    const b=e.target.closest('.private-chat-bubble[data-thread]'); if(!b||e.button>0) return;
+    bubbleDrag={b,id:e.pointerId,x:e.clientX,y:e.clientY,dx:0,moving:false};
+    // El dedo ya queda capturado por la burbuja; el raton, no: sin esto, un
+    // arrastre rapido sale de ella antes del primer movimiento que se cuenta.
+    try{ b.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  host.addEventListener('pointermove',e=>{
+    const d=bubbleDrag; if(!d||e.pointerId!==d.id) return;
+    const dx=e.clientX-d.x,dy=e.clientY-d.y;
+    if(!d.moving){
+      if(Math.abs(dx)<8||Math.abs(dx)<Math.abs(dy)) return;
+      d.moving=true; d.b.classList.add('dragging');
+    }
+    d.dx=dx; d.b.style.transform=`translateX(${dx}px)`; d.b.style.opacity=String(Math.max(.2,1-Math.abs(dx)/150));
+  });
+  const end=e=>{
+    const d=bubbleDrag; if(!d||e.pointerId!==d.id) return;
+    bubbleDrag=null; if(!d.moving) return;
+    bubbleSwipedAt=Date.now(); d.b.classList.remove('dragging');
+    const gone=e.type==='pointerup'&&Math.abs(d.dx)>=64,id=d.b.dataset.thread;
+    if(gone&&calmMotion()){ hideBubble(id); return; }
+    d.b.style.transition='transform .18s ease-out,opacity .18s ease-out';
+    d.b.style.transform=gone?`translateX(${d.dx>0?160:-160}px)`:''; d.b.style.opacity=gone?'0':'';
+    setTimeout(()=>{ if(gone) hideBubble(id); else d.b.style.transition=''; },180);
+  };
+  host.addEventListener('pointerup',end); host.addEventListener('pointercancel',end);
+  host.addEventListener('click',e=>{
+    const b=e.target.closest('.private-chat-bubble'); if(!b||Date.now()-bubbleSwipedAt<400) return;
+    if(b.dataset.more){ $('private-chat-menu').classList.toggle('hidden'); return; }
+    openPrivateChat(b.dataset.thread);
+  });
+  host.addEventListener('keydown',e=>{
+    const b=e.target.closest('.private-chat-bubble[data-thread]'); if(!b||(e.key!=='Delete'&&e.key!=='Backspace')) return;
+    e.preventDefault(); hideBubble(b.dataset.thread);
+  });
+})();
 async function refreshPrivateThreads(force=false){if(!sessionToken||privateThreadsBusy||(!force&&Date.now()-privateThreadsFetchedAt<15000))return;privateThreadsBusy=true;privateThreadsFetchedAt=Date.now();try{const r=await api('chatList',{listThreads:true});if(r.ok){privateThreads=r.threads||[];renderPrivateThreads();}}catch(e){}finally{privateThreadsBusy=false;}}
 function setChatContext(view){
   /* Mirando una partida (E6-T1) el chat existe, pero solo para leerlo: la
@@ -3882,23 +3980,33 @@ function chatLive(){
   if(!panel.classList.contains('docked')) return true;
   return document.activeElement===$('chat-input')||Date.now()-chatTouchedAt<60000;
 }
-/* Anclado en el vestibulo no hay burbujas flotantes: las conversaciones
-   privadas son pestañas encima de los mensajes, con la del vestibulo delante. */
+/* En el vestibulo las conversaciones privadas son pestañas encima de los
+   mensajes, con la del vestibulo delante. Anclado no hay burbujas flotantes;
+   en el telefono (5.1.0) las pestañas estan tambien, y son el camino de vuelta
+   a una conversacion cuya burbuja se quito. */
 function renderChatThreads(){
   const box=$('chat-threads'); if(!box) return;
-  const on=$('chat-panel').classList.contains('docked')&&currentView==='lobby'&&privateThreads.length>0;
+  const on=currentView==='lobby'&&privateThreads.length>0;
   box.classList.toggle('hidden',!on);
-  if(!on){ if(box.innerHTML){ box.innerHTML=''; box.dataset.html=''; } return; }
+  if(!on){ if(box.innerHTML){ box.innerHTML=''; box.dataset.html=''; box.dataset.shown=''; } return; }
   const room=currentChatRoom();
   // El sondeo pasa por aqui cada pocos segundos: rehacer los botones sin que
   // nada cambie podria comerse un clic a medias.
   const html=`<button type="button" class="chat-thread${room.roomType==='lobby'?' on':''}" onclick="openLobbyChat()">${ico('globo',16)}<span>${esc(t('chat_lobby'))}</span></button>`
     +privateThreads.map(x=>{
-      const unread=Number(x.lastMessageId)>Number(localStorage.getItem('pf_chat_read_'+x.id)||0);
+      const unread=threadUnread(x);
       const current=room.roomType==='private'&&Number(room.threadId)===Number(x.id);
       return `<button type="button" class="chat-thread${current?' on':''}${unread&&!current?' unread':''}" onclick="openPrivateChat(${Number(x.id)})">${avatarHTML(x.opponent,{sm:true})}<span>${esc(x.opponent)}</span></button>`;
     }).join('');
   if(box.dataset.html!==html){ box.dataset.html=html; box.innerHTML=html; }
+  // En el telefono la fila no cabe entera: la pestaña abierta se trae a la
+  // vista una vez por conversacion, y solo con el panel ya a la vista.
+  const active=box.querySelector('.chat-thread.on'),key=room.roomType+':'+(room.threadId||'');
+  if(active&&box.dataset.shown!==key&&box.clientWidth){
+    box.dataset.shown=key;
+    const b=box.getBoundingClientRect(),r=active.getBoundingClientRect();
+    if(r.right>b.right) box.scrollLeft+=r.right-b.right+12; else if(r.left<b.left) box.scrollLeft-=b.left-r.left+12;
+  }
 }
 function openLobbyChat(){ selectedPrivateThread=null; chatRoom=''; setChatContext(currentView); }
 function updateChatLabels(){
@@ -3907,7 +4015,13 @@ function updateChatLabels(){
   $('chat-form').classList.toggle('hidden',watching);
   $('chat-readonly').classList.toggle('hidden',!watching);
   $('chat-readonly').textContent=t('spectator_chat_readonly');
-  $('chat-title').textContent=watching?`${t('chat_game')} · ${t('spectator_mode')}`:room.roomType==='private'?`${t('chat_game')} · ${selectedPrivateThread?.opponent||gState?.chatOpponent||''}`:t('chat_lobby');
+  // En el vestibulo la conversacion privada se titula con el nombre: la pestaña
+  // ya dice donde se esta, y la cabecera del telefono lleva un boton mas.
+  const lobbyThread=room.roomType==='private'&&currentView==='lobby'&&selectedPrivateThread?.opponent;
+  $('chat-title').textContent=watching?`${t('chat_game')} · ${t('spectator_mode')}`:lobbyThread?selectedPrivateThread.opponent:room.roomType==='private'?`${t('chat_game')} · ${selectedPrivateThread?.opponent||gState?.chatOpponent||''}`:t('chat_lobby');
+  const canHide=!!lobbyThread&&!$('chat-panel').classList.contains('docked')&&bubbleThreads().some(x=>x.id===Number(room.threadId));
+  $('chat-bubble-hide').classList.toggle('hidden',!canHide);
+  $('chat-bubble-hide').title=t('chat_bubble_hide');$('chat-bubble-hide').setAttribute('aria-label',t('chat_bubble_hide'));
   $('chat-input').placeholder=t('chat_placeholder');
   $('chat-nudge').title=t('chat_nudge');$('chat-nudge').setAttribute('aria-label',t('chat_nudge'));
   $('chat-nudge-toggle').title=t(chatNudgesOn?'chat_nudges_on':'chat_nudges_off');

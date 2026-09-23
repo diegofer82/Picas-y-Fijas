@@ -244,6 +244,8 @@ export async function listThreads(db, user) {
       lastMessageId: Number(t.last_message_id) || 0,
       lastKind: t.last_kind || "",
       lastBody: t.last_body || "",
+      // 5.1.0: quien lo escribio decide si una burbuja quitada vuelve.
+      lastSender: t.last_sender || "",
     })),
   };
 }

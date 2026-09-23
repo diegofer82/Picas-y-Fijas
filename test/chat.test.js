@@ -68,3 +68,80 @@ test('al salir del vestibulo, setChatContext esconde las burbujas del chat priva
     assert.ok($('chat-launch').classList.contains('hidden'), `el boton flotante sigue a la vista en ${view}`);
   }
 });
+
+/* 5.1.0: la burbuja se quita deslizandola a un lado —o con el boton de su
+   conversacion— y vuelve sola cuando el otro escribe; los avisos de la partida
+   no la hacen volver ni encienden su punto rojo. La conversacion sigue en su
+   pestaña del chat del lobby, tambien en el telefono. */
+function clientFn(name) {
+  const start = publicHtml.indexOf(`function ${name}(`);
+  assert.ok(start >= 0, `falta ${name}`);
+  let depth = 0, i = publicHtml.indexOf('{', start);
+  for (; i < publicHtml.length; i++) {
+    if (publicHtml[i] === '{') depth++;
+    else if (publicHtml[i] === '}' && --depth === 0) break;
+  }
+  return publicHtml.slice(start, i + 1);
+}
+function loadBubbles(threads) {
+  const store = new Map();
+  const localStorage = { getItem: (k) => (store.has(k) ? store.get(k) : null), setItem: (k, v) => store.set(k, String(v)) };
+  const src = ['hiddenBubbles', 'saveHiddenBubbles', 'threadFromOther', 'threadUnread', 'bubbleThreads'].map(clientFn).join('\n');
+  const api = new Function('localStorage', 'privateThreads', 'user',
+    `const chatUserKey=(v)=>String(v||'').trim().toLocaleLowerCase();${src}; return { hiddenBubbles, saveHiddenBubbles, threadUnread, bubbleThreads };`)(
+    localStorage, threads, 'Ana');
+  return { api, store };
+}
+
+test('una burbuja quitada vuelve solo cuando el otro escribe', () => {
+  const thread = { id: 7, opponent: 'Carlos', lastMessageId: 40, lastKind: 'user', lastSender: 'Carlos', lastBody: 'hola' };
+  const threads = [thread];
+  const { api } = loadBubbles(threads);
+  assert.deepEqual(api.bubbleThreads().map((x) => x.id), [7]);
+  api.saveHiddenBubbles({ 7: { m: 40, at: Date.now() } });
+  assert.deepEqual(api.bubbleThreads(), [], 'quitada, no se ve');
+  // Una partida nueva contra el mismo jugador deja avisos sin autor: no vuelve.
+  Object.assign(thread, { lastMessageId: 41, lastKind: 'system', lastSender: '', lastBody: 'finished|' });
+  assert.deepEqual(api.bubbleThreads(), [], 'un aviso de la partida no la hace volver');
+  // Lo que escribe una misma tampoco.
+  Object.assign(thread, { lastMessageId: 42, lastKind: 'user', lastSender: 'ana' });
+  assert.deepEqual(api.bubbleThreads(), [], 'un mensaje propio no la hace volver');
+  // Una reaccion o un mensaje del otro, si; y deja de estar quitada.
+  Object.assign(thread, { lastMessageId: 43, lastKind: 'system', lastSender: 'Carlos', lastBody: 'react_gg|Carlos' });
+  assert.deepEqual(api.bubbleThreads().map((x) => x.id), [7], 'vuelve con lo que escribe el otro');
+  assert.deepEqual(api.hiddenBubbles(), {});
+});
+
+test('el punto rojo es para lo que escribe el otro, no para los avisos de la partida', () => {
+  const thread = { id: 3, opponent: 'Carla', lastMessageId: 9, lastKind: 'system', lastSender: '', lastBody: 'finished|' };
+  const { api, store } = loadBubbles([thread]);
+  assert.equal(api.threadUnread(thread), false);
+  Object.assign(thread, { lastMessageId: 10, lastKind: 'user', lastSender: 'Carla' });
+  assert.equal(api.threadUnread(thread), true);
+  store.set('pf_chat_read_3', '10');
+  assert.equal(api.threadUnread(thread), false, 'leida, se apaga');
+});
+
+test('la burbuja se desliza para quitarla y tiene su boton y su camino de vuelta', () => {
+  assert.match(publicHtml, /\.private-chat-bubble\{touch-action:pan-y\}/, 'el gesto es horizontal y la pagina sigue desplazandose');
+  assert.match(publicHtml, /const gone=e\.type==='pointerup'&&Math\.abs\(d\.dx\)>=64/, 'se quita pasado un umbral, hacia cualquier lado');
+  assert.match(publicHtml, /if\(!b\|\|Date\.now\(\)-bubbleSwipedAt<400\) return;/, 'soltarla no abre la conversacion');
+  assert.match(publicHtml, /e\.key!=='Delete'&&e\.key!=='Backspace'/, 'con el teclado tambien se quita');
+  assert.match(publicHtml, /id="chat-bubble-hide" type="button" onclick="hideCurrentBubble\(\)"/, 'y con un boton en la conversacion');
+  assert.match(clientFn('renderChatThreads'), /const on=currentView==='lobby'&&privateThreads\.length>0;/, 'las pestañas, tambien en el telefono');
+  assert.match(publicHtml, /#s-lobby\{padding-bottom:calc\(48px \+ var\(--burbujas,0\) \* 53px\)\}/, 'el pie del vestibulo sube por encima de lo que flota');
+  assert.doesNotMatch(clientFn('renderPrivateThreads'), /[\u{1F300}-\u{1FAFF}]/u, 'el menu de hilos sin emoji');
+  for (const key of ['chat_bubble_label', 'chat_bubble_hide', 'chat_bubble_hidden']) {
+    assert.equal((publicHtml.match(new RegExp(`[{,]${key}:"`, 'g')) || []).length, 3, `falta ${key} en alguno de los tres idiomas`);
+  }
+});
+
+test('la lista de hilos dice quien escribio lo ultimo', async () => {
+  const { listThreads } = await import('../src/chat.js');
+  const db = { prepare: () => ({ bind: () => ({ all: async () => ({ results: [
+    { id: 5, user1: 'Ana', user1_key: 'ana', user2: 'Carlos', user2_key: 'carlos', last_game_at: new Date().toISOString(), last_message_at: null, last_message_id: 12, last_kind: 'user', last_body: 'hola', last_sender: 'Carlos' },
+  ] }) }) }) };
+  const r = await listThreads(db, { username_key: 'ana' });
+  assert.equal(r.threads[0].lastSender, 'Carlos');
+  assert.equal(r.threads[0].opponent, 'Carlos');
+});
