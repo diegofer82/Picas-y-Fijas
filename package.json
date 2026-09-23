@@ -12,6 +12,7 @@
     "puzzles": "node tools/make-puzzles.mjs",
     "pages": "python tools/make-rules-pages.py && python tools/make-install-pages.py",
     "screenshots": "node tools/make-screenshots.mjs",
+    "simulate": "node tools/simulate-players.mjs",
     "db:local": "wrangler d1 migrations apply picas-y-fijas-db --local",
     "db:remote": "wrangler d1 migrations apply picas-y-fijas-db --remote"
   },
