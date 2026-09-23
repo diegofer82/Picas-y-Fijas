@@ -2305,7 +2305,7 @@ body.chat-docked .chat-launch,body.chat-docked #g-chat-btn,body.chat-docked .pri
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v5.0.1';
+const APP_VERSION = 'v5.0.2';
 /* Enlace de invitación: ...?game=SZ93
    La invitación sobrevive al registro: se guarda en el navegador, porque entre
    abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
@@ -3841,7 +3841,11 @@ function setChatContext(view){
   const allowed=!!sessionToken&&(view==='lobby'||watching||(view==='game'&&gState&&gState.youAre>0&&gState.p2));
   // En la partida el chat vive en la cabecera: el boton flotante taparia el muelle.
   chatEnabled=allowed;$('chat-launch').classList.toggle('hidden',!allowed||view==='game');$('g-chat-btn').classList.toggle('hidden',!allowed||view!=='game');
-  if(!allowed){$('chat-panel').classList.add('hidden');stopChatPoll();placeChat();return;}
+  // Las burbujas de los hilos privados son del vestibulo: fuera de el se esconden
+  // aqui mismo, porque renderPrivateThreads() no vuelve a correr en las pantallas
+  // sin chat y las burbujas se quedaban flotando sobre el teclado del codigo del
+  // dia y sobre la rejilla de enigmas.
+  if(!allowed){$('chat-panel').classList.add('hidden');$('private-chat-bubbles').classList.add('hidden');$('private-chat-menu').classList.add('hidden');stopChatPoll();placeChat();return;}
   if(view==='lobby')selectedPrivateThread=null;
   const room=watching?'watch:'+game.id:view==='game'?'private:'+(gState?.chatThreadId||game.id):'lobby';
   if(room!==chatRoom){chatRoom=room;chatItems=[];chatLastId=0;chatUnread=0;renderChat();updateChatBadge();}
