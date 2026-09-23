@@ -1179,6 +1179,10 @@ Para recuperar D1 se debe usar una exportación confiable o Time Travel de Cloud
 
 La aplicación fue concebida inicialmente para menos de 20 conexiones simultáneas y preparada para crecer aproximadamente a 100 después de medir consumo. Actualmente usa consultas periódicas; si el tráfico aumenta, una evolución posible es WebSockets o coordinación con Durable Objects. Esa decisión requiere mediciones reales y no debe introducirse solo por anticipación.
 
+### Mejoras posibles, sin fecha
+
+**GIF en el chat.** Lo pidió Diego el 23-09-2026, junto con la 5.1.0, y quedó para más adelante. Los GIF del teclado del teléfono no sirven de camino: en Chrome para Android, Gboard no inserta imágenes en un `<input>` como el del chat —solo en `contenteditable="true"`, y en el teléfono detrás de una opción experimental apagada por defecto, `kAndroidMediaInsertion`, que entrega un `paste` con el archivo y sin la dirección de origen—, y en el iPhone los GIF de «#images» existen solo dentro de Mensajes. Lo que funcionaría para todo el mundo es un **botón GIF propio** con búsqueda en GIPHY o Klipy (la API pública de Tenor cerró el 30-06-2026): una clave de API como secreto del Worker, la búsqueda pasando por el Worker con filtro de contenido, y en `chat_messages` solo el identificador del GIF, nunca el archivo. Por dónde empezar, si llega el día: las conversaciones privadas, no el chat del vestíbulo, que es público y más difícil de moderar. Antes de escribirlo, comprobar de nuevo qué hace Chrome en el teléfono, porque el soporte del teclado puede haber cambiado.
+
 ### Recuperación del PIN — cómo quedó
 
 El camino elegido fue el del correo, y ya está en producción: columna `email` con índice único parcial, `email_verifications` y `pin_resets` con el token guardado como hash, caducidad corta y un solo uso. La petición del enlace pasa por Turnstile y se corta a tres por IP y hora; responda lo que responda la base, la respuesta al navegador es siempre la misma, para no delatar qué direcciones están registradas. Reponer el PIN cierra todas las sesiones de esa cuenta.
