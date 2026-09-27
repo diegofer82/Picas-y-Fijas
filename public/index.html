@@ -2311,7 +2311,7 @@ body.chat-docked #s-lobby{padding-bottom:0}
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v5.2.0';
+const APP_VERSION = 'v5.2.1';
 /* Enlace de invitación: ...?game=SZ93
    La invitación sobrevive al registro: se guarda en el navegador, porque entre
    abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
@@ -3665,15 +3665,22 @@ function syncRail(){
   });
   const me=$('rail-me'); if(me) me.textContent=initialOf(user);
 }
-async function railGo(dest){
-  closeSettingsMenu();
-  if(railCurrent()===dest) return;
+/* La puerta de salida que comparten el rail y el boton «atras» del navegador:
+   la partida avisa de que te vas y sigue abierta, la revision del historial
+   se cierra, la practica queda guardada. Nada se pierde por cambiar de
+   pantalla. */
+async function leaveCurrentView(){
   if(currentView==='game'){
     if(reviewingHistory){ reviewingHistory=false; stopPoll(); stopTick(); }
     else await quitGame();
   }else if(currentView==='practice-game'&&practice&&!practice.finished){
     pauseActivePractice(); toast(t('practice_saved_toast'));
   }
+}
+async function railGo(dest){
+  closeSettingsMenu();
+  if(railCurrent()===dest) return;
+  await leaveCurrentView();
   const go={lobby:enterLobby, play:()=>show('create'), practice:openPractice, arena:openArenaCreate,
     puzzles:openPuzzles, rank:openRank, me:()=>openProfile(user,'lobby')}[dest];
   if(go) go();
@@ -3733,12 +3740,68 @@ function countUp(root){
     el.textContent='+0'; requestAnimationFrame(step);
   });
 }
+/* -------------------- el boton «atras» del navegador --------------------
+   La app es una sola pagina y nunca escribia en el historial: desde cualquier
+   pantalla, «atras» se salia del sitio. Ahora cada pantalla que no es raiz
+   —la portada, la puerta del correo y el vestibulo lo son— deja una entrada,
+   y solo una: pasar de una pantalla a otra la reemplaza, asi que «atras»
+   siempre devuelve a la raiz. Cuando la app vuelve a la raiz por su cuenta
+   (Volver, la marca, el rail) consume esa entrada, para que «atras» no la
+   encuentre vacia. La entrada guarda su profundidad en `history.state`, y
+   al cargar la pagina se parte de cero: lo que quedo de una carga anterior
+   no es nuestro. */
+const ROOT_VIEWS=new Set(['login','verify','lobby']);
+let historyPopping=false, historyPopTimer=null;
+function historyDepth(){ try{ return (history.state&&Number(history.state.pfDepth))||0; }catch(e){ return 0; } }
+function historyURL(){ return location.pathname+location.search+location.hash; }
+try{ history.replaceState({pfDepth:0},'',historyURL()); }catch(e){}
+function syncHistory(from, to){
+  if(from===to) return;
+  try{
+    const depth=historyDepth();
+    if(ROOT_VIEWS.has(to)){
+      if(depth>0&&!historyPopping){
+        historyPopping=true; clearTimeout(historyPopTimer);
+        historyPopTimer=setTimeout(()=>{ historyPopping=false; },600);
+        history.go(-depth);
+      }else if(depth===0) history.replaceState({pfDepth:0},'',historyURL());
+    }else if(depth===0) history.pushState({pfDepth:1},'',historyURL());
+    else history.replaceState({pfDepth:depth},'',historyURL());
+  }catch(e){}
+}
+/* «Atras» sale por la misma puerta que el rail y vuelve a la raiz: el buzon a
+   donde se entro, como su boton Volver; el invitado a la portada; el resto
+   al vestibulo. «Adelante» no puede rehacer la pantalla que se dejo —sus
+   datos ya no estan—, asi que la entrada se queda como raiz y no pasa nada. */
+async function browserBack(){
+  closeSettingsMenu();
+  await leaveCurrentView();
+  if(currentView==='feedback') closeFeedback();
+  else if(sessionToken) enterLobby();
+  else exitGuest();
+}
+window.addEventListener('popstate', e=>{
+  const depth=(e.state&&Number(e.state.pfDepth))||0;
+  if(historyPopping){
+    // El viaje lo pidio la app. Si entre tanto ya abrio otra pantalla, esa
+    // pantalla vuelve a tener su entrada.
+    historyPopping=false; clearTimeout(historyPopTimer);
+    if(depth===0&&!ROOT_VIEWS.has(currentView)) try{ history.pushState({pfDepth:1},'',historyURL()); }catch(err){}
+    return;
+  }
+  if(depth>0){
+    if(ROOT_VIEWS.has(currentView)) try{ history.replaceState({pfDepth:0},'',historyURL()); }catch(err){}
+    return;
+  }
+  if(!ROOT_VIEWS.has(currentView)) browserBack();
+});
 function show(name){
   // Sin sesion abierta solo existen las pantallas publicas: ningun boton
   // olvidado puede dejar a un invitado delante del vestibulo o de la cuenta.
   if(!sessionToken && !GUEST_VIEWS.has(name)) name = 'login';
   const previousView = currentView;
   currentView = name;
+  syncHistory(previousView, name);
   if(name!=='game') gameViewEpoch++;
   ['login','verify','lobby','account','feedback','rank','profile','rivals','history','rules','practice','practice-game','puzzles','daily','create','wait','join','rematch','arena-new','arena','game'].forEach(s=>{
     $('s-'+s).classList.toggle('hidden', s!==name);

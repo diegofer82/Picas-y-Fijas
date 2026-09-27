@@ -39,8 +39,12 @@ test('la marca se hace rail a partir de 720 px, y solo para quien tiene cuenta',
 
 test('salir por el rail pasa por la misma puerta que el boton de volver', () => {
   const go = fn('railGo');
-  assert.match(go, /if\(currentView==='game'\)\{[\s\S]*else await quitGame\(\);/, 'la partida avisa de que te vas y sigue abierta');
-  assert.match(go, /currentView==='practice-game'&&practice&&!practice\.finished\)\{\s*pauseActivePractice\(\);/, 'la practica se guarda');
+  // Desde la 5.2.1 la puerta es `leaveCurrentView()`, compartida con el
+  // boton «atras» del navegador (test/browser-back.test.js).
+  const door = fn('leaveCurrentView');
+  assert.match(door, /if\(currentView==='game'\)\{[\s\S]*else await quitGame\(\);/, 'la partida avisa de que te vas y sigue abierta');
+  assert.match(door, /currentView==='practice-game'&&practice&&!practice\.finished\)\{\s*pauseActivePractice\(\);/, 'la practica se guarda');
+  assert.match(go, /await leaveCurrentView\(\);/, 'el rail sale por esa puerta');
   assert.match(go, /if\(railCurrent\(\)===dest\) return;/, 'pulsar donde ya estas no hace nada');
   assert.match(html, /async function leaveGame\(\)\{ await quitGame\(\); enterLobby\(\); \}/, 'volver al lobby y el rail comparten la salida');
   assert.match(fn('quitGame'), /api\('gamePresence',\{gameId:id,username:user,connected:false,reason:'lobby'\}\)/);
