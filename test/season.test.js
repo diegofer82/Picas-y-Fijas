@@ -241,7 +241,7 @@ test("renombrarse se lleva los puntos, y borrar una cuenta se los lleva del rank
 });
 
 test("la pantalla traduce las insignias y las dos pantallas nuevas en los tres idiomas", () => {
-  for (const code of ["first_win", "solved_4", "fast_finish", "expert_rules", "wins_10", "wins_50", "days_7"]) {
+  for (const code of ["first_win", "solved_4", "fast_finish", "expert_rules", "arena_win", "wins_10", "wins_50", "days_7"]) {
     assert.equal((html.match(new RegExp(`badge_${code}:`, "g")) || []).length, 3, `falta el nombre de ${code}`);
     assert.equal((html.match(new RegExp(`badge_${code}_desc:`, "g")) || []).length, 3, `falta la frase de ${code}`);
   }

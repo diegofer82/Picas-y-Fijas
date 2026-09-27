@@ -22,12 +22,15 @@ const RULES_KEPT = 8;
 /* Las insignias. Cada una es una frase corta que alguien puede querer contar,
    y ninguna depende de jugar mucho: se ganan por como se juega, no por
    cuanto. Los codigos no se traducen aqui —la pantalla los traduce a los tres
-   idiomas—, porque el servidor no sabe en que lengua se va a leer. */
+   idiomas—, porque el servidor no sabe en que lengua se va a leer.
+   `arena_win` es la unica que no se gana en una partida de dos: la apunta
+   `settleArena()` en src/arena.js cuando una arena termina. */
 export const BADGES = Object.freeze([
   "first_win",
   "solved_4",
   "fast_finish",
   "expert_rules",
+  "arena_win",
   "wins_10",
   "wins_50",
   "days_7",

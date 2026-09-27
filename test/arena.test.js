@@ -4,6 +4,7 @@ import { readFile, readdir } from "node:fs/promises";
 import { Miniflare } from "miniflare";
 import { seedAccount } from "./accounts.js";
 import { ARENA, rankPlayers, randomSecret, validateArenaOptions } from "../src/arena.js";
+import { usernameKey } from "../src/game.js";
 
 /* E6-T3, la arena.
 
@@ -146,6 +147,78 @@ test("una arena termina sola cuando ya no queda nadie jugando", async () => {
   assert.equal(board[board.length - 1].username, people[1].username, "quien se marchó cierra la lista");
   const late = await api("arenaGuess", { arenaId, guess: "012" }, people[2].token);
   assert.equal(late.ok, false);
+});
+
+test("ganar la primera arena da la insignia, que solo se enseña como nueva en esa arena", async () => {
+  const { arenaId, people, host } = await openArena("badge", { maxAttempts: 6 });
+  await api("arenaStart", { arenaId }, host.token);
+  const secret = await secretOf(arenaId);
+  const wrong = secret === "012" ? "345" : "012";
+  // El segundo acierta a la segunda; el primero, a la primera pero después:
+  // manda quien lo hizo con menos intentos, no quien lo hizo antes.
+  await api("arenaGuess", { arenaId, guess: wrong }, people[1].token);
+  await api("arenaGuess", { arenaId, guess: secret }, people[1].token);
+  await api("arenaGuess", { arenaId, guess: secret }, people[0].token);
+  for (let attempt = 0; attempt < 6; attempt++) await api("arenaGuess", { arenaId, guess: wrong }, people[2].token);
+
+  const winner = await api("arenaState", { arenaId }, people[0].token);
+  assert.equal(winner.status, "finished");
+  assert.equal(winner.board[0].username, people[0].username);
+  assert.deepEqual(winner.newBadges, ["arena_win"], "quien ganó la ve como nueva");
+  const second = await api("arenaState", { arenaId }, people[1].token);
+  assert.equal(second.newBadges, undefined, "quien acertó segundo no gana nada");
+  const profile = await api("profile", { username: people[0].username }, people[0].token);
+  assert.equal(profile.ok, true, profile.error);
+  const badge = profile.profile.badges.find((b) => b.code === "arena_win");
+  assert.equal(badge?.detail, "1", "la insignia guarda en cuántos intentos se ganó");
+  const row = await db.prepare("SELECT game_id FROM badges WHERE username_key=? AND code='arena_win'")
+    .bind(usernameKey(people[0].username)).first();
+  assert.equal(row.game_id, arenaId, "y en qué arena");
+
+  // La segunda arena ganada no escribe nada y no se anuncia como nueva.
+  const again = await openArena("badge2", { maxAttempts: 6 });
+  const joinedWinner = await api("arenaJoin", { arenaId: again.arenaId, country: "es" }, people[0].token);
+  assert.equal(joinedWinner.ok, true, joinedWinner.error);
+  await api("arenaStart", { arenaId: again.arenaId }, again.host.token);
+  const secret2 = await secretOf(again.arenaId);
+  await api("arenaGuess", { arenaId: again.arenaId, guess: secret2 }, people[0].token);
+  for (const person of again.people) await api("arenaLeave", { arenaId: again.arenaId }, person.token);
+  const state2 = await api("arenaState", { arenaId: again.arenaId }, people[0].token);
+  assert.equal(state2.status, "finished");
+  assert.equal(state2.board[0].username, people[0].username);
+  assert.equal(state2.newBadges, undefined, "ya la tenía: nada nuevo que enseñar");
+  const count = await db.prepare("SELECT COUNT(*) AS n FROM badges WHERE username_key=? AND code='arena_win'")
+    .bind(usernameKey(people[0].username)).first();
+  assert.equal(count.n, 1);
+});
+
+test("la migración 0018 apunta a quien ya había ganado una arena antes de la insignia", async () => {
+  const { arenaId, people, host } = await openArena("retro", { maxAttempts: 6 });
+  await api("arenaStart", { arenaId }, host.token);
+  const secret = await secretOf(arenaId);
+  const wrong = secret === "012" ? "345" : "012";
+  await api("arenaGuess", { arenaId, guess: wrong }, people[2].token);
+  await api("arenaGuess", { arenaId, guess: secret }, people[2].token);
+  await api("arenaGuess", { arenaId, guess: secret }, people[1].token);
+  for (let attempt = 0; attempt < 6; attempt++) await api("arenaGuess", { arenaId, guess: wrong }, people[0].token);
+  // Como si la arena se hubiera jugado antes de la 5.2.0: se borra lo apuntado
+  // y se vuelve a pasar la migración.
+  const key = usernameKey(people[1].username);
+  await db.prepare("DELETE FROM badges WHERE code='arena_win'").run();
+  const migration = await readFile(new URL("0018_arena_badge.sql", migrationsDir), "utf8");
+  for (const statement of migration.split(";").map((sql) => sql.trim()).filter(Boolean))
+    await db.prepare(statement).run();
+  const { results } = await db.prepare("SELECT username_key,game_id,detail FROM badges WHERE code='arena_win' AND game_id=?")
+    .bind(arenaId).all();
+  assert.deepEqual(results, [{ username_key: key, game_id: arenaId, detail: "1" }],
+    "solo el ganador, con sus intentos");
+  // Pasarla dos veces no cambia nada.
+  for (const statement of migration.split(";").map((sql) => sql.trim()).filter(Boolean))
+    await db.prepare(statement).run();
+  const count = await db.prepare("SELECT COUNT(*) AS n FROM badges WHERE code='arena_win'").first();
+  assert.ok(count.n >= 1);
+  const dup = await db.prepare("SELECT COUNT(*) AS n FROM badges WHERE code='arena_win' AND username_key=?").bind(key).first();
+  assert.equal(dup.n, 1);
 });
 
 test("hacen falta tres para empezar, caben ocho y solo empieza quien la abrió", async () => {

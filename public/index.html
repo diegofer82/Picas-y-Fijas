@@ -2311,7 +2311,7 @@ body.chat-docked #s-lobby{padding-bottom:0}
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v5.1.0';
+const APP_VERSION = 'v5.2.0';
 /* Enlace de invitación: ...?game=SZ93
    La invitación sobrevive al registro: se guarda en el navegador, porque entre
    abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
@@ -3126,6 +3126,7 @@ Object.assign(I18N.es,{
   badge_solved_4:"Resuelto en 4", badge_solved_4_desc:"Descubriste un código en cuatro intentos o menos.",
   badge_fast_finish:"Con cinco segundos", badge_fast_finish_desc:"Ganaste con cinco segundos o menos en el reloj.",
   badge_expert_rules:"Al Experto", badge_expert_rules_desc:"Ganaste con las reglas más duras.",
+  badge_arena_win:"Primera arena", badge_arena_win_desc:"Descifraste el código de una arena antes que los demás.",
   badge_wins_10:"Diez victorias", badge_wins_10_desc:"Has ganado diez partidas.",
   badge_wins_50:"Cincuenta victorias", badge_wins_50_desc:"Has ganado cincuenta partidas.",
   badge_days_7:"Siete días seguidos", badge_days_7_desc:"Jugaste siete días seguidos.",
@@ -3157,6 +3158,7 @@ Object.assign(I18N.en,{
   badge_solved_4:"Solved in 4", badge_solved_4_desc:"You cracked a code in four attempts or fewer.",
   badge_fast_finish:"Five seconds left", badge_fast_finish_desc:"You won with five seconds or less on the clock.",
   badge_expert_rules:"Expert rules", badge_expert_rules_desc:"You won under the hardest rules.",
+  badge_arena_win:"First arena", badge_arena_win_desc:"You cracked an arena code before everyone else.",
   badge_wins_10:"Ten wins", badge_wins_10_desc:"You have won ten games.",
   badge_wins_50:"Fifty wins", badge_wins_50_desc:"You have won fifty games.",
   badge_days_7:"Seven days in a row", badge_days_7_desc:"You played seven days in a row.",
@@ -3188,6 +3190,7 @@ Object.assign(I18N.fr,{
   badge_solved_4:"Trouvé en 4", badge_solved_4_desc:"Tu as trouvé un code en quatre essais ou moins.",
   badge_fast_finish:"À cinq secondes", badge_fast_finish_desc:"Tu as gagné avec cinq secondes ou moins au compteur.",
   badge_expert_rules:"Règles d'expert", badge_expert_rules_desc:"Tu as gagné avec les règles les plus dures.",
+  badge_arena_win:"Première arène", badge_arena_win_desc:"Tu as trouvé le code d'une arène avant tout le monde.",
   badge_wins_10:"Dix victoires", badge_wins_10_desc:"Tu as gagné dix parties.",
   badge_wins_50:"Cinquante victoires", badge_wins_50_desc:"Tu as gagné cinquante parties.",
   badge_days_7:"Sept jours d'affilée", badge_days_7_desc:"Tu as joué sept jours d'affilée.",
@@ -5402,6 +5405,7 @@ function renderArena(st){
   const banner=$('arena-banner');
   if(st.solved&&!over) banner.innerHTML=endCardHTML({result:'win', kicker:esc(t('arena_word')+' '+st.arenaId), title:esc(t('arena_you_solved',{n:st.attempts})), small:true});
   else if(!over&&!st.attemptsLeft&&st.youArePlaying) banner.innerHTML=endCardHTML({result:'lose', title:esc(t('arena_nomore')), text:esc(t('arena_nomore_text')), small:true});
+  else if(over&&Array.isArray(st.newBadges)&&st.newBadges.length) banner.innerHTML=badgesBlockHTML(st.newBadges);
   else banner.innerHTML='';
   if(st.solved&&!firstPaint&&!wasSolved) rainConfetti();
   renderArenaFeed();
@@ -5605,6 +5609,7 @@ const BADGE_ART={
   solved_4:{bg:'#FFC531', fg:'<path d="M24 9 14 25h8l-2 10 10-16h-8Z" fill="#1B1638"></path>'},
   fast_finish:{bg:'#FF6B5E', fg:'<circle cx="22" cy="23" r="10" fill="none" stroke="#1B1638" stroke-width="3.5"></circle><path d="M22 17.5v5.5l3.8 2.6M19 10h6" fill="none" stroke="#1B1638" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"></path>'},
   expert_rules:{bg:'#7C5CFF', fg:'<circle cx="22" cy="22" r="9.5" fill="none" stroke="#fff" stroke-width="3.5"></circle><circle cx="22" cy="22" r="3.2" fill="#fff"></circle>'},
+  arena_win:{bg:'#625B7A', fg:'<rect x="9" y="22" width="8" height="12" rx="1.5" fill="#FFF5E8"></rect><rect x="18" y="14" width="8" height="20" rx="1.5" fill="#FFC531"></rect><rect x="27" y="26" width="8" height="8" rx="1.5" fill="#FFF5E8"></rect><path d="M22 6.5l1.6 3.2 3.5.5-2.5 2.5.6 3.5-3.2-1.7-3.2 1.7.6-3.5-2.5-2.5 3.5-.5Z" fill="#FFC531"></path>'},
   wins_10:{bg:'#5FE0C9', fg:'<path d="M22 10.5l3.4 6.9 7.6 1.1-5.5 5.4 1.3 7.6L22 27.9l-6.8 3.6 1.3-7.6-5.5-5.4 7.6-1.1Z" fill="#1B1638"></path>'},
   wins_50:{bg:'#1B1638', ring:'#FFC531', fg:'<path d="M12 29 10 16l6.2 4.4L22 12l5.8 8.4L34 16l-2 13Z" fill="#FFC531"></path><rect x="12" y="30" width="20" height="3.6" rx="1.6" fill="#FFC531"></rect>'},
   days_7:{bg:'#B18CFF', fg:'<rect x="12" y="14" width="20" height="18" rx="4" fill="#1B1638"></rect><path d="M17 11v5M27 11v5" fill="none" stroke="#1B1638" stroke-width="3" stroke-linecap="round"></path><path d="M16.5 21.5h11M16.5 26.5h6" fill="none" stroke="#FFF5E8" stroke-width="2.4" stroke-linecap="round"></path>'}
@@ -5680,7 +5685,7 @@ function renderProfile(p){
   paintProfileHead(p);
   const own=p.username===user;
   const earned=new Set((p.badges||[]).map(b=>b.code));
-  // Las siete, siempre: las ganadas con su color y las que faltan en blanco,
+  // Las ocho, siempre: las ganadas con su color y las que faltan en blanco,
   // con lo que queda cuando se puede contar sin preguntar nada mas.
   const cells=BADGE_ORDER.map(code=>{
     const got=earned.has(code), prog=got?'':badgeProgress(code,p);

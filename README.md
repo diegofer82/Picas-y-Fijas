@@ -173,13 +173,17 @@ y acierto, el marcador completo, la temporada en curso, la mejor partida, las re
 las insignias. No enseña nada que no fuera ya público: ni el correo, ni la última conexión, ni el país de una
 IP. Todo lo que se ve estaba ya calculado, así que abrir un perfil no recorre el historial de nadie.
 
-Las insignias son siete y se ganan por cómo se juega, no por cuánto: primera victoria, código resuelto en
-cuatro intentos o menos, ganar con cinco segundos o menos en el reloj, ganar con las reglas más duras, diez
-victorias, cincuenta victorias y siete días seguidos jugando. Se calculan al terminar la partida y se guardan;
-las que se acaban de ganar aparecen en la tarjeta final de esa misma partida. Desde la 4.7.0 están dibujadas
-—un disco de un color de la marca y un trazo encima, en `BADGE_ART`— y el perfil enseña las siete: las ganadas
-en color y las que faltan apagadas, con lo que queda cuando se puede contar sin preguntar nada más (3/10
-victorias, 2/7 días).
+Las insignias son ocho y se ganan por cómo se juega, no por cuánto: primera victoria, código resuelto en
+cuatro intentos o menos, ganar con cinco segundos o menos en el reloj, ganar con las reglas más duras, la
+primera arena ganada (desde la 5.2.0), diez victorias, cincuenta victorias y siete días seguidos jugando. Las
+siete de partida se calculan al terminar la partida y se guardan; las que se acaban de ganar aparecen en la
+tarjeta final de esa misma partida. La de la arena la apunta `settleArena()` cuando la arena termina por
+cualquiera de sus cuatro caminos —el cierre natural, la marcha del último que jugaba, el reloj del sondeo y el
+Cron— para quien va primero en la clasificación habiendo descifrado el código; guarda en qué arena se ganó y el
+estado de esa arena, terminada, se la enseña como nueva solo a esa persona y solo ahí, con una lectura por clave
+que nadie más hace. Desde la 4.7.0 están dibujadas —un disco de un color de la marca y un trazo encima, en
+`BADGE_ART`— y el perfil enseña las ocho: las ganadas en color y las que faltan apagadas, con lo que queda cuando
+se puede contar sin preguntar nada más (3/10 victorias, 2/7 días).
 
 La lista de **rivales** dice con quién se ha jugado, con el marcador de la pareja, un punto verde si está
 conectado ahora y un botón de desafío que pide la revancha de la última partida que jugasteis: al rival le llega
@@ -204,7 +208,7 @@ Marcharse antes de empezar es marcharse; si quien se va es el anfitrión, la are
 
 **Lo que se escribe no lo toca el sondeo.** La arena pide su estado cada cuatro segundos y repinta la clasificación, pero el intento a medias vive en el muelle (`arenaPad`), que el repintado solo redibuja. Tras un intento, el teclado se enciende en cuanto vuelve la respuesta, sin esperar al sondeo siguiente, y de las respuestas que se cruzan solo se pinta la más reciente de las pedidas (`arenaAsked`/`arenaPainted`): una lenta no puede devolver la arena a antes del último intento. `test/arena-pad.test.js` hace correr ese código de la página contra un servidor que contesta cuando la prueba decide.
 
-La arena **no reparte puntos de temporada**. Es un modo nuevo y medirlo con la misma vara que una partida de dos deformaría una clasificación que acaba de estrenarse; si un día se decide contarlo, será con su propia cuenta y su propio recibo, como hizo `game_scores`.
+La arena **no reparte puntos de temporada**. Es un modo nuevo y medirlo con la misma vara que una partida de dos deformaría una clasificación que acaba de estrenarse; si un día se decide contarlo, será con su propia cuenta y su propio recibo, como hizo `game_scores`. Lo que sí da, desde la 5.2.0, es la insignia «Primera arena» a quien la gana: quien va primero en la clasificación final habiendo descifrado el código.
 
 ### Mirar una partida
 
@@ -346,7 +350,7 @@ Antes hay que activar **Email Routing** en `picasyfijas.fans` y verificar la dir
 - `src/rename.js`: el cambio de nombre de usuario y su reescritura en todas las tablas que guardan el nombre —partidas, chat, ranking, insignias, arena y código del día—. También es donde se decide cuándo **no** se puede cambiar: con una partida o una arena abiertas, no.
 - `src/recovery.js`: los enlaces de un solo uso que llegan por correo —verificar la dirección y reponer el PIN—, su emisión, su caducidad y el correo que los lleva en los tres idiomas.
 - `src/feedback.js`: el buzón de sugerencias y errores: validación, barandillas del endpoint público, consultas del panel y el aviso por correo.
-- `migrations/0001_initial.sql`: esquema reproducible de D1. No es un residuo de la migración desde Google y no debe eliminarse. Las migraciones siguientes añaden o ajustan: `0002` el chat, `0003` los hilos privados, `0004` el origen de cada cuenta, `0005` el buzón de sugerencias, `0006` la bolsa de tiempo, `0007` los índices necesarios para permanecer dentro de D1 Free, `0008` el correo y la recuperación del PIN, `0009` la fecha del último cambio de nombre, `0010` el nombre anterior, `0011` la zona horaria, `0012` la lengua de avisos, las suscripciones push y la deduplicación por turno, `0013` los resultados del código del día, `0014` la opción de cuaderno de la partida, `0015` los puntos por temporada y el recibo de cada partida contada, `0016` las insignias y las rachas, y `0017` la arena con sus tres tablas.
+- `migrations/0001_initial.sql`: esquema reproducible de D1. No es un residuo de la migración desde Google y no debe eliminarse. Las migraciones siguientes añaden o ajustan: `0002` el chat, `0003` los hilos privados, `0004` el origen de cada cuenta, `0005` el buzón de sugerencias, `0006` la bolsa de tiempo, `0007` los índices necesarios para permanecer dentro de D1 Free, `0008` el correo y la recuperación del PIN, `0009` la fecha del último cambio de nombre, `0010` el nombre anterior, `0011` la zona horaria, `0012` la lengua de avisos, las suscripciones push y la deduplicación por turno, `0013` los resultados del código del día, `0014` la opción de cuaderno de la partida, `0015` los puntos por temporada y el recibo de cada partida contada, `0016` las insignias y las rachas, `0017` la arena con sus tres tablas, y `0018` la insignia de la arena para quien ya la había ganado.
 - `test/`: pruebas automáticas de reglas, rutas, teclado y regresiones.
 - `tools/make-icons.mjs`: genera los cuatro PNG de la aplicación instalada: la vaca tranquila sobre azul. Se ejecuta con `npm run icons`.
 - `tools/make-puzzles.mjs`: fabrica `public/puzzles.json`. Usa el mismo `public/deduce.js` que el navegador, parte de una semilla fija y quita de cada enigma las pistas que sobran hasta dejar el más apretado con solución única. Se ejecuta con `npm run puzzles`.
@@ -686,7 +690,7 @@ El nombre nuevo viaja como `newUsername`, no como `username`, porque `authentica
 - `daily_results`: lo que hizo cada persona con el código del día —intentos, si lo resolvió y cuánto tardó—. No guarda el código: ese se deriva del día cada vez. Su clave primaria es el día más la cuenta, que es la regla «un intento diario» escrita en el esquema; su índice parcial (`solved = 1`) es el que sirve la clasificación del día.
 - `player_scores`: los puntos de cada jugador, una fila por temporada (`AAAA-MM`) y otra con la temporada `all`, que es el total de siempre. Guarda también partidas, victorias, derrotas, empates, la mejor partida —el código descubierto en menos intentos— y las ocho combinaciones de reglas más jugadas. Es lo que lee el ranking, y por eso el ranking ya no recorre `games`.
 - `game_scores`: un recibo por partida contada. Es lo que hace imposible sumar dos veces la misma partida, que puede cerrarse por el intento ganador, por el reloj, por abandono o por el Cron.
-- `badges`: las insignias ganadas, únicas por cuenta y código. Se calculan al terminar la partida, nunca al abrir un perfil.
+- `badges`: las insignias ganadas, únicas por cuenta y código. Se calculan al terminar la partida —o la arena, para «Primera arena»—, nunca al abrir un perfil. `game_id` guarda la partida o la arena en que se ganó.
 - `player_progress`: las rachas —días seguidos jugando y victorias seguidas—, que no pertenecen a ninguna temporada porque no se parten al cambiar de mes.
 - `arenas`: una arena por fila —código, reglas, estado y el secreto que sortea el servidor—, con su columna `version` para la concurrencia. El secreto no sale de esta tabla hasta que la arena termina.
 - `arena_players`: quién juega en cada arena y cómo va: intentos gastados, mejor número de fijas, cuándo lo descifró y si se marchó. De aquí sale la clasificación en directo, sin recorrer los intentos.
@@ -851,7 +855,7 @@ npm run db:remote
 git push origin main
 ```
 
-La regla vale para todas, sin excepción: `0005_feedback.sql` y `0006_time_bank.sql` con la 2.5, `0007_d1_free_optimization.sql` con la optimización de D1 Free, `0012_push.sql` con la correspondencia, `0013_daily.sql` con el código del día, `0014_notebook_option.sql` con el cuaderno, `0015_season.sql` y `0016_badges.sql` con los puntos y las insignias, y `0017_arena.sql` con la arena. El aviso por correo del buzón necesita además, una sola vez, activar Email Routing en el dominio y colocar sus dos secretos:
+La regla vale para todas, sin excepción: `0005_feedback.sql` y `0006_time_bank.sql` con la 2.5, `0007_d1_free_optimization.sql` con la optimización de D1 Free, `0012_push.sql` con la correspondencia, `0013_daily.sql` con el código del día, `0014_notebook_option.sql` con el cuaderno, `0015_season.sql` y `0016_badges.sql` con los puntos y las insignias, `0017_arena.sql` con la arena, y `0018_arena_badge.sql` con la insignia de la arena. El aviso por correo del buzón necesita además, una sola vez, activar Email Routing en el dominio y colocar sus dos secretos:
 
 ```text
 wrangler secret put FEEDBACK_TO
@@ -1047,6 +1051,7 @@ Diario de transiciones:
 
 La 5.0.0 cierra la serie Plaza. Desde aquí, como en la 4: cada corrección sube el parche y cada mejora compatible la menor, en el commit que la trae y con su etiqueta anotada `vX.Y.Z`.
 
+- **5.2.0** — La insignia «Primera arena». Lo pidió Diego el 27-09-2026: la arena no daba nada a quien la ganaba. La octava insignia la apunta `settleArena()` en cualquiera de los cuatro caminos que cierran una arena, para quien va primero en la clasificación final habiendo descifrado el código; guarda en qué arena se ganó, y la arena terminada se la enseña como nueva solo a esa persona. Es retroactiva: `migrations/0018_arena_badge.sql` la da a quien ya había ganado una arena de las que la base todavía guarda —las terminadas se conservan siete días—, con la fecha del acierto; las anteriores ya no existen. Va después de «Al Experto» en la rejilla del perfil, en bruma con un podio; `test/arena.test.js` fija quién la gana, que la segunda arena no la anuncia y que la migración apunta al ganador y a nadie más.
 - **5.1.0** — Las burbujas del chat privado se pueden quitar. La 5.0.2 las dejó en el vestíbulo, pero allí seguían sin cerrarse: tapaban el pie con los enlaces de sonido, reglas y sugerencias, y volvían después de cada partida contra la misma persona con un punto rojo aunque nadie hubiera escrito. Ahora una burbuja se desliza a un lado —o se quita con un botón en su conversación— y vuelve sola cuando el otro escribe; el punto rojo solo se enciende por lo que escribe el otro; el chat del vestíbulo lleva en el teléfono las pestañas de las conversaciones, que son el camino de vuelta, con la abierta traída a la vista; y el vestíbulo deja sitio debajo para lo que flota. En el vestíbulo, una conversación privada se titula con el nombre del otro. `test/chat.test.js` fija las reglas.
 - **5.0.2** — Las burbujas del chat privado se quedaban flotando fuera del vestíbulo. `setChatContext` solo las repintaba cuando la pantalla tenía chat, así que al abrir el código del día o los enigmas desde un vestíbulo con conversaciones abiertas las burbujas seguían ahí, fijas abajo a la derecha, y en un teléfono de 375 px tapaban el 4 y el 9 del teclado del día y los enigmas 20 y 24. Lo encontró el barrido de QA posterior a la serie 5; ahora la rama sin chat las esconde en el acto. `test/chat.test.js` lo fija.
 - **5.0.1** — En la arena se puede volver a escribir. Hasta la 4.6.0 cada sondeo de cuatro segundos vaciaba el campo del intento (`applyMode` lo ponía a cero al repintar), y en la arena del 22-09 un jugador tardó dos minutos en mandar su primer intento; la 4.7.0 cambió el campo por el muelle, que guarda lo escrito, pero quedaban dos restos: tras cada intento el teclado seguía apagado hasta el sondeo siguiente —hasta cuatro segundos en los que las cifras no entraban— y una respuesta lenta podía pintar la arena como estaba antes del intento. Ahora el teclado se enciende al volver la respuesta y solo se pinta la respuesta más reciente.

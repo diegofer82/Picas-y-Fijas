@@ -241,6 +241,29 @@ export async function startArena(db, user, params) {
    agotado sus intentos o se han marchado. Se comprueba después de cada intento
    y al soltar a alguien, que son los dos únicos momentos en los que eso puede
    cambiar. */
+/* La insignia de la arena (5.2.0). Ganar una arena es descifrar el código
+   antes que los demás, contra dos personas como mínimo; la clasificación ya
+   sabe decirlo —`rankPlayers` pone delante a quien acertó con menos
+   intentos—, así que aquí solo se apunta. Se llama desde los cuatro sitios que
+   cierran una arena: el cierre natural, la marcha del último que jugaba, el
+   reloj del sondeo y el Cron. La clave primaria de `badges` hace que la
+   segunda arena ganada no escriba nada, y `game_id` guarda en qué arena se
+   ganó: es lo que permite enseñarla como nueva solo en esa. */
+export async function settleArena(db, arenaId) {
+  const { results: players } = await db
+    .prepare("SELECT * FROM arena_players WHERE arena_id=?")
+    .bind(arenaId)
+    .all();
+  const winner = rankPlayers(players.map(publicPlayer))[0];
+  if (!winner?.solvedAt) return null;
+  const row = players.find((p) => p.username === winner.username);
+  await db
+    .prepare("INSERT OR IGNORE INTO badges(username_key,code,earned_at,game_id,detail) VALUES(?,?,?,?,?)")
+    .bind(row.username_key, "arena_win", now(), arenaId, String(winner.attempts))
+    .run();
+  return winner.username;
+}
+
 async function closeIfDone(db, arena) {
   const row = await db
     .prepare(
@@ -256,6 +279,7 @@ async function closeIfDone(db, arena) {
     .prepare("UPDATE arenas SET status='finished',finish_reason='complete',updated_at=?,version=version+1 WHERE arena_id=? AND status='active'")
     .bind(stamp, arena.arena_id)
     .run();
+  await settleArena(db, arena.arena_id);
   return true;
 }
 
@@ -362,6 +386,7 @@ export async function arenaState(db, user, params) {
     await db.prepare("UPDATE arenas SET status='finished',finish_reason='timeout',updated_at=?,version=version+1 WHERE arena_id=? AND status='active'")
       .bind(now(), arena.arena_id).run();
     arena = { ...arena, status: "finished", finish_reason: "timeout" };
+    await settleArena(db, arena.arena_id);
   }
   const [{ results: players }, { results: mine }] = await Promise.all([
     db.prepare("SELECT * FROM arena_players WHERE arena_id=?").bind(arena.arena_id).all(),
@@ -370,10 +395,21 @@ export async function arenaState(db, user, params) {
   ]);
   const me = players.find((row) => row.username_key === user.username_key) || null;
   const over = arena.status === "finished" || arena.status === "expired";
+  const board = rankPlayers(players.map(publicPlayer));
+  // Solo quien ganó esta arena, y solo cuando ya terminó, pregunta si la
+  // insignia se ganó aquí: una lectura por clave, y solo en su pantalla.
+  let newBadges = [];
+  if (over && me?.solved_at && board[0]?.username === me.username) {
+    const { results } = await db
+      .prepare("SELECT code FROM badges WHERE username_key=? AND game_id=?")
+      .bind(user.username_key, arena.arena_id)
+      .all();
+    newBadges = results.map((r) => r.code);
+  }
   return {
     ok: true,
     ...arenaMeta({ ...arena, players: players.length }),
-    board: rankPlayers(players.map(publicPlayer)),
+    board,
     /* Los intentos de los demás no se enseñan mientras se juega: todos atacan
        el mismo código, así que leer el intento de otro y su resultado sería
        jugar con su cabeza. Lo que se ve de los demás —intentos gastados y
@@ -388,6 +424,7 @@ export async function arenaState(db, user, params) {
     solved: Boolean(me?.solved_at),
     // El código solo sale de aquí cuando ya no queda nada que adivinar.
     secret: over ? padCode(arena.secret, arena.digits) : "",
+    ...(newBadges.length ? { newBadges } : {}),
   };
 }
 
@@ -396,6 +433,12 @@ export async function cleanupArenas(db, at = Date.now()) {
   const waitingCutoff = new Date(at - ARENA.waitingTtlMs).toISOString();
   const activeCutoff = new Date(at - ARENA.activeTtlMs).toISOString();
   const forgetCutoff = new Date(at - ARENA.finishedRetentionMs).toISOString();
+  // Las arenas que el reloj va a cerrar se apuntan antes: su ganador, si lo
+  // hay, se lleva la insignia igual que si la arena se hubiera cerrado sola.
+  const { results: stale } = await db
+    .prepare("SELECT arena_id FROM arenas WHERE status='active' AND updated_at<?")
+    .bind(activeCutoff)
+    .all();
   await db.batch([
     db.prepare("UPDATE arenas SET status='expired',finish_reason='timeout',updated_at=?,version=version+1 WHERE status='waiting' AND created_at<?")
       .bind(stamp, waitingCutoff),
@@ -409,4 +452,5 @@ export async function cleanupArenas(db, at = Date.now()) {
       .bind(forgetCutoff),
     db.prepare("DELETE FROM arenas WHERE status IN ('finished','expired') AND updated_at<?").bind(forgetCutoff),
   ]);
+  for (const row of stale) await settleArena(db, row.arena_id);
 }
