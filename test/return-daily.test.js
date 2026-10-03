@@ -28,13 +28,14 @@ test('las insignias se dibujan: adios a los emoji de BADGE_ICONS', () => {
   assert.doesNotMatch(html, /BADGE_ICONS/);
   const art = html.slice(html.indexOf('const BADGE_ART={'), html.indexOf('const BADGE_ORDER='));
   const codes = [...art.matchAll(/^\s{2}(\w+):\{bg:/gm)].map((m) => m[1]);
-  assert.deepEqual(codes, ['first_win', 'solved_4', 'fast_finish', 'expert_rules', 'arena_win', 'wins_10', 'wins_50', 'days_7'],
-    'las ocho del servidor, en el orden de la rejilla');
+  assert.deepEqual(codes, ['first_win', 'solved_4', 'fast_finish', 'expert_rules', 'arena_win', 'wins_10', 'wins_50', 'days_7',
+    'puzzles_easy', 'puzzles_normal', 'puzzles_expert', 'puzzles_all'],
+    'las doce del servidor, en el orden de la rejilla');
   assert.doesNotMatch(art, /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u, 'ningun emoji');
   // El verde y el naranja son informacion del juego: ninguna insignia los usa.
   assert.doesNotMatch(art, /#12A150|#39D37E|#E0731A|#F6A040/i);
   assert.match(fn('badgeChipHTML'), /badgeSVG\(code,28\)/, 'la tarjeta final tambien las dibuja');
-  // El perfil ensena las ocho: las ganadas y, apagadas, las que faltan.
+  // El perfil las ensena todas: las ganadas y, apagadas, las que faltan.
   const render = fn('renderProfile');
   assert.match(render, /BADGE_ORDER\.map\(code=>/);
   assert.match(render, /bcell\$\{got\?'':' off'\}/);
@@ -63,9 +64,12 @@ test('ninguna pantalla nueva pide nada al servidor que no pidiera antes', () => 
   assert.doesNotMatch(fn('renderRank') + fn('renderRankMe'), /\bapi\(/);
   // Lo que acaba de pasar en la arena sale de comparar dos sondeos.
   assert.doesNotMatch(fn('arenaEvents') + fn('renderArenaFeed') + fn('arenaRowHTML'), /\bapi\(/);
-  // Los enigmas siguen sin API ni sesion.
+  // Los enigmas no pedian nada en la 4.7.0. Desde la 5.3.0 guardan lo resuelto
+  // en la cuenta: una sola accion, `puzzleSync`, y ni pintar la lista ni abrir
+  // un enigma ni comprobar una respuesta la llaman por su cuenta.
   const puzzles = html.slice(html.indexOf('const PUZZLE_FILE='), html.indexOf('let historyEntries='));
-  assert.doesNotMatch(puzzles, /\bapi\(/);
+  assert.deepEqual(puzzles.match(/\bapi\('\w+'/g), ["api('puzzleSync'"]);
+  assert.doesNotMatch(fn('renderPuzzleList') + fn('openPuzzle') + fn('renderOpenPuzzle') + fn('revealPuzzle'), /\bapi\(|syncPuzzles/);
   // La tarjeta de fin y el confeti son cosa de la pantalla.
   assert.doesNotMatch(fn('endCardHTML') + fn('revealHTML') + fn('rainConfetti') + fn('playedTime'), /\bapi\(/);
 });

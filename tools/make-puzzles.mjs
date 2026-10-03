@@ -13,6 +13,12 @@
      byte a byte. Por eso una prueba puede volver a generarlo y comparar, que
      es la unica forma de que «generado» signifique algo.
 
+   Desde la 5.3.0 escribe tambien `src/puzzle-data.js`, el mismo contenido como
+   modulo, para el Worker: es quien comprueba una respuesta antes de guardarla
+   en la cuenta. Un modulo y no el JSON porque las pruebas levantan el Worker
+   en Miniflare sin empaquetador, y ahi un `import` de JSON no existe. Los dos
+   archivos salen de la misma pasada y la prueba compara los dos.
+
    Uso: node tools/make-puzzles.mjs
 */
 import { readFile, writeFile } from 'node:fs/promises';
@@ -130,11 +136,25 @@ export function serialize(data) {
   return lines.join('\n') + '\n';
 }
 
+/* El mismo contenido, como modulo para el Worker. No lleva nada que no este
+   ya en el archivo publico: pistas, y ninguna solucion. */
+export function serializeModule(data) {
+  return [
+    '/* GENERADO por tools/make-puzzles.mjs: no se edita a mano.',
+    '   Es public/puzzles.json como modulo, para que el Worker compruebe las',
+    '   respuestas de los enigmas (src/puzzles.js). */',
+    `export default ${serialize(data).trimEnd()};`,
+    '',
+  ].join('\n');
+}
+
 export const OUTPUT = new URL('../public/puzzles.json', import.meta.url);
+export const MODULE_OUTPUT = new URL('../src/puzzle-data.js', import.meta.url);
 
 if (process.argv[1] && process.argv[1].endsWith('make-puzzles.mjs')) {
   const data = buildPuzzles();
   await writeFile(OUTPUT, serialize(data), 'utf8');
+  await writeFile(MODULE_OUTPUT, serializeModule(data), 'utf8');
   const total = data.levels.reduce((sum, level) => sum + level.puzzles.length, 0);
-  console.log(`public/puzzles.json: ${total} enigmas en ${data.levels.length} niveles.`);
+  console.log(`public/puzzles.json y src/puzzle-data.js: ${total} enigmas en ${data.levels.length} niveles.`);
 }

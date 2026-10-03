@@ -1161,6 +1161,7 @@ body.chat-docked #s-lobby{padding-bottom:0}
 .pz-card .sec-head>span{font-size:12px}
 .pz-card .ikeys .key:not(.used):not(.out):not(.c){background:var(--crema)}
 .pz-links{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+#pz-earned:empty{display:none}
 .linkbtn.danger{color:var(--error)}
 .linkbtn.soft{color:var(--bruma)}
 /* La arena. */
@@ -1848,6 +1849,7 @@ body.chat-docked #s-lobby{padding-bottom:0}
       <button type="button" role="tab" data-l="expert" aria-selected="false" data-i18n="difficulty_expert">Experto</button>
     </div>
     <div class="pz-prog"><span id="pz-progress"></span><span class="pbar" aria-hidden="true"><i id="pz-bar"></i></span></div>
+    <div id="pz-earned"></div>
     <div class="pz-grid" id="pz-grid"></div>
     <div class="pz-card hidden" id="pz-play">
       <div class="sec-head"><h3 id="pz-play-title"></h3><span id="pz-play-rules"></span></div>
@@ -2311,7 +2313,7 @@ body.chat-docked #s-lobby{padding-bottom:0}
    CONFIG — la API se sirve desde el mismo Worker de Cloudflare
    ========================================================================== */
 const API = '/api';
-const APP_VERSION = 'v5.2.1';
+const APP_VERSION = 'v5.3.0';
 /* Enlace de invitación: ...?game=SZ93
    La invitación sobrevive al registro: se guarda en el navegador, porque entre
    abrir el enlace y entrar en la partida hay un alta, un correo y a menudo un
@@ -3130,6 +3132,10 @@ Object.assign(I18N.es,{
   badge_wins_10:"Diez victorias", badge_wins_10_desc:"Has ganado diez partidas.",
   badge_wins_50:"Cincuenta victorias", badge_wins_50_desc:"Has ganado cincuenta partidas.",
   badge_days_7:"Siete días seguidos", badge_days_7_desc:"Jugaste siete días seguidos.",
+  badge_puzzles_easy:"Enigmas fáciles", badge_puzzles_easy_desc:"Resolviste todos los enigmas fáciles.",
+  badge_puzzles_normal:"Enigmas normales", badge_puzzles_normal_desc:"Resolviste todos los enigmas normales.",
+  badge_puzzles_expert:"Enigmas expertos", badge_puzzles_expert_desc:"Resolviste todos los enigmas de nivel experto.",
+  badge_puzzles_all:"Todos los enigmas", badge_puzzles_all_desc:"Resolviste todos los enigmas, de los tres niveles.",
   rivals_title:"Rivales", rivals_hint:"Con quién has jugado. El punto verde dice quién está conectado ahora.",
   rivals_empty:"Todavía no has terminado ninguna partida con nadie.",
   rivals_record:"{wins}–{losses} en {played} partidas", rivals_record_one:"{wins}–{losses} en 1 partida",
@@ -3162,6 +3168,10 @@ Object.assign(I18N.en,{
   badge_wins_10:"Ten wins", badge_wins_10_desc:"You have won ten games.",
   badge_wins_50:"Fifty wins", badge_wins_50_desc:"You have won fifty games.",
   badge_days_7:"Seven days in a row", badge_days_7_desc:"You played seven days in a row.",
+  badge_puzzles_easy:"Easy puzzles", badge_puzzles_easy_desc:"You solved every easy puzzle.",
+  badge_puzzles_normal:"Normal puzzles", badge_puzzles_normal_desc:"You solved every normal puzzle.",
+  badge_puzzles_expert:"Expert puzzles", badge_puzzles_expert_desc:"You solved every expert puzzle.",
+  badge_puzzles_all:"Every puzzle", badge_puzzles_all_desc:"You solved every puzzle, all three levels.",
   rivals_title:"Rivals", rivals_hint:"Who you have played. The green dot shows who is online right now.",
   rivals_empty:"You have not finished a game with anyone yet.",
   rivals_record:"{wins}–{losses} in {played} games", rivals_record_one:"{wins}–{losses} in 1 game",
@@ -3194,6 +3204,10 @@ Object.assign(I18N.fr,{
   badge_wins_10:"Dix victoires", badge_wins_10_desc:"Tu as gagné dix parties.",
   badge_wins_50:"Cinquante victoires", badge_wins_50_desc:"Tu as gagné cinquante parties.",
   badge_days_7:"Sept jours d'affilée", badge_days_7_desc:"Tu as joué sept jours d'affilée.",
+  badge_puzzles_easy:"Énigmes faciles", badge_puzzles_easy_desc:"Tu as résolu toutes les énigmes faciles.",
+  badge_puzzles_normal:"Énigmes normales", badge_puzzles_normal_desc:"Tu as résolu toutes les énigmes normales.",
+  badge_puzzles_expert:"Énigmes expert", badge_puzzles_expert_desc:"Tu as résolu toutes les énigmes du niveau expert.",
+  badge_puzzles_all:"Toutes les énigmes", badge_puzzles_all_desc:"Tu as résolu toutes les énigmes, des trois niveaux.",
   rivals_title:"Rivaux", rivals_hint:"Avec qui tu as joué. Le point vert montre qui est connecté maintenant.",
   rivals_empty:"Tu n'as encore terminé aucune partie avec personne.",
   rivals_record:"{wins}–{losses} en {played} parties", rivals_record_one:"{wins}–{losses} en 1 partie",
@@ -5110,6 +5124,7 @@ function handleSessionExpired(){
 }
 async function logout(){
   try{ if(user&&sessionToken) await api('leavePresence',{username:user}); }catch(e){}
+  detachPuzzles();
   localStorage.removeItem('pf_user'); localStorage.removeItem('pf_pin'); localStorage.removeItem('pf_session'); localStorage.removeItem('pf_current_game'); user=''; userPin=''; sessionToken='';sessionExpiryHandled=false;
   chatEnabled=false;stopChatPoll();$('chat-panel').classList.add('hidden');$('chat-launch').classList.add('hidden');
   show('login');
@@ -5663,10 +5678,15 @@ function renderRankMe(res,list){
    de filas que se escribieron cuando las partidas terminaron: abrir el perfil
    de alguien no recorre su historial. Del jugador solo se enseña lo que ya era
    publico —el nombre, la bandera, lo que ha ganado—; el correo no viaja. */
-/* Las siete insignias, dibujadas (4.7.0): un disco de un color de la marca y
-   un trazo encima, con sus colores escritos como la vaca. Sustituyen a los
+/* Las insignias, dibujadas (4.7.0): un disco de un color de la marca y un
+   trazo encima, con sus colores escritos como la vaca. Sustituyen a los
    emoji de la 3.10.0, que cada sistema pintaba a su manera. El orden es el
-   de la rejilla del perfil. Ninguna usa verde ni naranja: son informacion. */
+   de la rejilla del perfil. Ninguna usa verde ni naranja: son informacion.
+   Las cuatro de los enigmas (5.3.0) son una familia: las fichas de la
+   cabecera de los enigmas, con la del «?» en amarillo —una, dos y tres segun
+   el nivel—, y para todos los enigmas, la ficha con su estrella. La estrella
+   es un hueco de la ficha y no un trazo encima, para que apagada se siga
+   distinguiendo de la ficha sola del primer nivel. */
 const BADGE_ART={
   first_win:{bg:'#2F5BFF', fg:'<path d="M14 22.5l5.5 5.5L30 17" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"></path>'},
   solved_4:{bg:'#FFC531', fg:'<path d="M24 9 14 25h8l-2 10 10-16h-8Z" fill="#1B1638"></path>'},
@@ -5675,7 +5695,11 @@ const BADGE_ART={
   arena_win:{bg:'#625B7A', fg:'<rect x="9" y="22" width="8" height="12" rx="1.5" fill="#FFF5E8"></rect><rect x="18" y="14" width="8" height="20" rx="1.5" fill="#FFC531"></rect><rect x="27" y="26" width="8" height="8" rx="1.5" fill="#FFF5E8"></rect><path d="M22 6.5l1.6 3.2 3.5.5-2.5 2.5.6 3.5-3.2-1.7-3.2 1.7.6-3.5-2.5-2.5 3.5-.5Z" fill="#FFC531"></path>'},
   wins_10:{bg:'#5FE0C9', fg:'<path d="M22 10.5l3.4 6.9 7.6 1.1-5.5 5.4 1.3 7.6L22 27.9l-6.8 3.6 1.3-7.6-5.5-5.4 7.6-1.1Z" fill="#1B1638"></path>'},
   wins_50:{bg:'#1B1638', ring:'#FFC531', fg:'<path d="M12 29 10 16l6.2 4.4L22 12l5.8 8.4L34 16l-2 13Z" fill="#FFC531"></path><rect x="12" y="30" width="20" height="3.6" rx="1.6" fill="#FFC531"></rect>'},
-  days_7:{bg:'#B18CFF', fg:'<rect x="12" y="14" width="20" height="18" rx="4" fill="#1B1638"></rect><path d="M17 11v5M27 11v5" fill="none" stroke="#1B1638" stroke-width="3" stroke-linecap="round"></path><path d="M16.5 21.5h11M16.5 26.5h6" fill="none" stroke="#FFF5E8" stroke-width="2.4" stroke-linecap="round"></path>'}
+  days_7:{bg:'#B18CFF', fg:'<rect x="12" y="14" width="20" height="18" rx="4" fill="#1B1638"></rect><path d="M17 11v5M27 11v5" fill="none" stroke="#1B1638" stroke-width="3" stroke-linecap="round"></path><path d="M16.5 21.5h11M16.5 26.5h6" fill="none" stroke="#FFF5E8" stroke-width="2.4" stroke-linecap="round"></path>'},
+  puzzles_easy:{bg:'#2F5BFF', fg:'<rect x="15" y="11.5" width="14" height="21" rx="4" fill="#FFC531"></rect><path d="M19.5 19a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7" fill="none" stroke="#1B1638" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="22" cy="26.6" r="1.3" fill="#1B1638"></circle>'},
+  puzzles_normal:{bg:'#7C5CFF', fg:'<rect x="10" y="13.5" width="11" height="17" rx="3.2" fill="#FFF5E8"></rect><rect x="23" y="13.5" width="11" height="17" rx="3.2" fill="#FFC531"></rect><path d="M26.5 20a2 2 0 1 1 2.8 1.84c-.56.32-.8.72-.8 1.36" fill="none" stroke="#1B1638" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="28.5" cy="26" r="1.1" fill="#1B1638"></circle>'},
+  puzzles_expert:{bg:'#FF6B5E', fg:'<rect x="6.5" y="15" width="9" height="14" rx="2.6" fill="#FFF5E8"></rect><rect x="17.5" y="15" width="9" height="14" rx="2.6" fill="#FFC531"></rect><rect x="28.5" y="15" width="9" height="14" rx="2.6" fill="#FFF5E8"></rect><path d="M20.35 20.35a1.65 1.65 0 1 1 2.31 1.52c-.46.26-.66.6-.66 1.12" fill="none" stroke="#1B1638" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="22" cy="25.4" r=".95" fill="#1B1638"></circle>'},
+  puzzles_all:{bg:'#1B1638', ring:'#FFC531', fg:'<path fill-rule="evenodd" d="M18 10.5h8a5 5 0 0 1 5 5v13a5 5 0 0 1-5 5h-8a5 5 0 0 1-5-5v-13a5 5 0 0 1 5-5Zm4 5.6l1.53 4.1 4.37.18-3.43 2.72 1.17 4.22L22 24.9l-3.64 2.42 1.17-4.22-3.43-2.72 4.37-.18Z" fill="#FFC531"></path>'}
 };
 const BADGE_ORDER=Object.keys(BADGE_ART);
 function badgeSVG(code,size){
@@ -5748,7 +5772,7 @@ function renderProfile(p){
   paintProfileHead(p);
   const own=p.username===user;
   const earned=new Set((p.badges||[]).map(b=>b.code));
-  // Las ocho, siempre: las ganadas con su color y las que faltan en blanco,
+  // Todas, siempre: las ganadas con su color y las que faltan en blanco,
   // con lo que queda cuando se puede contar sin preguntar nada mas.
   const cells=BADGE_ORDER.map(code=>{
     const got=earned.has(code), prog=got?'':badgeProgress(code,p);
@@ -6176,26 +6200,106 @@ const LOCALE={es:'es',en:'en',fr:'fr'};
    `Deduce.contradicts` sin enumerar nada— y revelarla es filtrar el espacio.
    Asi la respuesta no esta escrita en ningun sitio que se pueda abrir.
 
-   Lo unico que se guarda de quien juega son los enigmas resueltos, aqui en el
-   navegador: no es una partida, no toca el ranking y no cuesta nada. */
+   Lo unico que se guarda de quien juega son los enigmas resueltos. Sin cuenta
+   viven aqui, en el navegador, y nada sale del aparato. Con cuenta (5.3.0)
+   viajan ademas a D1, para que cambiar de aparato o de navegador no sea
+   empezar de cero: `syncPuzzles` los trae al abrir la pantalla y apunta el
+   que se acaba de resolver, nunca en un sondeo. El servidor no se fia de una
+   lista de identificadores: cada enigma viaja con su respuesta y la comprueba
+   contra las pistas, y de ahi salen las cuatro insignias de los enigmas. */
 const PUZZLE_FILE='/puzzles.json';
 const PUZZLE_CACHE_KEY='pf_puzzles_v1';
 const PUZZLE_SOLVED_KEY='pf_puzzles_solved';
+const PUZZLE_SYNC_KEY='pf_puzzles_sync';
 let puzzleData=null, puzzleLevel='easy', puzzleOpen=null, puzzlesLoading=false, puzzlesFailed=false;
 let puzzlesReturn='lobby';
 function solvedPuzzles(){
   try{ const saved=JSON.parse(localStorage.getItem(PUZZLE_SOLVED_KEY)||'[]'); return new Set(Array.isArray(saved)?saved:[]); }
   catch(e){ return new Set(); }
 }
-function markPuzzleSolved(id){
-  const solved=solvedPuzzles(); solved.add(id);
+function saveSolvedPuzzles(solved){
   try{ localStorage.setItem(PUZZLE_SOLVED_KEY,JSON.stringify([...solved])); }catch(e){}
+}
+function markPuzzleSolved(id){
+  const solved=solvedPuzzles(); solved.add(id); saveSolvedPuzzles(solved);
+}
+/* Lo que la cuenta tiene apuntado segun la ultima respuesta del servidor en
+   este aparato: de quien es y que enigmas. Con eso se sabe que falta por
+   enviar y de quien es lo que hay guardado aqui. */
+function puzzleSyncMemo(){
+  try{ const memo=JSON.parse(localStorage.getItem(PUZZLE_SYNC_KEY)||'null'); return memo&&Array.isArray(memo.ids)?memo:null; }
+  catch(e){ return null; }
+}
+/* Al salir de una cuenta, lo suyo se va con ella —sigue en el servidor— y en
+   el aparato queda solo lo que no llego a enviarse, que sera de quien entre
+   despues. Sin esto, la cuenta siguiente heredaria los enigmas de la anterior. */
+function detachPuzzles(){
+  const memo=puzzleSyncMemo(); if(!memo) return;
+  const solved=solvedPuzzles(); memo.ids.forEach(id=>solved.delete(id));
+  saveSolvedPuzzles(solved);
+  try{ localStorage.removeItem(PUZZLE_SYNC_KEY); }catch(e){}
+}
+/* Cada enigma pendiente viaja con su respuesta. La del que se acaba de
+   resolver esta en la mano; la de los resueltos antes de la 5.3.0, o sin
+   conexion, no esta guardada en ningun sitio y se vuelve a deducir filtrando
+   el espacio, como hace «Ver la solucion». */
+function pendingPuzzleAnswers(pending, known){
+  const answers=[];
+  for(const level of (puzzleData&&puzzleData.levels)||[]){
+    let space=null;
+    for(const puzzle of level.puzzles){
+      if(!pending.has(puzzle.id)) continue;
+      let code=known[puzzle.id]||'';
+      if(!code&&typeof Deduce!=='undefined'&&Deduce){
+        space=space||Deduce.enumerate(level.rules);
+        let left=space;
+        for(const [guess,fijas,picas] of puzzle.clues) left=Deduce.filter(left,guess,{fijas,picas});
+        code=left.length===1?left[0]:'';
+      }
+      if(code) answers.push(puzzle.id+':'+code);
+    }
+  }
+  return answers;
+}
+/* La unica llamada al API de esta pantalla, y solo con sesion: un invitado
+   vuelve de aqui sin haber pedido nada. Envia lo que la cuenta todavia no
+   tiene y recibe la lista entera, que pasa a ser la de este aparato. Si falla
+   —sin conexion—, lo resuelto se queda guardado aqui y viaja la proxima vez. */
+async function syncPuzzles(known){
+  if(!sessionToken||!user) return;
+  const owner=user.toLocaleLowerCase();
+  let memo=puzzleSyncMemo();
+  if(memo&&memo.owner!==owner){ detachPuzzles(); memo=null; }
+  const confirmed=new Set(memo?memo.ids:[]);
+  const pending=new Set([...solvedPuzzles()].filter(id=>!confirmed.has(id)));
+  const answers=pendingPuzzleAnswers(pending,known||{});
+  let res=null;
+  try{ res=await api('puzzleSync',{answers:answers.join(',')}); }catch(e){ return; }
+  if(!res||!res.ok||!Array.isArray(res.solved)) return;
+  if(!sessionToken||user.toLocaleLowerCase()!==owner) return;
+  // Lo enviado que el servidor no devuelve no era un enigma resuelto: se va.
+  // Lo que no se pudo enviar se queda, para la proxima vez.
+  const sent=new Set(answers.map(answer=>answer.split(':')[0]));
+  const merged=new Set(res.solved);
+  solvedPuzzles().forEach(id=>{ if(!sent.has(id)) merged.add(id); });
+  saveSolvedPuzzles(merged);
+  try{ localStorage.setItem(PUZZLE_SYNC_KEY,JSON.stringify({owner,ids:res.solved})); }catch(e){}
+  renderPuzzleList();
+  if(Array.isArray(res.newBadges)&&res.newBadges.length) showPuzzleBadges(res.newBadges);
+}
+/* Las insignias llegan con la respuesta del servidor, despues de la tarjeta de
+   «codigo deducido»: se añaden debajo si el enigma sigue abierto y, si no —la
+   primera vez que un aparato envia lo que ya tenia resuelto—, sobre la rejilla. */
+function showPuzzleBadges(codes){
+  const slot=puzzleOpen&&puzzleOpen.finished?$('pz-banner'):$('pz-earned');
+  if(slot) slot.insertAdjacentHTML('beforeend',badgesBlockHTML(codes));
 }
 function puzzleLevelData(){ return (puzzleData&&puzzleData.levels||[]).find(level=>level.level===puzzleLevel)||null; }
 async function openPuzzles(){
   puzzlesReturn=guestActive()?'practice':'lobby';
-  closePuzzle(); show('puzzles'); renderPuzzleList();
+  closePuzzle(); $('pz-earned').innerHTML=''; show('puzzles'); renderPuzzleList();
   if(!puzzleData) await loadPuzzles();
+  syncPuzzles();
 }
 function closePuzzles(){ closePuzzle(); show(puzzlesReturn); }
 async function loadPuzzles(){
@@ -6291,7 +6395,7 @@ function submitPuzzle(){
     paintOnce($('pz-banner'),`<div class="contradiction">${esc(t('pz_wrong'))}</div>`);
     endSound('lose'); return;
   }
-  puzzleDone(); markPuzzleSolved(puzzleOpen.id);
+  puzzleDone(); markPuzzleSolved(puzzleOpen.id); syncPuzzles({[puzzleOpen.id]:code});
   paintOnce($('pz-banner'),endCardHTML({result:'win', kicker:esc(t('pz_play_title',{n:puzzleOpen.index+1})), title:t('pz_solved'), text:t('pz_solved_text'), small:true})
     +revealHTML(esc(t('pz_revealed')),code,rules.mode,true,''));
   endSound('win'); renderPuzzleList();

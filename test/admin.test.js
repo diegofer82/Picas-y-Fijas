@@ -394,7 +394,7 @@ test('el resumen, la ficha y las partidas cuentan lo que trajo la 4.0.0', async 
   assert.equal(games.games[0].secret1, undefined, 'y ningún secreto');
 
   const exported = await api('adminExport', {}, boss.token);
-  for (const table of ['playerScores','gameScores','badges','playerProgress','dailyResults','arenas','arenaPlayers','arenaGuesses'])
+  for (const table of ['playerScores','gameScores','badges','playerProgress','dailyResults','arenas','arenaPlayers','arenaGuesses','puzzleSolves'])
     assert.ok(Array.isArray(exported[table]), `la copia incluye ${table}`);
 });
 

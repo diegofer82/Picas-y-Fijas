@@ -7,6 +7,7 @@ import { LIMITS, toInt, usernameKey } from "./game.js";
 import { pinThrottleKey } from "./security.js";
 import { rankPlayers } from "./arena.js";
 import { SEASON_ALL, seasonOf } from "./score.js";
+import { PUZZLE_TOTAL } from "./puzzles.js";
 
 const now = () => new Date().toISOString();
 const KEY_DIEGO = "diego";
@@ -44,7 +45,7 @@ export async function adminUserDetail(db, target) {
     .first();
   if (!user) return { ok: false, error: "Usuario no encontrado." };
   const season = seasonOf(Date.now());
-  const [games, sessions, threads, mute, presence, stats, scores, badges, progress, daily, arenas, push] =
+  const [games, sessions, threads, mute, presence, stats, scores, badges, progress, daily, arenas, push, puzzles] =
     await Promise.all([
       db
         .prepare(
@@ -131,6 +132,7 @@ export async function adminUserDetail(db, target) {
         .prepare("SELECT lang,created_at,updated_at FROM push_subscriptions WHERE user_id=? ORDER BY updated_at DESC")
         .bind(user.id)
         .all(),
+      db.prepare("SELECT COUNT(*) n FROM puzzle_solves WHERE username_key=?").bind(key).first(),
     ]);
   const scoreOf = (name) => scores.results.find((row) => row.season === name) || null;
   return {
@@ -173,6 +175,7 @@ export async function adminUserDetail(db, target) {
     // Del aparato solo se dice cuantos hay y en que idioma avisan: el
     // endpoint lo identifica y no hace falta verlo para administrar.
     push: push.results,
+    puzzles: { solved: toInt(puzzles?.n), total: PUZZLE_TOTAL },
   };
 }
 
@@ -304,6 +307,7 @@ export async function adminDeleteUser(db, params, admin) {
     db.prepare("DELETE FROM player_scores WHERE username_key=?").bind(user.username_key),
     db.prepare("DELETE FROM player_progress WHERE username_key=?").bind(user.username_key),
     db.prepare("DELETE FROM badges WHERE username_key=?").bind(user.username_key),
+    db.prepare("DELETE FROM puzzle_solves WHERE username_key=?").bind(user.username_key),
     db.prepare("DELETE FROM game_scores WHERE game_id IN (SELECT game_id FROM games WHERE p1=? OR p2=?)")
       .bind(user.username, user.username),
     // La arena guarda el nombre escrito en sus tres tablas y no tiene clave

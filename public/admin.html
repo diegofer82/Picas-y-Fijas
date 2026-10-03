@@ -277,7 +277,7 @@ function rulesText(x,withClock=true){
 const FINISH={timeout:'por tiempo',abandon:'por abandono','admin-correction':'corregida en el panel',admin:'cerrada en el panel',complete:'todos acabaron',host_left:'se fue el anfitrión'};
 const finishText=r=>r?(FINISH[r]||r):'';
 const ARENA_STATUS={waiting:'esperando',active:'en juego',finished:'terminada',expired:'caducada'};
-const BADGE={first_win:'Primera victoria',solved_4:'En 4 o menos',fast_finish:'Al límite del reloj',expert_rules:'Reglas más duras',wins_10:'10 victorias',wins_50:'50 victorias',days_7:'7 días seguidos'};
+const BADGE={first_win:'Primera victoria',solved_4:'En 4 o menos',fast_finish:'Al límite del reloj',expert_rules:'Reglas más duras',arena_win:'Primera arena',wins_10:'10 victorias',wins_50:'50 victorias',days_7:'7 días seguidos',puzzles_easy:'Enigmas fáciles',puzzles_normal:'Enigmas normales',puzzles_expert:'Enigmas expertos',puzzles_all:'Todos los enigmas'};
 /* Los avisos del chat se guardan como clave —`joined|Ana`, `react_gg|Ana`—
    para que cada pantalla los lea en su idioma. El panel los lee en español. */
 const SYSTEM_TEXT={joined:'{name} entró en la partida.',paused:'{name} pausó la partida.',resumed:'{name} reanudó la partida.',abandoned:'{name} abandonó la partida.',rematch:'{name} propuso una revancha.',finished:'La partida terminó.',
@@ -519,6 +519,7 @@ async function openUser(name){
       ${line('Puntos',`${scoreText(d.allTimeScore)} desde siempre · ${scoreText(d.seasonScore)} en ${esc(d.season||'')}`)}
       ${line('Rachas',d.progress?`${d.progress.day_streak} días seguidos (mejor ${d.progress.best_day_streak}) · ${d.progress.win_streak} victorias seguidas (mejor ${d.progress.best_win_streak})`:'<span class="muted">—</span>')}
       ${line('Insignias',d.badges.length?d.badges.map(b=>`<span class="tag" title="${esc(zoned(b.earned_at,ADMIN_TZ)||'')}${b.game_id?' · '+esc(b.game_id):''}">${esc(BADGE[b.code]||b.code)}</span>`).join(' '):'<span class="muted">ninguna</span>')}
+      ${line('Enigmas',d.puzzles&&d.puzzles.solved?`${d.puzzles.solved} resueltos de ${d.puzzles.total}`:'<span class="muted">ninguno</span>')}
       ${line('Código del día',d.daily.played?`${d.daily.solved} resueltos de ${d.daily.played}${d.daily.bestAttempts?` · mejor en ${d.daily.bestAttempts}`:''} · último ${esc(d.daily.lastDay)}`:'<span class="muted">nunca</span>')}
       ${line('Avisos',`${d.push.length?`${d.push.length} aparato(s) con push (${d.push.map(p=>esc(p.lang)).join(', ')})`:'sin push: los turnos de correspondencia van al correo'} · idioma ${esc(u.notification_lang||'es')}`)}
       ${line('Mensajes',`${s.messages||0} enviados · ${s.reportsGot||0} reportados · ${s.reportsMade||0} reportes hechos`)}

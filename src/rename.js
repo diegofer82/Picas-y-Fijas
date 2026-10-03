@@ -106,6 +106,8 @@ export async function changeUsername(db, user, params, at = Date.now()) {
     db.prepare("UPDATE arena_players SET username=?,username_key=? WHERE username_key=?").bind(username, key, oldKey),
     db.prepare("UPDATE arena_guesses SET username=?,username_key=? WHERE username_key=?").bind(username, key, oldKey),
     db.prepare("UPDATE daily_results SET username=?,username_key=? WHERE username_key=?").bind(username, key, oldKey),
+    // Los enigmas resueltos son los que sostienen sus insignias: viajan con ellas.
+    db.prepare("UPDATE puzzle_solves SET username_key=? WHERE username_key=?").bind(key, oldKey),
     db.prepare("DELETE FROM presence WHERE username_key=?").bind(oldKey),
     db.prepare("UPDATE feedback SET username=? WHERE username=?").bind(username, oldName),
     db.prepare("UPDATE audit_log SET target=? WHERE target=?").bind(username, oldName),

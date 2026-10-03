@@ -65,6 +65,7 @@ import {
   startArena,
 } from "./arena.js";
 import { dailyGuess, dailyState } from "./daily.js";
+import { puzzleSync } from "./puzzles.js";
 import { leaderboard, profile, recordFinishedGame, rivals } from "./season.js";
 import { scoreGame } from "./score.js";
 import { cleanupDatabase } from "./maintenance.js";
@@ -86,6 +87,7 @@ const PROTECTED = new Set([
   "rivals",
   "dailyState",
   "dailyGuess",
+  "puzzleSync",
   "arenaCreate",
   "arenaJoin",
   "arenaStart",
@@ -1409,7 +1411,7 @@ async function adminAction(db, action, params, user, env) {
   }
   if (action === "adminExport") {
     const [users, games, audit, chatMessages, chatReports, chatMutes, feedback, pushSubscriptions,
-      playerScores, gameScores, badges, playerProgress, dailyResults, arenas, arenaPlayers, arenaGuesses] =
+      playerScores, gameScores, badges, playerProgress, dailyResults, arenas, arenaPlayers, arenaGuesses, puzzleSolves] =
       await Promise.all([
         db
           .prepare(
@@ -1435,11 +1437,14 @@ async function adminAction(db, action, params, user, env) {
         db.prepare("SELECT * FROM arenas ORDER BY created_at").all(),
         db.prepare("SELECT * FROM arena_players ORDER BY arena_id,username_key").all(),
         db.prepare("SELECT * FROM arena_guesses ORDER BY id").all(),
+        // Desde la 7, tambien los enigmas resueltos: sin ellos, una copia
+        // restaurada dejaria insignias de enigmas sin las filas que las ganaron.
+        db.prepare("SELECT * FROM puzzle_solves ORDER BY username_key,puzzle_id").all(),
       ]);
     return {
       ok: true,
       exportedAt: now(),
-      schemaVersion: 6,
+      schemaVersion: 7,
       users: users.results,
       games: games.results,
       audit: audit.results,
@@ -1456,6 +1461,7 @@ async function adminAction(db, action, params, user, env) {
       arenas: arenas.results,
       arenaPlayers: arenaPlayers.results,
       arenaGuesses: arenaGuesses.results,
+      puzzleSolves: puzzleSolves.results,
     };
   }
   // Las herramientas de mantenimiento devuelven su propio detalle, asi que
@@ -1773,6 +1779,9 @@ async function routeApi(request, env, ctx) {
       break;
     case "dailyGuess":
       result = await dailyGuess(env.DB, env, auth.user, params);
+      break;
+    case "puzzleSync":
+      result = await puzzleSync(env.DB, auth.user, params);
       break;
     case "leaderboard":
       result = await leaderboard(env.DB, auth.user.username, params);

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import vm from "node:vm";
-import { LEVELS, buildPuzzles, serialize } from "../tools/make-puzzles.mjs";
+import { LEVELS, buildPuzzles, serialize, serializeModule } from "../tools/make-puzzles.mjs";
 
 /* Enigmas de deducción (E4-T5).
 
@@ -32,6 +32,18 @@ function solutions(rules, clues) {
 test("el archivo publicado es exactamente el que produce el generador", () => {
   assert.equal(raw, serialize(buildPuzzles(published.seed)),
     "public/puzzles.json se regenera con `node tools/make-puzzles.mjs`, no se edita a mano");
+});
+
+test("el Worker lleva los mismos enigmas, generados en la misma pasada", async () => {
+  // Desde la 5.3.0 el servidor comprueba las respuestas, así que necesita las
+  // pistas. `src/puzzle-data.js` es el mismo contenido como módulo, y también
+  // se compara byte a byte: dos copias que salen del mismo generador no se
+  // pueden separar sin que esta prueba lo diga.
+  const moduleRaw = await readFile(new URL("../src/puzzle-data.js", import.meta.url), "utf8");
+  assert.equal(moduleRaw, serializeModule(buildPuzzles(published.seed)),
+    "src/puzzle-data.js se regenera con `node tools/make-puzzles.mjs`, no se edita a mano");
+  const { default: bundled } = await import("../src/puzzle-data.js");
+  assert.deepEqual(bundled, published);
 });
 
 test("cada enigma tiene una solución y solo una", () => {
@@ -81,10 +93,16 @@ test("comprobar una respuesta es comprobar que es compatible con las pistas", ()
   assert.equal(Deduce.contradicts(wrong, turns), true, "cualquier otro código contradice alguna pista");
 });
 
-test("la pantalla de enigmas es solitaria: ni sesión, ni servidor, ni D1", () => {
+test("los enigmas se juegan sin cuenta, y sin cuenta no tocan el servidor", () => {
+  // Hasta la 5.2.1 esta pantalla no llamaba al API nunca. Desde la 5.3.0 lo
+  // resuelto viaja a la cuenta, pero solo cuando la hay: la única llamada es
+  // `puzzleSync` y su función sale en la primera línea si no hay sesión.
+  // `test/puzzle-sync.test.js` la hace correr sin sesión y cuenta las llamadas.
   const block = html.slice(html.indexOf("const PUZZLE_FILE="), html.indexOf("let historyEntries="));
-  assert.doesNotMatch(block, /\bapi\(/, "los enigmas no llaman al API");
-  assert.match(block, /fetch\(PUZZLE_FILE/, "solo se descarga el archivo publicado");
+  assert.deepEqual(block.match(/\bapi\(/g), ["api("], "una sola llamada al API en toda la pantalla");
+  assert.match(block, /async function syncPuzzles\(known\)\{\n  if\(!sessionToken\|\|!user\) return;[\s\S]*?api\('puzzleSync'/,
+    "y detrás de la sesión");
+  assert.match(block, /fetch\(PUZZLE_FILE/, "los enigmas se descargan del archivo publicado");
   assert.match(html, /const GUEST_VIEWS = new Set\(\[[^\]]*'puzzles'/, "se puede jugar sin cuenta");
   assert.match(html, /<section id="s-puzzles" class="hidden">/);
   assert.match(html, /onclick="openPuzzles\(\)"/);
