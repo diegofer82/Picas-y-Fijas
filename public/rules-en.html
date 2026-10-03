@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#FFF5E8" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#120F24" media="(prefers-color-scheme: dark)">
 <title>How to play Bulls and Cows · Picas y Fijas rules</title>
-<meta name="description" content="The full rules of Picas y Fijas, the classic Bulls and Cows deduction game: what the Fixed and Present clues mean, how to set up a match and how to win. Free strategy guide in PDF.">
+<meta name="description" content="The full rules of Picas y Fijas, the classic Bulls and Cows deduction game: what the Fixed and Present clues mean, the clocks, the arena, the code of the day and how ranking points add up. Free strategy guide in PDF.">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <link rel="canonical" href="https://picasyfijas.fans/en/how-to-play">
 <link rel="alternate" hreflang="es" href="https://picasyfijas.fans/como-se-juega">
@@ -16,7 +16,7 @@
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="Picas y Fijas">
 <meta property="og:title" content="How to play Bulls and Cows · Picas y Fijas rules">
-<meta property="og:description" content="The full rules of Picas y Fijas, the classic Bulls and Cows deduction game: what the Fixed and Present clues mean, how to set up a match and how to win. Free strategy guide in PDF.">
+<meta property="og:description" content="The full rules of Picas y Fijas, the classic Bulls and Cows deduction game: what the Fixed and Present clues mean, the clocks, the arena, the code of the day and how ranking points add up. Free strategy guide in PDF.">
 <meta property="og:url" content="https://picasyfijas.fans/en/how-to-play">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://picasyfijas.fans/og-en.png">
@@ -24,22 +24,34 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="How to play Bulls and Cows · Picas y Fijas rules">
-<meta name="twitter:description" content="The full rules of Picas y Fijas, the classic Bulls and Cows deduction game: what the Fixed and Present clues mean, how to set up a match and how to win. Free strategy guide in PDF.">
+<meta name="twitter:description" content="The full rules of Picas y Fijas, the classic Bulls and Cows deduction game: what the Fixed and Present clues mean, the clocks, the arena, the code of the day and how ranking points add up. Free strategy guide in PDF.">
 <meta name="twitter:image" content="https://picasyfijas.fans/og-en.png">
 <link rel="icon" href="/icon-192.png" sizes="192x192">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Figtree:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Figtree:wght@400;600;700;800&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
 <style>
-  :root{--crema:#FFF5E8;--papel:#FFFFFF;--hueco:#F7F0E4;--linea:#E9DFD0;--linea-2:#F2ECE0;
-    --tinta:#1B1638;--bruma:#625B7A;--bruma-2:#A79FB8;
+  :root{--crema:#FFF5E8;--papel:#FFFFFF;--papel-2:#FFF9F1;--hueco:#F7F0E4;--linea:#E9DFD0;--linea-2:#F2ECE0;--linea-3:#C9BEAE;
+    --tinta:#1B1638;--tinta-2:#0C0A1C;--bruma:#625B7A;--bruma-2:#A79FB8;
     --azul:#2F5BFF;--azul-2:#1F3FB8;--azul-suave:#EEF2FF;--azul-texto:#1F3FB8;
-    --pica:#E0731A;--fija:#12A150;--r:22px;--r-md:16px}
-  @media (prefers-color-scheme:dark){:root{--crema:#120F24;--papel:#1D1838;--hueco:#171233;
-    --linea:#2E2850;--linea-2:#2A2448;--tinta:#F6F1FF;--bruma:#A79FC4;--bruma-2:#6E63A0;
+    --coral:#FF6B5E;--coral-2:#D94F45;--coral-suave:#FFF1EF;
+    --violeta:#7C5CFF;--violeta-2:#5A3FD1;--violeta-suave:#F1EDFF;
+    --sol:#FFC531;--sol-2:#D9A317;--sol-suave:#FFF6DA;
+    --pica:#E0731A;--pica-suave:#FDEEDF;--pica-texto:#9A4B08;
+    --fija:#12A150;--fija-suave:#E3F6EA;--fija-texto:#0C7A3A;
+    --sobre-azul:#FFFFFF;--sobre-tinta:#FFF5E8;
+    --tono:#2F5BFF;--tono-2:#1F3FB8;--tono-suave:#EEF2FF;--sobre:#FFFFFF;
+    --r:22px;--r-md:16px}
+  @media (prefers-color-scheme:dark){:root{--crema:#120F24;--papel:#1D1838;--papel-2:#231D45;--hueco:#171233;
+    --linea:#2E2850;--linea-2:#2A2448;--linea-3:#4A4272;--tinta:#F6F1FF;--tinta-2:#A79FC4;--bruma:#A79FC4;--bruma-2:#6E63A0;
     --azul:#4F79FF;--azul-2:#2F4FC7;--azul-suave:#22305E;--azul-texto:#A9BDFF;
-    --pica:#F6A040;--fija:#39D37E}}
+    --coral:#FF7A6E;--coral-2:#C94F45;--coral-suave:#4A2833;
+    --violeta:#9B82FF;--violeta-2:#5A3FD1;--violeta-suave:#2E2650;
+    --sol:#FFC531;--sol-2:#B8890F;--sol-suave:#4A3A14;
+    --pica:#F6A040;--pica-suave:#4A3020;--pica-texto:#F6A040;
+    --fija:#39D37E;--fija-suave:#183A2A;--fija-texto:#39D37E;
+    --sobre-tinta:#120F24}}
   *{box-sizing:border-box}
   html,body{margin:0}
   body{font-family:'Figtree',system-ui,-apple-system,sans-serif;background:var(--crema);
@@ -65,11 +77,6 @@
   .intro{color:var(--bruma);font-size:15px;line-height:1.6;margin:0 0 18px}
   .intro b{color:var(--tinta);font-weight:700}
   .rules{color:var(--tinta);font-size:15px;line-height:1.6}
-  .rules ol{padding-left:20px;margin:0 0 6px}
-  .rules li{margin-bottom:11px}
-  .rules ul{padding-left:18px;margin:6px 0;color:var(--bruma);font-size:14px}
-  .rules ul li{margin-bottom:4px}
-  .rules b{color:var(--tinta)}
   .note{background:var(--hueco);border:2px solid var(--linea-2);border-radius:var(--r-md);
     padding:12px 14px;margin:12px 0;font-size:14px;color:var(--bruma)}
   .note b{color:var(--tinta)}
@@ -88,6 +95,188 @@
   .foot{text-align:center;color:var(--bruma);font-size:12px;font-weight:600}
   .foot a{color:var(--bruma)}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* guia:inicio — «Como se juega» por capitulos (5.4.0).
+   Este bloque, de marca a marca, lo copia tal cual tools/make-rules-pages.py a
+   las paginas publicas de reglas: es la unica hoja de la guia y por eso no pide
+   nada de fuera salvo los colores de :root. Dentro del juego los capitulos se
+   cambian con una clase (.rk.live, que pone paintRules); en las paginas
+   publicas, que no llevan JavaScript, con :target. Verde y naranja solo
+   aparecen en las pistas: los capitulos se pintan con azul, coral, violeta, sol
+   y tinta. */
+.rk{--tono:var(--azul);--tono-2:var(--azul-2);--tono-suave:var(--azul-suave);--sobre:#FFFFFF;color:var(--tinta);font-size:15px;line-height:1.55;scroll-margin-top:10px}
+.rk .t-azul{--tono:var(--azul);--tono-2:var(--azul-2);--tono-suave:var(--azul-suave);--sobre:#FFFFFF}
+.rk .t-coral{--tono:var(--coral);--tono-2:var(--coral-2);--tono-suave:var(--coral-suave);--sobre:#1B1638}
+.rk .t-violeta{--tono:var(--violeta);--tono-2:var(--violeta-2);--tono-suave:var(--violeta-suave);--sobre:#FFFFFF}
+.rk .t-sol{--tono:var(--sol);--tono-2:var(--sol-2);--tono-suave:var(--sol-suave);--sobre:#1B1638}
+.rk .t-tinta{--tono:var(--tinta);--tono-2:var(--tinta-2);--tono-suave:var(--hueco);--sobre:var(--sobre-tinta)}
+.rk p{margin:0 0 12px}
+.rk b{font-weight:800;color:var(--tinta)}
+.rk svg{display:block;flex:0 0 auto}
+.rk .dl{fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.rk a{color:var(--azul-texto);font-weight:700}
+.rk h4{margin:22px 0 10px;font:800 18px/1.2 'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.01em}
+/* Los capitulos: una fila de fichas que se desliza de lado y se queda arriba. */
+.rk-nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:3;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -4px 12px;padding:6px 4px 10px;background:var(--papel)}
+.rk-nav::-webkit-scrollbar{display:none}
+.rk-nav a{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 14px 0 11px;border-radius:14px;border:2px solid var(--linea);background:var(--papel);color:var(--tinta);font-size:13px;font-weight:800;text-decoration:none;white-space:nowrap;box-shadow:0 3px 0 var(--linea);transition:transform .08s ease,box-shadow .08s ease}
+.rk-nav a:active{transform:translateY(3px);box-shadow:none}
+.rk-ch{scroll-margin-top:78px}
+.rk-hero{display:flex;align-items:center;gap:14px;margin:0 0 16px;padding:16px;border-radius:20px;background:var(--tono-suave)}
+.rk-hero h3{margin:0 0 4px;font:800 24px/1.1 'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.02em}
+.rk-hero p{margin:0;font-size:14px;line-height:1.45;color:var(--bruma)}
+.rk-ic{display:grid;place-items:center;flex:0 0 auto;width:52px;height:52px;border-radius:16px;background:var(--tono);color:var(--sobre);box-shadow:0 4px 0 var(--tono-2)}
+.rk-ic.sm{width:38px;height:38px;border-radius:12px;box-shadow:0 3px 0 var(--tono-2)}
+.rk-call{margin:14px 0;padding:12px 14px;border-radius:16px;border-left:6px solid var(--tono);background:var(--tono-suave);font-size:14px}
+.rk-fine{margin:10px 0 0;font-size:13px;color:var(--bruma)}
+/* Las pistas se leen por forma: disco la fija, anillo la pica, punteado nada. */
+.rk-pip{display:inline-block;flex:0 0 auto;width:22px;height:22px;border-radius:50%;border:3px dashed var(--linea-3)}
+.rk-pip.f{border:0;background:var(--fija)}
+.rk-pip.p{border:5px solid var(--pica)}
+.rk-pip.s{width:14px;height:14px;border-width:2px}
+.rk-pip.s.p{border-width:3.5px}
+.rk-legend{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 4px}
+.rk-legend>div{display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 6px;border-radius:16px;border:2px solid var(--linea-2);background:var(--hueco);text-align:center}
+.rk-legend b{font-size:14px;line-height:1.2}
+.rk-legend span{font-size:12px;line-height:1.3;color:var(--bruma)}
+.rk-ex{margin:0 0 12px;padding:14px;border-radius:18px;border:2px solid var(--linea-2);background:var(--hueco)}
+.rk-ex-row{display:grid;gap:6px;margin:0 0 12px}
+.rk-ex-row.marks{margin-bottom:34px}
+.rk-ex-l{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--bruma)}
+.rk-code{display:flex;gap:7px;min-width:0}
+.rk-tile{position:relative;display:grid;place-items:center;flex:0 1 44px;min-width:0;height:50px;border-radius:13px;border:2px solid var(--tinta);background:var(--papel);color:var(--tinta);box-shadow:0 3px 0 var(--tinta);font:700 22px 'JetBrains Mono',ui-monospace,monospace;font-feature-settings:"zero" 1}
+.rk-tile.sec{border-color:#1B1638;background:var(--sol);color:#1B1638;box-shadow:0 3px 0 #1B1638}
+.rk-tile.gap{border-style:dashed;border-color:var(--linea-3);background:transparent;box-shadow:none}
+.rk-tile>i{position:absolute;left:50%;top:calc(100% + 10px);margin-left:-7px}
+.rk-ex-out{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0}
+.rk-pill{display:inline-block;padding:3px 10px;border-radius:9px;background:var(--papel);font-size:13px;font-weight:800}
+.rk-pill.f{background:var(--fija-suave);color:var(--fija-texto)}
+.rk-pill.p{background:var(--pica-suave);color:var(--pica-texto)}
+.rk-why{display:grid;gap:7px;margin:12px 0 0;padding:0;list-style:none;font-size:14px;line-height:1.4}
+.rk-why li{display:flex;align-items:center;gap:9px}
+/* El laboratorio del primer capitulo solo existe dentro del juego. */
+.rk-lab{margin:18px 0 0;padding:14px;border-radius:18px;border:2px solid var(--tono)}
+.rk-lab h4{margin:0 0 4px}
+.rk-lab>p{margin:0 0 12px;font-size:14px;color:var(--bruma)}
+.rk-lab-out{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-height:27px;margin:0;font-size:14px}
+.rk-lab-out small{flex:1 0 100%;font-size:12px;color:var(--bruma)}
+.rk-keys{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.rk-keys button{display:grid;place-items:center;min-height:46px;padding:0;border-radius:12px;border:2px solid var(--linea);background:var(--papel);color:var(--tinta);box-shadow:0 3px 0 var(--linea);cursor:pointer;font:700 20px 'JetBrains Mono',ui-monospace,monospace;font-feature-settings:"zero" 1;transition:transform .08s ease,box-shadow .08s ease}
+.rk-keys button:active{transform:translateY(3px);box-shadow:none}
+.rk-keys button:disabled{opacity:.35;box-shadow:none;cursor:default;text-decoration:line-through}
+.rk-keys .del{grid-column:span 2}
+.rk-lab .rk-tile.drop>i{animation:rkPop .35s cubic-bezier(.34,1.56,.64,1) backwards}
+@keyframes rkPop{0%{transform:scale(0)}60%{transform:scale(1.3)}100%{transform:scale(1)}}
+/* El duelo: cuatro pasos numerados y las opciones en fichas. */
+.rk-steps{display:grid;gap:8px;margin:0 0 4px;padding:0;list-style:none;counter-reset:paso}
+.rk-steps li{position:relative;min-height:62px;padding:12px 14px 12px 60px;border-radius:16px;border:2px solid var(--linea-2);background:var(--papel);counter-increment:paso}
+.rk-steps li::before{content:counter(paso);position:absolute;left:12px;top:12px;display:grid;place-items:center;width:36px;height:36px;border-radius:12px;background:var(--tono);color:var(--sobre);box-shadow:0 3px 0 var(--tono-2);font:800 18px/1 'Bricolage Grotesque','Figtree',sans-serif}
+.rk-steps b{display:block;font-size:15px;line-height:1.3}
+.rk-steps span{display:block;font-size:14px;line-height:1.45;color:var(--bruma)}
+.rk-chips{display:flex;flex-wrap:wrap;gap:5px;margin:0}
+.rk-chips>span{padding:3px 7px;border-radius:8px;border:2px solid var(--linea);background:var(--papel);font-size:12px;font-weight:700;line-height:1.35;overflow-wrap:anywhere}
+.rk-opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.rk-opts>div{min-width:0;padding:10px 10px 12px;border-radius:14px;border:2px solid var(--linea-2);background:var(--hueco)}
+.rk-opts>.wide{grid-column:1/-1}
+.rk-opts b{display:block;margin-bottom:6px;font-size:13px}
+.rk-opts small{display:block;margin-top:7px;font-size:12px;line-height:1.4;color:var(--bruma)}
+.rk-minis{display:grid;gap:8px;margin:0 0 12px}
+.rk-minis>div{padding:12px 14px;border-radius:16px;border:2px solid var(--linea-2);background:var(--hueco)}
+.rk-minis b{display:block;margin-bottom:2px;font-size:14px}
+.rk-minis span{display:block;font-size:13px;line-height:1.45;color:var(--bruma)}
+/* Las tarjetas de los relojes y de los modos: el color va en el canto. */
+.rk-cards{display:grid;gap:10px}
+.rk-card{min-width:0;padding:14px;border-radius:18px;border:2px solid var(--linea-2);border-top:6px solid var(--tono);background:var(--papel)}
+.rk-card h4{margin:0 0 8px}
+.rk-card header{display:flex;align-items:center;gap:10px;margin:0 0 10px}
+.rk-card header h4{margin:0}
+.rk-card p{margin:0 0 10px;font-size:14px;line-height:1.45;color:var(--bruma)}
+.rk-card .rk-chips{margin:0 0 10px;color:var(--tinta)}
+.rk-card dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 10px;margin:0;font-size:13px;line-height:1.4}
+.rk-card dt{font-weight:800}
+.rk-card dd{margin:0;color:var(--bruma)}
+.rk-card .rk-foot{margin:0;padding-top:10px;border-top:2px dashed var(--linea);font-size:13px;font-weight:700;color:var(--tinta)}
+/* Los puntos: la suma, lo que vale cada final, las barras y el recibo. */
+.rk-sum{display:flex;align-items:stretch;gap:6px;margin:0 0 8px}
+.rk-sum>div{flex:1 1 0;min-width:0;padding:13px 4px 11px;border-radius:16px;background:var(--tono);color:var(--sobre);box-shadow:0 4px 0 var(--tono-2);text-align:center}
+.rk-sum b{display:block;color:inherit;font:800 24px/1 'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.02em}
+.rk-sum span{display:block;margin-top:5px;font-size:11px;font-weight:800;line-height:1.2;overflow-wrap:anywhere}
+.rk-sum>i{align-self:center;color:var(--bruma);font:800 20px/1 'Bricolage Grotesque','Figtree',sans-serif;font-style:normal}
+.rk-pts{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.rk-pts li{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 12px;padding:10px 12px;border-radius:14px;border:2px solid var(--linea-2);background:var(--hueco);font-size:14px;line-height:1.35}
+.rk-pts span{flex:1 1 150px;min-width:0}
+.rk-pts b{margin-left:auto;font:800 14px/1.3 'JetBrains Mono',ui-monospace,monospace;text-align:right}
+.rk-bars{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));align-items:end;gap:6px;margin:0 0 6px}
+.rk-bars>div{display:flex;flex-direction:column;align-items:center;gap:4px}
+.rk-bars b{font:800 14px/1 'JetBrains Mono',ui-monospace,monospace}
+.rk-bars i{display:block;width:100%;border-radius:9px 9px 4px 4px;background:var(--coral)}
+.rk-bars span{color:var(--bruma);font:700 13px/1 'JetBrains Mono',ui-monospace,monospace}
+.rk-axis{margin:0;text-align:center;font-size:12px;font-weight:700;color:var(--bruma)}
+.rk-ticket{margin:20px 0 0;padding:16px;border-radius:18px;border:2px dashed var(--linea-3);background:var(--papel-2)}
+.rk-ticket h4{margin:0 0 6px}
+.rk-ticket p{margin:0 0 12px;font-size:14px;color:var(--bruma)}
+.rk-ticket dl{display:grid;gap:8px;margin:0}
+.rk-ticket dl>div{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.rk-ticket dt{font-size:14px;font-weight:800}
+.rk-ticket dt small{display:block;font-size:12px;font-weight:500;line-height:1.35;color:var(--bruma)}
+.rk-ticket dd{margin:0;white-space:nowrap;font:800 16px/1.3 'JetBrains Mono',ui-monospace,monospace}
+.rk-ticket .tot{padding-top:10px;border-top:2px solid var(--tinta)}
+.rk-ticket .tot dd{font-size:18px;color:var(--azul-texto)}
+/* Las insignias, con su dibujo y como se ganan. */
+.rk-badges{display:grid;gap:8px;margin:0 0 14px}
+.rk-badges>div{display:grid;grid-template-columns:40px minmax(0,1fr);align-items:center;column-gap:12px;padding:10px 12px;border-radius:16px;border:2px solid var(--linea-2);background:var(--papel)}
+.rk-badges>div>span{grid-row:1/span 2;width:40px;height:40px}
+.rk-badges b{align-self:end;font-size:14px;line-height:1.25}
+.rk-badges small{align-self:start;font-size:13px;line-height:1.35;color:var(--bruma)}
+/* Las preguntas se despliegan: <details>, que no necesita script. */
+.rk-faq{margin:0 0 8px;border-radius:16px;border:2px solid var(--linea-2);background:var(--papel)}
+.rk-faq summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:50px;padding:12px 16px 12px 14px;list-style:none;cursor:pointer;font-size:15px;font-weight:800;line-height:1.3}
+.rk-faq summary::-webkit-details-marker{display:none}
+.rk-faq summary::after{content:"";flex:0 0 auto;width:9px;height:9px;margin-top:-4px;border-right:3px solid var(--bruma);border-bottom:3px solid var(--bruma);transform:rotate(45deg);transition:transform .15s ease}
+.rk-faq[open] summary::after{margin-top:4px;transform:rotate(-135deg)}
+.rk-faq>div{padding:0 14px 14px;font-size:14px;line-height:1.5;color:var(--bruma)}
+/* El pie de cada capitulo: la unica accion llena de la pantalla es «siguiente». */
+.rk-step{display:flex;align-items:center;gap:10px;margin:22px 0 0;padding:16px 0 4px;border-top:2px solid var(--linea-2)}
+.rk-step a{display:inline-flex;align-items:center;gap:7px;min-height:46px;padding:0 14px;border-radius:14px;border:2px solid var(--linea);background:var(--papel);color:var(--tinta);box-shadow:0 4px 0 var(--linea);font-size:14px;font-weight:800;text-decoration:none;white-space:nowrap;transition:transform .08s ease,box-shadow .08s ease}
+.rk-step a:active{transform:translateY(4px);box-shadow:none}
+.rk-step a.rk-next{margin-left:auto;border-color:var(--azul);background:var(--azul);color:var(--sobre-azul);box-shadow:0 4px 0 var(--azul-2)}
+.rk-count{color:var(--bruma);font:700 13px/1 'JetBrains Mono',ui-monospace,monospace;white-space:nowrap}
+.rk-prev+.rk-count{margin:0 auto}
+/* En un telefono estrecho «anterior» se queda en su flecha: el nombre del
+   capitulo siguiente es lo que tiene que caber. El texto sigue ahi para quien
+   no ve la pantalla. */
+@media (max-width:419px){
+  .rk-prev .rk-lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+}
+@media (max-width:359px){
+  .rk-count{display:none}
+}
+@media (min-width:480px){
+  .rk-minis{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (min-width:600px){
+  .rk-cards,.rk-badges{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+/* Dentro del juego: un capitulo a la vez, el que marca paintRules(). */
+.rk.live .rk-ch{display:none}
+.rk.live .rk-ch.on{display:block}
+.rk-nav a.on{border-color:var(--tinta);background:var(--tinta);color:var(--sobre-tinta);box-shadow:0 3px 0 var(--tinta-2)}
+/* Sin script: el capitulo abierto es el que senala la direccion (#rk3), y el
+   primero cuando no senala ninguno. Un navegador que no entiende :has() los
+   ensena todos seguidos, con la fila de arriba como indice. */
+@supports selector(:has(*)){
+  .rk:not(.live) .rk-ch{display:none}
+  .rk:not(.live) .rk-ch:target,.rk:not(.live):not(:has(.rk-ch:target)) #rk1{display:block}
+  .rk:not(.live):not(:has(.rk-ch:target)) .rk-nav a[href="#rk1"],
+  .rk:not(.live):has(#rk1:target) .rk-nav a[href="#rk1"],.rk:not(.live):has(#rk2:target) .rk-nav a[href="#rk2"],
+  .rk:not(.live):has(#rk3:target) .rk-nav a[href="#rk3"],.rk:not(.live):has(#rk4:target) .rk-nav a[href="#rk4"],
+  .rk:not(.live):has(#rk5:target) .rk-nav a[href="#rk5"],.rk:not(.live):has(#rk6:target) .rk-nav a[href="#rk6"],
+  .rk:not(.live):has(#rk7:target) .rk-nav a[href="#rk7"]{border-color:var(--tinta);background:var(--tinta);color:var(--sobre-tinta);box-shadow:0 3px 0 var(--tinta-2)}
+}
+@media print{
+  .rk .rk-ch{display:block!important}
+  .rk-nav,.rk-step{display:none!important}
+}
+/* guia:fin */
 </style>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://picasyfijas.fans/en"},{"@type":"ListItem","position":2,"name":"How to play","item":"https://picasyfijas.fans/en/how-to-play"}]}</script>
 </head>
@@ -103,31 +292,193 @@
   <main class="card">
     <h1>How to play Picas y Fijas</h1>
     <p class="intro">Picas y Fijas is a two-player deduction game, known in English as <b>Bulls and Cows</b> and closely related to <b>Mastermind</b>. Each player hides a secret code and the first to crack their opponent's code wins. It is free and runs in the browser, with nothing to install.</p>
-    <div class="rules"><ol>
-    <li>Each player registers a <b>username</b> and protects it with a <b>4-to-8-digit PIN</b>. The name is also used in the ranking.</li>
-    <li>One player <b>creates the game</b> and picks the rules:
-      <ul>
-        <li><b>Mode</b>: numbers 0-9 or <b>colors</b> (4, 6 or 8 colors, Mastermind style).</li>
-        <li><b>Positions</b>: 3, 4, 5 or 6.</li>
-        <li><b>Repeats</b>: allowed or not.</li>
-        <li><b>Attempt limit</b>: none, 6 or 10 per player.</li>
-        <li><b>Clock</b>: none; <b>per turn</b> (30 s, 60 s or 2 min), and reaching zero passes the turn to your opponent; a <b>time bank</b> (3, 5 or 10 min each, with an optional increment per move), just like chess: only the clock of whoever is playing runs, there are no pauses and running out of bank loses the game; or <b>correspondence</b> (1 or 3 days per move), which keeps running even when both players close the game.</li>
-        <li><b>Visibility</b>: public (lobby) or private (code only).</li>
-        <li><b>Reveal codes at the end</b>: off by default; when enabled, each player sees their opponent's secret after the game.</li>
+    <div class="rules"><div class="rk">
+    <nav class="rk-nav" aria-label="Chapters">
+      <a href="#rk1"><span data-ico="bombilla" data-ico-size="18"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M12.2 3.4c3.3-.2 5.9 2.3 5.8 5.4-.1 1.9-.9 3-1.9 4.1-.7.8-1.1 1.6-1.2 2.6-1.9.3-3.9.3-5.8 0-.1-1-.5-1.8-1.2-2.6C6.9 11.8 6.1 10.7 6 8.8c-.1-2.9 2.3-5.3 5.4-5.4"></path><path class="dl" d="M9.6 18.2c1.6.3 3.2.3 4.8 0M10.5 20.6c1 .2 2 .2 3 0"></path></svg></span>The basics</a>
+      <a href="#rk2"><span data-ico="partida" data-ico-size="18"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect class="dl" x="3" y="4" width="8" height="10" rx="2"></rect><rect class="dl" x="13" y="10" width="8" height="10" rx="2"></rect></svg></span>The duel</a>
+      <a href="#rk3"><span data-ico="reloj" data-ico-size="18"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M12.3 3.7c4.6-.2 8.5 3.7 8.3 8.4-.2 4.5-3.9 8.1-8.4 8.1-4.7 0-8.5-3.9-8.2-8.6.3-4.2 3.7-7.5 7.9-7.6"></path><path class="dl" d="M11.9 7.4c.2 1.7.2 3.3.1 4.8 1.1.8 2.2 1.4 3.3 1.9"></path></svg></span>The clock</a>
+      <a href="#rk4"><span data-ico="dado" data-ico-size="18"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M4.8 5c4.8-.5 9.6-.5 14.4 0 .5 4.7.5 9.3 0 14-4.8.5-9.6.5-14.4 0-.5-4.7-.5-9.3 0-14Z"></path><circle cx="8.6" cy="8.6" r="1.5" fill="currentColor"></circle><circle cx="12" cy="12" r="1.5" fill="currentColor"></circle><circle cx="15.4" cy="15.4" r="1.5" fill="currentColor"></circle></svg></span>More modes</a>
+      <a href="#rk5"><span data-ico="podio" data-ico-size="18"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="12" width="5" height="9" rx="1.5" fill="currentColor"></rect><rect x="9.5" y="5" width="5" height="16" rx="1.5" fill="currentColor"></rect><rect x="16" y="9" width="5" height="12" rx="1.5" fill="currentColor"></rect></svg></span>Points</a>
+      <a href="#rk6"><span data-ico="estrella" data-ico-size="18"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M12 3.4 14.5 9.2 20.9 9.9 16.1 14.2 17.4 20.5 12 17.4 6.6 20.5 7.9 14.2 3.1 9.9 9.5 9.2Z"></path></svg></span>Badges</a>
+      <a href="#rk7"><span data-ico="interrogacion" data-ico-size="18"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M8.7 8.8c-.2-2.4 1.3-3.9 3.4-3.9 2.1 0 3.5 1.3 3.5 3.1 0 2.4-3 2.7-3.5 5.1-.1.5-.1 1-.1 1.5"></path><circle cx="12" cy="18.6" r="1.4" fill="currentColor"></circle></svg></span>And more</a>
+    </nav>
+
+    <div class="rk-ch t-azul" id="rk1">
+      <header class="rk-hero"><span class="rk-ic" data-ico="bombilla" data-ico-size="28"><svg class="ico" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M12.2 3.4c3.3-.2 5.9 2.3 5.8 5.4-.1 1.9-.9 3-1.9 4.1-.7.8-1.1 1.6-1.2 2.6-1.9.3-3.9.3-5.8 0-.1-1-.5-1.8-1.2-2.6C6.9 11.8 6.1 10.7 6 8.8c-.1-2.9 2.3-5.3 5.4-5.4"></path><path class="dl" d="M9.6 18.2c1.6.3 3.2.3 4.8 0M10.5 20.6c1 .2 2 .2 3 0"></path></svg></span><div><h3>The basics</h3><p>Your opponent hides a code. You propose codes and every try comes back with a clue. Whoever cracks the other’s code first wins.</p></div></header>
+      <div class="rk-legend">
+        <div><i class="rk-pip f"></i><b>Fija (F)</b><span>“Fixed”: in the code and in the right spot.</span></div>
+        <div><i class="rk-pip p"></i><b>Pica (P)</b><span>“Present”: in the code, but in another spot.</span></div>
+        <div><i class="rk-pip"></i><b>Nothing</b><span>Not in the code.</span></div>
+      </div>
+      <h4>An example</h4>
+      <div class="rk-ex">
+        <div class="rk-ex-row"><span class="rk-ex-l">Secret code</span><span class="rk-code"><span class="rk-tile sec">4</span><span class="rk-tile sec">2</span><span class="rk-tile sec">7</span><span class="rk-tile sec">1</span></span></div>
+        <div class="rk-ex-row marks"><span class="rk-ex-l">Your try</span><span class="rk-code"><span class="rk-tile">4<i class="rk-pip s f"></i></span><span class="rk-tile">7<i class="rk-pip s p"></i></span><span class="rk-tile">9<i class="rk-pip s"></i></span><span class="rk-tile">3<i class="rk-pip s"></i></span></span></div>
+        <p class="rk-ex-out"><span class="rk-pill f">1 fija</span> <span class="rk-pill p">1 pica</span></p>
+        <ul class="rk-why">
+          <li><i class="rk-pip s f"></i><span>The <b>4</b> is in the right spot: a fija.</span></li>
+          <li><i class="rk-pip s p"></i><span>The <b>7</b> is in the code, but in another spot: a pica.</span></li>
+          <li><i class="rk-pip s"></i><span>The <b>9</b> and the <b>3</b> are not in the code.</span></li>
+        </ul>
+      </div>
+      <p class="rk-call"><b>In a game you only see the totals</b> — “1 fija, 1 pica” — never which digit earned which clue. That is where the deduction begins.</p>
+      <div class="rk-lab" hidden></div>
+      <p class="rk-fine">Color codes work the same way: colored pegs instead of digits, and every color also has its own shape.</p>
+      <nav class="rk-step" aria-label="Change chapter"><span class="rk-count">1 / 7</span><a class="rk-next" href="#rk2">The duel<span data-ico="flecha" data-ico-size="18"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" style="stroke-width:2.6" d="M5 12h13M13 6l6 6-6 6"></path></svg></span></a></nav>
+    </div>
+
+    <div class="rk-ch t-coral" id="rk2">
+      <header class="rk-hero"><span class="rk-ic" data-ico="partida" data-ico-size="28"><svg class="ico" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><rect class="dl" x="3" y="4" width="8" height="10" rx="2"></rect><rect class="dl" x="13" y="10" width="8" height="10" rx="2"></rect></svg></span><div><h3>The duel</h3><p>The classic game: two people, two secret codes and one try per turn.</p></div></header>
+      <ol class="rk-steps">
+        <li><b>Create the game</b><span>Pick the rules and your secret code. You get a 4-character game code and a link to invite someone.</span></li>
+        <li><b>Your opponent joins</b><span>From the lobby, with the code or with the link, and sets their own secret under the same rules. The first turn is drawn at random.</span></li>
+        <li><b>Take turns guessing</b><span>Every try gets its fijas and picas. You can go back to the lobby whenever you like: the game stays open.</span></li>
+        <li><b>First to crack the code wins</b><span>If the player who opened the round cracks it, the other gets one last try to tie. With an attempt limit, if nobody cracks it, it is a draw.</span></li>
+      </ol>
+      <h4>The creator sets the rules</h4>
+      <div class="rk-opts">
+        <div><b>Mode</b><p class="rk-chips"><span>Numbers 0–9</span> <span>Colors: 4, 6 or 8</span></p></div>
+        <div><b>Positions</b><p class="rk-chips"><span>3</span> <span>4</span> <span>5</span> <span>6</span></p></div>
+        <div><b>Repeats</b><p class="rk-chips"><span>Allowed</span> <span>Not allowed</span></p></div>
+        <div><b>Tries</b><p class="rk-chips"><span>No limit</span> <span>6</span> <span>10</span></p></div>
+        <div class="wide"><b>Clock</b><p class="rk-chips"><span>No clock</span> <span>Per turn</span> <span>Time bank</span> <span>Correspondence</span></p><small>All four explained in <a href="#rk3">the next chapter</a>.</small></div>
+        <div><b>Visibility</b><p class="rk-chips"><span>Public</span> <span>Private</span></p><small>A private game only opens with its code.</small></div>
+        <div><b>Codes at the end</b><p class="rk-chips"><span>Hidden</span> <span>Revealed</span></p></div>
+        <div class="wide"><b>Notebook</b><p class="rk-chips"><span>No notebook</span> <span>With notebook</span></p><small>A grid to mark symbols as ruled out or confirmed, plus a warning when a try contradicts your own clues.</small></div>
+      </div>
+      <p class="rk-fine">Don’t feel like choosing? <b>Random game</b> draws the rules for you. You can have up to <b>3 games</b> open at once.</p>
+      <h4>When it ends</h4>
+      <div class="rk-minis">
+        <div><b>Your card</b><span>The result, your tries, the time and the points you take home.</span></div>
+        <div><b>Share</b><span>A grid of your clues that gives away no code.</span></div>
+        <div><b>How it played out</b><span>Every try gets a grade — optimal, solid or wasted — and the move that decided the game is flagged.</span></div>
+        <div><b>Rematch</b><span>Same rules, same opponent, new codes.</span></div>
+      </div>
+      <nav class="rk-step" aria-label="Change chapter"><a class="rk-prev" href="#rk1"><span data-ico="atras" data-ico-size="18"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" style="stroke-width:2.4" d="M19 12H6M11 6l-6 6 6 6"></path></svg></span><span class="rk-lbl">Previous</span></a><span class="rk-count">2 / 7</span><a class="rk-next" href="#rk3">The clock<span data-ico="flecha" data-ico-size="18"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" style="stroke-width:2.6" d="M5 12h13M13 6l6 6-6 6"></path></svg></span></a></nav>
+    </div>
+
+    <div class="rk-ch t-violeta" id="rk3">
+      <header class="rk-hero"><span class="rk-ic" data-ico="reloj" data-ico-size="28"><svg class="ico" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M12.3 3.7c4.6-.2 8.5 3.7 8.3 8.4-.2 4.5-3.9 8.1-8.4 8.1-4.7 0-8.5-3.9-8.2-8.6.3-4.2 3.7-7.5 7.9-7.6"></path><path class="dl" d="M11.9 7.4c.2 1.7.2 3.3.1 4.8 1.1.8 2.2 1.4 3.3 1.9"></path></svg></span><div><h3>The clock</h3><p>Four ways to keep time. It is chosen when the game is created and applies to both players.</p></div></header>
+      <div class="rk-cards">
+        <article class="rk-card t-tinta"><h4>No clock</h4><p class="rk-chips"><span>At your own pace</span></p><p>Play one try now and the next one a few hours later.</p><dl><dt>Closes</dt><dd>After 48 hours with no move from anyone.</dd></dl></article>
+        <article class="rk-card t-azul"><h4>Per turn</h4><p class="rk-chips"><span>30 s</span> <span>60 s</span> <span>2 min</span></p><p>The clock starts over on every turn.</p><dl><dt>At zero</dt><dd>A missed try is recorded and the turn passes to your opponent.</dd><dt>Pause</dt><dd>Yes: the clock stops if someone goes back to the lobby, and there is a manual pause of up to 5 minutes.</dd></dl></article>
+        <article class="rk-card t-coral"><h4>Time bank</h4><p class="rk-chips"><span>3 min</span> <span>5 min</span> <span>10 min</span> <span>+ 3, 5 or 10 s per move</span></p><p>Like chess: each player has a bank and only the bank of whoever is playing runs down.</p><dl><dt>At zero</dt><dd>You lose the game.</dd><dt>Pause</dt><dd>None. Both players need to be there from start to finish.</dd></dl></article>
+        <article class="rk-card t-violeta"><h4>Correspondence</h4><p class="rk-chips"><span>1 day per move</span> <span>3 days per move</span></p><p>For playing without being online together: we tell you when it is your turn, with a notification or by email.</p><dl><dt>At zero</dt><dd>A missed try is recorded and the turn passes to your opponent.</dd><dt>Pause</dt><dd>None: the deadline keeps running even if you close the game.</dd></dl></article>
+      </div>
+      <p class="rk-call"><b>The server keeps the time.</b> Changing the clock on your device does not buy a single second. The clock starts once both players are in.</p>
+      <nav class="rk-step" aria-label="Change chapter"><a class="rk-prev" href="#rk2"><span data-ico="atras" data-ico-size="18"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" style="stroke-width:2.4" d="M19 12H6M11 6l-6 6 6 6"></path></svg></span><span class="rk-lbl">Previous</span></a><span class="rk-count">3 / 7</span><a class="rk-next" href="#rk4">More modes<span data-ico="flecha" data-ico-size="18"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" style="stroke-width:2.6" d="M5 12h13M13 6l6 6-6 6"></path></svg></span></a></nav>
+    </div>
+
+    <div class="rk-ch t-tinta" id="rk4">
+      <header class="rk-hero"><span class="rk-ic" data-ico="dado" data-ico-size="28"><svg class="ico" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M4.8 5c4.8-.5 9.6-.5 14.4 0 .5 4.7.5 9.3 0 14-4.8.5-9.6.5-14.4 0-.5-4.7-.5-9.3 0-14Z"></path><circle cx="8.6" cy="8.6" r="1.5" fill="currentColor"></circle><circle cx="12" cy="12" r="1.5" fill="currentColor"></circle><circle cx="15.4" cy="15.4" r="1.5" fill="currentColor"></circle></svg></span><div><h3>More modes</h3><p>There is not always an opponent free. That is what these four are for.</p></div></header>
+      <div class="rk-cards">
+        <article class="rk-card t-violeta"><header><span class="rk-ic sm" data-ico="gente" data-ico-size="20"><svg class="ico" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="9" r="3" fill="currentColor"></circle><circle cx="18" cy="9" r="3" fill="currentColor"></circle><circle cx="12" cy="6" r="3" fill="currentColor"></circle><rect x="5" y="15" width="14" height="5" rx="2.5" fill="currentColor"></rect></svg></span><h4>The arena</h4></header><p class="rk-chips"><span>3 to 8 players</span> <span>One code</span> <span>No turns</span> <span>6 or 10 tries</span></p><p>The server draws the code and everyone attacks it at once. You see the live standings — tries used and best number of fijas for each player — but never anyone else’s tries. Whoever cracks it in the fewest tries wins. The host starts it, with at least 3 players.</p><p class="rk-foot">No season points. Winning it earns the “First arena” badge.</p></article>
+        <article class="rk-card t-sol"><header><span class="rk-ic sm" data-ico="llama" data-ico-size="20"><svg class="ico" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M12 3.4c-.4 3-1.6 5.2-3.6 6.6-1.6 1.2-2.4 2.8-2.4 4.8 0 3.2 2.6 5.8 6 5.8s6-2.6 6-5.8c0-3.4-2-7.2-6-11.4Z"></path><path class="dl" d="M12 12.4c-1.4 1.4-2.1 2.7-2.1 3.9 0 1.3 1 2.3 2.1 2.3s2.1-1 2.1-2.3c0-1.2-.7-2.5-2.1-3.9Z"></path></svg></span><h4>Code of the day</h4></header><p class="rk-chips"><span>4 digits, no repeats</span> <span>8 tries</span> <span>Once a day</span></p><p>The same code for everyone. It changes at midnight UTC. The day’s standings rank by tries and then by time. When you finish you can share your grid without revealing the code.</p><p class="rk-foot">No season points.</p></article>
+        <article class="rk-card t-azul"><header><span class="rk-ic sm" data-ico="enigma" data-ico-size="20"><svg class="ico" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect class="dl" x="4" y="3" width="16" height="18" rx="3"></rect><path class="dl" d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7"></path><circle cx="12" cy="17" r=".9" fill="currentColor"></circle></svg></span><h4>Puzzles</h4></header><p class="rk-chips"><span>72 puzzles</span> <span>3 levels</span> <span>No clock</span></p><p>We give you the clues from a game you did not play: deduce the only code that fits. With an account, what you solve follows you to any device, and completing a level earns a badge.</p><p class="rk-foot">Playable without an account too.</p></article>
+        <article class="rk-card t-coral"><header><span class="rk-ic sm" data-ico="diana" data-ico-size="20"><svg class="ico" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle class="dl" cx="12" cy="12" r="8.5"></circle><circle class="dl" cx="12" cy="12" r="4.5"></circle><circle cx="12" cy="12" r="1.2" fill="currentColor"></circle></svg></span><h4>Practice</h4></header><p class="rk-chips"><span>Solo</span> <span>Against the computer</span> <span>Offline</span></p><p>The same rules as a duel, with nobody to wait for. The computer has three levels — easy, normal and expert — and explains every move it makes.</p><p class="rk-foot">No account needed, no effect on the ranking.</p></article>
+      </div>
+      <nav class="rk-step" aria-label="Change chapter"><a class="rk-prev" href="#rk3"><span data-ico="atras" data-ico-size="18"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" style="stroke-width:2.4" d="M19 12H6M11 6l-6 6 6 6"></path></svg></span><span class="rk-lbl">Previous</span></a><span class="rk-count">4 / 7</span><a class="rk-next" href="#rk5">Points<span data-ico="flecha" data-ico-size="18"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" style="stroke-width:2.6" d="M5 12h13M13 6l6 6-6 6"></path></svg></span></a></nav>
+    </div>
+
+    <div class="rk-ch t-azul" id="rk5">
+      <header class="rk-hero"><span class="rk-ic" data-ico="podio" data-ico-size="28"><svg class="ico" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="12" width="5" height="9" rx="1.5" fill="currentColor"></rect><rect x="9.5" y="5" width="5" height="16" rx="1.5" fill="currentColor"></rect><rect x="16" y="9" width="5" height="12" rx="1.5" fill="currentColor"></rect></svg></span><div><h3>Points and ranking</h3><p>The ranking does not sort by wins: it sorts by <b>points</b>. Every duel hands them out when it ends, based on how hard it was and how soon you cracked the code.</p></div></header>
+      <div class="rk-sum">
+        <div class="t-azul"><b>10</b><span>for the win</span></div><i>+</i>
+        <div class="t-violeta"><b>0–14</b><span>difficulty</span></div><i>+</i>
+        <div class="t-coral"><b>0–12</b><span>economy</span></div>
+      </div>
+      <h4>What each ending is worth</h4>
+      <ul class="rk-pts">
+        <li><span>You win by cracking the code</span><b>10 + difficulty + economy</b></li>
+        <li><span>You draw</span><b>4 + half the difficulty</b></li>
+        <li><span>You lose</span><b>1</b></li>
+        <li><span>You abandon</span><b>0</b></li>
+        <li><span>You win because your opponent abandons</span><b>6</b></li>
+        <li><span>You win without cracking the code: your opponent’s time bank runs out</span><b>10 + difficulty</b></li>
       </ul>
-      They set their secret code and get a <b>4-character game code</b> to share.</li>
-    <li>The other player <b>joins</b> from the lobby or with the code, and sets their own secret with the same rules.</li>
-    <li>Players take turns guessing. Each guess is answered with <span class="pill f">Fixed</span> and <span class="pill p">Present</span>.</li>
-    <li>Whoever <b>cracks the opponent's code first</b> wins. If the player who started cracks it, the other gets one <b>last try to tie</b>. With an attempt limit, if nobody cracks it → <b>draw</b>.</li>
-    <li>When it ends: a <b>Rematch</b> button (same settings, same opponent). When one proposes it, the other sees <b>“Go to rematch”</b>.</li>
-    <li>And there is more than one way to play: <b>the arena</b> puts 3 to 8 players against a single code drawn by the server, with no turns and an attempt limit; <b>the daily code</b> is one secret a day, the same for everyone, with a single try; <b>the puzzles</b> are solved alone from a set of given clues; and <b>practice</b> is played alone or against the computer, offline and without an account.</li>
-  </ol>
-  <div class="note"><b>Fixed (F)</b> = correct digit in the <b>correct position</b>. &nbsp; <b>Present (P)</b> = correct digit in a <b>different position</b>.</div>
-  <div class="note"><b>Colors mode:</b> same F/P scoring, colored pegs instead of digits.</div>
-  <div class="note"><b>Asynchronous play:</b> without a turn timer, you can return to the lobby and continue minutes or hours later; your opponent can also play when available.</div>
-  <div class="note"><b>Timer:</b> when it reaches 0, the turn automatically passes to the opponent and counts as a used attempt when the game has an attempt limit. If someone returns to the lobby, the clock stops until both return. A temporary manual pause is only available in timed games.</div>
-  <div class="note"><b>Leaving or cancelling:</b> returning to the lobby does not delete the game. The creator can cancel a game that is still waiting for an opponent. Abandoning a game in progress awards the win to the opponent and records a loss.</div>
-  <div class="note strategy-download"><b>Made it to the end? You already have an advantage.</b><br>Discover strategies for every game type.<br><a href="/picas-y-fijas-strategy-guide-en.pdf" download>Download the strategy guide (PDF)</a></div></div>
+      <p class="rk-fine">A loss is worth 1 and abandoning 0: walking away is never cheaper than finishing.</p>
+      <h4>Difficulty: 0 to 14</h4>
+      <p>It comes from how many different codes the rules allow, and it goes up if you accept pressure:</p>
+      <ul class="rk-pts">
+        <li><span>3 digits, no repeats · 720 codes</span><b>6</b></li>
+        <li><span>4 digits, no repeats · 5,040 codes</span><b>7</b></li>
+        <li><span>6 digits with repeats · 1,000,000 codes</span><b>12</b></li>
+        <li><span>With an attempt limit</span><b>+2</b></li>
+        <li><span>With a per-turn clock or a time bank</span><b>+2</b></li>
+      </ul>
+      <p class="rk-fine">Correspondence adds nothing: it gives days, not pressure. The cap is 14.</p>
+      <h4>Economy: 0 to 12</h4>
+      <p>It rewards cracking the code early. Count your tries:</p>
+      <div class="rk-bars">
+        <div><b>12</b><i style="height:96px"></i><span>1</span></div>
+        <div><b>10</b><i style="height:80px"></i><span>2</span></div>
+        <div><b>8</b><i style="height:64px"></i><span>3</span></div>
+        <div><b>6</b><i style="height:48px"></i><span>4</span></div>
+        <div><b>4</b><i style="height:32px"></i><span>5</span></div>
+        <div><b>2</b><i style="height:16px"></i><span>6</span></div>
+        <div><b>0</b><i style="height:4px"></i><span>7+</span></div>
+      </div>
+      <p class="rk-axis">tries to crack the code</p>
+      <div class="rk-ticket">
+        <h4>An example</h4>
+        <p>You win a game with <b>4 digits, no repeats</b>, on a <b>per-turn clock</b>, and you crack the code on your <b>fifth try</b>.</p>
+        <dl>
+          <div><dt>Win</dt><dd>10</dd></div>
+          <div><dt>Difficulty<small>5,040 possible codes (7) + clock (2)</small></dt><dd>9</dd></div>
+          <div><dt>Economy<small>5 tries</small></dt><dd>4</dd></div>
+          <div class="tot"><dt>Total</dt><dd>23 points</dd></div>
+        </dl>
+      </div>
+      <h4>Seasons</h4>
+      <div class="rk-minis">
+        <div><b>This season</b><span>The calendar month, in UTC. On the 1st everyone starts from zero.</span></div>
+        <div><b>All time</b><span>The total of all your games. It never resets.</span></div>
+      </div>
+      <p>Each table shows the top 50 and your own position, wherever you are. On equal points, whoever has more wins goes first, and then whoever has played fewer games.</p>
+      <h4>What earns no points</h4>
+      <p class="rk-chips"><span>Practice</span> <span>Puzzles</span> <span>Code of the day</span> <span>The arena</span></p>
+      <p class="rk-fine">Only duels against another person score.</p>
+      <nav class="rk-step" aria-label="Change chapter"><a class="rk-prev" href="#rk4"><span data-ico="atras" data-ico-size="18"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" style="stroke-width:2.4" d="M19 12H6M11 6l-6 6 6 6"></path></svg></span><span class="rk-lbl">Previous</span></a><span class="rk-count">5 / 7</span><a class="rk-next" href="#rk6">Badges<span data-ico="flecha" data-ico-size="18"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" style="stroke-width:2.6" d="M5 12h13M13 6l6 6-6 6"></path></svg></span></a></nav>
+    </div>
+
+    <div class="rk-ch t-sol" id="rk6">
+      <header class="rk-hero"><span class="rk-ic" data-ico="estrella" data-ico-size="28"><svg class="ico" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M12 3.4 14.5 9.2 20.9 9.9 16.1 14.2 17.4 20.5 12 17.4 6.6 20.5 7.9 14.2 3.1 9.9 9.5 9.2Z"></path></svg></span><div><h3>Badges and profile</h3><p>Twelve badges, earned by how you play, not by how much.</p></div></header>
+      <div class="rk-badges">
+        <div><span data-badge="first_win"><svg class="badge-art" width="40" height="40" viewBox="0 0 44 44" fill="none" aria-hidden="true"><circle class="bg" cx="22" cy="22" r="20" fill="#2F5BFF"></circle><g class="fg"><path d="M14 22.5l5.5 5.5L30 17" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"></path></g></svg></span><b>First win</b><small>Win your first game.</small></div>
+        <div><span data-badge="solved_4"><svg class="badge-art" width="40" height="40" viewBox="0 0 44 44" fill="none" aria-hidden="true"><circle class="bg" cx="22" cy="22" r="20" fill="#FFC531"></circle><g class="fg"><path d="M24 9 14 25h8l-2 10 10-16h-8Z" fill="#1B1638"></path></g></svg></span><b>Solved in 4</b><small>Crack a code in four tries or fewer.</small></div>
+        <div><span data-badge="fast_finish"><svg class="badge-art" width="40" height="40" viewBox="0 0 44 44" fill="none" aria-hidden="true"><circle class="bg" cx="22" cy="22" r="20" fill="#FF6B5E"></circle><g class="fg"><circle cx="22" cy="23" r="10" fill="none" stroke="#1B1638" stroke-width="3.5"></circle><path d="M22 17.5v5.5l3.8 2.6M19 10h6" fill="none" stroke="#1B1638" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"></path></g></svg></span><b>Five seconds left</b><small>Win with five seconds or less on the clock.</small></div>
+        <div><span data-badge="expert_rules"><svg class="badge-art" width="40" height="40" viewBox="0 0 44 44" fill="none" aria-hidden="true"><circle class="bg" cx="22" cy="22" r="20" fill="#7C5CFF"></circle><g class="fg"><circle cx="22" cy="22" r="9.5" fill="none" stroke="#fff" stroke-width="3.5"></circle><circle cx="22" cy="22" r="3.2" fill="#fff"></circle></g></svg></span><b>Expert rules</b><small>Win by cracking a code under rules of difficulty 12 or more.</small></div>
+        <div><span data-badge="arena_win"><svg class="badge-art" width="40" height="40" viewBox="0 0 44 44" fill="none" aria-hidden="true"><circle class="bg" cx="22" cy="22" r="20" fill="#625B7A"></circle><g class="fg"><rect x="9" y="22" width="8" height="12" rx="1.5" fill="#FFF5E8"></rect><rect x="18" y="14" width="8" height="20" rx="1.5" fill="#FFC531"></rect><rect x="27" y="26" width="8" height="8" rx="1.5" fill="#FFF5E8"></rect><path d="M22 6.5l1.6 3.2 3.5.5-2.5 2.5.6 3.5-3.2-1.7-3.2 1.7.6-3.5-2.5-2.5 3.5-.5Z" fill="#FFC531"></path></g></svg></span><b>First arena</b><small>Crack an arena code before everyone else.</small></div>
+        <div><span data-badge="wins_10"><svg class="badge-art" width="40" height="40" viewBox="0 0 44 44" fill="none" aria-hidden="true"><circle class="bg" cx="22" cy="22" r="20" fill="#5FE0C9"></circle><g class="fg"><path d="M22 10.5l3.4 6.9 7.6 1.1-5.5 5.4 1.3 7.6L22 27.9l-6.8 3.6 1.3-7.6-5.5-5.4 7.6-1.1Z" fill="#1B1638"></path></g></svg></span><b>Ten wins</b><small>Win ten games.</small></div>
+        <div><span data-badge="wins_50"><svg class="badge-art" width="40" height="40" viewBox="0 0 44 44" fill="none" aria-hidden="true"><circle class="bg" cx="22" cy="22" r="19" fill="#1B1638" stroke="#FFC531" stroke-width="2"></circle><g class="fg"><path d="M12 29 10 16l6.2 4.4L22 12l5.8 8.4L34 16l-2 13Z" fill="#FFC531"></path><rect x="12" y="30" width="20" height="3.6" rx="1.6" fill="#FFC531"></rect></g></svg></span><b>Fifty wins</b><small>Win fifty games.</small></div>
+        <div><span data-badge="days_7"><svg class="badge-art" width="40" height="40" viewBox="0 0 44 44" fill="none" aria-hidden="true"><circle class="bg" cx="22" cy="22" r="20" fill="#B18CFF"></circle><g class="fg"><rect x="12" y="14" width="20" height="18" rx="4" fill="#1B1638"></rect><path d="M17 11v5M27 11v5" fill="none" stroke="#1B1638" stroke-width="3" stroke-linecap="round"></path><path d="M16.5 21.5h11M16.5 26.5h6" fill="none" stroke="#FFF5E8" stroke-width="2.4" stroke-linecap="round"></path></g></svg></span><b>Seven days in a row</b><small>Play seven days in a row.</small></div>
+        <div><span data-badge="puzzles_easy"><svg class="badge-art" width="40" height="40" viewBox="0 0 44 44" fill="none" aria-hidden="true"><circle class="bg" cx="22" cy="22" r="20" fill="#2F5BFF"></circle><g class="fg"><rect x="15" y="11.5" width="14" height="21" rx="4" fill="#FFC531"></rect><path d="M19.5 19a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7" fill="none" stroke="#1B1638" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="22" cy="26.6" r="1.3" fill="#1B1638"></circle></g></svg></span><b>Easy puzzles</b><small>Solve all 24 easy puzzles.</small></div>
+        <div><span data-badge="puzzles_normal"><svg class="badge-art" width="40" height="40" viewBox="0 0 44 44" fill="none" aria-hidden="true"><circle class="bg" cx="22" cy="22" r="20" fill="#7C5CFF"></circle><g class="fg"><rect x="10" y="13.5" width="11" height="17" rx="3.2" fill="#FFF5E8"></rect><rect x="23" y="13.5" width="11" height="17" rx="3.2" fill="#FFC531"></rect><path d="M26.5 20a2 2 0 1 1 2.8 1.84c-.56.32-.8.72-.8 1.36" fill="none" stroke="#1B1638" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="28.5" cy="26" r="1.1" fill="#1B1638"></circle></g></svg></span><b>Normal puzzles</b><small>Solve all 24 normal puzzles.</small></div>
+        <div><span data-badge="puzzles_expert"><svg class="badge-art" width="40" height="40" viewBox="0 0 44 44" fill="none" aria-hidden="true"><circle class="bg" cx="22" cy="22" r="20" fill="#FF6B5E"></circle><g class="fg"><rect x="6.5" y="15" width="9" height="14" rx="2.6" fill="#FFF5E8"></rect><rect x="17.5" y="15" width="9" height="14" rx="2.6" fill="#FFC531"></rect><rect x="28.5" y="15" width="9" height="14" rx="2.6" fill="#FFF5E8"></rect><path d="M20.35 20.35a1.65 1.65 0 1 1 2.31 1.52c-.46.26-.66.6-.66 1.12" fill="none" stroke="#1B1638" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="22" cy="25.4" r=".95" fill="#1B1638"></circle></g></svg></span><b>Expert puzzles</b><small>Solve all 24 expert puzzles.</small></div>
+        <div><span data-badge="puzzles_all"><svg class="badge-art" width="40" height="40" viewBox="0 0 44 44" fill="none" aria-hidden="true"><circle class="bg" cx="22" cy="22" r="19" fill="#1B1638" stroke="#FFC531" stroke-width="2"></circle><g class="fg"><path fill-rule="evenodd" d="M18 10.5h8a5 5 0 0 1 5 5v13a5 5 0 0 1-5 5h-8a5 5 0 0 1-5-5v-13a5 5 0 0 1 5-5Zm4 5.6l1.53 4.1 4.37.18-3.43 2.72 1.17 4.22L22 24.9l-3.64 2.42 1.17-4.22-3.43-2.72 4.37-.18Z" fill="#FFC531"></path></g></svg></span><b>Every puzzle</b><small>Solve all 72, across the three levels.</small></div>
+      </div>
+      <p>New ones show up on the end card of the game that earns them, and your profile shows all twelve: the ones you have in color, the rest dimmed.</p>
+      <h4>Profile, rivals and history</h4>
+      <div class="rk-minis">
+        <div><b>Public profile</b><span>Tap a name in the ranking or among your rivals: points, games, wins, streaks, favourite rules and badges. Never the email.</span></div>
+        <div><b>Rivals</b><span>Who you have played, the score between the two of you, who is online and a button to challenge them to a rematch.</span></div>
+        <div><b>History</b><span>Your last 40 games, with filters, and your numbers: win rate, average tries and streaks.</span></div>
+      </div>
+      <nav class="rk-step" aria-label="Change chapter"><a class="rk-prev" href="#rk5"><span data-ico="atras" data-ico-size="18"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" style="stroke-width:2.4" d="M19 12H6M11 6l-6 6 6 6"></path></svg></span><span class="rk-lbl">Previous</span></a><span class="rk-count">6 / 7</span><a class="rk-next" href="#rk7">And more<span data-ico="flecha" data-ico-size="18"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" style="stroke-width:2.6" d="M5 12h13M13 6l6 6-6 6"></path></svg></span></a></nav>
+    </div>
+
+    <div class="rk-ch t-coral" id="rk7">
+      <header class="rk-hero"><span class="rk-ic" data-ico="interrogacion" data-ico-size="28"><svg class="ico" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" d="M8.7 8.8c-.2-2.4 1.3-3.9 3.4-3.9 2.1 0 3.5 1.3 3.5 3.1 0 2.4-3 2.7-3.5 5.1-.1.5-.1 1-.1 1.5"></path><circle cx="12" cy="18.6" r="1.4" fill="currentColor"></circle></svg></span><div><h3>And more</h3><p>Good to know before your first game.</p></div></header>
+      <details class="rk-faq"><summary>Do I need an account?</summary><div>To play against other people, yes: an email, a name and a 4-to-8-digit PIN. The account is activated by opening the link we email you, valid for 3 days. <b>Without an account</b> you can practice and solve puzzles. If you forget your PIN, an emailed link resets it.</div></details>
+      <details class="rk-faq"><summary>What happens if I leave a game?</summary><div><b>Going back to the lobby neither deletes nor abandons it</b>: it stays among your games. <b>Abandoning</b> does end it: your opponent wins and you get 0 points. Whoever created a game can <b>cancel</b> it while it is still waiting for an opponent, at no cost.</div></details>
+      <details class="rk-faq"><summary>How long does a game wait?</summary><div>A public game waits 2 hours for an opponent; a private invitation, 48 hours. A game in progress closes after 48 hours without activity, except correspondence games, which follow their own deadline.</div></details>
+      <details class="rk-faq"><summary>How do I talk to my opponent?</summary><div>There is a general chat in the lobby and a private chat in every game. The <b>nudge</b> tells your opponent it is their turn, and the <b>quick reactions</b> — Good luck!, So close!, Nice move!, Good game! — take a single tap.</div></details>
+      <details class="rk-faq"><summary>Can I watch other people’s games?</summary><div>Yes: from the lobby, any public game in progress. You see the tries, the clues and the clock live; never a code, not even at the end. The game chat can be read, not written to.</div></details>
+      <details class="rk-faq"><summary>Will it tell me when it is my turn?</summary><div>With the game open, with sound and vibration. With the game closed, through notifications if you turn them on; on iPhone they only arrive once the game is installed on your home screen. <a href="/en/install" target="_blank" rel="noopener">How to install it</a></div></details>
+      <div class="note strategy-download"><b>Made it to the end? You already have an advantage.</b><br>Discover strategies for every game type.<br><a href="/picas-y-fijas-strategy-guide-en.pdf" download>Download the strategy guide (PDF)</a></div>
+      <nav class="rk-step" aria-label="Change chapter"><a class="rk-prev" href="#rk6"><span data-ico="atras" data-ico-size="18"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path class="dl" style="stroke-width:2.4" d="M19 12H6M11 6l-6 6 6 6"></path></svg></span><span class="rk-lbl">Previous</span></a><span class="rk-count">7 / 7</span></nav>
+    </div>
+  </div></div>
     <a class="btn" href="/en">Play now</a>
   </main>
   <nav class="langs"><a href="/como-se-juega" hreflang="es">Español</a><span>English</span><a href="/fr/comment-jouer" hreflang="fr">Français</a></nav>

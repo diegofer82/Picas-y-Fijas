@@ -17,18 +17,37 @@ FONTS = ('<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesq
 THEME_COLOR = ('<meta name="theme-color" content="#FFF5E8" media="(prefers-color-scheme: light)">\n'
                '<meta name="theme-color" content="#120F24" media="(prefers-color-scheme: dark)">')
 
+# Las paginas de reglas escriben codigos y cifras con la tipografia de los
+# codigos del juego; las de instalacion no la necesitan y no la cargan.
+FONTS_MONO = FONTS.replace("&display=swap", "&family=JetBrains+Mono:wght@700;800&display=swap")
+
 # Los tokens son los de la identidad Plaza, con los mismos nombres que en el
 # `:root` de public/index.html: los dibujos de INSTALL_ART que se copian aqui los
-# piden por ese nombre (--azul, --hueco, --linea, --papel, --bruma-2, --pica).
+# piden por ese nombre (--azul, --hueco, --linea, --papel, --bruma-2, --pica), y
+# la hoja de la guia de reglas, que tambien se copia del juego, pide los demas.
+# --tono, --tono-2, --tono-suave y --sobre son el color del capitulo: la guia los
+# cambia por capitulo y aqui solo tienen su valor de partida.
 STYLE = """
-  :root{--crema:#FFF5E8;--papel:#FFFFFF;--hueco:#F7F0E4;--linea:#E9DFD0;--linea-2:#F2ECE0;
-    --tinta:#1B1638;--bruma:#625B7A;--bruma-2:#A79FB8;
+  :root{--crema:#FFF5E8;--papel:#FFFFFF;--papel-2:#FFF9F1;--hueco:#F7F0E4;--linea:#E9DFD0;--linea-2:#F2ECE0;--linea-3:#C9BEAE;
+    --tinta:#1B1638;--tinta-2:#0C0A1C;--bruma:#625B7A;--bruma-2:#A79FB8;
     --azul:#2F5BFF;--azul-2:#1F3FB8;--azul-suave:#EEF2FF;--azul-texto:#1F3FB8;
-    --pica:#E0731A;--fija:#12A150;--r:22px;--r-md:16px}
-  @media (prefers-color-scheme:dark){:root{--crema:#120F24;--papel:#1D1838;--hueco:#171233;
-    --linea:#2E2850;--linea-2:#2A2448;--tinta:#F6F1FF;--bruma:#A79FC4;--bruma-2:#6E63A0;
+    --coral:#FF6B5E;--coral-2:#D94F45;--coral-suave:#FFF1EF;
+    --violeta:#7C5CFF;--violeta-2:#5A3FD1;--violeta-suave:#F1EDFF;
+    --sol:#FFC531;--sol-2:#D9A317;--sol-suave:#FFF6DA;
+    --pica:#E0731A;--pica-suave:#FDEEDF;--pica-texto:#9A4B08;
+    --fija:#12A150;--fija-suave:#E3F6EA;--fija-texto:#0C7A3A;
+    --sobre-azul:#FFFFFF;--sobre-tinta:#FFF5E8;
+    --tono:#2F5BFF;--tono-2:#1F3FB8;--tono-suave:#EEF2FF;--sobre:#FFFFFF;
+    --r:22px;--r-md:16px}
+  @media (prefers-color-scheme:dark){:root{--crema:#120F24;--papel:#1D1838;--papel-2:#231D45;--hueco:#171233;
+    --linea:#2E2850;--linea-2:#2A2448;--linea-3:#4A4272;--tinta:#F6F1FF;--tinta-2:#A79FC4;--bruma:#A79FC4;--bruma-2:#6E63A0;
     --azul:#4F79FF;--azul-2:#2F4FC7;--azul-suave:#22305E;--azul-texto:#A9BDFF;
-    --pica:#F6A040;--fija:#39D37E}}
+    --coral:#FF7A6E;--coral-2:#C94F45;--coral-suave:#4A2833;
+    --violeta:#9B82FF;--violeta-2:#5A3FD1;--violeta-suave:#2E2650;
+    --sol:#FFC531;--sol-2:#B8890F;--sol-suave:#4A3A14;
+    --pica:#F6A040;--pica-suave:#4A3020;--pica-texto:#F6A040;
+    --fija:#39D37E;--fija-suave:#183A2A;--fija-texto:#39D37E;
+    --sobre-tinta:#120F24}}
   *{box-sizing:border-box}
   html,body{margin:0}
   body{font-family:'Figtree',system-ui,-apple-system,sans-serif;background:var(--crema);
@@ -54,11 +73,6 @@ STYLE = """
   .intro{color:var(--bruma);font-size:15px;line-height:1.6;margin:0 0 18px}
   .intro b{color:var(--tinta);font-weight:700}
   .rules{color:var(--tinta);font-size:15px;line-height:1.6}
-  .rules ol{padding-left:20px;margin:0 0 6px}
-  .rules li{margin-bottom:11px}
-  .rules ul{padding-left:18px;margin:6px 0;color:var(--bruma);font-size:14px}
-  .rules ul li{margin-bottom:4px}
-  .rules b{color:var(--tinta)}
   .note{background:var(--hueco);border:2px solid var(--linea-2);border-radius:var(--r-md);
     padding:12px 14px;margin:12px 0;font-size:14px;color:var(--bruma)}
   .note b{color:var(--tinta)}

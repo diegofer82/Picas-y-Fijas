@@ -7,6 +7,12 @@ aplicacion, donde ningun buscador las lee. Este script las saca a tres paginas
 propias y rastreables, una por idioma, sin JavaScript y sin duplicar el texto:
 la unica fuente sigue siendo `RULES`.
 
+Desde la 5.4.0 las reglas son una guia por capitulos. Tres cosas mas salen del
+juego en lugar de escribirse aqui: su hoja de estilos (el bloque que va de
+`guia:inicio` a `guia:fin`), los iconos (`ICONS`) y las insignias (`BADGE_ART`),
+que en `RULES` son huecos `data-ico` y `data-badge`. Sin script, los capitulos se
+abren con `:target`; el laboratorio del primer capitulo solo existe en el juego.
+
 Uso:  python tools/make-rules-pages.py
 Las paginas generadas se sirven desde /como-se-juega, /en/how-to-play y
 /fr/comment-jouer; el mapa esta en `assetPathFor`, en `src/index.js`.
@@ -15,7 +21,7 @@ import io
 import os
 import re
 
-from site_style import FONTS, NAMES, ORIGIN, STYLE, THEME_COLOR
+from site_style import FONTS_MONO, NAMES, ORIGIN, STYLE, THEME_COLOR
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SOURCE = os.path.join(ROOT, "public", "index.html")
@@ -26,7 +32,7 @@ PAGES = {
         "game": "/",
         "locale": "es_ES",
         "title": "Cómo se juega a Picas y Fijas · reglas de Bulls and Cows",
-        "description": "Las reglas completas de Picas y Fijas, el clásico Bulls and Cows: qué es una fija, qué es una pica, cómo se crea una partida y cómo se gana. Con guía de estrategias en PDF.",
+        "description": "Las reglas completas de Picas y Fijas, el clásico Bulls and Cows: qué es una fija, qué es una pica, los relojes, la arena, el código del día y cómo se suman los puntos del ranking. Con guía de estrategias en PDF.",
         "h1": "Cómo se juega a Picas y Fijas",
         "tagline": "Duelo de deducción online",
         "intro": "Picas y Fijas es un juego de deducción para dos jugadores, conocido en inglés como <b>Bulls and Cows</b>, en español también como <b>Toros y Vacas</b>, y emparentado con <b>Mastermind</b>. Cada jugador esconde un código secreto y gana quien descifre antes el del rival. Se juega gratis en el navegador, sin instalar nada.",
@@ -40,7 +46,7 @@ PAGES = {
         "game": "/en",
         "locale": "en_US",
         "title": "How to play Bulls and Cows · Picas y Fijas rules",
-        "description": "The full rules of Picas y Fijas, the classic Bulls and Cows deduction game: what the Fixed and Present clues mean, how to set up a match and how to win. Free strategy guide in PDF.",
+        "description": "The full rules of Picas y Fijas, the classic Bulls and Cows deduction game: what the Fixed and Present clues mean, the clocks, the arena, the code of the day and how ranking points add up. Free strategy guide in PDF.",
         "h1": "How to play Picas y Fijas",
         "tagline": "Online deduction duel",
         "intro": "Picas y Fijas is a two-player deduction game, known in English as <b>Bulls and Cows</b> and closely related to <b>Mastermind</b>. Each player hides a secret code and the first to crack their opponent's code wins. It is free and runs in the browser, with nothing to install.",
@@ -54,7 +60,7 @@ PAGES = {
         "game": "/fr",
         "locale": "fr_FR",
         "title": "Comment jouer à Bulls and Cows · règles de Picas y Fijas",
-        "description": "Les règles complètes de Picas y Fijas, le classique Bulls and Cows : ce que veulent dire les indices Fixe et Présent, comment créer une partie et comment gagner. Guide stratégique en PDF.",
+        "description": "Les règles complètes de Picas y Fijas, le classique Bulls and Cows : ce que veulent dire les indices Fixe et Présent, les horloges, l'arène, le code du jour et le calcul des points du classement. Guide stratégique en PDF.",
         "h1": "Comment jouer à Picas y Fijas",
         "tagline": "Duel de déduction en ligne",
         "intro": "Picas y Fijas est un jeu de déduction à deux joueurs, appelé <b>Bulls and Cows</b> en anglais, parfois <b>le jeu du taureau</b>, et proche de <b>Mastermind</b>. Chaque joueur cache un code secret et le premier à deviner celui de l'adversaire gagne. C'est gratuit et ça se joue dans le navigateur, sans rien installer.",
@@ -65,9 +71,66 @@ PAGES = {
     },
 }
 
-def rules_html():
+def game_source():
+    return io.open(SOURCE, encoding="utf-8").read()
+
+
+def guide_css(source):
+    """La hoja de la guia vive en el juego, de marca a marca, y se copia tal cual."""
+    start = source.index("/* guia:inicio")
+    end = source.index("/* guia:fin */", start) + len("/* guia:fin */")
+    return source[start:end]
+
+
+def icon_paths(source):
+    """Los trazados de ICONS: una linea por icono, `nombre:'<path ...>'`."""
+    start = source.index("const ICONS={")
+    block = source[start:source.index("\n};", start)]
+    return dict(re.findall(r"\n  (\w+):'([^']*)'", block))
+
+
+def badge_art(source):
+    """BADGE_ART: fondo, anillo si lo hay y el dibujo de cada insignia."""
+    start = source.index("const BADGE_ART={")
+    block = source[start:source.index("\n};", start)]
+    return {
+        code: dict(re.findall(r"(bg|ring|fg):'([^']*)'", body))
+        for code, body in re.findall(r"\n  (\w+):\{(.*)\},?", block)
+    }
+
+
+def ico(paths, name, size):
+    """El gemelo de ico() del juego: mismo marcado, para que el icono sea el mismo."""
+    return '<svg class="ico" width="%s" height="%s" viewBox="0 0 24 24" aria-hidden="true">%s</svg>' % (
+        size, size, paths[name])
+
+
+def badge_svg(art, size):
+    """El gemelo de badgeSVG() del juego."""
+    ring = ' stroke="%s" stroke-width="2"' % art["ring"] if "ring" in art else ""
+    return (
+        '<svg class="badge-art" width="%s" height="%s" viewBox="0 0 44 44" fill="none" aria-hidden="true">'
+        '<circle class="bg" cx="22" cy="22" r="%s" fill="%s"%s></circle><g class="fg">%s</g></svg>'
+        % (size, size, 19 if "ring" in art else 20, art["bg"], ring, art["fg"])
+    )
+
+
+def fill_art(html, paths, arts):
+    """Rellena los huecos que en el juego pinta paintRules(): iconos e insignias."""
+    def icon(match):
+        size = re.search(r'data-ico-size="(\d+)"', match.group(1))
+        return match.group(1) + ico(paths, match.group(2), size.group(1) if size else "16") + "</span>"
+
+    html = re.sub(r'(<span[^>]*\bdata-ico="(\w+)"[^>]*>)</span>', icon, html)
+    return re.sub(
+        r'(<span data-badge="(\w+)">)</span>',
+        lambda match: match.group(1) + badge_svg(arts[match.group(2)], 40) + "</span>",
+        html,
+    )
+
+
+def rules_html(source):
     """Saca los tres bloques de reglas del juego. La fuente unica es RULES."""
-    source = io.open(SOURCE, encoding="utf-8").read()
     start = source.index("const RULES = {")
     block = source[start:source.index("\n};", start)]
     found = dict(re.findall(r"\n  ([a-z]{2}):`(.*?)`,?(?=\n  [a-z]{2}:`|$)", block, re.S))
@@ -96,7 +159,7 @@ def language_nav(current):
     return "".join(parts)
 
 
-def build(lang, page, rules):
+def build(lang, page, rules, guide):
     url = ORIGIN + page["path"]
     breadcrumb_ld = (
         '{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":['
@@ -133,7 +196,8 @@ def build(lang, page, rules):
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 {fonts}
-<style>{style}</style>
+<style>{style}{guide}
+</style>
 <script type="application/ld+json">{breadcrumb_ld}</script>
 </head>
 <body>
@@ -162,7 +226,8 @@ def build(lang, page, rules):
         url=url,
         alternates=alternates(),
         style=STYLE,
-        fonts=FONTS,
+        guide=guide,
+        fonts=FONTS_MONO,
         theme_color=THEME_COLOR,
         breadcrumb_ld=breadcrumb_ld,
         nav=language_nav(lang),
@@ -171,8 +236,12 @@ def build(lang, page, rules):
     )
 
 
-rules = rules_html()
+source = game_source()
+rules = rules_html(source)
+guide = guide_css(source)
+paths, arts = icon_paths(source), badge_art(source)
 for lang, page in PAGES.items():
     out = os.path.join(ROOT, "public", "rules-%s.html" % lang)
-    io.open(out, "w", encoding="utf-8", newline="\n").write(build(lang, page, rules[lang]))
+    html = build(lang, page, fill_art(rules[lang], paths, arts), guide)
+    io.open(out, "w", encoding="utf-8", newline="\n").write(html)
     print("%s  ->  public/rules-%s.html  (%d KB)" % (page["path"], lang, os.path.getsize(out) // 1024))
