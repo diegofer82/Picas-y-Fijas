@@ -119,9 +119,10 @@ test('las paginas publicas definen todos los colores que piden sus dibujos', asy
 });
 
 test('las guias en PDF llevan la paleta Plaza', async () => {
-  for (const name of ['tools/pdf/crear_guia_estrategias.py', 'tools/pdf/create_strategy_translations.py']) {
-    const src = await read(name);
-    assert.match(src, /NAVY ?= ?colors\.HexColor\(["']#1B1638["']\)/, `${name}: la tinta no es la de Plaza`);
-    assert.doesNotMatch(src, /#241E17|#5C4A33|#DDD2C0/, `${name} conserva colores de Mesa`);
-  }
+  // Desde la 5.5.0 hay un solo generador para los tres idiomas; lo demas que
+  // se le exige a la guia esta en test/strategy-guide.test.js.
+  const name = 'tools/pdf/guia.py';
+  const src = await read(name);
+  assert.match(src, /TINTA ?= ?colors\.HexColor\(["']#1B1638["']\)/, `${name}: la tinta no es la de Plaza`);
+  assert.doesNotMatch(src, /#241E17|#5C4A33|#DDD2C0/, `${name} conserva colores de Mesa`);
 });

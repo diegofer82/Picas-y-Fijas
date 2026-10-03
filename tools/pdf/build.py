@@ -8,6 +8,10 @@ Mesa: alguien regeneraba en output/ y se olvidaba de copiar. Los nombres de
 public/ son los que enlaza la pantalla de reglas y no se pueden cambiar sin
 cambiarlos tambien en public/index.html.
 
+Desde la 5.5.0 hay un solo generador, guia.py, para los tres idiomas: los textos
+viven en textos.json y las cifras en datos.json. Si cambia el motor de
+deduccion o la cuenta de puntos, antes de esto:  node tools/pdf/make-datos.mjs
+
 Necesita reportlab:  python -m pip install reportlab
 """
 
@@ -21,7 +25,7 @@ HERE = Path(__file__).resolve().parent
 OUT = ROOT / "output" / "pdf"
 PUBLIC = ROOT / "public"
 
-GENERADORES = ["crear_guia_estrategias.py", "create_strategy_translations.py"]
+GENERADORES = ["guia.py"]
 
 # origen en output/pdf  ->  nombre que sirve la aplicacion
 PUBLICAR = {
