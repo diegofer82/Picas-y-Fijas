@@ -130,3 +130,37 @@ test('el modulo de entrada no exporta cadenas ni numeros', () => {
     assert.ok(ok, `src/index.js exporta ${name}, que es ${typeof value}`);
   }
 });
+
+/* `/.well-known/security.txt` (5.5.2): a quien escribir si alguien encuentra un
+   fallo. El RFC 9116 exige `Contact` y un `Expires` que no este vencido, y un
+   archivo caducado es peor que ninguno: dice que nadie lo mira. */
+const securityTxt = async () => {
+  const text = await readFile(new URL('../public/.well-known/security.txt', import.meta.url), 'utf8');
+  const fields = {};
+  for (const line of text.split('\n')) {
+    if (!line.trim() || line.startsWith('#')) continue;
+    const cut = line.indexOf(':');
+    (fields[line.slice(0, cut)] ||= []).push(line.slice(cut + 1).trim());
+  }
+  return { text, fields };
+};
+
+test('security.txt dice a quien escribir y donde vive', async () => {
+  const { text, fields } = await securityTxt();
+  assert.doesNotMatch(text, /\r/, 'debe ir en LF');
+  assert.match(text, /^[\x20-\x7e\n]*$/, 'solo ASCII');
+  assert.deepEqual(fields.Contact, ['mailto:security@picasyfijas.fans']);
+  assert.deepEqual(fields.Canonical, ['https://picasyfijas.fans/.well-known/security.txt']);
+  assert.deepEqual(fields['Preferred-Languages'], ['es, en, fr']);
+  assert.equal(fields.Expires.length, 1);
+});
+
+test('security.txt no esta caducado ni a punto de caducar', async () => {
+  const { fields } = await securityTxt();
+  const expires = Date.parse(fields.Expires[0]);
+  assert.ok(Number.isFinite(expires), 'Expires debe ser una fecha ISO');
+  const days = (expires - Date.now()) / 86400000;
+  // El RFC recomienda no pasar de un ano.
+  assert.ok(days <= 366, 'Expires no debe ir a mas de un ano');
+  assert.ok(days > 30, `security.txt caduca en ${Math.floor(days)} dias: pon en Expires la fecha de dentro de un ano, no mas, en public/.well-known/security.txt`);
+});

@@ -1,0 +1,7 @@
+# Picas y Fijas - https://picasyfijas.fans
+# Como avisar de un fallo de seguridad / How to report a security issue /
+# Comment signaler une faille. RFC 9116.
+Contact: mailto:security@picasyfijas.fans
+Expires: 2027-10-01T00:00:00Z
+Preferred-Languages: es, en, fr
+Canonical: https://picasyfijas.fans/.well-known/security.txt
