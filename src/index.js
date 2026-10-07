@@ -71,6 +71,7 @@ import { scoreGame } from "./score.js";
 import { cleanupDatabase } from "./maintenance.js";
 import { deletePushSubscription, savePushSubscription, sendTurnNotification } from "./push.js";
 import { APP_VERSION } from "./version.js";
+import { secure } from "./headers.js";
 import { requestEmailVerification, requestPinReset, resetPin, verifyEmail } from "./recovery.js";
 
 const PROTECTED = new Set([
@@ -1956,13 +1957,26 @@ function localizeHtml(response, seo) {
 }
 
 // Direcciones que responden pero no son la canonica. Se enumeran una a una en
-// vez de redirigir "todo lo que no sea CANONICAL_HOST" para no dejar fuera de
-// juego a `wrangler dev`, que sirve en localhost, ni arriesgar un bucle si
-// algun dia se anade otro dominio.
-export function canonicalRedirect(url) {
+// vez de redirigir "todo lo que no sea CANONICAL_HOST" para no arriesgar un
+// bucle si algun dia se anade otro dominio.
+//
+// El dominio canonico por HTTP plano cuenta como alias. Que Cloudflare redirija
+// a HTTPS depende de un ajuste de la zona («Always Use HTTPS») que no vive en
+// el repositorio, y el 07-10-2026 estaba apagado: la portada, el PIN y el
+// enlace para restablecerlo —que se arma con el origen de la peticion— podian
+// viajar en claro. El Worker ya no lo da por hecho.
+//
+// El protocolo de la URL no basta para saberlo: `wrangler dev` toma el host de
+// `routes` y presenta cada peticion local como `http://picasyfijas.fans/...`,
+// asi que fiarse de el manda el desarrollo local a produccion, en bucle. Lo
+// que distingue a un visitante de verdad es `X-Forwarded-Proto`, que solo
+// escribe el borde de Cloudflare.
+export function canonicalRedirect(url, forwardedProto = "") {
   const host = url.hostname;
   const alias = host === `www.${CANONICAL_HOST}` || host.endsWith(".workers.dev");
-  if (!alias) return null;
+  const plain =
+    host === CANONICAL_HOST && url.protocol === "http:" && forwardedProto === "http";
+  if (!alias && !plain) return null;
   // Se conservan ruta y parametros: los enlaces de partida antiguos deben
   // seguir abriendo su partida.
   const target = new URL(url);
@@ -1972,45 +1986,51 @@ export function canonicalRedirect(url) {
   return Response.redirect(target.toString(), 301);
 }
 
+async function respond(request, env, ctx, url) {
+  const redirect = canonicalRedirect(url, request.headers.get("x-forwarded-proto") || "");
+  if (redirect) return redirect;
+  try {
+    if (url.pathname === "/api" || url.pathname.startsWith("/api/"))
+      return await routeApi(request, env, ctx);
+    const assetPath = assetPathFor(url.pathname);
+    if (assetPath) {
+      const asset = noStoreHtml(
+        await env.ASSETS.fetch(new Request(new URL(assetPath, url), request)),
+      );
+      if (assetPath === "/admin.html") return noIndex(asset);
+      const seo = seoFor(url.pathname);
+      return seo ? localizeHtml(asset, seo) : asset;
+    }
+    if (url.pathname === "/index.html")
+      return noStoreHtml(await env.ASSETS.fetch(request));
+    return env.ASSETS.fetch(request);
+  } catch (cause) {
+    // Un cuerpo demasiado grande no es un fallo del servidor y no merece una
+    // traza en el registro: se contesta y se calla.
+    if (cause instanceof PayloadError) return error(cause.message, 413);
+    console.error(
+      JSON.stringify({
+        message: cause?.message,
+        stack: cause?.stack,
+        path: url.pathname,
+      }),
+    );
+    const message =
+      cause instanceof ConflictError
+        ? "La partida recibió dos acciones simultáneas. Inténtalo de nuevo."
+        : env.DEBUG_ERRORS === "1"
+          ? String(cause?.message || cause)
+          : "Error temporal del servidor.";
+    return error(message, 500);
+  }
+}
+
 export default {
+  // Todo lo que sale del Worker pasa por `secure`: una respuesta nueva no
+  // puede olvidarse de las cabeceras.
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    const redirect = canonicalRedirect(url);
-    if (redirect) return redirect;
-    try {
-      if (url.pathname === "/api" || url.pathname.startsWith("/api/"))
-        return await routeApi(request, env, ctx);
-      const assetPath = assetPathFor(url.pathname);
-      if (assetPath) {
-        const asset = noStoreHtml(
-          await env.ASSETS.fetch(new Request(new URL(assetPath, url), request)),
-        );
-        if (assetPath === "/admin.html") return noIndex(asset);
-        const seo = seoFor(url.pathname);
-        return seo ? localizeHtml(asset, seo) : asset;
-      }
-      if (url.pathname === "/index.html")
-        return noStoreHtml(await env.ASSETS.fetch(request));
-      return env.ASSETS.fetch(request);
-    } catch (cause) {
-      // Un cuerpo demasiado grande no es un fallo del servidor y no merece una
-      // traza en el registro: se contesta y se calla.
-      if (cause instanceof PayloadError) return error(cause.message, 413);
-      console.error(
-        JSON.stringify({
-          message: cause?.message,
-          stack: cause?.stack,
-          path: url.pathname,
-        }),
-      );
-      const message =
-        cause instanceof ConflictError
-          ? "La partida recibió dos acciones simultáneas. Inténtalo de nuevo."
-          : env.DEBUG_ERRORS === "1"
-            ? String(cause?.message || cause)
-            : "Error temporal del servidor.";
-      return error(message, 500);
-    }
+    return secure(await respond(request, env, ctx, url), url);
   },
   async scheduled(_controller, env, _ctx) {
     await cleanupDatabase(env.DB, Date.now(), env);

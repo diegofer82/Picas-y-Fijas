@@ -1,0 +1,8 @@
+# Cabeceras de los archivos estaticos que Cloudflare sirve sin pasar por el
+# Worker: iconos, PDF, manifest, service worker y las copias `.html`. Las
+# paginas y el API llevan las suyas desde `secure()` en `src/index.js`, y
+# `test/security-headers.test.js` comprueba que las dos listas no se separan.
+/*
+  X-Content-Type-Options: nosniff
+  Strict-Transport-Security: max-age=31536000
+  Referrer-Policy: strict-origin-when-cross-origin
